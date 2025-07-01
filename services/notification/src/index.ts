@@ -49,7 +49,7 @@ app.post('/api/v1/notify', async (req, res) => {
     });
 
     res.json(result);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Notification error:', error);
     
     await auditLogger.log({
@@ -68,7 +68,7 @@ app.post('/api/v1/notify/bulk', async (req, res) => {
   try {
     const { notifications } = req.body;
     const results = await Promise.allSettled(
-      notifications.map(notification => notificationService.send(notification))
+      notifications.map((notification: any) => notificationService.send(notification))
     );
 
     const successful = results.filter(r => r.status === 'fulfilled').length;

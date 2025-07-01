@@ -24,6 +24,7 @@ export default function Home() {
         <div className="flex-1 relative">
           <MapView 
             trucks={trucks}
+            geofences={[]}
             selectedTruck={selectedTruck}
             onSelectTruck={setSelectedTruck}
           />

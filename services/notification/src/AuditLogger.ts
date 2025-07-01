@@ -24,12 +24,12 @@ export class AuditLogger {
       ),
       transports: [
         new winston.transports.File({
-          filename: path.join(__dirname, '../../../logs/audit/audit.log'),
+          filename: path.join(__dirname, '../logs/audit.log'),
           maxsize: 10 * 1024 * 1024, // 10MB
           maxFiles: 10,
         }),
         new winston.transports.File({
-          filename: path.join(__dirname, '../../../logs/audit/error.log'),
+          filename: path.join(__dirname, '../logs/error.log'),
           level: 'error',
           maxsize: 10 * 1024 * 1024,
           maxFiles: 5,
@@ -92,7 +92,7 @@ export class AuditLogger {
   }
 
   private async storeComplianceLog(entry: AuditLogEntry): Promise<void> {
-    const complianceLogPath = path.join(__dirname, '../../../logs/audit/compliance.log');
+    const complianceLogPath = path.join(__dirname, '../logs/compliance.log');
     const logEntry = JSON.stringify({
       ...entry,
       hash: this.generateHash(entry),

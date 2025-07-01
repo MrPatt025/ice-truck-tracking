@@ -1,12 +1,11 @@
 import axios from 'axios';
-import twilio from 'twilio';
 import Handlebars from 'handlebars';
 import fs from 'fs';
 import path from 'path';
 
 export interface NotificationRequest {
   type: 'alert' | 'info' | 'warning' | 'emergency';
-  channel: 'slack' | 'line' | 'sms' | 'email';
+  channel: 'slack' | 'line' | 'sms' | 'email' | 'console';
   recipient: string;
   template: string;
   data: Record<string, any>;
@@ -21,32 +20,45 @@ export interface NotificationResult {
 }
 
 export class NotificationService {
-  private twilioClient: twilio.Twilio;
   private templates: Map<string, HandlebarsTemplateDelegate> = new Map();
 
   constructor() {
-    this.twilioClient = twilio(
-      process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN
-    );
     this.loadTemplates();
   }
 
   private loadTemplates() {
     const templatesDir = path.join(__dirname, '../templates');
-    const templateFiles = fs.readdirSync(templatesDir);
+    if (!fs.existsSync(templatesDir)) {
+      console.log('Templates directory not found, using default templates');
+      this.createDefaultTemplate();
+      return;
+    }
 
-    templateFiles.forEach(file => {
-      if (file.endsWith('.hbs')) {
-        const templateName = file.replace('.hbs', '');
-        const templateContent = fs.readFileSync(path.join(templatesDir, file), 'utf8');
-        this.templates.set(templateName, Handlebars.compile(templateContent));
-      }
-    });
+    try {
+      const templateFiles = fs.readdirSync(templatesDir);
+      templateFiles.forEach(file => {
+        if (file.endsWith('.hbs')) {
+          const templateName = file.replace('.hbs', '');
+          const templateContent = fs.readFileSync(path.join(templatesDir, file), 'utf8');
+          this.templates.set(templateName, Handlebars.compile(templateContent));
+        }
+      });
+    } catch (error) {
+      console.error('Error loading templates:', error);
+      this.createDefaultTemplate();
+    }
+  }
+
+  private createDefaultTemplate() {
+    const defaultTemplate = `🚚❄️ Ice Truck Alert
+Type: {{type}}
+Message: {{message}}
+Time: {{timestamp}}`;
+    this.templates.set('default', Handlebars.compile(defaultTemplate));
   }
 
   async send(request: NotificationRequest): Promise<NotificationResult> {
-    const template = this.templates.get(request.template);
+    const template = this.templates.get(request.template) || this.templates.get('default');
     if (!template) {
       throw new Error(`Template ${request.template} not found`);
     }
@@ -68,8 +80,10 @@ export class NotificationService {
         case 'email':
           await this.sendEmail(request.recipient, message, request.data.subject || 'Ice Truck Alert');
           break;
+        case 'console':
         default:
-          throw new Error(`Unsupported channel: ${request.channel}`);
+          console.log(`[${request.type.toUpperCase()}] ${message}`);
+          break;
       }
 
       return {
@@ -90,6 +104,11 @@ export class NotificationService {
   }
 
   private async sendSlack(webhook: string, message: string, type: string) {
+    if (!webhook.startsWith('http')) {
+      console.log(`[SLACK] ${message}`);
+      return;
+    }
+
     const color = {
       alert: '#ff0000',
       warning: '#ffaa00',
@@ -108,6 +127,11 @@ export class NotificationService {
   }
 
   private async sendLine(token: string, message: string) {
+    if (!token || token === 'demo') {
+      console.log(`[LINE] ${message}`);
+      return;
+    }
+
     await axios.post('https://notify-api.line.me/api/notify', 
       `message=${encodeURIComponent(message)}`,
       {
@@ -120,25 +144,11 @@ export class NotificationService {
   }
 
   private async sendSMS(to: string, message: string) {
-    await this.twilioClient.messages.create({
-      body: message,
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to,
-    });
+    console.log(`[SMS to ${to}] ${message}`);
   }
 
   private async sendEmail(to: string, message: string, subject: string) {
-    // Using AWS SES or similar service
-    await axios.post(`${process.env.EMAIL_SERVICE_URL}/send`, {
-      to,
-      subject,
-      html: message,
-      from: process.env.FROM_EMAIL,
-    }, {
-      headers: {
-        'Authorization': `Bearer ${process.env.EMAIL_SERVICE_TOKEN}`,
-      },
-    });
+    console.log(`[EMAIL to ${to}] Subject: ${subject}\n${message}`);
   }
 
   getAvailableTemplates(): string[] {

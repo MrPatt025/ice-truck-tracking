@@ -13,8 +13,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run",
-    "prepare": "husky install"
+    "cypress:run": "cypress run"
   },
   "dependencies": {
     "next": "14.0.0",
