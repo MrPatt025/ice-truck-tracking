@@ -1,0 +1,69 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        npm ci
+    
+    - name: Run linter
+      run: |
+        cd backend
+        npm run lint:check
+    
+    - name: Run unit tests
+      run: |
+        cd backend
+        npm run test:unit
+    
+    - name: Run integration tests
+      run: |
+        cd backend
+        npm run test:integration
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Docker image
+      run: |
+        cd backend
+        docker build -t ice-truck-api:${{ github.sha }} .
+    
+    - name: Push to registry
+      run: |
+        echo "Push to container registry"
+        # docker push ice-truck-api:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Deploy to production
+      run: |
+        echo "Deploy to production environment"
+        # kubectl apply -f infra/k8s/

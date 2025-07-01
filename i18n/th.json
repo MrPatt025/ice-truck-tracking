@@ -1,0 +1,131 @@
+{
+  "common": {
+    "loading": "กำลังโหลด...",
+    "error": "ข้อผิดพลาด",
+    "success": "สำเร็จ",
+    "cancel": "ยกเลิก",
+    "save": "บันทึก",
+    "delete": "ลบ",
+    "edit": "แก้ไข",
+    "view": "ดู",
+    "search": "ค้นหา",
+    "filter": "กรอง",
+    "export": "ส่งออก",
+    "refresh": "รีเฟรช"
+  },
+  "navigation": {
+    "dashboard": "แดชบอร์ด",
+    "trucks": "รถบรรทุก",
+    "drivers": "คนขับ",
+    "routes": "เส้นทาง",
+    "alerts": "การแจ้งเตือน",
+    "reports": "รายงาน",
+    "settings": "การตั้งค่า"
+  },
+  "dashboard": {
+    "title": "แดชบอร์ดติดตามรถขนส่งน้ำแข็ง",
+    "overview": "ภาพรวม",
+    "activeTrucks": "รถที่ใช้งาน",
+    "totalTrucks": "รถทั้งหมด",
+    "alerts": "การแจ้งเตือนที่ใช้งาน",
+    "temperature": "อุณหภูมิ",
+    "speed": "ความเร็ว",
+    "location": "ตำแหน่ง",
+    "status": "สถานะ",
+    "lastUpdate": "อัปเดตล่าสุด"
+  },
+  "trucks": {
+    "title": "การจัดการรถบรรทุก",
+    "plateNumber": "หมายเลขทะเบียน",
+    "driver": "คนขับ",
+    "status": {
+      "active": "ใช้งาน",
+      "inactive": "ไม่ใช้งาน",
+      "maintenance": "ซ่อมบำรุง",
+      "offline": "ออฟไลน์"
+    },
+    "temperature": {
+      "normal": "ปกติ",
+      "warning": "เตือน",
+      "critical": "วิกฤต"
+    },
+    "addTruck": "เพิ่มรถบรรทุก",
+    "editTruck": "แก้ไขรถบรรทุก",
+    "deleteTruck": "ลบรถบรรทุก"
+  },
+  "alerts": {
+    "title": "การจัดการการแจ้งเตือน",
+    "types": {
+      "geofence": "การละเมิดขอบเขต",
+      "temperature": "การแจ้งเตือนอุณหภูมิ",
+      "speed": "การแจ้งเตือนความเร็ว",
+      "offline": "รถออฟไลน์",
+      "maintenance": "ต้องการซ่อมบำรุง"
+    },
+    "severity": {
+      "low": "ต่ำ",
+      "medium": "ปานกลาง",
+      "high": "สูง",
+      "critical": "วิกฤต"
+    },
+    "acknowledge": "รับทราบ",
+    "resolve": "แก้ไข",
+    "newAlert": "การแจ้งเตือนใหม่"
+  },
+  "geofence": {
+    "title": "การจัดการขอบเขต",
+    "allowedZones": "พื้นที่ที่อนุญาต",
+    "restrictedZones": "พื้นที่ที่จำกัด",
+    "createZone": "สร้างพื้นที่",
+    "editZone": "แก้ไขพื้นที่",
+    "deleteZone": "ลบพื้นที่",
+    "zoneName": "ชื่อพื้นที่",
+    "zoneType": "ประเภทพื้นที่"
+  },
+  "reports": {
+    "title": "รายงานและการวิเคราะห์",
+    "dailyReport": "รายงานรายวัน",
+    "weeklyReport": "รายงานรายสัปดาห์",
+    "monthlyReport": "รายงานรายเดือน",
+    "temperatureReport": "รายงานอุณหภูมิ",
+    "routeReport": "รายงานเส้นทาง",
+    "driverReport": "รายงานคนขับ",
+    "generateReport": "สร้างรายงาน",
+    "downloadReport": "ดาวน์โหลดรายงาน"
+  },
+  "settings": {
+    "title": "การตั้งค่า",
+    "general": "การตั้งค่าทั่วไป",
+    "notifications": "การแจ้งเตือน",
+    "users": "การจัดการผู้ใช้",
+    "integrations": "การรวมระบบ",
+    "featureFlags": "ฟีเจอร์แฟล็ก",
+    "language": "ภาษา",
+    "theme": "ธีม",
+    "darkMode": "โหมดมืด",
+    "lightMode": "โหมดสว่าง"
+  },
+  "notifications": {
+    "truckOffline": "รถ {{plateNumber}} ออฟไลน์",
+    "temperatureAlert": "การแจ้งเตือนอุณหภูมิสำหรับรถ {{plateNumber}}: {{temperature}}°C",
+    "speedAlert": "การแจ้งเตือนความเร็วสำหรับรถ {{plateNumber}}: {{speed}} กม./ชม.",
+    "geofenceViolation": "การละเมิดขอบเขต: รถ {{plateNumber}} เข้าพื้นที่ที่จำกัด",
+    "maintenanceReminder": "การแจ้งเตือนการซ่อมบำรุงสำหรับรถ {{plateNumber}}"
+  },
+  "errors": {
+    "networkError": "ข้อผิดพลาดการเชื่อมต่อเครือข่าย กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต",
+    "serverError": "ข้อผิดพลาดเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง",
+    "unauthorized": "คุณไม่ได้รับอนุญาตให้ทำการกระทำนี้",
+    "notFound": "ไม่พบทรัพยากรที่ร้องขอ",
+    "validationError": "กรุณาตรวจสอบข้อมูลที่ป้อนและลองใหม่อีกครั้ง",
+    "unknownError": "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ กรุณาติดต่อฝ่ายสนับสนุน"
+  },
+  "validation": {
+    "required": "ฟิลด์นี้จำเป็น",
+    "email": "กรุณาป้อนที่อยู่อีเมลที่ถูกต้อง",
+    "phone": "กรุณาป้อนหมายเลขโทรศัพท์ที่ถูกต้อง",
+    "plateNumber": "กรุณาป้อนหมายเลขทะเบียนที่ถูกต้อง",
+    "temperature": "อุณหภูมิต้องอยู่ระหว่าง -20°C ถึง 20°C",
+    "speed": "ความเร็วต้องอยู่ระหว่าง 0 ถึง 120 กม./ชม."
+  }
+}

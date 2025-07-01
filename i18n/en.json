@@ -1,0 +1,131 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "refresh": "Refresh"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "trucks": "Trucks",
+    "drivers": "Drivers",
+    "routes": "Routes",
+    "alerts": "Alerts",
+    "reports": "Reports",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Ice Truck Tracking Dashboard",
+    "overview": "Overview",
+    "activeTrucks": "Active Trucks",
+    "totalTrucks": "Total Trucks",
+    "alerts": "Active Alerts",
+    "temperature": "Temperature",
+    "speed": "Speed",
+    "location": "Location",
+    "status": "Status",
+    "lastUpdate": "Last Update"
+  },
+  "trucks": {
+    "title": "Truck Management",
+    "plateNumber": "Plate Number",
+    "driver": "Driver",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "maintenance": "Maintenance",
+      "offline": "Offline"
+    },
+    "temperature": {
+      "normal": "Normal",
+      "warning": "Warning",
+      "critical": "Critical"
+    },
+    "addTruck": "Add Truck",
+    "editTruck": "Edit Truck",
+    "deleteTruck": "Delete Truck"
+  },
+  "alerts": {
+    "title": "Alert Management",
+    "types": {
+      "geofence": "Geofence Violation",
+      "temperature": "Temperature Alert",
+      "speed": "Speed Alert",
+      "offline": "Truck Offline",
+      "maintenance": "Maintenance Required"
+    },
+    "severity": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "acknowledge": "Acknowledge",
+    "resolve": "Resolve",
+    "newAlert": "New Alert"
+  },
+  "geofence": {
+    "title": "Geofence Management",
+    "allowedZones": "Allowed Zones",
+    "restrictedZones": "Restricted Zones",
+    "createZone": "Create Zone",
+    "editZone": "Edit Zone",
+    "deleteZone": "Delete Zone",
+    "zoneName": "Zone Name",
+    "zoneType": "Zone Type"
+  },
+  "reports": {
+    "title": "Reports & Analytics",
+    "dailyReport": "Daily Report",
+    "weeklyReport": "Weekly Report",
+    "monthlyReport": "Monthly Report",
+    "temperatureReport": "Temperature Report",
+    "routeReport": "Route Report",
+    "driverReport": "Driver Report",
+    "generateReport": "Generate Report",
+    "downloadReport": "Download Report"
+  },
+  "settings": {
+    "title": "Settings",
+    "general": "General Settings",
+    "notifications": "Notifications",
+    "users": "User Management",
+    "integrations": "Integrations",
+    "featureFlags": "Feature Flags",
+    "language": "Language",
+    "theme": "Theme",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
+  },
+  "notifications": {
+    "truckOffline": "Truck {{plateNumber}} has gone offline",
+    "temperatureAlert": "Temperature alert for truck {{plateNumber}}: {{temperature}}°C",
+    "speedAlert": "Speed alert for truck {{plateNumber}}: {{speed}} km/h",
+    "geofenceViolation": "Geofence violation: Truck {{plateNumber}} entered restricted area",
+    "maintenanceReminder": "Maintenance reminder for truck {{plateNumber}}"
+  },
+  "errors": {
+    "networkError": "Network connection error. Please check your internet connection.",
+    "serverError": "Server error. Please try again later.",
+    "unauthorized": "You are not authorized to perform this action.",
+    "notFound": "The requested resource was not found.",
+    "validationError": "Please check your input and try again.",
+    "unknownError": "An unknown error occurred. Please contact support."
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "phone": "Please enter a valid phone number",
+    "plateNumber": "Please enter a valid plate number",
+    "temperature": "Temperature must be between -20°C and 20°C",
+    "speed": "Speed must be between 0 and 120 km/h"
+  }
+}

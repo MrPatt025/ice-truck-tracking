@@ -1,0 +1,68 @@
+{
+  "name": "ice-truck-tracking",
+  "version": "1.0.0",
+  "description": "Complete Ice Truck Tracking System with real-time monitoring, geofencing, and multi-channel notifications",
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../dashboard && npm install && cd ../sdk/edge && npm install && cd ../mobile && npm install && cd ../../services/notification && npm install",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:dashboard\" \"npm run dev:notification\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:dashboard": "cd dashboard && npm run dev",
+    "dev:notification": "cd services/notification && npm run dev",
+    "build:all": "npm run build:backend && npm run build:dashboard && npm run build:sdks && npm run build:notification",
+    "build:backend": "cd backend && npm run build",
+    "build:dashboard": "cd dashboard && npm run build",
+    "build:sdks": "cd sdk/edge && npm run build && cd ../mobile && npm run build",
+    "build:notification": "cd services/notification && npm run build",
+    "test:all": "npm run test:backend && npm run test:dashboard && npm run test:sdks && npm run test:notification",
+    "test:backend": "cd backend && npm test",
+    "test:dashboard": "cd dashboard && npm test",
+    "test:sdks": "cd sdk/edge && npm test && cd ../mobile && npm test",
+    "test:notification": "cd services/notification && npm test",
+    "test:e2e": "cd dashboard && npm run cypress:run",
+    "lint:all": "npm run lint:backend && npm run lint:dashboard && npm run lint:sdks && npm run lint:notification",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:dashboard": "cd dashboard && npm run lint",
+    "lint:sdks": "cd sdk/edge && npm run lint && cd ../mobile && npm run lint",
+    "lint:notification": "cd services/notification && npm run lint",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "deploy:dev": "docker-compose -f docker-compose.yml up -d",
+    "deploy:prod": "docker-compose -f docker-compose.prod.yml up -d",
+    "infra:plan": "cd infra/terraform && terraform plan",
+    "infra:apply": "cd infra/terraform && terraform apply",
+    "infra:destroy": "cd infra/terraform && terraform destroy",
+    "backup": "./scripts/backup.sh",
+    "restore": "./scripts/restore.sh",
+    "health:check": "./scripts/health-check.sh",
+    "load:test": "k6 run tests/load/api-load-test.js",
+    "security:scan": "npm audit --audit-level moderate",
+    "docs:serve": "cd docs && python -m http.server 8000",
+    "postman:import": "newman run postman/ice-truck-api.postman_collection.json"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "newman": "^6.0.0"
+  },
+  "keywords": [
+    "ice-truck",
+    "tracking",
+    "real-time",
+    "geofencing",
+    "iot",
+    "logistics",
+    "cold-chain",
+    "monitoring"
+  ],
+  "author": "Ice Truck Tracking Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/ice-truck-tracking.git"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
