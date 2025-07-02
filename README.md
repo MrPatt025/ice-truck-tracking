@@ -38,18 +38,28 @@ A comprehensive real-time tracking system for ice delivery trucks with advanced 
 - **Nginx**: Load balancing and SSL termination
 - **Health Checks**: Comprehensive system monitoring
 
-## 🚀 One-Command Deployment
+## 🚀 Quick Start
 
-```bash
-# Clone and deploy
+### Windows
+```cmd
+# Clone and start
 git clone https://github.com/MrPatt025/ice-truck-tracking.git
 cd ice-truck-tracking
-./scripts/deploy-all.sh
+start.bat
+```
 
-# System will be available at:
-# Dashboard: http://localhost:3000
-# API: http://localhost:5000
-# Monitoring: http://localhost:3001
+### Linux/Mac
+```bash
+# Clone and start
+git clone https://github.com/MrPatt025/ice-truck-tracking.git
+cd ice-truck-tracking
+chmod +x start.sh
+./start.sh
+```
+
+### Manual Start
+```bash
+docker-compose up -d
 ```
 
 ## 📊 Live System Access

@@ -1,0 +1,49 @@
+{
+  "passed": 1,
+  "failed": 6,
+  "total": 7,
+  "results": [
+    {
+      "test": "Health endpoint",
+      "status": "PASS",
+      "message": "API is healthy",
+      "timestamp": "2025-07-02T07:47:00.193Z"
+    },
+    {
+      "test": "WebSocket",
+      "status": "FAIL",
+      "message": "socket hang up",
+      "timestamp": "2025-07-02T07:47:01.226Z"
+    },
+    {
+      "test": "Truck simulation",
+      "status": "FAIL",
+      "message": "Truck test-truck-001: Request failed with status code 500",
+      "timestamp": "2025-07-02T07:47:01.253Z"
+    },
+    {
+      "test": "Truck simulation",
+      "status": "FAIL",
+      "message": "Truck test-truck-002: Request failed with status code 500",
+      "timestamp": "2025-07-02T07:47:01.257Z"
+    },
+    {
+      "test": "Truck simulation",
+      "status": "FAIL",
+      "message": "Truck test-truck-003: Request failed with status code 500",
+      "timestamp": "2025-07-02T07:47:01.261Z"
+    },
+    {
+      "test": "Notification system",
+      "status": "FAIL",
+      "message": "",
+      "timestamp": "2025-07-02T07:47:01.265Z"
+    },
+    {
+      "test": "Offline sync",
+      "status": "FAIL",
+      "message": "Request failed with status code 500",
+      "timestamp": "2025-07-02T07:47:01.270Z"
+    }
+  ]
+}
