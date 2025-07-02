@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚚❄️ Ice Truck Mobile SDK Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .title {
+            text-align: center;
+            color: #2196F3;
+            margin-bottom: 20px;
+        }
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .status.online { background: #e8f5e8; color: #2e7d32; }
+        .status.offline { background: #ffebee; color: #c62828; }
+        .status.loading { background: #fff3e0; color: #f57c00; }
+        .location-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-family: monospace;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #2196F3;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        button:hover { background: #1976D2; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .logs {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin-bottom: 2px;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🚚❄️ Ice Truck Mobile SDK Test</h1>
+        
+        <div id="status" class="status loading">Initializing...</div>
+        
+        <div id="location-info" class="location-info" style="display: none;">
+            <div>📍 <strong>Latitude:</strong> <span id="lat">-</span></div>
+            <div>📍 <strong>Longitude:</strong> <span id="lng">-</span></div>
+            <div>🎯 <strong>Accuracy:</strong> <span id="accuracy">-</span></div>
+            <div>⏰ <strong>Last Update:</strong> <span id="timestamp">-</span></div>
+        </div>
+
+        <div class="buttons">
+            <button onclick="getCurrentLocation()">📍 Get Location</button>
+            <button onclick="trackLocation()">🚚 Track Location</button>
+            <button onclick="checkCache()">📦 Check Cache</button>
+            <button onclick="clearCache()">🗑️ Clear Cache</button>
+            <button onclick="testConnection()">🌐 Test Connection</button>
+            <button onclick="simulateMovement()">🏃 Simulate Movement</button>
+        </div>
+
+        <h3>📋 Activity Logs:</h3>
+        <div id="logs" class="logs"></div>
+    </div>
+
+    <script>
+        // Mock Mobile SDK for web testing
+        class IceTruckMobileSDK {
+            constructor(config) {
+                this.config = config;
+                this.isOnline = true;
+                this.cacheKey = 'ice-truck-cache';
+                this.init();
+            }
+
+            init() {
+                console.log('SDK initialized with config:', this.config);
+            }
+
+            async trackLocation(location) {
+                // Simulate API call
+                const response = await fetch(`${this.config.apiUrl}/api/v1/tracking/location`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.config.apiKey}`
+                    },
+                    body: JSON.stringify(location)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                // Cache location
+                this.cacheLocation(location);
+                return await response.json();
+            }
+
+            cacheLocation(location) {
+                const cached = JSON.parse(localStorage.getItem(this.cacheKey) || '[]');
+                cached.push(location);
+                
+                if (cached.length > this.config.cacheSize) {
+                    cached.splice(0, cached.length - this.config.cacheSize);
+                }
+                
+                localStorage.setItem(this.cacheKey, JSON.stringify(cached));
+            }
+
+            async getCacheStatus() {
+                const cached = JSON.parse(localStorage.getItem(this.cacheKey) || '[]');
+                const size = new Blob([localStorage.getItem(this.cacheKey) || '']).size;
+                
+                return {
+                    count: cached.length,
+                    size: `${(size / 1024).toFixed(2)} KB`
+                };
+            }
+
+            async clearCache() {
+                localStorage.removeItem(this.cacheKey);
+            }
+
+            isConnected() {
+                return this.isOnline;
+            }
+        }
+
+        // Initialize SDK
+        let sdk;
+        let currentLocation = null;
+
+        function initSDK() {
+            try {
+                sdk = new IceTruckMobileSDK({
+                    apiUrl: 'http://localhost:5000',
+                    apiKey: 'demo-key',
+                    cacheSize: 100,
+                    syncInterval: 30000,
+                    enableOfflineMode: true
+                });
+                
+                updateStatus('SDK Initialized', 'online');
+                addLog('✅ SDK initialized successfully');
+            } catch (error) {
+                updateStatus('SDK Error', 'offline');
+                addLog(`❌ SDK Error: ${error.message}`);
+            }
+        }
+
+        function updateStatus(message, type = 'loading') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = `Status: ${message}`;
+            statusEl.className = `status ${type}`;
+        }
+
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logsEl = document.getElementById('logs');
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logsEl.insertBefore(logEntry, logsEl.firstChild);
+            
+            // Keep only last 50 logs
+            while (logsEl.children.length > 50) {
+                logsEl.removeChild(logsEl.lastChild);
+            }
+        }
+
+        function updateLocationDisplay(location) {
+            document.getElementById('lat').textContent = location.coords.latitude.toFixed(6);
+            document.getElementById('lng').textContent = location.coords.longitude.toFixed(6);
+            document.getElementById('accuracy').textContent = `${location.coords.accuracy?.toFixed(1) || 'N/A'}m`;
+            document.getElementById('timestamp').textContent = new Date().toLocaleString();
+            document.getElementById('location-info').style.display = 'block';
+        }
+
+        async function getCurrentLocation() {
+            addLog('📍 Getting current location...');
+            
+            if (!navigator.geolocation) {
+                addLog('❌ Geolocation not supported');
+                return;
+            }
+
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    });
+                });
+
+                currentLocation = position;
+                updateLocationDisplay(position);
+                addLog(`✅ Location: ${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+                updateStatus('Location Retrieved', 'online');
+            } catch (error) {
+                addLog(`❌ Location error: ${error.message}`);
+                updateStatus('Location Error', 'offline');
+            }
+        }
+
+        async function trackLocation() {
+            if (!sdk || !currentLocation) {
+                addLog('❌ SDK or location not available');
+                return;
+            }
+
+            try {
+                addLog('🚚 Tracking location...');
+                const result = await sdk.trackLocation({
+                    truckId: 'web-test-truck-001',
+                    latitude: currentLocation.coords.latitude,
+                    longitude: currentLocation.coords.longitude,
+                    timestamp: new Date().toISOString(),
+                    accuracy: currentLocation.coords.accuracy
+                });
+                
+                addLog('✅ Location tracked successfully');
+                addLog(`📊 Response: ${JSON.stringify(result).substring(0, 100)}...`);
+                updateStatus('Location Tracked', 'online');
+            } catch (error) {
+                addLog(`❌ Tracking error: ${error.message}`);
+                updateStatus('Tracking Error', 'offline');
+            }
+        }
+
+        async function checkCache() {
+            if (!sdk) return;
+            
+            try {
+                const cacheStatus = await sdk.getCacheStatus();
+                addLog(`📦 Cache: ${cacheStatus.count} items, ${cacheStatus.size}`);
+            } catch (error) {
+                addLog(`❌ Cache error: ${error.message}`);
+            }
+        }
+
+        async function clearCache() {
+            if (!sdk) return;
+            
+            try {
+                await sdk.clearCache();
+                addLog('🗑️ Cache cleared');
+            } catch (error) {
+                addLog(`❌ Clear cache error: ${error.message}`);
+            }
+        }
+
+        function testConnection() {
+            if (!sdk) return;
+            
+            const isConnected = sdk.isConnected();
+            addLog(`🌐 Connection: ${isConnected ? 'Online' : 'Offline'}`);
+            updateStatus(isConnected ? 'Online' : 'Offline', isConnected ? 'online' : 'offline');
+        }
+
+        async function simulateMovement() {
+            if (!currentLocation) {
+                addLog('❌ Get location first');
+                return;
+            }
+
+            addLog('🏃 Starting movement simulation...');
+            
+            for (let i = 0; i < 5; i++) {
+                const lat = currentLocation.coords.latitude + (Math.random() - 0.5) * 0.001;
+                const lng = currentLocation.coords.longitude + (Math.random() - 0.5) * 0.001;
+                
+                try {
+                    await sdk.trackLocation({
+                        truckId: 'web-test-truck-001',
+                        latitude: lat,
+                        longitude: lng,
+                        timestamp: new Date().toISOString(),
+                        accuracy: 10
+                    });
+                    
+                    addLog(`🚚 Simulated position ${i + 1}: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (error) {
+                    addLog(`❌ Simulation error: ${error.message}`);
+                    break;
+                }
+            }
+            
+            addLog('✅ Movement simulation completed');
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            initSDK();
+            addLog('🌐 Web test environment loaded');
+        });
+    </script>
+</body>
+</html>

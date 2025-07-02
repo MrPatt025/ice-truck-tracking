@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🚚❄️ UAT Feedback Form</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .rating { display: flex; gap: 10px; margin: 10px 0; }
+        .star { font-size: 24px; cursor: pointer; color: #ddd; }
+        .star.active { color: #ffd700; }
+        textarea { width: 100%; height: 100px; }
+        button { background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🚚❄️ Ice Truck Tracking - UAT Feedback</h1>
+    
+    <form id="feedbackForm">
+        <h3>Dashboard Usability</h3>
+        <div class="rating" data-category="dashboard">
+            <span class="star" data-rating="1">⭐</span>
+            <span class="star" data-rating="2">⭐</span>
+            <span class="star" data-rating="3">⭐</span>
+            <span class="star" data-rating="4">⭐</span>
+            <span class="star" data-rating="5">⭐</span>
+        </div>
+        
+        <h3>Map Responsiveness</h3>
+        <div class="rating" data-category="map">
+            <span class="star" data-rating="1">⭐</span>
+            <span class="star" data-rating="2">⭐</span>
+            <span class="star" data-rating="3">⭐</span>
+            <span class="star" data-rating="4">⭐</span>
+            <span class="star" data-rating="5">⭐</span>
+        </div>
+        
+        <h3>Alert System</h3>
+        <div class="rating" data-category="alerts">
+            <span class="star" data-rating="1">⭐</span>
+            <span class="star" data-rating="2">⭐</span>
+            <span class="star" data-rating="3">⭐</span>
+            <span class="star" data-rating="4">⭐</span>
+            <span class="star" data-rating="5">⭐</span>
+        </div>
+        
+        <h3>Comments</h3>
+        <textarea placeholder="Please provide detailed feedback..."></textarea>
+        
+        <br><br>
+        <button type="submit">Submit Feedback</button>
+    </form>
+
+    <script>
+        const ratings = {};
+        
+        document.querySelectorAll('.rating').forEach(rating => {
+            rating.addEventListener('click', (e) => {
+                if (e.target.classList.contains('star')) {
+                    const category = rating.dataset.category;
+                    const value = parseInt(e.target.dataset.rating);
+                    ratings[category] = value;
+                    
+                    rating.querySelectorAll('.star').forEach((star, index) => {
+                        star.classList.toggle('active', index < value);
+                    });
+                }
+            });
+        });
+        
+        document.getElementById('feedbackForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log('Feedback:', ratings);
+            alert('Feedback submitted! Thank you.');
+        });
+    </script>
+</body>
+</html>

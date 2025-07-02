@@ -7,6 +7,7 @@ const alertRoutes = require('./alertRoutes');
 const shopRoutes = require('./shopRoutes');
 const healthRoutes = require('./healthRoutes');
 const featureFlagsRoutes = require('./featureFlagsRoutes');
+const mobileTestRoutes = require('./mobileTestRoutes');
 
 const router = express.Router();
 
@@ -23,5 +24,6 @@ router.use('/tracking', trackingRoutes);
 router.use('/alerts', alertRoutes);
 router.use('/shops', shopRoutes);
 router.use('/feature-flags', featureFlagsRoutes);
+router.use('/mobile', mobileTestRoutes);
 
 module.exports = router;
