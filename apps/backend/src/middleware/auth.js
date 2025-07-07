@@ -11,7 +11,7 @@ const signToken = (id, role) => {
 
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user.id, user.role);
-  
+
   // Remove password from output
   user.password = undefined;
 
@@ -19,8 +19,8 @@ const createSendToken = (user, statusCode, res) => {
     status: 'success',
     token,
     data: {
-      user
-    }
+      user,
+    },
   });
 };
 
@@ -42,7 +42,7 @@ const protect = async (req, res, next) => {
     // 3) Check if user still exists (simplified for this example)
     req.user = {
       id: decoded.id,
-      role: decoded.role
+      role: decoded.role,
     };
 
     next();
@@ -65,5 +65,5 @@ module.exports = {
   signToken,
   createSendToken,
   protect,
-  restrictTo
+  restrictTo,
 };

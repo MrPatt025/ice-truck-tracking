@@ -10,9 +10,11 @@ export function useFocusTrap(isActive: boolean) {
     const focusableElements = container.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     )
-    
+
     const firstElement = focusableElements[0] as HTMLElement
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
+    const lastElement = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement
 
     const handleTabKey = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return
@@ -32,7 +34,9 @@ export function useFocusTrap(isActive: boolean) {
 
     const handleEscapeKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        const closeButton = container.querySelector('[data-close]') as HTMLElement
+        const closeButton = container.querySelector(
+          '[data-close]'
+        ) as HTMLElement
         closeButton?.click()
       }
     }
@@ -51,15 +55,18 @@ export function useFocusTrap(isActive: boolean) {
 }
 
 export function useAnnouncer() {
-  const announce = (message: string, priority: 'polite' | 'assertive' = 'polite') => {
+  const announce = (
+    message: string,
+    priority: 'polite' | 'assertive' = 'polite'
+  ) => {
     const announcer = document.createElement('div')
     announcer.setAttribute('aria-live', priority)
     announcer.setAttribute('aria-atomic', 'true')
     announcer.className = 'sr-only'
     announcer.textContent = message
-    
+
     document.body.appendChild(announcer)
-    
+
     setTimeout(() => {
       document.body.removeChild(announcer)
     }, 1000)
@@ -82,7 +89,10 @@ export function useKeyboardNavigation(
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          currentIndex.current = Math.min(currentIndex.current + 1, items.length - 1)
+          currentIndex.current = Math.min(
+            currentIndex.current + 1,
+            items.length - 1
+          )
           break
         case 'ArrowUp':
           e.preventDefault()

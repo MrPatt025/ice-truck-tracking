@@ -11,4 +11,4 @@ class AlertService {
   }
 }
 
-module.exports = new AlertService(); 
+module.exports = new AlertService();

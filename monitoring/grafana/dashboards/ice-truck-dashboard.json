@@ -20,14 +20,14 @@
             "unit": "reqps",
             "thresholds": {
               "steps": [
-                {"color": "green", "value": null},
-                {"color": "yellow", "value": 100},
-                {"color": "red", "value": 500}
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 100 },
+                { "color": "red", "value": 500 }
               ]
             }
           }
         },
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
       },
       {
         "id": 2,
@@ -44,14 +44,14 @@
             "unit": "s",
             "thresholds": {
               "steps": [
-                {"color": "green", "value": null},
-                {"color": "yellow", "value": 0.3},
-                {"color": "red", "value": 1}
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 0.3 },
+                { "color": "red", "value": 1 }
               ]
             }
           }
         },
-        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
       }
     ],
     "time": {

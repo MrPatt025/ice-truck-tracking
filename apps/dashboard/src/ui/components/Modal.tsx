@@ -14,7 +14,14 @@ interface ModalProps {
   className?: string
 }
 
-export function Modal({ isOpen, onClose, title, size = 'md', children, className }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  size = 'md',
+  children,
+  className,
+}: ModalProps) {
   const containerRef = useFocusTrap(isOpen)
   const overlayRef = useRef<HTMLDivElement>(null)
 
@@ -48,10 +55,10 @@ export function Modal({ isOpen, onClose, title, size = 'md', children, className
   return createPortal(
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
+      className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4'
       onClick={handleOverlayClick}
-      role="dialog"
-      aria-modal="true"
+      role='dialog'
+      aria-modal='true'
       aria-labelledby={title ? 'modal-title' : undefined}
     >
       <div
@@ -61,28 +68,36 @@ export function Modal({ isOpen, onClose, title, size = 'md', children, className
           sizes[size],
           className
         )}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         {title && (
-          <div className="flex items-center justify-between p-6 border-b">
-            <h2 id="modal-title" className="text-xl font-semibold">
+          <div className='flex items-center justify-between p-6 border-b'>
+            <h2 id='modal-title' className='text-xl font-semibold'>
               {title}
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-              aria-label="Close modal"
+              className='text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded'
+              aria-label='Close modal'
               data-close
             >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className='w-6 h-6'
+                fill='none'
+                viewBox='0 0 24 24'
+                stroke='currentColor'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M6 18L18 6M6 6l12 12'
+                />
               </svg>
             </button>
           </div>
         )}
-        <div className="p-6">
-          {children}
-        </div>
+        <div className='p-6'>{children}</div>
       </div>
     </div>,
     document.body

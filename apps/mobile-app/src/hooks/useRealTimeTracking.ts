@@ -1,28 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useState, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 
 interface Truck {
-  id: string;
-  latitude: number;
-  longitude: number;
-  driver_name: string;
-  temperature: number;
-  speed: number;
-  status: 'active' | 'inactive';
+  id: string
+  latitude: number
+  longitude: number
+  driver_name: string
+  temperature: number
+  speed: number
+  status: 'active' | 'inactive'
 }
 
 export function useRealTimeTracking() {
-  const [trucks, setTrucks] = useState<Truck[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const { user } = useAuth();
+  const [trucks, setTrucks] = useState<Truck[]>([])
+  const [isConnected, setIsConnected] = useState(false)
+  const { user } = useAuth()
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) return
 
     // Mock WebSocket connection
     const mockConnection = () => {
-      setIsConnected(true);
-      
+      setIsConnected(true)
+
       // Mock truck data
       const mockTrucks: Truck[] = [
         {
@@ -36,8 +36,8 @@ export function useRealTimeTracking() {
         },
         {
           id: 'truck-002',
-          latitude: 13.7600 + (Math.random() - 0.5) * 0.01,
-          longitude: 100.5100 + (Math.random() - 0.5) * 0.01,
+          latitude: 13.76 + (Math.random() - 0.5) * 0.01,
+          longitude: 100.51 + (Math.random() - 0.5) * 0.01,
           driver_name: 'Jane Smith',
           temperature: -1.8,
           speed: 32,
@@ -45,16 +45,16 @@ export function useRealTimeTracking() {
         },
         {
           id: 'truck-003',
-          latitude: 13.7650 + (Math.random() - 0.5) * 0.01,
-          longitude: 100.5200 + (Math.random() - 0.5) * 0.01,
+          latitude: 13.765 + (Math.random() - 0.5) * 0.01,
+          longitude: 100.52 + (Math.random() - 0.5) * 0.01,
           driver_name: 'Mike Johnson',
           temperature: -3.2,
           speed: 0,
           status: 'inactive',
         },
-      ];
+      ]
 
-      setTrucks(mockTrucks);
+      setTrucks(mockTrucks)
 
       // Simulate real-time updates
       const interval = setInterval(() => {
@@ -66,21 +66,21 @@ export function useRealTimeTracking() {
             speed: Math.max(0, truck.speed + (Math.random() - 0.5) * 10),
             temperature: truck.temperature + (Math.random() - 0.5) * 0.5,
           }))
-        );
-      }, 5000);
+        )
+      }, 5000)
 
       return () => {
-        clearInterval(interval);
-        setIsConnected(false);
-      };
-    };
+        clearInterval(interval)
+        setIsConnected(false)
+      }
+    }
 
-    const cleanup = mockConnection();
-    return cleanup;
-  }, [user]);
+    const cleanup = mockConnection()
+    return cleanup
+  }, [user])
 
   return {
     trucks,
     isConnected,
-  };
+  }
 }

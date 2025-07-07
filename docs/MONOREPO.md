@@ -41,7 +41,7 @@ npx turbo run build --filter=@ice-truck/web
 ```
 ice-truck-tracking/
 ├── api/                 # @ice-truck/api
-├── web/                 # @ice-truck/web  
+├── web/                 # @ice-truck/web
 ├── mobile/              # @ice-truck/mobile
 ├── packages/
 │   ├── shared/          # @ice-truck/shared
@@ -54,7 +54,7 @@ ice-truck-tracking/
 ## Benefits
 
 - ✅ **One Install**: Single `npm install` for entire project
-- ✅ **Fast Builds**: Turborepo caching and parallelization  
+- ✅ **Fast Builds**: Turborepo caching and parallelization
 - ✅ **Shared Dependencies**: Hoisted node_modules
 - ✅ **Type Safety**: Shared types across workspaces
 - ✅ **CI Efficiency**: Cached builds in GitHub Actions

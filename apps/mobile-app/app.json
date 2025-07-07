@@ -11,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#2196F3"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.icetrucktracking.mobile"
@@ -34,10 +32,7 @@
       "favicon": "./assets/favicon.png"
     },
     "scheme": "ice-truck",
-    "plugins": [
-      "expo-location",
-      "expo-notifications"
-    ],
+    "plugins": ["expo-location", "expo-notifications"],
     "extra": {
       "eas": {
         "projectId": "ice-truck-mobile-project"

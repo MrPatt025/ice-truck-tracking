@@ -11,12 +11,12 @@ class WebSocketService {
   initialize(server) {
     this.io = new Server(server, {
       cors: {
-        origin: "*",
-        methods: ["GET", "POST"]
-      }
+        origin: '*',
+        methods: ['GET', 'POST'],
+      },
     });
 
-    this.io.on('connection', (socket) => {
+    this.io.on('connection', socket => {
       logger.info(`Client connected: ${socket.id}`);
       this.connectedClients.add(socket.id);
 
@@ -38,7 +38,7 @@ class WebSocketService {
         longitude: 100.5018 + (Math.random() - 0.5) * 0.01,
         temperature: -18 + Math.random() * 2,
         status: 'active',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       this.broadcast('truck-update', mockTruckData);

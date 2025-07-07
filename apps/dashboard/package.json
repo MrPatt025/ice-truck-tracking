@@ -15,7 +15,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run"
+    "cypress:run": "cypress run",
+    "analyze": "ANALYZE=true next build"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.17",

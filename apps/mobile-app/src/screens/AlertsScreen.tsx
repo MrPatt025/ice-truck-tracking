@@ -1,16 +1,22 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react'
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
 
 interface Alert {
-  id: string;
-  type: 'geofence' | 'temperature' | 'speed' | 'offline';
-  title: string;
-  message: string;
-  timestamp: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  read: boolean;
+  id: string
+  type: 'geofence' | 'temperature' | 'speed' | 'offline'
+  title: string
+  message: string
+  timestamp: string
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  read: boolean
 }
 
 const mockAlerts: Alert[] = [
@@ -32,36 +38,48 @@ const mockAlerts: Alert[] = [
     severity: 'medium',
     read: true,
   },
-];
+]
 
 export function AlertsScreen() {
   const getAlertIcon = (type: Alert['type']) => {
     switch (type) {
-      case 'temperature': return 'thermometer-outline';
-      case 'geofence': return 'location-outline';
-      case 'speed': return 'speedometer-outline';
-      case 'offline': return 'wifi-outline';
-      default: return 'alert-circle-outline';
+      case 'temperature':
+        return 'thermometer-outline'
+      case 'geofence':
+        return 'location-outline'
+      case 'speed':
+        return 'speedometer-outline'
+      case 'offline':
+        return 'wifi-outline'
+      default:
+        return 'alert-circle-outline'
     }
-  };
+  }
 
   const getSeverityColor = (severity: Alert['severity']) => {
     switch (severity) {
-      case 'low': return '#4CAF50';
-      case 'medium': return '#FF9800';
-      case 'high': return '#FF5722';
-      case 'critical': return '#F44336';
-      default: return '#9E9E9E';
+      case 'low':
+        return '#4CAF50'
+      case 'medium':
+        return '#FF9800'
+      case 'high':
+        return '#FF5722'
+      case 'critical':
+        return '#F44336'
+      default:
+        return '#9E9E9E'
     }
-  };
+  }
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleString();
-  };
+    const date = new Date(timestamp)
+    return date.toLocaleString()
+  }
 
   const renderAlert = ({ item }: { item: Alert }) => (
-    <TouchableOpacity style={[styles.alertItem, !item.read && styles.unreadAlert]}>
+    <TouchableOpacity
+      style={[styles.alertItem, !item.read && styles.unreadAlert]}
+    >
       <View style={styles.alertHeader}>
         <View style={styles.alertIconContainer}>
           <Ionicons
@@ -70,22 +88,26 @@ export function AlertsScreen() {
             color={getSeverityColor(item.severity)}
           />
         </View>
-        
+
         <View style={styles.alertContent}>
           <Text style={styles.alertTitle}>{item.title}</Text>
           <Text style={styles.alertMessage}>{item.message}</Text>
-          <Text style={styles.alertTimestamp}>{formatTimestamp(item.timestamp)}</Text>
+          <Text style={styles.alertTimestamp}>
+            {formatTimestamp(item.timestamp)}
+          </Text>
         </View>
-        
-        <View style={[
-          styles.severityBadge,
-          { backgroundColor: getSeverityColor(item.severity) }
-        ]}>
+
+        <View
+          style={[
+            styles.severityBadge,
+            { backgroundColor: getSeverityColor(item.severity) },
+          ]}
+        >
           <Text style={styles.severityText}>{item.severity}</Text>
         </View>
       </View>
     </TouchableOpacity>
-  );
+  )
 
   return (
     <SafeAreaView style={styles.container}>
@@ -95,16 +117,16 @@ export function AlertsScreen() {
           <Text style={styles.markAllText}>Mark All Read</Text>
         </TouchableOpacity>
       </View>
-      
+
       <FlatList
         data={mockAlerts}
         renderItem={renderAlert}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -195,4 +217,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textTransform: 'uppercase',
   },
-});
+})

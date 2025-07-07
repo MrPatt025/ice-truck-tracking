@@ -1,51 +1,56 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react'
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Switch,
+  Alert,
+} from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
 
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext'
 
 export function SettingsScreen() {
-  const { user, logout } = useAuth();
-  const [notifications, setNotifications] = React.useState(true);
-  const [darkMode, setDarkMode] = React.useState(false);
-  const [offlineSync, setOfflineSync] = React.useState(true);
+  const { user, logout } = useAuth()
+  const [notifications, setNotifications] = React.useState(true)
+  const [darkMode, setDarkMode] = React.useState(false)
+  const [offlineSync, setOfflineSync] = React.useState(true)
 
   const handleLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: logout },
-      ]
-    );
-  };
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: logout },
+    ])
+  }
 
-  const SettingItem = ({ 
-    icon, 
-    title, 
-    subtitle, 
-    onPress, 
-    rightElement 
+  const SettingItem = ({
+    icon,
+    title,
+    subtitle,
+    onPress,
+    rightElement,
   }: {
-    icon: string;
-    title: string;
-    subtitle?: string;
-    onPress?: () => void;
-    rightElement?: React.ReactNode;
+    icon: string
+    title: string
+    subtitle?: string
+    onPress?: () => void
+    rightElement?: React.ReactNode
   }) => (
     <TouchableOpacity style={styles.settingItem} onPress={onPress}>
       <View style={styles.settingLeft}>
-        <Ionicons name={icon as any} size={24} color="#2196F3" />
+        <Ionicons name={icon as any} size={24} color='#2196F3' />
         <View style={styles.settingText}>
           <Text style={styles.settingTitle}>{title}</Text>
           {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
         </View>
       </View>
-      {rightElement || <Ionicons name="chevron-forward" size={20} color="#ccc" />}
+      {rightElement || (
+        <Ionicons name='chevron-forward' size={20} color='#ccc' />
+      )}
     </TouchableOpacity>
-  );
+  )
 
   return (
     <SafeAreaView style={styles.container}>
@@ -57,7 +62,7 @@ export function SettingsScreen() {
       <View style={styles.section}>
         <View style={styles.profileSection}>
           <View style={styles.avatar}>
-            <Ionicons name="person" size={32} color="white" />
+            <Ionicons name='person' size={32} color='white' />
           </View>
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.name}</Text>
@@ -70,11 +75,11 @@ export function SettingsScreen() {
       {/* Preferences */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Preferences</Text>
-        
+
         <SettingItem
-          icon="notifications-outline"
-          title="Push Notifications"
-          subtitle="Receive alerts and updates"
+          icon='notifications-outline'
+          title='Push Notifications'
+          subtitle='Receive alerts and updates'
           rightElement={
             <Switch
               value={notifications}
@@ -83,11 +88,11 @@ export function SettingsScreen() {
             />
           }
         />
-        
+
         <SettingItem
-          icon="moon-outline"
-          title="Dark Mode"
-          subtitle="Use dark theme"
+          icon='moon-outline'
+          title='Dark Mode'
+          subtitle='Use dark theme'
           rightElement={
             <Switch
               value={darkMode}
@@ -96,11 +101,11 @@ export function SettingsScreen() {
             />
           }
         />
-        
+
         <SettingItem
-          icon="sync-outline"
-          title="Offline Sync"
-          subtitle="Sync data when offline"
+          icon='sync-outline'
+          title='Offline Sync'
+          subtitle='Sync data when offline'
           rightElement={
             <Switch
               value={offlineSync}
@@ -114,35 +119,35 @@ export function SettingsScreen() {
       {/* App Info */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>About</Text>
-        
+
         <SettingItem
-          icon="information-circle-outline"
-          title="App Version"
-          subtitle="1.0.0"
+          icon='information-circle-outline'
+          title='App Version'
+          subtitle='1.0.0'
         />
-        
+
         <SettingItem
-          icon="help-circle-outline"
-          title="Help & Support"
-          subtitle="Get help and contact support"
+          icon='help-circle-outline'
+          title='Help & Support'
+          subtitle='Get help and contact support'
         />
-        
+
         <SettingItem
-          icon="document-text-outline"
-          title="Privacy Policy"
-          subtitle="Read our privacy policy"
+          icon='document-text-outline'
+          title='Privacy Policy'
+          subtitle='Read our privacy policy'
         />
       </View>
 
       {/* Sign Out */}
       <View style={styles.section}>
         <TouchableOpacity style={styles.signOutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={24} color="#F44336" />
+          <Ionicons name='log-out-outline' size={24} color='#F44336' />
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -247,4 +252,4 @@ const styles = StyleSheet.create({
     color: '#F44336',
     fontWeight: '600',
   },
-});
+})

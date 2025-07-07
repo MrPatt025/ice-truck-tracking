@@ -5,11 +5,13 @@ React Native Expo app for real-time ice truck tracking.
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - Expo CLI: `npm install -g @expo/cli`
 - EAS CLI: `npm install -g eas-cli`
 
 ### Development
+
 ```bash
 # Install dependencies
 npm install
@@ -24,6 +26,7 @@ npm run web
 ```
 
 ### Building
+
 ```bash
 # Development build
 eas build --profile development --platform android
@@ -35,6 +38,7 @@ eas build --profile production --platform all
 ## 📱 Features
 
 ### ✅ Core Features
+
 - **Authentication**: Secure login with JWT tokens
 - **Real-time Tracking**: Live truck locations on map
 - **Offline Support**: Queue actions when offline
@@ -43,6 +47,7 @@ eas build --profile production --platform all
 - **Settings**: User preferences and app configuration
 
 ### 🗺️ Map Features
+
 - Interactive map with truck markers
 - Real-time location updates
 - Geofence visualization
@@ -50,12 +55,14 @@ eas build --profile production --platform all
 - Map style switching (standard/satellite)
 
 ### 🔔 Notifications
+
 - Push notifications for alerts
 - Deep linking support
 - In-app notification handling
 - Background notification processing
 
 ### 🎨 UI/UX
+
 - Light/Dark theme support
 - Responsive design for phones and tablets
 - Native navigation with bottom tabs
@@ -64,6 +71,7 @@ eas build --profile production --platform all
 ## 🏗️ Architecture
 
 ### Project Structure
+
 ```
 src/
 ├── components/     # Reusable UI components
@@ -77,6 +85,7 @@ src/
 ```
 
 ### Key Technologies
+
 - **React Native**: Cross-platform mobile framework
 - **Expo**: Development platform and tools
 - **React Navigation**: Navigation library
@@ -87,11 +96,13 @@ src/
 ## 🧪 Testing
 
 ### Unit Tests
+
 ```bash
 npm test
 ```
 
 ### E2E Tests (Detox)
+
 ```bash
 # Build for testing
 detox build --configuration ios.sim.debug
@@ -103,6 +114,7 @@ detox test --configuration ios.sim.debug
 ## 🚀 Deployment
 
 ### App Store Deployment
+
 ```bash
 # Build for production
 eas build --profile production --platform ios
@@ -112,6 +124,7 @@ eas submit --platform ios
 ```
 
 ### Google Play Deployment
+
 ```bash
 # Build for production
 eas build --profile production --platform android
@@ -121,6 +134,7 @@ eas submit --platform android
 ```
 
 ### OTA Updates
+
 ```bash
 # Publish update
 eas update --branch production --message "Bug fixes and improvements"
@@ -129,20 +143,25 @@ eas update --branch production --message "Bug fixes and improvements"
 ## 🔧 Configuration
 
 ### Environment Variables
+
 Create `.env` file:
+
 ```
 API_BASE_URL=https://api.icetrucktracking.com
 MAPBOX_ACCESS_TOKEN=your_mapbox_token
 ```
 
 ### Deep Linking
+
 App supports deep links with scheme `ice-truck://`:
+
 - `ice-truck://alert/123` - Open specific alert
 - `ice-truck://truck/456` - View truck details
 
 ## 📊 Performance
 
 ### Optimization Features
+
 - Code splitting and lazy loading
 - Image optimization
 - Bundle size optimization
@@ -150,6 +169,7 @@ App supports deep links with scheme `ice-truck://`:
 - Smooth 60fps animations
 
 ### Monitoring
+
 - Crash reporting with Sentry
 - Performance monitoring
 - User analytics
@@ -158,6 +178,7 @@ App supports deep links with scheme `ice-truck://`:
 ## 🔒 Security
 
 ### Security Features
+
 - JWT token authentication
 - Secure token storage
 - API request encryption
@@ -167,12 +188,14 @@ App supports deep links with scheme `ice-truck://`:
 ## 📱 Platform Support
 
 ### iOS
+
 - iOS 13.0+
 - iPhone and iPad support
 - Native iOS components
 - App Store ready
 
 ### Android
+
 - Android 6.0+ (API 23)
 - Phone and tablet support
 - Material Design components

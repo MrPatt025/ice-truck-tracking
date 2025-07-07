@@ -1,10 +1,10 @@
 const { AppError } = require('./errorHandler');
 
 // Simple validation without Joi
-const validate = (schema) => {
+const validate = schema => {
   return (req, res, next) => {
     const { body } = req;
-    
+
     // Basic validation for login
     if (schema.name === 'login') {
       if (!body.username || !body.password) {
@@ -17,7 +17,7 @@ const validate = (schema) => {
         return next(new AppError('Password must be at least 6 characters', 400));
       }
     }
-    
+
     next();
   };
 };
@@ -29,10 +29,10 @@ const schemas = {
   truck: { name: 'truck' },
   tracking: { name: 'tracking' },
   alert: { name: 'alert' },
-  shop: { name: 'shop' }
+  shop: { name: 'shop' },
 };
 
 module.exports = {
   validate,
-  schemas
+  schemas,
 };

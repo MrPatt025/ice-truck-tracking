@@ -101,6 +101,7 @@ cp nginx/nginx.prod.conf nginx/nginx.conf
 Create `.env` files for each service:
 
 **Backend (.env)**
+
 ```env
 NODE_ENV=production
 PORT=5000
@@ -110,6 +111,7 @@ REDIS_URL=redis://redis:6379
 ```
 
 **Dashboard (.env.local)**
+
 ```env
 NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 NEXT_PUBLIC_WS_URL=wss://api.yourdomain.com
@@ -117,6 +119,7 @@ NEXT_PUBLIC_MAPBOX_TOKEN=your-mapbox-token
 ```
 
 **Notification Service (.env)**
+
 ```env
 PORT=3002
 TWILIO_ACCOUNT_SID=your-twilio-sid
@@ -185,6 +188,7 @@ aws ecs update-service --cluster ice-truck-cluster --service ice-truck-dashboard
 ## 🧪 Testing
 
 ### Unit Tests
+
 ```bash
 # Backend tests
 cd backend && npm test
@@ -197,6 +201,7 @@ npm run test:coverage
 ```
 
 ### E2E Tests
+
 ```bash
 # Start services
 docker-compose up -d
@@ -206,6 +211,7 @@ cd dashboard && npm run cypress:run
 ```
 
 ### Load Testing
+
 ```bash
 # Install k6
 brew install k6  # macOS
@@ -219,8 +225,9 @@ k6 run tests/load/api-load-test.js
 ## 📱 SDK Usage
 
 ### Edge SDK (Node.js)
+
 ```javascript
-const { IceTruckEdgeSDK } = require('@ice-truck/edge-sdk');
+const { IceTruckEdgeSDK } = require('@ice-truck/edge-sdk')
 
 const sdk = new IceTruckEdgeSDK({
   apiUrl: 'https://api.yourdomain.com',
@@ -230,7 +237,7 @@ const sdk = new IceTruckEdgeSDK({
   bufferSize: 1000,
   syncInterval: 30000,
   retryAttempts: 3,
-});
+})
 
 await sdk.trackTruck({
   truckId: 'TRUCK001',
@@ -239,12 +246,13 @@ await sdk.trackTruck({
   temperature: -2.5,
   speed: 45,
   timestamp: new Date().toISOString(),
-});
+})
 ```
 
 ### Mobile SDK (React Native)
+
 ```javascript
-import { init } from '@ice-truck/mobile-sdk';
+import { init } from '@ice-truck/mobile-sdk'
 
 const sdk = init({
   apiUrl: 'https://api.yourdomain.com',
@@ -252,14 +260,14 @@ const sdk = init({
   cacheSize: 500,
   syncInterval: 60000,
   enableOfflineMode: true,
-});
+})
 
 await sdk.trackLocation({
   truckId: 'TRUCK001',
   latitude: 13.7563,
   longitude: 100.5018,
   timestamp: new Date().toISOString(),
-});
+})
 ```
 
 ## 🔧 Troubleshooting
@@ -267,6 +275,7 @@ await sdk.trackLocation({
 ### Common Issues
 
 1. **Docker build fails**
+
    ```bash
    # Clear Docker cache
    docker system prune -a
@@ -274,10 +283,11 @@ await sdk.trackLocation({
    ```
 
 2. **Database connection issues**
+
    ```bash
    # Check database logs
    docker-compose logs postgres
-   
+
    # Reset database
    docker-compose down -v
    docker-compose up -d postgres
@@ -293,12 +303,14 @@ await sdk.trackLocation({
 ### Performance Optimization
 
 1. **Enable Redis caching**
+
    ```bash
    # Check Redis connection
    docker-compose exec redis redis-cli ping
    ```
 
 2. **Database optimization**
+
    ```sql
    -- Add indexes for better performance
    CREATE INDEX idx_truck_locations_timestamp ON truck_locations(timestamp);
@@ -314,6 +326,7 @@ await sdk.trackLocation({
 ## 📈 Scaling
 
 ### Horizontal Scaling
+
 ```bash
 # Scale ECS services
 aws ecs update-service --cluster ice-truck-cluster --service ice-truck-backend --desired-count 5
@@ -323,6 +336,7 @@ kubectl scale deployment backend --replicas=5 -n ice-truck
 ```
 
 ### Database Scaling
+
 ```bash
 # Enable read replicas
 aws rds create-db-instance-read-replica \

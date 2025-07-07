@@ -74,6 +74,6 @@ export const theme = {
     lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
     xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
   },
-} as const;
+} as const
 
-export type Theme = typeof theme;
+export type Theme = typeof theme

@@ -5,11 +5,7 @@ module.exports = {
     es2022: true,
     node: true,
   },
-  extends: [
-    'eslint:recommended',
-    '@typescript-eslint/recommended',
-    'prettier',
-  ],
+  extends: ['eslint:recommended', '@typescript-eslint/recommended', 'prettier'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2022,
@@ -33,7 +29,7 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-non-null-assertion': 'warn',
-    
+
     // Import
     'import/order': [
       'error',
@@ -55,12 +51,12 @@ module.exports = {
     ],
     'import/no-unresolved': 'error',
     'import/no-cycle': 'error',
-    
+
     // Security
     'security/detect-object-injection': 'warn',
     'security/detect-non-literal-regexp': 'warn',
     'security/detect-unsafe-regex': 'error',
-    
+
     // General
     'no-console': 'warn',
     'no-debugger': 'error',
@@ -108,4 +104,4 @@ module.exports = {
       },
     },
   },
-};
+}

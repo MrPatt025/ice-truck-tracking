@@ -8,18 +8,21 @@ We welcome contributions to the Ice Truck Tracking System! This document provide
 
 1. **Fork the repository**
 2. **Clone your fork**
+
    ```bash
    git clone https://github.com/your-username/ice-truck-tracking.git
    cd ice-truck-tracking
    ```
 
 3. **Install dependencies**
+
    ```bash
    cd backend
    npm install
    ```
 
 4. **Setup environment**
+
    ```bash
    cp .env.example .env
    # Edit .env with your configuration
@@ -33,6 +36,7 @@ We welcome contributions to the Ice Truck Tracking System! This document provide
 ## 🔄 Development Workflow
 
 1. **Create a feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -43,6 +47,7 @@ We welcome contributions to the Ice Truck Tracking System! This document provide
    - Update documentation as needed
 
 3. **Run quality checks**
+
    ```bash
    npm run lint
    npm run test
@@ -68,6 +73,7 @@ We follow [Conventional Commits](https://conventionalcommits.org/):
 - `chore:` Maintenance tasks
 
 ### Examples
+
 ```bash
 feat: add driver location tracking
 fix: resolve authentication token expiration
@@ -83,6 +89,7 @@ test: add unit tests for auth controller
 - Maintain test coverage above 80%
 
 ### Test Structure
+
 ```
 tests/
 ├─ unit/           # Unit tests
@@ -123,22 +130,27 @@ src/
    - Updates documentation if needed
 
 2. **PR Template**:
+
    ```markdown
    ## Description
+
    Brief description of changes
 
    ## Type of Change
+
    - [ ] Bug fix
    - [ ] New feature
    - [ ] Documentation update
    - [ ] Refactoring
 
    ## Testing
+
    - [ ] Unit tests pass
    - [ ] Integration tests pass
    - [ ] Manual testing completed
 
    ## Checklist
+
    - [ ] Code follows style guidelines
    - [ ] Self-review completed
    - [ ] Documentation updated
@@ -178,6 +190,7 @@ For new features:
 ## 🏆 Recognition
 
 Contributors will be recognized in:
+
 - README.md contributors section
 - Release notes
 - Project documentation

@@ -14,14 +14,16 @@ export function usePerformanceMonitor(componentName: string) {
 
   useEffect(() => {
     mountTime.current = performance.now()
-    
+
     return () => {
       const unmountTime = performance.now()
       const totalLifetime = unmountTime - mountTime.current
-      
+
       // Log performance metrics
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[Performance] ${componentName} lifetime: ${totalLifetime.toFixed(2)}ms`)
+        console.log(
+          `[Performance] ${componentName} lifetime: ${totalLifetime.toFixed(2)}ms`
+        )
       }
     }
   }, [componentName])
@@ -32,7 +34,7 @@ export function usePerformanceMonitor(componentName: string) {
 
   const endRender = () => {
     const renderTime = performance.now() - renderStartTime.current
-    
+
     const metrics: PerformanceMetrics = {
       renderTime,
       componentName,
@@ -41,7 +43,7 @@ export function usePerformanceMonitor(componentName: string) {
 
     // Send to analytics in production
     if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'component_render', {
+      ;(window as any).gtag('event', 'component_render', {
         component_name: componentName,
         render_time: renderTime,
         custom_parameter: 'performance_monitoring',
@@ -50,7 +52,9 @@ export function usePerformanceMonitor(componentName: string) {
 
     // Log in development
     if (process.env.NODE_ENV === 'development' && renderTime > 16) {
-      console.warn(`[Performance] ${componentName} slow render: ${renderTime.toFixed(2)}ms`)
+      console.warn(
+        `[Performance] ${componentName} slow render: ${renderTime.toFixed(2)}ms`
+      )
     }
 
     return metrics
@@ -64,8 +68,8 @@ export function useWebVitals() {
     if (typeof window === 'undefined') return
 
     // Measure Core Web Vitals
-    const observer = new PerformanceObserver((list) => {
-      list.getEntries().forEach((entry) => {
+    const observer = new PerformanceObserver(list => {
+      list.getEntries().forEach(entry => {
         const metric = {
           name: entry.name,
           value: entry.startTime,
@@ -74,7 +78,7 @@ export function useWebVitals() {
 
         // Send to analytics
         if ((window as any).gtag) {
-          (window as any).gtag('event', 'web_vital', {
+          ;(window as any).gtag('event', 'web_vital', {
             metric_name: metric.name,
             metric_value: metric.value,
             page_path: window.location.pathname,
@@ -86,7 +90,9 @@ export function useWebVitals() {
     })
 
     try {
-      observer.observe({ entryTypes: ['navigation', 'paint', 'largest-contentful-paint'] })
+      observer.observe({
+        entryTypes: ['navigation', 'paint', 'largest-contentful-paint'],
+      })
     } catch (error) {
       console.warn('Performance Observer not supported:', error)
     }

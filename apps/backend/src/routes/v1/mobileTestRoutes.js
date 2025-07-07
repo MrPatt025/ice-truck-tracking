@@ -7,49 +7,49 @@ const mobileDevices = new Map();
 // Register mobile device
 router.post('/register', (req, res) => {
   const { deviceId, deviceInfo } = req.body;
-  
+
   mobileDevices.set(deviceId, {
     ...deviceInfo,
     registeredAt: new Date().toISOString(),
     lastSeen: new Date().toISOString(),
-    status: 'active'
+    status: 'active',
   });
 
   res.json({
     success: true,
     message: 'Device registered successfully',
-    deviceId
+    deviceId,
   });
 });
 
 // Get device status
 router.get('/device/:deviceId', (req, res) => {
   const device = mobileDevices.get(req.params.deviceId);
-  
+
   if (!device) {
     return res.status(404).json({
       success: false,
-      message: 'Device not found'
+      message: 'Device not found',
     });
   }
 
   res.json({
     success: true,
-    device
+    device,
   });
 });
 
 // Update device location
 router.post('/location', (req, res) => {
   const { deviceId, latitude, longitude, accuracy, timestamp } = req.body;
-  
+
   if (mobileDevices.has(deviceId)) {
     const device = mobileDevices.get(deviceId);
     device.lastLocation = {
       latitude,
       longitude,
       accuracy,
-      timestamp
+      timestamp,
     };
     device.lastSeen = new Date().toISOString();
   }
@@ -63,7 +63,7 @@ router.post('/location', (req, res) => {
   res.json({
     success: true,
     message: 'Location updated successfully',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -71,13 +71,13 @@ router.post('/location', (req, res) => {
 router.get('/devices', (req, res) => {
   const devices = Array.from(mobileDevices.entries()).map(([id, device]) => ({
     deviceId: id,
-    ...device
+    ...device,
   }));
 
   res.json({
     success: true,
     devices,
-    count: devices.length
+    count: devices.length,
   });
 });
 
@@ -87,18 +87,18 @@ router.get('/ping', (req, res) => {
     success: true,
     message: 'Mobile API is working',
     timestamp: new Date().toISOString(),
-    server: 'Ice Truck Tracking API'
+    server: 'Ice Truck Tracking API',
   });
 });
 
 // Simulate offline sync
 router.post('/sync', (req, res) => {
   const { deviceId, locations } = req.body;
-  
+
   if (!Array.isArray(locations)) {
     return res.status(400).json({
       success: false,
-      message: 'Locations must be an array'
+      message: 'Locations must be an array',
     });
   }
 
@@ -111,7 +111,7 @@ router.post('/sync', (req, res) => {
     success: true,
     message: `Synced ${locations.length} locations`,
     processed: locations.length,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 

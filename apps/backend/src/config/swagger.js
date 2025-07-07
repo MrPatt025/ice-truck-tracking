@@ -6,8 +6,8 @@ const specs = {
   info: {
     title: 'Ice Truck Tracking API',
     version: '1.0.0',
-    description: 'Professional Ice Truck Tracking System API'
-  }
+    description: 'Professional Ice Truck Tracking System API',
+  },
 };
 
 const swaggerUi = {
@@ -18,13 +18,13 @@ const swaggerUi = {
       swagger: 'Available at /api-docs',
       endpoints: {
         health: '/api/v1/health',
-        auth: '/api/v1/auth/login'
-      }
+        auth: '/api/v1/auth/login',
+      },
     });
-  }
+  },
 };
 
 module.exports = {
   specs,
-  swaggerUi
+  swaggerUi,
 };

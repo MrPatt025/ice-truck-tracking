@@ -3,13 +3,13 @@ global:
   evaluation_interval: 15s
 
 rule_files:
-  - "alert_rules.yml"
+  - 'alert_rules.yml'
 
 alerting:
   alertmanagers:
     - static_configs:
         - targets:
-          - alertmanager:9093
+            - alertmanager:9093
 
 scrape_configs:
   - job_name: 'ice-truck-api'
@@ -17,7 +17,7 @@ scrape_configs:
       - targets: ['backend:5000']
     metrics_path: '/metrics'
     scrape_interval: 5s
-    
+
   - job_name: 'ice-truck-dashboard'
     static_configs:
       - targets: ['dashboard:3000']

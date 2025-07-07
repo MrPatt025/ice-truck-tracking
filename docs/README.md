@@ -61,6 +61,7 @@ ice-truck-tracking/
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - Docker & Docker Compose
 - AWS CLI (for cloud deployment)
@@ -83,16 +84,17 @@ cd dashboard && npm install && npm run dev
 
 ### 2. Access Services
 
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| **Dashboard** | http://localhost:3000 | - |
-| **API** | http://localhost:5000 | admin/admin123 |
-| **Grafana** | http://localhost:3001 | admin/admin123 |
-| **Prometheus** | http://localhost:9090 | - |
+| Service        | URL                   | Credentials    |
+| -------------- | --------------------- | -------------- |
+| **Dashboard**  | http://localhost:3000 | -              |
+| **API**        | http://localhost:5000 | admin/admin123 |
+| **Grafana**    | http://localhost:3001 | admin/admin123 |
+| **Prometheus** | http://localhost:9090 | -              |
 
 ## 🎯 Key Features
 
 ### 📱 Real-Time Dashboard
+
 - **Live Map**: Mapbox integration with truck markers
 - **WebSocket**: Real-time location updates
 - **Dark Mode**: Responsive, mobile-first design
@@ -100,6 +102,7 @@ cd dashboard && npm install && npm run dev
 - **Analytics**: KPIs and performance metrics
 
 ### 🔧 Backend API
+
 - **REST API**: Full CRUD operations
 - **WebSocket**: Real-time data streaming
 - **Authentication**: JWT-based security
@@ -107,12 +110,14 @@ cd dashboard && npm install && npm run dev
 - **Health Checks**: Kubernetes-ready endpoints
 
 ### 📊 Observability
+
 - **Metrics**: Request rate, latency, errors
 - **Dashboards**: Grafana visualizations
 - **Alerts**: Slack/email notifications
 - **SLOs**: 99.9% uptime, <300ms P95 latency
 
 ### 🤖 AI Analytics
+
 - **Route Optimization**: Genetic algorithm TSP solver
 - **Anomaly Detection**: GPS jumps, temperature spikes
 - **Predictive Analytics**: Maintenance scheduling
@@ -121,11 +126,13 @@ cd dashboard && npm install && npm run dev
 ## 🏗️ Deployment
 
 ### Docker Compose (Development)
+
 ```bash
 docker-compose up --build
 ```
 
 ### AWS ECS (Production)
+
 ```bash
 cd infra/terraform
 terraform init
@@ -134,6 +141,7 @@ terraform apply
 ```
 
 ### Kubernetes
+
 ```bash
 kubectl apply -f infra/k8s/
 ```
@@ -141,11 +149,13 @@ kubectl apply -f infra/k8s/
 ## 📈 Monitoring & Alerts
 
 ### Grafana Dashboards
+
 - **API Performance**: Request rate, latency, errors
 - **Business Metrics**: Active trucks, deliveries
 - **Infrastructure**: CPU, memory, disk usage
 
 ### Alert Rules
+
 - High error rate (>10%)
 - High latency (P95 >300ms)
 - Service down
@@ -153,6 +163,7 @@ kubectl apply -f infra/k8s/
 - Temperature anomalies
 
 ### SLO Monitoring
+
 ```yaml
 Availability: ≥99.9%
 Latency: P95 <300ms, P99 <1s
@@ -162,6 +173,7 @@ Error Rate: <1%
 ## 🔬 Analytics & ML
 
 ### Route Optimization
+
 ```python
 # Genetic Algorithm TSP
 optimized_routes = optimize_routes(tracking_data)
@@ -169,6 +181,7 @@ fuel_savings = calculate_savings(original, optimized)
 ```
 
 ### Anomaly Detection
+
 ```python
 # Real-time anomaly detection
 anomalies = detect_anomalies(telemetry_data)
@@ -176,6 +189,7 @@ send_alerts(anomalies)
 ```
 
 ### Data Pipeline
+
 ```
 GPS Data → S3 → Lambda → DynamoDB → Dashboard
          ↓
@@ -204,6 +218,7 @@ npm run test:e2e        # Cypress tests
 ## 📋 API Documentation
 
 ### Authentication
+
 ```bash
 POST /api/v1/auth/login
 {
@@ -213,14 +228,16 @@ POST /api/v1/auth/login
 ```
 
 ### Real-time WebSocket
+
 ```javascript
 const socket = io('ws://localhost:5000')
-socket.on('truck_update', (data) => {
+socket.on('truck_update', data => {
   updateMap(data)
 })
 ```
 
 ### Key Endpoints
+
 - `GET /api/v1/health` - Health check
 - `GET /api/v1/trucks` - List trucks
 - `GET /api/v1/tracking` - GPS data
@@ -265,6 +282,7 @@ Strategy: Blue-Green deployment with health checks
 ```
 
 ### GitHub Actions
+
 - **Quality Gates**: ESLint, tests, security scans
 - **Docker Build**: Multi-stage, cached builds
 - **AWS Deploy**: ECS with Terraform
@@ -272,12 +290,12 @@ Strategy: Blue-Green deployment with health checks
 
 ## 📊 Performance Benchmarks
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| **Response Time** | <300ms P95 | 150ms |
-| **Throughput** | 1000 req/s | 1200 req/s |
-| **Availability** | 99.9% | 99.95% |
-| **Error Rate** | <1% | 0.1% |
+| Metric            | Target     | Current    |
+| ----------------- | ---------- | ---------- |
+| **Response Time** | <300ms P95 | 150ms      |
+| **Throughput**    | 1000 req/s | 1200 req/s |
+| **Availability**  | 99.9%      | 99.95%     |
+| **Error Rate**    | <1%        | 0.1%       |
 
 ## 🤝 Contributing
 
@@ -304,6 +322,6 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
 ✅ **Full Observability** with Prometheus, Grafana, and alerts  
 ✅ **AI Analytics** with route optimization and anomaly detection  
 ✅ **Cloud-Ready** infrastructure with Docker and Kubernetes  
-✅ **Enterprise Security** with JWT, rate limiting, and validation  
+✅ **Enterprise Security** with JWT, rate limiting, and validation
 
 **Built with ❤️ for efficient ice truck operations worldwide! 🚚❄️**

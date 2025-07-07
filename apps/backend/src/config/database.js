@@ -9,7 +9,7 @@ class Database {
 
   connect() {
     return new Promise((resolve, reject) => {
-      this.db = new sqlite3.Database(this.dbPath, (err) => {
+      this.db = new sqlite3.Database(this.dbPath, err => {
         if (err) {
           console.error('Database connection error:', err);
           reject(err);
@@ -34,7 +34,7 @@ class Database {
           }
         });
       } else {
-        this.db.run(sql, params, function(err) {
+        this.db.run(sql, params, function (err) {
           if (err) {
             console.error('Query error:', err, 'SQL:', sql);
             reject(err);
@@ -118,7 +118,7 @@ class Database {
         resolved_at DATETIME,
         FOREIGN KEY (truck_id) REFERENCES trucks(id),
         FOREIGN KEY (driver_id) REFERENCES drivers(id)
-      )`
+      )`,
     ];
 
     for (const sql of tables) {
@@ -130,30 +130,33 @@ class Database {
   async seedData() {
     try {
       const bcrypt = require('bcrypt');
-      
+
       // Check if users exist
       const users = await this.query('SELECT COUNT(*) as count FROM users');
-      
+
       if (users[0].count === 0) {
         // Create test users
         const adminPass = await bcrypt.hash('admin123', 12);
         const driverPass = await bcrypt.hash('driver123', 12);
         const ownerPass = await bcrypt.hash('owner123', 12);
-        
-        await this.query(`
+
+        await this.query(
+          `
           INSERT INTO users (username, password, role) VALUES 
           ('admin', ?, 'admin'),
           ('driver1', ?, 'driver'),
           ('driver2', ?, 'driver'),
           ('owner', ?, 'owner')
-        `, [adminPass, driverPass, driverPass, ownerPass]);
-        
+        `,
+          [adminPass, driverPass, driverPass, ownerPass]
+        );
+
         console.log('✅ Test users created');
       }
 
       // Check if test data exists
       const drivers = await this.query('SELECT COUNT(*) as count FROM drivers');
-      
+
       if (drivers[0].count === 0) {
         // Insert comprehensive test data
         await this.query(`
@@ -219,5 +222,5 @@ module.exports = {
   connect: () => database.connect(),
   createTables: () => database.createTables(),
   seedData: () => database.seedData(),
-  close: () => database.close()
+  close: () => database.close(),
 };

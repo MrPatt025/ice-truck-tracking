@@ -10,20 +10,20 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "install": "pnpm install",
-    "build": "turbo run build",
+    "build": "npx turbo run build",
     "build:all": "turbo run build --force",
-    "test": "turbo run test",
+    "test": "npx turbo run test",
     "test:unit": "turbo run test:unit",
     "test:integration": "turbo run test:integration",
     "test:e2e": "turbo run test:e2e",
     "test:coverage": "turbo run test:coverage",
-    "test:mutation": "turbo run test:mutation",
+    "test:mutation": "npx turbo run test:mutation",
     "test:all": "turbo run test test:unit test:integration test:e2e",
     "dev": "turbo run dev --parallel",
     "start": "turbo run start",
-    "lint": "turbo run lint",
-    "lint:fix": "turbo run lint:fix",
-    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
+    "lint": "npx eslint . --ext .js,.ts,.tsx",
+    "lint:fix": "npx eslint . --ext .js,.ts,.tsx --fix",
+    "format": "npx prettier --write \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean && rimraf node_modules .turbo",
@@ -43,11 +43,17 @@
     "health:check": "node scripts/health-check.js",
     "load:test": "node scripts/load-test.js",
     "setup": "pnpm install && turbo run build && npm run docker:up",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "bootstrap": "npm install && npm run build --workspaces && npm run lint --workspaces && npm test --workspaces",
+    "commitlint": "commitlint --from=HEAD~1",
+    "release": "npx semantic-release",
+    "security:snyk": "npx snyk test",
+    "analyze:frontend": "cd apps/dashboard && npm run analyze",
+    "snyk:auth": "npx snyk auth"
   },
   "devDependencies": {
-    "@commitlint/cli": "^18.4.3",
-    "@commitlint/config-conventional": "^18.4.3",
+    "@commitlint/cli": "^18.0.0",
+    "@commitlint/config-conventional": "^18.0.0",
     "@stryker-mutator/core": "^8.0.0",
     "@stryker-mutator/jest-runner": "^8.0.0",
     "@stryker-mutator/typescript-checker": "^8.0.0",
@@ -62,13 +68,17 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-security": "^1.7.1",
-    "husky": "^8.0.3",
-    "lint-staged": "^15.2.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^16.1.2",
     "npm-check-updates": "^16.14.12",
     "prettier": "^3.1.1",
     "rimraf": "^5.0.5",
     "turbo": "^1.11.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "conventional-changelog-cli": "^4.1.0",
+    "stryker-cli": "^6.0.0",
+    "snyk": "^1.1300.0",
+    "next-bundle-analyzer": "^1.0.0"
   },
   "engines": {
     "node": ">=18.19.0",
@@ -94,5 +104,17 @@
   "bugs": {
     "url": "https://github.com/ice-truck-tracking/monorepo/issues"
   },
-  "homepage": "https://github.com/ice-truck-tracking/monorepo#readme"
+  "homepage": "https://github.com/ice-truck-tracking/monorepo#readme",
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/github",
+      "@semantic-release/npm"
+    ]
+  }
 }

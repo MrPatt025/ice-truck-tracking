@@ -1,33 +1,36 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react'
+import { View, Text, StyleSheet } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
 
 interface ConnectionStatusProps {
-  isConnected: boolean;
-  queueCount?: number;
+  isConnected: boolean
+  queueCount?: number
 }
 
-export function ConnectionStatus({ isConnected, queueCount = 0 }: ConnectionStatusProps) {
+export function ConnectionStatus({
+  isConnected,
+  queueCount = 0,
+}: ConnectionStatusProps) {
   return (
-    <View style={[
-      styles.container,
-      { backgroundColor: isConnected ? '#4CAF50' : '#F44336' }
-    ]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: isConnected ? '#4CAF50' : '#F44336' },
+      ]}
+    >
       <Ionicons
         name={isConnected ? 'wifi' : 'wifi-outline'}
         size={16}
-        color="white"
+        color='white'
       />
-      <Text style={styles.text}>
-        {isConnected ? 'Online' : 'Offline'}
-      </Text>
+      <Text style={styles.text}>{isConnected ? 'Online' : 'Offline'}</Text>
       {!isConnected && queueCount > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{queueCount}</Text>
         </View>
       )}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -56,4 +59,4 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
   },
-});
+})

@@ -1,16 +1,16 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react'
 
 interface ThemeContextType {
-  isDark: boolean;
-  toggleTheme: () => void;
+  isDark: boolean
+  toggleTheme: () => void
   colors: {
-    primary: string;
-    background: string;
-    surface: string;
-    text: string;
-    textSecondary: string;
-    border: string;
-  };
+    primary: string
+    background: string
+    surface: string
+    text: string
+    textSecondary: string
+    border: string
+  }
 }
 
 const lightColors = {
@@ -20,7 +20,7 @@ const lightColors = {
   text: '#333333',
   textSecondary: '#666666',
   border: '#e0e0e0',
-};
+}
 
 const darkColors = {
   primary: '#2196F3',
@@ -29,32 +29,32 @@ const darkColors = {
   text: '#ffffff',
   textSecondary: '#cccccc',
   border: '#333333',
-};
+}
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(false)
 
   const toggleTheme = () => {
-    setIsDark(!isDark);
-  };
+    setIsDark(!isDark)
+  }
 
-  const colors = isDark ? darkColors : lightColors;
+  const colors = isDark ? darkColors : lightColors
 
   const value: ThemeContextType = {
     isDark,
     toggleTheme,
     colors,
-  };
+  }
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext);
+  const context = useContext(ThemeContext)
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error('useTheme must be used within a ThemeProvider')
   }
-  return context;
+  return context
 }

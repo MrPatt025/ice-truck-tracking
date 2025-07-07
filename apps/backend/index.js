@@ -27,7 +27,10 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' ws: wss:;");
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' ws: wss:;"
+  );
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
   next();
@@ -42,7 +45,7 @@ const corsOptions = {
     const allowedOrigins = [
       config.CLIENT_URL,
       'http://localhost:3000',
-      'https://ice-truck-tracking.com'
+      'https://ice-truck-tracking.com',
     ];
 
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -54,7 +57,7 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
 };
 
 app.use(cors(corsOptions));
@@ -85,7 +88,7 @@ app.get('/api/v1/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     version: '1.0.0',
-    websocket_clients: websocketService.getConnectedClientsCount()
+    websocket_clients: websocketService.getConnectedClientsCount(),
   });
 });
 
@@ -96,8 +99,8 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     status: 'healthy',
     endpoints: {
-      health: '/api/v1/health'
-    }
+      health: '/api/v1/health',
+    },
   });
 });
 

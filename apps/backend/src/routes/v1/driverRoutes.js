@@ -16,7 +16,7 @@ router.get('/', async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       results: drivers.length,
-      data: drivers
+      data: drivers,
     });
   } catch (error) {
     next(error);
@@ -32,7 +32,7 @@ router.get('/:id', async (req, res, next) => {
     }
     res.status(200).json({
       status: 'success',
-      data: driver
+      data: driver,
     });
   } catch (error) {
     next(error);
@@ -45,7 +45,7 @@ router.post('/', restrictTo('admin'), validate(schemas.driver), async (req, res,
     const newDriver = await driverService.createDriver(req.body);
     res.status(201).json({
       status: 'success',
-      data: newDriver
+      data: newDriver,
     });
   } catch (error) {
     next(error);

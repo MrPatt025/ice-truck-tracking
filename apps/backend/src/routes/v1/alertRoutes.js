@@ -14,7 +14,7 @@ router.get('/', async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       results: alerts.length,
-      data: alerts
+      data: alerts,
     });
   } catch (error) {
     next(error);
@@ -26,7 +26,7 @@ router.post('/', validate(schemas.alert), async (req, res, next) => {
     const newAlert = await alertService.createAlert(req.body);
     res.status(201).json({
       status: 'success',
-      data: newAlert
+      data: newAlert,
     });
   } catch (error) {
     next(error);

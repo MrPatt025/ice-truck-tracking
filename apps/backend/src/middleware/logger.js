@@ -14,8 +14,8 @@ const logger = (req, res, next) => {
   const userAgent = req.get('User-Agent') || '';
 
   const logEntry = `${timestamp} - ${method} ${url} - IP: ${ip} - ${userAgent}\n`;
-  
-  fs.appendFile(path.join(logDir, 'access.log'), logEntry, (err) => {
+
+  fs.appendFile(path.join(logDir, 'access.log'), logEntry, err => {
     if (err) console.error('Logging error:', err);
   });
 
@@ -26,8 +26,8 @@ const logger = (req, res, next) => {
 const logError = (error, req) => {
   const timestamp = new Date().toISOString();
   const errorEntry = `${timestamp} - ERROR: ${error.message}\nStack: ${error.stack}\nURL: ${req.originalUrl}\nMethod: ${req.method}\n\n`;
-  
-  fs.appendFile(path.join(logDir, 'error.log'), errorEntry, (err) => {
+
+  fs.appendFile(path.join(logDir, 'error.log'), errorEntry, err => {
     if (err) console.error('Error logging failed:', err);
   });
 };

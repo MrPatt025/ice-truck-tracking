@@ -5,12 +5,12 @@ const generalLimiter = rateLimit({
   windowMs: config.RATE_LIMIT_WINDOW_MS,
   max: config.RATE_LIMIT_MAX_REQUESTS,
   message: {
-    error: 'Too many requests from this IP, please try again later.'
+    error: 'Too many requests from this IP, please try again later.',
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 
 module.exports = {
-  generalLimiter
+  generalLimiter,
 };

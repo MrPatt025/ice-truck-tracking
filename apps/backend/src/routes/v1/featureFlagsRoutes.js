@@ -9,7 +9,7 @@ const featureFlags = [
     description: 'Enable real-time GPS tracking updates',
     enabled: true,
     environment: ['development', 'production'],
-    rolloutPercentage: 100
+    rolloutPercentage: 100,
   },
   {
     key: 'geofence-alerts',
@@ -17,7 +17,7 @@ const featureFlags = [
     description: 'Enable geofence violation alerts',
     enabled: true,
     environment: ['development', 'production'],
-    rolloutPercentage: 85
+    rolloutPercentage: 85,
   },
   {
     key: 'temperature-monitoring',
@@ -25,7 +25,7 @@ const featureFlags = [
     description: 'Monitor truck temperature sensors',
     enabled: true,
     environment: ['development', 'production'],
-    rolloutPercentage: 90
+    rolloutPercentage: 90,
   },
   {
     key: 'new-dashboard-ui',
@@ -33,15 +33,15 @@ const featureFlags = [
     description: 'Enable new dashboard interface',
     enabled: false,
     environment: ['development'],
-    rolloutPercentage: 25
-  }
+    rolloutPercentage: 25,
+  },
 ];
 
 // Get all feature flags
 router.get('/', (req, res) => {
   res.json({
     success: true,
-    flags: featureFlags
+    flags: featureFlags,
   });
 });
 
@@ -52,7 +52,7 @@ router.get('/:key/check', (req, res) => {
     return res.status(404).json({
       success: false,
       enabled: false,
-      message: 'Feature flag not found'
+      message: 'Feature flag not found',
     });
   }
 
@@ -63,7 +63,7 @@ router.get('/:key/check', (req, res) => {
   res.json({
     success: true,
     enabled,
-    rolloutPercentage: flag.rolloutPercentage
+    rolloutPercentage: flag.rolloutPercentage,
   });
 });
 
@@ -73,7 +73,7 @@ router.patch('/:key', (req, res) => {
   if (!flag) {
     return res.status(404).json({
       success: false,
-      message: 'Feature flag not found'
+      message: 'Feature flag not found',
     });
   }
 
@@ -83,7 +83,7 @@ router.patch('/:key', (req, res) => {
 
   res.json({
     success: true,
-    data: flag
+    data: flag,
   });
 });
 
@@ -93,7 +93,7 @@ router.patch('/:key/rollout', (req, res) => {
   if (!flag) {
     return res.status(404).json({
       success: false,
-      message: 'Feature flag not found'
+      message: 'Feature flag not found',
     });
   }
 
@@ -103,7 +103,7 @@ router.patch('/:key/rollout', (req, res) => {
 
   res.json({
     success: true,
-    data: flag
+    data: flag,
   });
 });
 

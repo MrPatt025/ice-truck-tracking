@@ -1,8 +1,12 @@
 # Ice Truck Tracking System 🚚❄️
 
+[![CI](https://github.com/ice-truck-tracking/ice-truck-tracking/actions/workflows/ci.yml/badge.svg)](https://github.com/ice-truck-tracking/ice-truck-tracking/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/ice-truck-tracking/ice-truck-tracking/badge.svg?branch=main)](https://coveralls.io/github/ice-truck-tracking/ice-truck-tracking?branch=main)
+[![Lint](https://img.shields.io/badge/lint-passing-brightgreen)](./)
+[![Release](https://img.shields.io/github/v/release/ice-truck-tracking/ice-truck-tracking)](https://github.com/ice-truck-tracking/ice-truck-tracking/releases)
+
 **Professional Enterprise-Grade Monorepo for Real-Time Ice Truck Tracking**
 
-[![CI/CD Pipeline](https://github.com/ice-truck-tracking/ice-truck-tracking/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/ice-truck-tracking/ice-truck-tracking/actions)
 [![Security Audit](https://img.shields.io/badge/security-audit-passing-brightgreen)](https://github.com/ice-truck-tracking/ice-truck-tracking/security)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -46,6 +50,7 @@ ice-truck-tracking/
 ## 🛠️ Available Scripts
 
 ### Development
+
 ```bash
 npm run dev          # Start all services in development mode
 npm run build        # Build all packages
@@ -56,6 +61,7 @@ npm run type-check   # Type check all TypeScript code
 ```
 
 ### Quality Assurance
+
 ```bash
 npm run security:audit      # Run comprehensive security audit
 npm run test:comprehensive  # Run full test suite
@@ -63,6 +69,7 @@ npm run load:test          # Run performance and load tests
 ```
 
 ### Deployment
+
 ```bash
 npm run docker:build       # Build all Docker images
 npm run docker:up          # Start all services with Docker Compose
@@ -73,16 +80,19 @@ npm run deploy             # Deploy to production
 ## 🏗️ Architecture
 
 ### Backend Services
+
 - **API Server**: Express.js with TypeScript, JWT authentication, rate limiting
 - **WebSocket Service**: Real-time tracking updates
 - **Notification Service**: Push notifications and alerts
 - **Route Optimizer**: Genetic algorithm for route optimization
 
 ### Frontend Applications
+
 - **Dashboard**: Next.js with TypeScript, real-time maps, analytics
 - **Mobile App**: React Native with Expo, offline support, push notifications
 
 ### Infrastructure
+
 - **Containerization**: Multi-stage Docker builds with shared base images
 - **Orchestration**: Kubernetes with Helm charts
 - **CI/CD**: GitHub Actions with parallel builds and caching
@@ -91,6 +101,7 @@ npm run deploy             # Deploy to production
 ## 🔧 Technology Stack
 
 ### Backend
+
 - **Runtime**: Node.js 18+
 - **Framework**: Express.js with TypeScript
 - **Database**: PostgreSQL with Prisma ORM
@@ -98,12 +109,14 @@ npm run deploy             # Deploy to production
 - **Message Queue**: RabbitMQ for async processing
 
 ### Frontend
+
 - **Web**: Next.js 14, React 19, TypeScript
 - **Mobile**: React Native 0.79, Expo SDK 53
 - **Styling**: Tailwind CSS, styled-components
 - **State Management**: Zustand, React Query
 
 ### DevOps
+
 - **Build Tool**: Turborepo for monorepo management
 - **Package Manager**: npm 9+ with workspaces
 - **Containerization**: Docker with multi-stage builds
@@ -121,13 +134,16 @@ npm run deploy             # Deploy to production
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - npm 9+
 - Docker Desktop
 - Git
 
 ### Development Setup
+
 1. **Clone and Install**
+
    ```bash
    git clone https://github.com/ice-truck-tracking/ice-truck-tracking.git
    cd ice-truck-tracking
@@ -135,12 +151,14 @@ npm run deploy             # Deploy to production
    ```
 
 2. **Environment Setup**
+
    ```bash
    cp .env.example .env.local
    # Edit .env.local with your configuration
    ```
 
 3. **Start Development**
+
    ```bash
    npm run dev
    ```
@@ -151,6 +169,7 @@ npm run deploy             # Deploy to production
    - Mobile App: Scan QR code with Expo Go
 
 ### Production Deployment
+
 ```bash
 # Build and deploy all services
 npm run build
@@ -174,6 +193,7 @@ npm run deploy
 We welcome contributions! Please see our [Contributing Guidelines](./docs/CONTRIBUTING.md) for details.
 
 ### Development Workflow
+
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
 3. Make your changes and run tests: `npm run test`

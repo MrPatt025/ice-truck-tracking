@@ -14,7 +14,7 @@ router.get('/', async (req, res, next) => {
     res.status(200).json({
       status: 'success',
       results: shops.length,
-      data: shops
+      data: shops,
     });
   } catch (error) {
     next(error);
@@ -29,7 +29,7 @@ router.get('/:id', async (req, res, next) => {
     }
     res.status(200).json({
       status: 'success',
-      data: shop
+      data: shop,
     });
   } catch (error) {
     next(error);
@@ -41,7 +41,7 @@ router.post('/', restrictTo('admin'), validate(schemas.shop), async (req, res, n
     const newShop = await shopService.createShop(req.body);
     res.status(201).json({
       status: 'success',
-      data: newShop
+      data: newShop,
     });
   } catch (error) {
     next(error);

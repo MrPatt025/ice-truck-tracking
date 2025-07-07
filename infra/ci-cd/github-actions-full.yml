@@ -2,9 +2,9 @@ name: Ice Truck Tracking CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io
@@ -16,205 +16,205 @@ jobs:
     strategy:
       matrix:
         node-version: [18.x, 20.x]
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: |
-          backend/package-lock.json
-          dashboard/package-lock.json
-    
-    - name: Install backend dependencies
-      run: |
-        cd backend
-        npm ci
-    
-    - name: Install dashboard dependencies
-      run: |
-        cd dashboard
-        npm ci
-    
-    - name: Lint backend
-      run: |
-        cd backend
-        npm run lint:check || true
-    
-    - name: Lint dashboard
-      run: |
-        cd dashboard
-        npm run lint
-    
-    - name: Run backend unit tests
-      run: |
-        cd backend
-        npm run test:unit
-    
-    - name: Run backend integration tests
-      run: |
-        cd backend
-        npm run test:integration
-    
-    - name: Run dashboard tests
-      run: |
-        cd dashboard
-        npm test
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: |
+            backend/package-lock.json
+            dashboard/package-lock.json
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Install dashboard dependencies
+        run: |
+          cd dashboard
+          npm ci
+
+      - name: Lint backend
+        run: |
+          cd backend
+          npm run lint:check || true
+
+      - name: Lint dashboard
+        run: |
+          cd dashboard
+          npm run lint
+
+      - name: Run backend unit tests
+        run: |
+          cd backend
+          npm run test:unit
+
+      - name: Run backend integration tests
+        run: |
+          cd backend
+          npm run test:integration
+
+      - name: Run dashboard tests
+        run: |
+          cd dashboard
+          npm test
 
   security-scan:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-    
-    - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v2
-      if: always()
-      with:
-        sarif_file: 'trivy-results.sarif'
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
 
   build-and-push:
     needs: [lint-and-test, security-scan]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
       image-digest: ${{ steps.build.outputs.digest }}
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ github.repository }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=sha,prefix={{branch}}-
-          type=raw,value=latest,enable={{is_default_branch}}
-    
-    - name: Build and push backend image
-      id: build
-      uses: docker/build-push-action@v5
-      with:
-        context: ./backend
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        platforms: linux/amd64,linux/arm64
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push backend image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
 
   deploy-staging:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
     environment: staging
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-west-2
-    
-    - name: Deploy to ECS Staging
-      run: |
-        aws ecs update-service \
-          --cluster ice-truck-staging \
-          --service ice-truck-api \
-          --force-new-deployment
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Deploy to ECS Staging
+        run: |
+          aws ecs update-service \
+            --cluster ice-truck-staging \
+            --service ice-truck-api \
+            --force-new-deployment
 
   deploy-production:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-west-2
-    
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: 1.6.0
-    
-    - name: Terraform Init
-      run: |
-        cd infra/terraform
-        terraform init
-    
-    - name: Terraform Plan
-      run: |
-        cd infra/terraform
-        terraform plan -var="image_tag=${{ needs.build-and-push.outputs.image-tag }}"
-    
-    - name: Terraform Apply
-      run: |
-        cd infra/terraform
-        terraform apply -auto-approve -var="image_tag=${{ needs.build-and-push.outputs.image-tag }}"
-    
-    - name: Blue-Green Deployment
-      run: |
-        # Switch traffic to new version
-        aws elbv2 modify-listener \
-          --listener-arn ${{ secrets.ALB_LISTENER_ARN }} \
-          --default-actions Type=forward,TargetGroupArn=${{ secrets.GREEN_TARGET_GROUP_ARN }}
-        
-        # Wait for health checks
-        sleep 60
-        
-        # Verify deployment
-        curl -f https://api.ice-truck-tracking.com/api/v1/health || exit 1
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        run: |
+          cd infra/terraform
+          terraform init
+
+      - name: Terraform Plan
+        run: |
+          cd infra/terraform
+          terraform plan -var="image_tag=${{ needs.build-and-push.outputs.image-tag }}"
+
+      - name: Terraform Apply
+        run: |
+          cd infra/terraform
+          terraform apply -auto-approve -var="image_tag=${{ needs.build-and-push.outputs.image-tag }}"
+
+      - name: Blue-Green Deployment
+        run: |
+          # Switch traffic to new version
+          aws elbv2 modify-listener \
+            --listener-arn ${{ secrets.ALB_LISTENER_ARN }} \
+            --default-actions Type=forward,TargetGroupArn=${{ secrets.GREEN_TARGET_GROUP_ARN }}
+
+          # Wait for health checks
+          sleep 60
+
+          # Verify deployment
+          curl -f https://api.ice-truck-tracking.com/api/v1/health || exit 1
 
   notify:
     needs: [deploy-production]
     runs-on: ubuntu-latest
     if: always()
-    
+
     steps:
-    - name: Notify Slack
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        fields: repo,message,commit,author,action,eventName,ref,workflow
+      - name: Notify Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow

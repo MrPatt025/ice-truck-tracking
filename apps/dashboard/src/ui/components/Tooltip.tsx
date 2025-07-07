@@ -12,7 +12,13 @@ interface TooltipProps {
   className?: string
 }
 
-export function Tooltip({ content, children, position = 'top', delay = 500, className }: TooltipProps) {
+export function Tooltip({
+  content,
+  children,
+  position = 'top',
+  delay = 500,
+  className,
+}: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
   const triggerRef = useRef<HTMLDivElement>(null)
@@ -24,10 +30,10 @@ export function Tooltip({ content, children, position = 'top', delay = 500, clas
         const rect = triggerRef.current.getBoundingClientRect()
         const scrollX = window.pageXOffset
         const scrollY = window.pageYOffset
-        
+
         let x = rect.left + scrollX + rect.width / 2
         let y = rect.top + scrollY
-        
+
         switch (position) {
           case 'top':
             y -= 8
@@ -44,7 +50,7 @@ export function Tooltip({ content, children, position = 'top', delay = 500, clas
             y += rect.height / 2
             break
         }
-        
+
         setTooltipPosition({ x, y })
         setIsVisible(true)
       }
@@ -75,9 +81,11 @@ export function Tooltip({ content, children, position = 'top', delay = 500, clas
 
   const arrowClasses = {
     top: 'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gray-900',
-    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-900',
+    bottom:
+      'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-900',
     left: 'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gray-900',
-    right: 'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-900',
+    right:
+      'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-900',
   }
 
   return (
@@ -88,34 +96,35 @@ export function Tooltip({ content, children, position = 'top', delay = 500, clas
         onMouseLeave={hideTooltip}
         onFocus={showTooltip}
         onBlur={hideTooltip}
-        className="inline-block"
+        className='inline-block'
       >
         {children}
       </div>
-      
-      {isVisible && createPortal(
-        <div
-          className={cn(
-            'absolute z-50 px-2 py-1 text-sm text-white bg-gray-900 rounded shadow-lg pointer-events-none',
-            positionClasses[position],
-            className
-          )}
-          style={{
-            left: tooltipPosition.x,
-            top: tooltipPosition.y,
-          }}
-          role="tooltip"
-        >
-          {content}
+
+      {isVisible &&
+        createPortal(
           <div
             className={cn(
-              'absolute w-0 h-0 border-4',
-              arrowClasses[position]
+              'absolute z-50 px-2 py-1 text-sm text-white bg-gray-900 rounded shadow-lg pointer-events-none',
+              positionClasses[position],
+              className
             )}
-          />
-        </div>,
-        document.body
-      )}
+            style={{
+              left: tooltipPosition.x,
+              top: tooltipPosition.y,
+            }}
+            role='tooltip'
+          >
+            {content}
+            <div
+              className={cn(
+                'absolute w-0 h-0 border-4',
+                arrowClasses[position]
+              )}
+            />
+          </div>,
+          document.body
+        )}
     </>
   )
 }

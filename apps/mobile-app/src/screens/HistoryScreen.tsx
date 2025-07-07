@@ -1,15 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react'
+import { View, Text, StyleSheet, FlatList } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
 
 interface HistoryItem {
-  id: string;
-  date: string;
-  route: string;
-  distance: number;
-  duration: string;
-  status: 'completed' | 'cancelled';
+  id: string
+  date: string
+  route: string
+  distance: number
+  duration: string
+  status: 'completed' | 'cancelled'
 }
 
 const mockHistory: HistoryItem[] = [
@@ -29,55 +29,60 @@ const mockHistory: HistoryItem[] = [
     duration: '1h 45m',
     status: 'completed',
   },
-];
+]
 
 export function HistoryScreen() {
   const renderHistoryItem = ({ item }: { item: HistoryItem }) => (
     <View style={styles.historyItem}>
       <View style={styles.historyHeader}>
         <Text style={styles.route}>{item.route}</Text>
-        <View style={[
-          styles.statusBadge,
-          { backgroundColor: item.status === 'completed' ? '#4CAF50' : '#F44336' }
-        ]}>
+        <View
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor:
+                item.status === 'completed' ? '#4CAF50' : '#F44336',
+            },
+          ]}
+        >
           <Text style={styles.statusText}>{item.status}</Text>
         </View>
       </View>
-      
+
       <View style={styles.historyDetails}>
         <View style={styles.detailItem}>
-          <Ionicons name="calendar-outline" size={16} color="#666" />
+          <Ionicons name='calendar-outline' size={16} color='#666' />
           <Text style={styles.detailText}>{item.date}</Text>
         </View>
-        
+
         <View style={styles.detailItem}>
-          <Ionicons name="speedometer-outline" size={16} color="#666" />
+          <Ionicons name='speedometer-outline' size={16} color='#666' />
           <Text style={styles.detailText}>{item.distance} km</Text>
         </View>
-        
+
         <View style={styles.detailItem}>
-          <Ionicons name="time-outline" size={16} color="#666" />
+          <Ionicons name='time-outline' size={16} color='#666' />
           <Text style={styles.detailText}>{item.duration}</Text>
         </View>
       </View>
     </View>
-  );
+  )
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Trip History</Text>
       </View>
-      
+
       <FlatList
         data={mockHistory}
         renderItem={renderHistoryItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
       />
     </SafeAreaView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -147,4 +152,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-});
+})
