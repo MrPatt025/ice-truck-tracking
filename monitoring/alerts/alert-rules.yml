@@ -1,47 +1,212 @@
 groups:
-  - name: ice-truck-alerts
+  - name: ice-truck-tracking
     rules:
-      - alert: HighErrorRate
-        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
-        for: 2m
-        labels:
-          severity: critical
-        annotations:
-          summary: "High error rate detected"
-          description: "Error rate is {{ $value }} errors per second"
-
-      - alert: HighLatency
-        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.3
-        for: 5m
-        labels:
-          severity: warning
-        annotations:
-          summary: "High latency detected"
-          description: "95th percentile latency is {{ $value }}s"
-
-      - alert: ServiceDown
+      # API Health Alerts
+      - alert: APIDown
         expr: up{job="ice-truck-api"} == 0
         for: 1m
         labels:
           severity: critical
+          service: api
         annotations:
-          summary: "Service is down"
-          description: "Ice truck API service has been down for more than 1 minute"
+          summary: "Ice Truck API is down"
+          description: "The API service has been down for more than 1 minute"
 
-      - alert: DatabaseConnectionHigh
-        expr: db_connections_active / db_connections_max > 0.8
+      - alert: APIHighErrorRate
+        expr: rate(http_requests_total{job="ice-truck-api", status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors per second"
+
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="ice-truck-api"}[5m])) > 0.3
         for: 5m
         labels:
           severity: warning
+          service: api
         annotations:
-          summary: "Database connection pool usage high"
-          description: "Database connection usage is {{ $value | humanizePercentage }}"
+          summary: "High API latency detected"
+          description: "95th percentile latency is {{ $value }} seconds"
 
-      - alert: TruckOffline
-        expr: increase(truck_offline_total[10m]) > 0
-        for: 0m
+      # WebSocket Alerts
+      - alert: WebSocketClientsLow
+        expr: websocket_connected_clients < 1
+        for: 2m
         labels:
           severity: warning
+          service: websocket
         annotations:
-          summary: "Truck went offline"
-          description: "{{ $labels.truck_id }} has gone offline"
+          summary: "No WebSocket clients connected"
+          description: "No real-time clients are connected to the WebSocket service"
+
+      - alert: WebSocketConnectionErrors
+        expr: rate(websocket_connection_errors_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: websocket
+        annotations:
+          summary: "WebSocket connection errors detected"
+          description: "{{ $value }} connection errors per second"
+
+      # Dashboard Alerts
+      - alert: DashboardDown
+        expr: up{job="ice-truck-dashboard"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: dashboard
+        annotations:
+          summary: "Dashboard is down"
+          description: "The web dashboard has been down for more than 1 minute"
+
+      # System Resource Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is {{ $value }}%"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value }}%"
+
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High disk usage detected"
+          description: "Disk usage is {{ $value }}%"
+
+      # Container Alerts
+      - alert: ContainerRestarting
+        expr: increase(container_restarts_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: container
+        annotations:
+          summary: "Container is restarting frequently"
+          description: "Container {{ $labels.name }} has restarted {{ $value }} times in the last 5 minutes"
+
+      - alert: ContainerHighMemoryUsage
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: container
+        annotations:
+          summary: "Container using high memory"
+          description: "Container {{ $labels.name }} is using {{ $value }}% of memory limit"
+
+      # Security Alerts
+      - alert: HighRateLimitHits
+        expr: rate(rate_limit_hits_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "High rate limiting activity detected"
+          description: "{{ $value }} rate limit hits per second - possible attack"
+
+      - alert: FailedAuthenticationAttempts
+        expr: rate(auth_failed_attempts_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "High number of failed authentication attempts"
+          description: "{{ $value }} failed auth attempts per second - possible brute force attack"
+
+      # Database Alerts
+      - alert: DatabaseConnectionErrors
+        expr: rate(db_connection_errors_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Database connection errors detected"
+          description: "{{ $value }} database connection errors per second"
+
+      - alert: DatabaseSlowQueries
+        expr: rate(db_query_duration_seconds_sum[5m]) / rate(db_query_duration_seconds_count[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average query duration is {{ $value }} seconds"
+
+      # Network Alerts
+      - alert: HighNetworkErrors
+        expr: rate(node_network_receive_errs_total[5m]) + rate(node_network_transmit_errs_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+          service: network
+        annotations:
+          summary: "Network errors detected"
+          description: "{{ $value }} network errors per second"
+
+      # Business Logic Alerts
+      - alert: NoTruckUpdates
+        expr: rate(truck_location_updates_total[5m]) == 0
+        for: 2m
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "No truck location updates received"
+          description: "No truck location updates in the last 2 minutes"
+
+      - alert: LowActiveTrucks
+        expr: active_trucks_count < 1
+        for: 5m
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "No active trucks detected"
+          description: "No trucks are currently active in the system"
+
+      # Notification Service Alerts
+      - alert: NotificationServiceDown
+        expr: up{job="notification"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: notification
+        annotations:
+          summary: "Notification service is down"
+          description: "The notification service has been down for more than 1 minute"
+
+      - alert: NotificationDeliveryFailures
+        expr: rate(notification_delivery_failures_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: notification
+        annotations:
+          summary: "Notification delivery failures detected"
+          description: "{{ $value }} notification failures per second"

@@ -43,7 +43,7 @@ services:
   # Notification Service
   notification:
     build:
-      context: ./services/notification
+      context: ./sdk/edge
       dockerfile: Dockerfile
     ports:
       - "3002:3002"
