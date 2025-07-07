@@ -1,7 +1,7 @@
 const express = require('express');
 const { protect, restrictTo } = require('../../middleware/auth');
 const { validate, schemas } = require('../../middleware/validation');
-const db = require('../../config/database');
+const shopService = require('../../services/shopService');
 const { AppError } = require('../../middleware/errorHandler');
 
 const router = express.Router();
@@ -10,7 +10,7 @@ router.use(protect);
 
 router.get('/', async (req, res, next) => {
   try {
-    const shops = await db.query('SELECT * FROM shops ORDER BY shop_name');
+    const shops = await shopService.getAllShops();
     res.status(200).json({
       status: 'success',
       results: shops.length,
@@ -23,15 +23,13 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const shops = await db.query('SELECT * FROM shops WHERE id = ?', [req.params.id]);
-    
-    if (shops.length === 0) {
+    const shop = await shopService.getShopById(req.params.id);
+    if (!shop) {
       return next(new AppError('Shop not found', 404));
     }
-
     res.status(200).json({
       status: 'success',
-      data: shops[0]
+      data: shop
     });
   } catch (error) {
     next(error);
@@ -40,17 +38,10 @@ router.get('/:id', async (req, res, next) => {
 
 router.post('/', restrictTo('admin'), validate(schemas.shop), async (req, res, next) => {
   try {
-    const result = await db.query(
-      `INSERT INTO shops (shop_code, shop_name, phone, address, latitude, longitude) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [req.body.shop_code, req.body.shop_name, req.body.phone, req.body.address, req.body.latitude, req.body.longitude]
-    );
-
-    const newShop = await db.query('SELECT * FROM shops WHERE id = ?', [result.lastID]);
-
+    const newShop = await shopService.createShop(req.body);
     res.status(201).json({
       status: 'success',
-      data: newShop[0]
+      data: newShop
     });
   } catch (error) {
     next(error);
