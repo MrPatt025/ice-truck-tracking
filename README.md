@@ -1,216 +1,205 @@
-# Ice Truck Tracking System 🚚❄️
+# 🚚❄️ Ice Truck Tracking Platform
 
 [![CI](https://github.com/ice-truck-tracking/ice-truck-tracking/actions/workflows/ci.yml/badge.svg)](https://github.com/ice-truck-tracking/ice-truck-tracking/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/ice-truck-tracking/ice-truck-tracking/badge.svg?branch=main)](https://coveralls.io/github/ice-truck-tracking/ice-truck-tracking?branch=main)
 [![Lint](https://img.shields.io/badge/lint-passing-brightgreen)](./)
-[![Release](https://img.shields.io/github/v/release/ice-truck-tracking/ice-truck-tracking)](https://github.com/ice-truck-tracking/ice-truck-tracking/releases)
-
-**Professional Enterprise-Grade Monorepo for Real-Time Ice Truck Tracking**
-
 [![Security Audit](https://img.shields.io/badge/security-audit-passing-brightgreen)](https://github.com/ice-truck-tracking/ice-truck-tracking/security)
+[![Release](https://img.shields.io/github/v/release/ice-truck-tracking/ice-truck-tracking)](https://github.com/ice-truck-tracking/ice-truck-tracking/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🚀 One-Command Setup
+**Enterprise-Grade Monorepo for Real-Time Ice Truck Tracking, Analytics, and Cloud Operations**
 
-```bash
-# Clone the repository
-git clone https://github.com/ice-truck-tracking/ice-truck-tracking.git
-cd ice-truck-tracking
+---
 
-# Install dependencies (hoisted to root)
-npm install
-
-# Build all packages
-npm run build
-
-# Deploy to staging
-npm run deploy
-```
-
-## 📁 Monorepo Structure
+## 📦 Monorepo Structure
 
 ```
 ice-truck-tracking/
-├── backend/           # Node.js/Express API server
-├── dashboard/         # Next.js web dashboard
-├── mobile-app/        # React Native Expo mobile app
-├── sdk/              # Shared SDKs and services
-│   ├── shared/       # Common utilities and types
-│   ├── types/        # TypeScript type definitions
-│   ├── notification/ # Notification service
-│   └── route-optimizer/ # Route optimization service
-├── infra/            # Infrastructure and deployment
-│   ├── docker-base/  # Shared Docker templates
-│   ├── k8s/          # Kubernetes manifests
-│   └── terraform/    # Infrastructure as Code
-├── docs/             # Documentation
-└── scripts/          # Build and deployment scripts
+├─ apps/
+│  ├─ backend/        # Node.js/Express API server
+│  ├─ dashboard/      # Next.js web dashboard
+│  └─ mobile-app/     # React Native Expo mobile app
+├─ packages/
+│  ├─ sdk-edge/       # Edge SDK (Node.js)
+│  └─ sdk-mobile/     # Mobile SDK (React Native)
+├─ infra/             # Infrastructure as Code (Terraform, K8s, Docker, CI/CD)
+├─ scripts/           # Automation scripts
+├─ docs/              # Documentation
+└─ ...
 ```
 
-## 🛠️ Available Scripts
+---
 
-### Development
+## 🚀 Quick Start (One Command)
 
 ```bash
-npm run dev          # Start all services in development mode
-npm run build        # Build all packages
-npm run test         # Run all tests
-npm run lint         # Lint all code
-npm run lint:fix     # Fix linting issues
-npm run type-check   # Type check all TypeScript code
+# Clone and setup
+git clone https://github.com/ice-truck-tracking/ice-truck-tracking.git
+cd ice-truck-tracking
+npm install
+npm run bootstrap
 ```
 
-### Quality Assurance
+- **Start all services (dev):** `npm run dev`
+- **Build all apps/packages:** `npm run build`
+- **Run all tests:** `npm run test:all`
+- **Lint & format:** `npm run lint && npm run format`
 
-```bash
-npm run security:audit      # Run comprehensive security audit
-npm run test:comprehensive  # Run full test suite
-npm run load:test          # Run performance and load tests
+---
+
+## 🏗️ Architecture & Best Practices
+
+- **Clean Architecture:** Controllers → Services → Repositories → Database/API
+- **SOLID Principles:** Separation of concerns, testability, maintainability
+- **Centralized Tooling:** ESLint, Prettier, Husky, lint-staged, commitlint, TurboRepo
+- **CI/CD:** GitHub Actions, Docker, Terraform, blue/green deploy, semantic-release
+- **Security:** Snyk, npm audit, Helmet, CSP, HSTS, rate limiting, input validation
+- **Quality:** Jest, Stryker (mutation testing), >90% coverage, conventional commits
+- **Observability:** Prometheus, Grafana, Sentry, health checks, metrics, alerting
+
+---
+
+## 🛠️ Technology Stack
+
+| Layer         | Tech/Tools                                 |
+|--------------|--------------------------------------------|
+| Backend      | Node.js 18+, Express.js, SQLite, JWT, WebSocket |
+| Frontend     | Next.js 14, React 19, Tailwind CSS, Zustand |
+| Mobile       | React Native, Expo SDK, TypeScript         |
+| SDKs         | TypeScript, Node.js, React Native          |
+| Infra/DevOps | Docker, Docker Compose, TurboRepo, GitHub Actions, Terraform, K8s |
+| Monitoring   | Prometheus, Grafana, Sentry                |
+| Security     | Snyk, npm audit, Helmet, rate limit        |
+
+---
+
+## 🧑‍💻 Key Features
+
+- **Real-Time Dashboard:** Live map, analytics, dark mode, geofencing
+- **API & WebSocket:** Secure REST API, real-time updates, metrics
+- **Mobile App:** Offline support, push notifications, deep linking
+- **Edge/Mobile SDKs:** Easy integration for IoT and mobile clients
+- **Cloud-Ready:** Docker, K8s, AWS ECS, Terraform, blue/green deploy
+- **Enterprise Security:** JWT, rate limiting, input validation, audit
+- **Observability:** Metrics, dashboards, alerting, SLO/SLA monitoring
+- **Automated CI/CD:** Lint, test, build, security, deploy, release
+
+---
+
+## 📋 Scripts & Commands
+
+| Command                | Description                                 |
+|------------------------|---------------------------------------------|
+| `npm run dev`          | Start all apps in development mode          |
+| `npm run build`        | Build all apps/packages                     |
+| `npm run test:all`     | Run all test types (unit, integration, e2e) |
+| `npm run test:mutation`| Run mutation tests (Stryker)                |
+| `npm run lint`         | Lint all code (ESLint)                      |
+| `npm run format`       | Format code (Prettier)                      |
+| `npm run type-check`   | Type check all TypeScript code              |
+| `npm run docker:build` | Build all Docker images                     |
+| `npm run docker:up`    | Start all services with Docker Compose      |
+| `npm run deploy`       | Build & deploy all services                 |
+| `npm run security:audit`| Run security audit (Snyk, npm audit)       |
+| `npm run release`      | Semantic release automation                 |
+
+---
+
+## 🔄 CI/CD Pipeline
+
+- **Workflow:** Lint → Type-check → Build → Test → Security → E2E → Deploy
+- **Environments:** Development → Staging → Production
+- **Automation:** Blue/green deploy, health checks, Slack/LINE notifications
+- **Release:** Semantic-release for versioning, changelog, and tagging
+
+**See:** [infra/ci-cd/github-actions-full.yml](infra/ci-cd/github-actions-full.yml)
+
+---
+
+## 🔐 Security & Compliance
+
+- **Authentication:** JWT, role-based access
+- **Rate Limiting:** Brute-force protection
+- **Input Validation:** Joi, custom middleware
+- **CORS & Headers:** Strict CORS, Helmet, CSP, HSTS
+- **Dependency Scanning:** Snyk, npm audit
+- **Audit Logging:** Centralized logs, error tracking
+
+---
+
+## 📈 Monitoring & Observability
+
+- **Metrics:** Prometheus, custom /metrics endpoint
+- **Dashboards:** Grafana, business & infra metrics
+- **Alerting:** Slack/email, SLO/SLA rules
+- **Tracing:** OpenTelemetry (optional), Sentry
+
+---
+
+## 🧪 Testing & Quality
+
+- **Unit/Integration/E2E:** Jest, Cypress, Detox
+- **Mutation Testing:** Stryker
+- **Coverage:** >90% required for merge
+- **Lint/Format:** ESLint, Prettier, Husky, lint-staged
+- **Conventional Commits:** Commitlint, semantic-release
+
+---
+
+## 🌍 Environment Variables (Sample)
+
+```env
+# Backend
+NODE_ENV=production
+PORT=5000
+JWT_SECRET=your-secret-key
+DB_URL=./database.sqlite
+
+# Dashboard
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_WS_URL=ws://localhost:5000
+NEXT_PUBLIC_MAPBOX_TOKEN=your-mapbox-token
 ```
 
-### Deployment
-
-```bash
-npm run docker:build       # Build all Docker images
-npm run docker:up          # Start all services with Docker Compose
-npm run docker:down        # Stop all services
-npm run deploy             # Deploy to production
-```
-
-## 🏗️ Architecture
-
-### Backend Services
-
-- **API Server**: Express.js with TypeScript, JWT authentication, rate limiting
-- **WebSocket Service**: Real-time tracking updates
-- **Notification Service**: Push notifications and alerts
-- **Route Optimizer**: Genetic algorithm for route optimization
-
-### Frontend Applications
-
-- **Dashboard**: Next.js with TypeScript, real-time maps, analytics
-- **Mobile App**: React Native with Expo, offline support, push notifications
-
-### Infrastructure
-
-- **Containerization**: Multi-stage Docker builds with shared base images
-- **Orchestration**: Kubernetes with Helm charts
-- **CI/CD**: GitHub Actions with parallel builds and caching
-- **Monitoring**: Prometheus, Grafana, and custom dashboards
-
-## 🔧 Technology Stack
-
-### Backend
-
-- **Runtime**: Node.js 18+
-- **Framework**: Express.js with TypeScript
-- **Database**: PostgreSQL with Prisma ORM
-- **Cache**: Redis for session and real-time data
-- **Message Queue**: RabbitMQ for async processing
-
-### Frontend
-
-- **Web**: Next.js 14, React 19, TypeScript
-- **Mobile**: React Native 0.79, Expo SDK 53
-- **Styling**: Tailwind CSS, styled-components
-- **State Management**: Zustand, React Query
-
-### DevOps
-
-- **Build Tool**: Turborepo for monorepo management
-- **Package Manager**: npm 9+ with workspaces
-- **Containerization**: Docker with multi-stage builds
-- **CI/CD**: GitHub Actions with parallel execution
-- **Infrastructure**: Terraform, Kubernetes
-
-## 📊 Performance & Quality
-
-- **Build Time**: < 2 minutes for full monorepo
-- **Test Coverage**: > 90% across all packages
-- **Bundle Size**: Optimized with tree-shaking and code splitting
-- **Security**: Automated vulnerability scanning and audit
-- **Performance**: Lighthouse score > 95 for web dashboard
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18+
-- npm 9+
-- Docker Desktop
-- Git
-
-### Development Setup
-
-1. **Clone and Install**
-
-   ```bash
-   git clone https://github.com/ice-truck-tracking/ice-truck-tracking.git
-   cd ice-truck-tracking
-   npm install
-   ```
-
-2. **Environment Setup**
-
-   ```bash
-   cp .env.example .env.local
-   # Edit .env.local with your configuration
-   ```
-
-3. **Start Development**
-
-   ```bash
-   npm run dev
-   ```
-
-4. **Access Applications**
-   - Dashboard: http://localhost:3000
-   - API: http://localhost:3001
-   - Mobile App: Scan QR code with Expo Go
-
-### Production Deployment
-
-```bash
-# Build and deploy all services
-npm run build
-npm run docker:build
-npm run docker:up
-
-# Or use the one-command deployment
-npm run deploy
-```
+---
 
 ## 📚 Documentation
 
-- [API Documentation](./docs/API.md)
+- [Architecture Overview](./docs/ARCHITECTURE.md)
+- [Monorepo Guide](./docs/MONOREPO.md)
 - [Deployment Guide](./docs/DEPLOYMENT.md)
-- [Contributing Guidelines](./docs/CONTRIBUTING.md)
-- [Architecture Overview](./docs/MONOREPO.md)
+- [API Reference](./docs/API.md)
 - [Development Roadmap](./docs/ROADMAP.md)
+- [Contributing Guidelines](./docs/CONTRIBUTING.md)
+
+---
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guidelines](./docs/CONTRIBUTING.md) for details.
+We welcome contributions from the community and enterprise partners!
 
-### Development Workflow
+- **Fork** the repository
+- **Create** a feature branch: `git checkout -b feature/amazing-feature`
+- **Commit** with [conventional commits](https://www.conventionalcommits.org/)
+- **Push** and **open a Pull Request**
+- **Follow:** [CONTRIBUTING.md](./docs/CONTRIBUTING.md)
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes and run tests: `npm run test`
-4. Commit with conventional commits: `git commit -m "feat: add amazing feature"`
-5. Push to your fork: `git push origin feature/amazing-feature`
-6. Open a Pull Request
+---
+
+## 🆘 Support & Troubleshooting
+
+- **Issues:** [GitHub Issues](https://github.com/ice-truck-tracking/ice-truck-tracking/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/ice-truck-tracking/ice-truck-tracking/discussions)
+- **Monitoring:** [Grafana Dashboard](http://localhost:3001)
+- **API Docs:** [Swagger/OpenAPI](http://localhost:5000/api-docs)
+- **FAQ & Wiki:** [Project Wiki](https://github.com/ice-truck-tracking/ice-truck-tracking/wiki)
+
+---
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
-
-- **Issues**: [GitHub Issues](https://github.com/ice-truck-tracking/ice-truck-tracking/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/ice-truck-tracking/ice-truck-tracking/discussions)
-- **Documentation**: [Project Wiki](https://github.com/ice-truck-tracking/ice-truck-tracking/wiki)
-
 ---
 
-**Built with ❤️ by the Ice Truck Tracking Team**
+**Built with passion and precision by the Ice Truck Tracking Team.**
