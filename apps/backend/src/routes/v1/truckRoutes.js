@@ -1,7 +1,7 @@
 const express = require('express');
 const { protect, restrictTo } = require('../../middleware/auth');
 const { validate, schemas } = require('../../middleware/validation');
-const db = require('../../config/database');
+const truckService = require('../../services/truckService');
 const { AppError } = require('../../middleware/errorHandler');
 
 const router = express.Router();
@@ -10,7 +10,7 @@ router.use(protect);
 
 router.get('/', async (req, res, next) => {
   try {
-    const trucks = await db.query('SELECT * FROM trucks ORDER BY truck_code');
+    const trucks = await truckService.getAllTrucks();
     res.status(200).json({
       status: 'success',
       results: trucks.length,
@@ -23,15 +23,13 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
-    const trucks = await db.query('SELECT * FROM trucks WHERE id = ?', [req.params.id]);
-    
-    if (trucks.length === 0) {
+    const truck = await truckService.getTruckById(req.params.id);
+    if (!truck) {
       return next(new AppError('Truck not found', 404));
     }
-
     res.status(200).json({
       status: 'success',
-      data: trucks[0]
+      data: truck
     });
   } catch (error) {
     next(error);
@@ -40,17 +38,10 @@ router.get('/:id', async (req, res, next) => {
 
 router.post('/', restrictTo('admin'), validate(schemas.truck), async (req, res, next) => {
   try {
-    const result = await db.query(
-      `INSERT INTO trucks (truck_code, plate_number, model, color, gps_code) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [req.body.truck_code, req.body.plate_number, req.body.model, req.body.color, req.body.gps_code]
-    );
-
-    const newTruck = await db.query('SELECT * FROM trucks WHERE id = ?', [result.lastID]);
-
+    const newTruck = await truckService.createTruck(req.body);
     res.status(201).json({
       status: 'success',
-      data: newTruck[0]
+      data: newTruck
     });
   } catch (error) {
     next(error);
