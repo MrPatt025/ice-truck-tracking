@@ -4,7 +4,7 @@ services:
   # Backend API
   backend:
     build:
-      context: ./apps/backend
+      context: ./backend
       dockerfile: Dockerfile
     ports:
       - '5000:5000'
@@ -16,7 +16,7 @@ services:
       - CLIENT_URL=http://localhost:3000
       - DB_URL=./database.sqlite
     volumes:
-      - ./apps/backend/database.sqlite:/app/database.sqlite
+      - ./backend/database.sqlite:/app/database.sqlite
     networks:
       - ice-truck-network
     healthcheck:
@@ -28,7 +28,7 @@ services:
   # Frontend Dashboard
   dashboard:
     build:
-      context: ./apps/dashboard
+      context: ./dashboard
       dockerfile: Dockerfile
     ports:
       - '3000:3000'
@@ -43,7 +43,7 @@ services:
   # Notification Service
   notification:
     build:
-      context: ./packages/sdk-edge
+      context: ./sdk/edge
       dockerfile: Dockerfile
     ports:
       - '3002:3002'
