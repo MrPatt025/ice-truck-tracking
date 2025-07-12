@@ -4,8 +4,11 @@
   "description": "Professional Ice Truck Tracking System - Enterprise Monorepo",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "backend",
+    "dashboard",
+    "mobile-app",
+    "sdk/edge",
+    "sdk/mobile"
   ],
   "scripts": {
     "preinstall": "npx only-allow pnpm",
@@ -25,9 +28,9 @@
     "lint:fix": "npx eslint . --ext .js,.ts,.tsx --fix",
     "format": "npx prettier --write \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,yml,yaml}\"",
-    "type-check": "turbo run type-check",
+    "type-check": "tsc --noEmit",
     "clean": "turbo run clean && rimraf node_modules .turbo",
-    "clean:all": "turbo run clean && rimraf node_modules .turbo apps/*/node_modules packages/*/node_modules",
+    "clean:all": "turbo run clean && rimraf node_modules .turbo backend/node_modules dashboard/node_modules mobile-app/node_modules sdk/edge/node_modules sdk/mobile/node_modules",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
@@ -48,7 +51,7 @@
     "commitlint": "commitlint --from=HEAD~1",
     "release": "npx semantic-release",
     "security:snyk": "npx snyk test",
-    "analyze:frontend": "cd apps/dashboard && npm run analyze",
+    "analyze:frontend": "cd dashboard && npm run analyze",
     "snyk:auth": "npx snyk auth"
   },
   "devDependencies": {

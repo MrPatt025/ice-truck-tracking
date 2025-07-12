@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -21,14 +25,46 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@/components/*": ["./src/components/*"],
-      "@/lib/*": ["./src/lib/*"],
-      "@/types/*": ["./src/types/*"],
-      "@apps/*": ["apps/*"],
-      "@packages/*": ["packages/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@/components/*": [
+        "./src/components/*"
+      ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
+      "@/types/*": [
+        "./src/types/*"
+      ],
+      "@backend/*": [
+        "backend/*"
+      ],
+      "@dashboard/*": [
+        "dashboard/*"
+      ],
+      "@mobile-app/*": [
+        "mobile-app/*"
+      ],
+      "@sdk-edge/*": [
+        "sdk/edge/*"
+      ],
+      "@sdk-mobile/*": [
+        "sdk/mobile/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "dist", "build", ".next", "coverage"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    "coverage"
+  ]
 }

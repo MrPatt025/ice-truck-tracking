@@ -15,17 +15,45 @@
 
 ```
 ice-truck-tracking/
-├─ apps/
-│  ├─ backend/        # Node.js/Express API server
-│  ├─ dashboard/      # Next.js web dashboard
-│  └─ mobile-app/     # React Native Expo mobile app
-├─ packages/
-│  ├─ sdk-edge/       # Edge SDK (Node.js)
-│  └─ sdk-mobile/     # Mobile SDK (React Native)
-├─ infra/             # Infrastructure as Code (Terraform, K8s, Docker, CI/CD)
-├─ scripts/           # Automation scripts
-├─ docs/              # Documentation
-└─ ...
+├─ backend/
+│   ├─ src/
+│   │   ├─ controllers/
+│   │   ├─ routes/
+│   │   ├─ services/
+│   │   ├─ repositories/
+│   │   ├─ middleware/
+│   │   ├─ config/
+│   │   └─ index.js
+│   ├─ tests/
+│   │   ├─ unit/
+│   │   └─ integration/
+│   ├─ Dockerfile
+│   ├─ docker-compose.yml
+│   ├─ .env.example
+│   ├─ package.json
+│   ├─ jest.config.js
+│   └─ swagger.json
+├─ dashboard/
+│   ├─ src/
+│   │   ├─ components/
+│   │   ├─ services/
+│   │   ├─ ui/
+│   │   └─ index.tsx
+│   ├─ public/
+│   ├─ package.json
+│   └─ tsconfig.json
+├─ mobile-app/
+│   ├─ App.tsx
+│   ├─ src/
+│   └─ package.json
+├─ sdk/
+│   ├─ edge/
+│   └─ mobile/
+├─ infra/
+│   ├─ terraform/
+│   ├─ k8s/
+│   └─ ci-cd/
+└─ docs/                   # only architecture & quickstart
 ```
 
 ---

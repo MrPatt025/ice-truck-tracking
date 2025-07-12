@@ -2,11 +2,12 @@
 
 ## Monorepo Structure
 
-- `apps/` — Application code (backend, dashboard, mobile-app)
-- `packages/` — Shared SDKs/libraries (edge, mobile)
+- `backend/` — Node.js/Express API server
+- `dashboard/` — Next.js web dashboard
+- `mobile-app/` — React Native Expo mobile app
+- `sdk/` — Shared SDKs/libraries (edge, mobile)
 - `infra/` — Infrastructure as Code (Terraform, K8s, Docker, CI/CD)
-- `scripts/` — Automation scripts
-- `docs/` — Documentation
+- `docs/` — Documentation (architecture & quickstart only)
 - Centralized config: ESLint, Prettier, Jest, TS, Husky, lint-staged, commitlint
 
 ## Clean Architecture Principles
