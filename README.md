@@ -1,8 +1,8 @@
 # 🚚❄️ Ice Truck Tracking Platform
 
-[![CI](https://github.com/ice-truck-tracking/ice-truck-tracking/actions/workflows/ci.yml/badge.svg)](https://github.com/ice-truck-tracking/ice-truck-tracking/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/ice-truck-tracking/ice-truck-tracking/badge.svg?branch=main)](https://coveralls.io/github/ice-truck-tracking/ice-truck-tracking?branch=main)
-[![Lint](https://img.shields.io/badge/lint-passing-brightgreen)](./)
+[![CI](https://github.coMrPatt025/ice-truck-trackingtruck-tracking/ice-truck-tracking/actions/workflows/ci.yml/badge.svg)](https://github.com/ice-truck-tracking/ice-truck-tracking/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/MrPatt025/ice-truck-tracking/badge.svg?branch=main)](https://coveralls.io/github/ice-truck-tracking/ice-truck-tracking?branch=main)
+[![Li(https://img.shields.io/badge/lint-passing-brightgreen)](./)
 [![Security Audit](https://img.shields.io/badge/security-audit-passing-brightgreen)](https://github.com/ice-truck-tracking/ice-truck-tracking/security)
 [![Release](https://img.shields.io/github/v/release/ice-truck-tracking/ice-truck-tracking)](https://github.com/ice-truck-tracking/ice-truck-tracking/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -184,12 +184,12 @@ npm run dev         # starts backend, dashboard, and watchers
 
 ## Packages & Apps
 
-* **`backend/`**: Express API, WebSocket, auth, metrics, Swagger docs
+* **`backend/`**: Express API, WebSocket, auth, metrics, OpenAPI docs
 * **`dashboard/`**: Next.js analytics UI with map and alerting views
 * **`mobile-app/`**: Expo app for drivers and on-site staff
-* **`sdk/edge`**: lightweight client for edge/IoT senders
-* **`sdk/mobile`**: client helpers for React Native consumers
-* **`infra/terraform`**: AWS modules for ECS/EKS, networking, and storage
+* **sdk/edge**: Node.js client for edge/IoT senders
+* **`sdk/mobile`**: l client libraries for React Native consumers
+* **`infra/terraform`**: Amodules for ECS/EKS, networking, and storage
 * **`infra/k8s`**: deploy manifests and Helm values
 * **`infra/ci-cd`**: GitHub Actions workflows and shared actions
 
