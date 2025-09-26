@@ -96,3 +96,6 @@ grafana-storage/
 *.key
 *.crt
 ssl/
+# TypeScript build info
+*.tsbuildinfo
+

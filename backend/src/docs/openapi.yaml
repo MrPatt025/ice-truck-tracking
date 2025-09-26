@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: Ice Truck Tracking API
+  version: 0.1.0
+paths:
+  /healthz:
+    get:
+      responses:
+        '200':
+          description: OK
+  /readyz:
+    get:
+      responses:
+        '200':
+          description: OK
+  /metrics:
+    get:
+      responses:
+        '200':
+          description: OK

@@ -103,12 +103,15 @@ ice-truck-tracking/
 
 ```bash
 # 1) Clone and bootstrap
-git clone https://github.com/ice-truck-tracking/ice-truck-tracking.git
+git clone https://github.com/MrPatt025/ice-truck-tracking.git
+
+
 cd ice-truck-tracking
 npm install
 npm run bootstrap
 
 # 2) Development
+
 npm run dev         # starts backend, dashboard, and watchers
 
 # 3) Access
