@@ -1,4 +1,4 @@
-describe('Dashboard E2E Tests', () => {
+﻿describe('Dashboard E2E Tests', () => {
   beforeEach(() => {
     cy.visit('/')
     cy.intercept('GET', '/api/v1/health', { fixture: 'health.json' })
@@ -65,7 +65,7 @@ describe('Dashboard E2E Tests', () => {
     cy.get('[data-testid="language-th"]').click()
     cy.get('[data-testid="save-preferences"]').click()
 
-    cy.get('[data-testid="dashboard-title"]').should('contain', 'แดชบอร์ด')
+    cy.get('[data-testid="dashboard-title"]').should('contain', 'à¹à¸”à¸Šà¸šà¸­à¸£à¹Œà¸”')
 
     // Change map style
     cy.get('[data-testid="preferences-button"]').click()
@@ -127,3 +127,5 @@ describe('Dashboard E2E Tests', () => {
       })
   })
 })
+
+

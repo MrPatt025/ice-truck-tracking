@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "moduleResolution": "bundler",  // หรือ "node16"
+    "forceConsistentCasingInFileNames": true,
+    "ignoreDeprecations": "6.0",
     "target": "ES2022",
     "lib": [
       "dom",

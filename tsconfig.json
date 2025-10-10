@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "target": "ES2022",
     "lib": [
       "ES2022",
@@ -14,6 +15,7 @@
     "esModuleInterop": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowArbitraryExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
@@ -24,6 +26,12 @@
       }
     ],
     "baseUrl": ".",
+    "types": [
+      "node",
+      "react",
+      "react-dom",
+      "next"
+    ],
     "paths": {
       "@/*": [
         "./src/*"

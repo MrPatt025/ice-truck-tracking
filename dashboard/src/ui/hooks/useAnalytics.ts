@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useCallback } from 'react'
 
@@ -174,3 +174,5 @@ export function useAnalyticsOptIn() {
 
   return { isOptedIn, optIn, optOut }
 }
+
+

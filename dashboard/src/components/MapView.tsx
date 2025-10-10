@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Button } from '../src/ui/components/Button'
-import { Card, CardContent } from '../src/ui/components/Card'
-import { Tooltip } from '../src/ui/components/Tooltip'
-import { usePerformanceMonitor } from '../src/ui/hooks/usePerformance'
+import { Button } from '../ui/components/Button'
+import { Card, CardContent } from '../ui/components/Card'
+import { Tooltip } from '../ui/components/Tooltip'
+import { usePerformanceMonitor } from '../ui/hooks/usePerformance'
 
 interface Truck {
   id: string
@@ -200,10 +200,10 @@ export function MapView({
             className='text-sm border-none outline-none bg-transparent'
             aria-label='Map style'
           >
-            <option value='streets'>🗺️ Streets</option>
-            <option value='satellite'>🛰️ Satellite</option>
-            <option value='terrain'>🏔️ Terrain</option>
-            <option value='dark'>🌙 Dark</option>
+            <option value='streets'><span role="img" aria-label="streets">ðŸ—ºï¸</span> Streets</option>
+            <option value='satellite'><span role="img" aria-label="satellite">ðŸ›°ï¸</span> Satellite</option>
+            <option value='terrain'><span role="img" aria-label="terrain">ðŸ”ï¸</span> Terrain</option>
+            <option value='dark'><span role="img" aria-label="dark">ðŸŒ™</span> Dark</option>
           </select>
         </Card>
 
@@ -302,12 +302,12 @@ export function MapView({
                     isSelected ? 'ring-4 ring-blue-300' : ''
                   } flex items-center justify-center text-xs`}
                 >
-                  🚚
+                  ðŸšš
                 </div>
 
                 {isSelected && (
                   <Card className='absolute top-8 left-1/2 transform -translate-x-1/2 min-w-48 z-30'>
-                    <CardContent padding='sm'>
+                    <CardContent className='p-2'>
                       <h3 className='font-semibold text-sm mb-2'>
                         {truck.driver_name}
                       </h3>
@@ -323,7 +323,7 @@ export function MapView({
                         <div className='flex justify-between'>
                           <span className='text-gray-600'>Temp:</span>
                           <span className='text-blue-600'>
-                            {truck.temperature}°C
+                            {truck.temperature}Â°C
                           </span>
                         </div>
                         <div className='flex justify-between'>
@@ -400,19 +400,19 @@ export function MapView({
                 className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2'
                 role='menuitem'
               >
-                🔍 Zoom to Truck
+                ðŸ” Zoom to Truck
               </button>
               <button
                 className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2'
                 role='menuitem'
               >
-                📊 View History
+                ðŸ“Š View History
               </button>
               <button
                 className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2'
                 role='menuitem'
               >
-                🚨 Create Alert
+                ðŸš¨ Create Alert
               </button>
             </>
           ) : (
@@ -421,13 +421,13 @@ export function MapView({
                 className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2'
                 role='menuitem'
               >
-                📍 Add Geofence
+                ðŸ“ Add Geofence
               </button>
               <button
                 className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2'
                 role='menuitem'
               >
-                🎯 Center Map
+                ðŸŽ¯ Center Map
               </button>
             </>
           )}
@@ -444,3 +444,5 @@ export function MapView({
     </div>
   )
 }
+
+

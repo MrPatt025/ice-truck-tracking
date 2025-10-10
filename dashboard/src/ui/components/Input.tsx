@@ -1,4 +1,4 @@
-import { forwardRef, InputHTMLAttributes } from 'react'
+﻿import { forwardRef, InputHTMLAttributes, useId } from 'react'
 import { cn } from '../utils'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -14,7 +14,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     { className, label, error, helperText, leftIcon, rightIcon, id, ...props },
     ref
   ) => {
-    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`
+    const reactId = useId();
+    const inputId = id || `input-${reactId.replace(/[:]/g, '')}`
 
     return (
       <div className='space-y-1'>
@@ -42,8 +43,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
               'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
               error && 'border-red-300 focus:ring-red-500 focus:border-red-500',
-              leftIcon && 'pl-10',
-              rightIcon && 'pr-10',
+              Boolean(leftIcon) && 'pl-10',
+              Boolean(rightIcon) && 'pr-10',
               className
             )}
             aria-invalid={error ? 'true' : 'false'}
@@ -88,3 +89,5 @@ Input.displayName = 'Input'
 
 export { Input }
 export type { InputProps }
+
+

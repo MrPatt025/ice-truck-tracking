@@ -1,7 +1,7 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Button } from '../src/ui/components/Button'
+import { Button } from '../ui/components/Button'
 
 interface Truck {
   id: string
@@ -113,10 +113,10 @@ export function EnhancedMapView({
             onChange={e => setMapStyle(e.target.value as MapStyle)}
             className='text-sm border-none outline-none'
           >
-            <option value='streets'>🗺️ Streets</option>
-            <option value='satellite'>🛰️ Satellite</option>
-            <option value='terrain'>🏔️ Terrain</option>
-            <option value='dark'>🌙 Dark</option>
+            <option value='streets'>ðŸ—ºï¸ Streets</option>
+            <option value='satellite'>ðŸ›°ï¸ Satellite</option>
+            <option value='terrain'>ðŸ”ï¸ Terrain</option>
+            <option value='dark'>ðŸŒ™ Dark</option>
           </select>
         </div>
 
@@ -171,7 +171,7 @@ export function EnhancedMapView({
                 } ${isSelected ? 'ring-4 ring-blue-300' : ''}`}
               >
                 <span className='text-xs text-white font-bold flex items-center justify-center h-full'>
-                  🚚
+                  ðŸšš
                 </span>
               </div>
 
@@ -183,7 +183,7 @@ export function EnhancedMapView({
                     Speed: {truck.speed} km/h
                   </p>
                   <p className='text-xs text-gray-600'>
-                    Temp: {truck.temperature}°C
+                    Temp: {truck.temperature}Â°C
                   </p>
                   <p
                     className={`text-xs font-medium ${
@@ -215,22 +215,22 @@ export function EnhancedMapView({
           {contextMenu.truck ? (
             <>
               <button className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'>
-                🔍 Zoom to Truck
+                ðŸ” Zoom to Truck
               </button>
               <button className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'>
-                📊 View History
+                ðŸ“Š View History
               </button>
               <button className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'>
-                🚨 Create Alert
+                ðŸš¨ Create Alert
               </button>
             </>
           ) : (
             <>
               <button className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'>
-                📍 Add Geofence
+                ðŸ“ Add Geofence
               </button>
               <button className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'>
-                🎯 Center Map
+                ðŸŽ¯ Center Map
               </button>
             </>
           )}
@@ -239,3 +239,5 @@ export function EnhancedMapView({
     </div>
   )
 }
+
+

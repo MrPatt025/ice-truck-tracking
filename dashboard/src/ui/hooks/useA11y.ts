@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+﻿import { useEffect, useRef } from 'react'
 
 export function useFocusTrap(isActive: boolean) {
   const containerRef = useRef<HTMLElement>(null)
@@ -120,3 +120,5 @@ export function useKeyboardNavigation(
 
   return currentIndex.current
 }
+
+

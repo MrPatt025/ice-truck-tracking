@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ตัวอย่าง class แทน inline styles ที่ใช้บ่อย */
+@layer utilities {
+  .abs-tr-2 { @apply absolute top-2 right-2; }
+  .card { @apply rounded-2xl shadow p-4 bg-white dark:bg-neutral-900; }
+  .btn { @apply inline-flex items-center gap-2 rounded-xl px-3 py-2 border; }
+}

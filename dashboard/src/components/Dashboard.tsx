@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 interface DashboardProps {
   trucks: any[]
@@ -119,3 +119,5 @@ export function Dashboard({ trucks, alerts, selectedTruck }: DashboardProps) {
     </div>
   )
 }
+
+

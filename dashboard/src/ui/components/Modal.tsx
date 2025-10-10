@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
@@ -62,7 +62,7 @@ export function Modal({
       aria-labelledby={title ? 'modal-title' : undefined}
     >
       <div
-        ref={containerRef}
+        ref={(containerRef as React.Ref<HTMLDivElement>)}
         className={cn(
           'relative w-full bg-white rounded-lg shadow-xl',
           sizes[size],
@@ -103,3 +103,5 @@ export function Modal({
     document.body
   )
 }
+
+

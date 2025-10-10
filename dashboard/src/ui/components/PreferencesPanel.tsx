@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { Button } from './Button'
@@ -186,7 +186,7 @@ export function PreferencesPanel({
                   onChange={e => updatePreference('language', e.target.value)}
                   className='mr-2'
                 />
-                ไทย
+                à¹„à¸—à¸¢
               </label>
             </div>
           </section>
@@ -356,3 +356,5 @@ export function PreferencesPanel({
     </div>
   )
 }
+
+

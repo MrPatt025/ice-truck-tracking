@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import {
@@ -73,16 +73,21 @@ export function AnalyticsDashboard() {
   return (
     <div className='p-6 space-y-6'>
       <div className='flex justify-between items-center'>
-        <h2 className='text-2xl font-bold'>📊 Analytics Dashboard</h2>
-        <select
-          value={timeRange}
-          onChange={e => setTimeRange(e.target.value)}
-          className='px-3 py-2 border rounded-lg'
-        >
+        <h2 className='text-2xl font-bold'>ðŸ“Š Analytics Dashboard</h2>
+        <div className="flex items-center">
+          <label htmlFor="timeRange" className="sr-only">Time range</label>
+          <select
+            id="timeRange"
+            aria-label="Time range"
+            value={timeRange}
+            onChange={e => setTimeRange(e.target.value)}
+            className='px-3 py-2 border rounded-lg'
+          >
           <option value='24h'>Last 24 Hours</option>
           <option value='7d'>Last 7 Days</option>
           <option value='30d'>Last 30 Days</option>
-        </select>
+          </select>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -116,7 +121,7 @@ export function AnalyticsDashboard() {
         {/* Daily Distance Chart */}
         <div className='bg-white p-4 rounded-lg shadow'>
           <h3 className='text-lg font-semibold mb-4'>
-            📈 Daily Distance Traveled
+            ðŸ“ˆ Daily Distance Traveled
           </h3>
           <ResponsiveContainer width='100%' height={300}>
             <LineChart data={data.dailyDistance}>
@@ -136,7 +141,7 @@ export function AnalyticsDashboard() {
 
         {/* Truck Utilization Chart */}
         <div className='bg-white p-4 rounded-lg shadow'>
-          <h3 className='text-lg font-semibold mb-4'>🚚 Truck Utilization</h3>
+          <h3 className='text-lg font-semibold mb-4'>ðŸšš Truck Utilization</h3>
           <ResponsiveContainer width='100%' height={300}>
             <BarChart data={data.truckUtilization}>
               <CartesianGrid strokeDasharray='3 3' />
@@ -150,7 +155,7 @@ export function AnalyticsDashboard() {
 
         {/* Alert Frequency Chart */}
         <div className='bg-white p-4 rounded-lg shadow'>
-          <h3 className='text-lg font-semibold mb-4'>🚨 Alert Frequency</h3>
+          <h3 className='text-lg font-semibold mb-4'>ðŸš¨ Alert Frequency</h3>
           <ResponsiveContainer width='100%' height={300}>
             <BarChart data={data.alertFrequency}>
               <CartesianGrid strokeDasharray='3 3' />
@@ -164,33 +169,24 @@ export function AnalyticsDashboard() {
 
         {/* Performance Trends */}
         <div className='bg-white p-4 rounded-lg shadow'>
-          <h3 className='text-lg font-semibold mb-4'>⚡ Performance Trends</h3>
+          <h3 className='text-lg font-semibold mb-4'>âš¡ Performance Trends</h3>
           <div className='space-y-4'>
             <div className='flex justify-between items-center'>
               <span>API Response Time</span>
               <div className='w-32 bg-gray-200 rounded-full h-2'>
-                <div
-                  className='bg-blue-600 h-2 rounded-full'
-                  style={{ width: '75%' }}
-                ></div>
+                <div className='bg-blue-600 h-2 rounded-full w-[75%]'></div>
               </div>
             </div>
             <div className='flex justify-between items-center'>
               <span>Database Performance</span>
               <div className='w-32 bg-gray-200 rounded-full h-2'>
-                <div
-                  className='bg-green-600 h-2 rounded-full'
-                  style={{ width: '90%' }}
-                ></div>
+                <div className='bg-green-600 h-2 rounded-full w-[90%]'></div>
               </div>
             </div>
             <div className='flex justify-between items-center'>
               <span>WebSocket Stability</span>
               <div className='w-32 bg-gray-200 rounded-full h-2'>
-                <div
-                  className='bg-purple-600 h-2 rounded-full'
-                  style={{ width: '85%' }}
-                ></div>
+                <div className='bg-purple-600 h-2 rounded-full w-[85%]'></div>
               </div>
             </div>
           </div>
@@ -199,3 +195,5 @@ export function AnalyticsDashboard() {
     </div>
   )
 }
+
+

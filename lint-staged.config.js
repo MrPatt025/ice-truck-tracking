@@ -1,6 +1,7 @@
+// lint-staged.config.js
 module.exports = {
-  '**/*.{js,ts,tsx,jsx}': ['eslint --fix', 'prettier --write'],
+  concurrent: false,
+  '**/*.{js,jsx,ts,tsx}': ['eslint --fix --cache --cache-location .eslintcache'],
   '*.{json,md,yml,yaml}': ['prettier --write'],
-  '*.{css,scss,less}': ['prettier --write', 'git add'],
-  'package.json': ['npm pkg fix', 'git add'],
-}
+  '**/*.{css,scss,less}': ['prettier --write'],
+};

@@ -1,4 +1,4 @@
-describe('Ice Truck Tracking Dashboard - Comprehensive E2E Tests', () => {
+﻿describe('Ice Truck Tracking Dashboard - Comprehensive E2E Tests', () => {
   beforeEach(() => {
     cy.visit('http://localhost:3000')
     cy.intercept('GET', '**/api/v1/health').as('healthCheck')
@@ -209,3 +209,5 @@ describe('Ice Truck Tracking Dashboard - Comprehensive E2E Tests', () => {
     })
   })
 })
+
+

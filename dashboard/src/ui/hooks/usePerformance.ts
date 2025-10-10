@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useRef } from 'react'
 
@@ -100,3 +100,5 @@ export function useWebVitals() {
     return () => observer.disconnect()
   }, [])
 }
+
+

@@ -1,4 +1,4 @@
-export const theme = {
+﻿export const theme = {
   colors: {
     primary: {
       50: '#e3f2fd',
@@ -77,3 +77,5 @@ export const theme = {
 } as const
 
 export type Theme = typeof theme
+
+

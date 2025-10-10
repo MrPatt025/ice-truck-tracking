@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Component, ErrorInfo, ReactNode } from 'react'
 import { Button } from './Button'
@@ -102,3 +102,5 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children
   }
 }
+
+

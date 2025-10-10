@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 interface SidebarProps {
   trucks: any[]
@@ -19,7 +19,7 @@ export function Sidebar({
     <div className='w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col'>
       <div className='p-4 border-b border-gray-200 dark:border-gray-700'>
         <h1 className='text-xl font-bold text-gray-900 dark:text-white'>
-          🚚❄️ Ice Truck Tracking
+          ðŸššâ„ï¸ Ice Truck Tracking
         </h1>
         <div className='flex items-center mt-2'>
           <div
@@ -89,3 +89,5 @@ export function Sidebar({
     </div>
   )
 }
+
+

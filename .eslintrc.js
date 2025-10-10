@@ -1,4 +1,14 @@
 module.exports = {
+  overrides: [
+    {
+      files: ['dashboard/**/*.{js,jsx,ts,tsx}', 'frontend/**/*.{js,jsx,ts,tsx}'],
+      rules: {
+        'react-native-text-watcher/rn-text': 'off'
+      }
+    }
+  ]
+}
+module.exports = {
   root: true,
   env: {
     browser: true,

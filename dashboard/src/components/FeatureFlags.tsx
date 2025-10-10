@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import { Switch } from '@headlessui/react'
 
 interface FeatureFlag {
@@ -151,16 +151,20 @@ export function FeatureFlags({ isAdmin = false }: FeatureFlagsProps) {
               {isAdmin && flag.enabled && (
                 <div className='flex items-center space-x-2'>
                   <label className='text-gray-500'>Rollout:</label>
-                  <input
-                    type='range'
-                    min='0'
-                    max='100'
-                    value={flag.rolloutPercentage}
-                    onChange={e =>
-                      updateRollout(flag.key, parseInt(e.target.value))
-                    }
-                    className='w-20'
-                  />
+                  <div className='flex items-center space-x-2'>
+                    <label htmlFor={`rollout-${flag.key}`} className='sr-only'>Rollout percentage</label>
+                    <input
+                      id={`rollout-${flag.key}`}
+                      type='range'
+                      min='0'
+                      max='100'
+                      value={flag.rolloutPercentage}
+                      onChange={e =>
+                        updateRollout(flag.key, parseInt(e.target.value))
+                      }
+                      className='w-20'
+                    />
+                  </div>
                   <span className='text-gray-700 dark:text-gray-300 min-w-[3rem]'>
                     {flag.rolloutPercentage}%
                   </span>
@@ -201,3 +205,5 @@ export function useFeatureFlag(flagKey: string): boolean {
 
   return enabled
 }
+
+

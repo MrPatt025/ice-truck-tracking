@@ -1,13 +1,17 @@
+นี่คือเวอร์ชัน README.md ที่แก้ไขให้เรียบร้อย อ่านง่าย ลิงก์/แบดจ์ถูกต้องตามรูปแบบ และสอดคล้องกับสภาพโปรเจกต์ (backend + dashboard บน pnpm/monorepo). แทนที่ `<OWNER>` กับ `<REPO>` ด้วยของจริงของคุณก่อนคอมมิต
+
+---
+
 # 🚚❄️ Ice Truck Tracking Platform
 
-[![CI](https://github.coMrPatt025/ice-truck-trackingtruck-tracking/ice-truck-tracking/actions/workflows/ci.yml/badge.svg)](https://github.com/ice-truck-tracking/ice-truck-tracking/actions/workflows/ci.yml)
-[![Coverage Status](https://coveralls.io/repos/github/MrPatt025/ice-truck-tracking/badge.svg?branch=main)](https://coveralls.io/github/ice-truck-tracking/ice-truck-tracking?branch=main)
-[![Li(https://img.shields.io/badge/lint-passing-brightgreen)](./)
-[![Security Audit](https://img.shields.io/badge/security-audit-passing-brightgreen)](https://github.com/ice-truck-tracking/ice-truck-tracking/security)
-[![Release](https://img.shields.io/github/v/release/ice-truck-tracking/ice-truck-tracking)](https://github.com/ice-truck-tracking/ice-truck-tracking/releases)
+[![CI](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml)
+[![Coverage Status](https://coveralls.io/repos/github/<OWNER>/<REPO>/badge.svg?branch=main)](https://coveralls.io/github/<OWNER>/<REPO>?branch=main)
+[![Lint](https://img.shields.io/badge/lint-passing-brightgreen)](./)
+[![Security Audit](https://img.shields.io/badge/security-audit-passing-brightgreen)](https://github.com/<OWNER>/<REPO>/security)
+[![Release](https://img.shields.io/github/v/release/<OWNER>/<REPO>)](https://github.com/<OWNER>/<REPO>/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> **Enterprise-grade monorepo for real-time cold-chain tracking, analytics, and cloud operations.**
+> **Enterprise-grade monorepo for real-time cold-chain tracking, analytics, and operations.**
 
 ---
 
@@ -21,7 +25,6 @@
 * [Architecture](#architecture)
 * [Technology Stack](#technology-stack)
 * [Key Features](#key-features)
-* [Packages & Apps](#packages--apps)
 * [Configuration](#configuration)
 * [Scripts](#scripts)
 * [Testing & Quality](#testing--quality)
@@ -32,14 +35,13 @@
 * [Roadmap](#roadmap)
 * [Documentation](#documentation)
 * [Contributing](#contributing)
-* [Community & Support](#community--support)
 * [License](#license)
 
 ---
 
 ## Overview
 
-**Ice Truck Tracking** delivers end-to-end visibility for refrigerated fleets: live location, temperature integrity, geofencing, analytics, and automated alerts. The repository houses backend services, a web dashboard, a mobile app, SDKs, and infrastructure-as-code for repeatable deployments.
+**Ice Truck Tracking** ให้การมองเห็นปลายทางถึงปลายทางสำหรับรถห้องเย็น: ตำแหน่งเรียลไทม์, อุณหภูมิสินค้า, geofencing, analytics และการแจ้งเตือนอัตโนมัติ ภายใน repo นี้มีบริการ backend และเว็บแดชบอร์ดแบบเรียลไทม์ (รองรับ WebSocket)
 
 ---
 
@@ -47,297 +49,225 @@
 
 ```
 ice-truck-tracking/
-├── backend/                 # REST + WebSocket API, auth, metrics
+├── backend/      # Express REST + WebSocket, auth, metrics
 │   ├── src/
-│   │   ├── controllers/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── repositories/
-│   │   ├── middleware/
-│   │   ├── config/
-│   │   └── index.js
-│   ├── tests/
-│   │   ├── unit/
-│   │   └── integration/
-│   ├── Dockerfile
-│   ├── docker-compose.yml
-│   ├── .env.example
-│   ├── package.json
-│   ├── jest.config.js
-│   └── swagger.json
-├── dashboard/               # Next.js dashboard (maps, analytics)
-│   ├── src/
-│   │   ├── components/
-│   │   ├── services/
-│   │   ├── ui/
-│   │   └── index.tsx
-│   ├── public/
-│   ├── package.json
-│   └── tsconfig.json
-├── mobile-app/              # React Native (Expo) driver app
-│   ├── App.tsx
-│   ├── src/
-│   └── package.json
-├── sdk/                     # Reusable client libraries
-│   ├── edge/
-│   └── mobile/
-├── infra/                   # IaC, clusters, pipelines
-│   ├── terraform/
-│   ├── k8s/
-│   └── ci-cd/
-└── docs/                    # Architecture, guides, ADRs
+│   └── index.js
+├── dashboard/    # Next.js App Router dashboard (maps, alerts, KPIs)
+│   └── src/
+├── docs/         # (optional) guides/ADR/architecture
+└── infra/        # (optional) IaC / pipelines
 ```
+
+> ถ้ามีโมดูลอื่น (mobile-app/, sdk/ ฯลฯ) เพิ่มโครงสร้างตามจริงได้ภายหลัง
 
 ---
 
 ## Prerequisites
 
-* **Node.js** 18+ and **npm** 9+
-* **Docker** 24+ and **Docker Compose**
-* Optional: **Terraform** 1.6+, **kubectl** 1.29+, **pnpm**/**turbo** if preferred
-* Map rendering: a **Mapbox** token
+* **Node.js** 18+
+* **pnpm** 8+
+* (แนะนำ) **Docker** / **Docker Compose** สำหรับรันแบบ container
+* Map rendering: **Mapbox token** (ถ้าเปิดแผนที่จริงใน UI)
 
 ---
 
 ## Quick Start
 
 ```bash
-# 1) Clone and bootstrap
-git clone https://github.com/MrPatt025/ice-truck-tracking.git
-
-
+# 1) Clone & install (ใช้ pnpm สำหรับ workspaces)
+git clone https://github.com/<OWNER>/<REPO>.git
 cd ice-truck-tracking
-npm install
-npm run bootstrap
+pnpm install
 
-# 2) Development
+# 2) ตั้งค่า env
+# backend/.env (ดูตัวอย่างด้านล่าง)
+# dashboard/.env.local (ดูตัวอย่างด้านล่าง)
 
-npm run dev         # starts backend, dashboard, and watchers
+# 3) รันแยกเทอร์มินัล
+# Terminal A: Backend
+pnpm --filter backend start
 
-# 3) Access
-# API:        http://localhost:5000
-# API Docs:   http://localhost:5000/api-docs
-# Dashboard:  http://localhost:3000
-# Grafana:    http://localhost:3001
+# Terminal B: Dashboard (Next.js dev)
+pnpm --filter dashboard dev
+
+# Access
+# API:       http://localhost:5000
+# Dashboard: http://localhost:3000
+# Metrics:   http://localhost:5000/metrics
+# Health:    http://localhost:5000/api/v1/health
 ```
 
-> For Docker-based bring-up use `npm run docker:up` after setting environment variables.
+> ใน Windows PowerShell คุณอาจ export env ชั่วคราวด้วย `$env:NAME="value"`
 
 ---
 
 ## Development
 
-* **Tooling**: ESLint, Prettier, Husky, lint-staged, commitlint, TurboRepo
-* **Branching**: `main` (protected), feature branches via PRs
-* **Commits**: Conventional Commits (`feat:`, `fix:`, `chore:`, etc.)
-* **Coverage gate**: 90%+ for merges
+* โค้ดสไตล์: ESLint + Prettier
+* Commits: **Conventional Commits** (`feat:`, `fix:`, `chore:` …)
+* แนะนำให้ทำงานบน branch แล้ว PR เข้า `main`
 
 ---
 
 ## Architecture
 
-**Clean Architecture** with clear boundaries:
+**Clean layering**:
 
-* **Controllers** → parse/validate requests
-* **Services** → business rules and orchestration
-* **Repositories** → data access (SQLite by default; adapters pluggable)
-* **Interfaces** → REST + WebSocket
-* **Cross-cutting** → auth, rate limit, input validation, logging, metrics
+* **Routes/Controllers** — รับ/ตรวจสอบ input
+* **Services** — บิสิเนสรวม logic และ orchestration
+* **Repositories** — data access (dev ใช้ in-memory/SQLite ได้)
+* **Interfaces** — REST (`/api/v1/*`) + WebSocket (realtime)
+* **Cross-cutting** — auth, rate limit, validation, logging, metrics
 
-**Runtime capabilities**:
+**Realtime**:
 
-* Real-time telemetry ingestion (location, cargo temperature)
-* Geofencing and alert rules
-* Aggregations and analytics
-* Health checks and readiness probes
-
-> See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for diagrams and sequence flows.
+* Backend broadcast ผ่าน WebSocket
+* Dashboard subscribe และ fallback เป็น polling หากยังไม่เชื่อมต่อ
 
 ---
 
 ## Technology Stack
 
-| Layer        | Tech/Tools                                                        |
-| ------------ | ----------------------------------------------------------------- |
-| Backend      | Node.js 18+, Express.js, SQLite, JWT, WebSocket                   |
-| Frontend     | Next.js 14, React 19, Tailwind CSS, Zustand                       |
-| Mobile       | React Native, Expo SDK, TypeScript                                |
-| SDKs         | TypeScript, Node.js, React Native                                 |
-| Infra/DevOps | Docker, Docker Compose, TurboRepo, GitHub Actions, Terraform, K8s |
-| Monitoring   | Prometheus, Grafana, Sentry                                       |
-| Security     | Helmet, rate limiting, Snyk, npm audit                            |
+| Layer    | Tech/Tools                            |
+| -------- | ------------------------------------- |
+| Backend  | Node.js, Express, WebSocket, JWT      |
+| Frontend | Next.js (App Router), React, Tailwind |
+| DevOps   | pnpm workspaces, GitHub Actions       |
+| Observ.  | Prometheus metrics, (Grafana-ready)   |
+| Security | Helmet, CORS, Rate limiting           |
 
 ---
 
 ## Key Features
 
-* **Real-Time Dashboard**: live map, dark mode, geofencing, KPIs
-* **API & WebSocket**: secure REST, streaming updates, metrics endpoint
-* **Mobile App**: offline-first, push notifications, deep linking
-* **Edge/Mobile SDKs**: simple client integration for IoT + driver apps
-* **Cloud-Ready**: Docker images, K8s manifests, Terraform modules
-* **Security**: JWT auth, RBAC, validation, rate limiting, audit logs
-* **Observability**: Prometheus metrics, Grafana dashboards, Sentry traces
-* **Automation**: lint/test/build/security/release via CI
-
----
-
-## Packages & Apps
-
-* **`backend/`**: Express API, WebSocket, auth, metrics, OpenAPI docs
-* **`dashboard/`**: Next.js analytics UI with map and alerting views
-* **`mobile-app/`**: Expo app for drivers and on-site staff
-* **sdk/edge**: Node.js client for edge/IoT senders
-* **`sdk/mobile`**: l client libraries for React Native consumers
-* **`infra/terraform`**: Amodules for ECS/EKS, networking, and storage
-* **`infra/k8s`**: deploy manifests and Helm values
-* **`infra/ci-cd`**: GitHub Actions workflows and shared actions
+* **Realtime Dashboard**: สถานะรถ/อุณหภูมิ/alerts แบบสด
+* **REST + WebSocket**: low-latency updates
+* **Metrics & Health**: พร้อมสำหรับ monitoring
+* **Dev-friendly**: pnpm workspaces, live reload
 
 ---
 
 ## Configuration
 
-Create `.env` files from the examples provided and adjust as needed.
+สร้างไฟล์ตามนี้:
+
+**`backend/.env`**
 
 ```env
-# Backend
 NODE_ENV=development
 PORT=5000
-JWT_SECRET=change-me
-DB_URL=./database.sqlite
 
-# Dashboard
-NEXT_PUBLIC_API_URL=http://localhost:5000
-NEXT_PUBLIC_WS_URL=ws://localhost:5000
-NEXT_PUBLIC_MAPBOX_TOKEN=your-mapbox-token
+# Auth / Security
+JWT_SECRET=change-me
+SALT_ROUNDS=1
+CLIENT_URL=http://localhost:3000
+
+# Dev helpers
+USE_FAKE_DB=true
+DISABLE_RATE_LIMIT=true
 ```
 
-Secrets should be stored using your platform’s secret manager in non-dev environments.
+**`dashboard/.env.local`**
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_WS_URL=ws://localhost:5000
+# NEXT_PUBLIC_MAPBOX_TOKEN=your-mapbox-token   # (ถ้าใช้แผนที่จริง)
+```
+
+> ใน dev เราอนุญาต `DISABLE_RATE_LIMIT=true` เพื่อหลีกเลี่ยง 429 ระหว่างรีเฟรชบ่อย ๆ
 
 ---
 
 ## Scripts
 
-Common orchestration commands from the monorepo root:
+รันที่ root หรือเฉพาะแพ็กเกจ:
 
-| Command                  | Description                                   |
-| ------------------------ | --------------------------------------------- |
-| `npm run dev`            | Start all apps in development                 |
-| `npm run build`          | Build all apps and packages                   |
-| `npm run type-check`     | TypeScript checks across workspaces           |
-| `npm run test:all`       | Run unit + integration + e2e where applicable |
-| `npm run test:mutation`  | Run mutation tests with Stryker               |
-| `npm run lint`           | Lint with ESLint                              |
-| `npm run format`         | Format with Prettier                          |
-| `npm run docker:build`   | Build Docker images                           |
-| `npm run docker:up`      | Compose up all services                       |
-| `npm run deploy`         | Build & deploy (see infra/ci-cd)              |
-| `npm run security:audit` | Snyk + npm audit                              |
-| `npm run release`        | Semantic-release for versioning and changelog |
+| Command                       | Description                  |
+| ----------------------------- | ---------------------------- |
+| `pnpm --filter backend start` | Start Express API + WS       |
+| `pnpm --filter dashboard dev` | Start Next.js dev server     |
+| `pnpm -r build`               | Build ทุกแพ็กเกจ (recursive) |
+| `pnpm -r lint`                | Lint ทุกแพ็กเกจ              |
+| `pnpm -r test`                | รันเทสต์ (ถ้ากำหนดไว้)       |
+
+> คุณสามารถเพิ่มสคริปต์ orchestrator ที่ root (เช่น ใช้ turbo หรือ concurrently) ภายหลังได้
 
 ---
 
 ## Testing & Quality
 
-* **Frameworks**: Jest (unit/integration), Cypress (e2e), Detox (mobile)
-* **Mutation testing**: Stryker
-* **Policies**: coverage ≥ **90%** required for merges
-* **Pre-commit**: lint-staged + Husky to keep diffs clean
+* Unit/Integration tests (Jest) — (เพิ่มภายหลังได้)
+* Lint & format ใน CI
+* เป้าหมาย coverage ≥ **90%** (กำหนดในอนาคต)
 
 ---
 
 ## CI/CD
 
-**Pipeline**: Lint → Type-check → Build → Test → Security → E2E → Deploy
-
-* **Environments**: Development → Staging → Production
-* **Deploy**: Blue/Green with automatic health checks
-* **Notifications**: Slack/LINE on failures and releases
-* **Release**: Semantic-release for tags and changelogs
-
-See [`infra/ci-cd/github-actions-full.yml`](./infra/ci-cd/github-actions-full.yml).
+Pipeline แนะนำ: **Lint → Type-check → Build → Test → Security → Release**
+ตัวอย่าง workflow: `.github/workflows/ci.yml` (เพิ่มเมื่อพร้อม)
+Release แนะนำ: **semantic-release**
 
 ---
 
 ## Security
 
-* **Auth**: JWT + role-based access control
-* **Hardening**: Helmet, strict CORS, HSTS, CSP
-* **Abuse prevention**: rate limiting and basic anomaly detection
-* **Dependencies**: Snyk and `npm audit` in CI
-* **Audit logging**: centralized request and auth logs
+* Helmet + CORS
+* JWT auth
+* Rate limit (ปิดได้ใน dev ด้วย `DISABLE_RATE_LIMIT=true`)
+* Audit dependencies (Snyk / `pnpm audit`)
 
-> Report security issues privately via **GitHub Security Advisories**.
+> แจ้งปัญหาด้านความปลอดภัยผ่าน **GitHub Security Advisories**
 
 ---
 
 ## Observability
 
-* **Metrics**: `/metrics` (Prometheus format)
-* **Dashboards**: Grafana boards for business and infra KPIs
-* **Tracing**: OpenTelemetry (optional) + Sentry for errors
-* **Health**: `/healthz` and `/readyz` endpoints
+* **Health**: `GET /api/v1/health`
+* **Metrics**: `GET /metrics` (Prometheus format)
 
 ---
 
 ## Deployment
 
-* **Local**: `npm run docker:up` (Compose)
-* **Kubernetes**: manifests in `infra/k8s/` and Terraform modules in `infra/terraform/`
-* **AWS**: ECS/EKS, RDS/SQLite migration path, CloudWatch/ALB integrations
-
-> Replace sample domains, registry names, and secrets before production.
+* **Local (bare-metal)**: ใช้สคริปต์ pnpm ข้างต้น
+* **Docker**: เพิ่ม `Dockerfile`/`docker-compose.yml` เมื่อพร้อม
+* **Kubernetes/Terraform**: วางไว้ใน `infra/` (ถ้ามี)
 
 ---
 
 ## Roadmap
 
-* Cold-chain anomaly detection (ML-assisted)
-* Route optimization and ETA prediction
-* Multi-tenant orgs and granular RBAC
-* Advanced alert rules and webhooks
-* Hardware integration playbooks (OBD-II, BLE temp probes)
-
-See [`docs/ROADMAP.md`](./docs/ROADMAP.md).
+* Geofencing ขั้นสูงและ rule-based alerts
+* Predictive ETA/temperature anomalies
+* Multi-tenant + RBAC
+* SDKs สำหรับ Edge/Mobile
 
 ---
 
 ## Documentation
 
-* [Architecture Overview](./docs/ARCHITECTURE.md)
-* [Monorepo Guide](./docs/MONOREPO.md)
-* [Deployment Guide](./docs/DEPLOYMENT.md)
-* [API Reference](./docs/API.md)
-* [Contributing Guidelines](./docs/CONTRIBUTING.md)
-* [Project Wiki](https://github.com/ice-truck-tracking/ice-truck-tracking/wiki)
+* `docs/ARCHITECTURE.md` — ภาพรวมระบบ
+* `docs/DEPLOYMENT.md` — แนวทางดีพลอย
+* `docs/CONTRIBUTING.md` — วิธีร่วมพัฒนา
+
+> เอกสารจะขยายเมื่อโปรเจกต์เติบโต
 
 ---
 
 ## Contributing
 
-Contributions are welcome.
-
-1. Fork the repo
-2. Create a feature branch: `git checkout -b feat/your-change`
-3. Commit using Conventional Commits
-4. Open a PR with context and screenshots where relevant
-
-Please review the [Code of Conduct](./docs/CODE_OF_CONDUCT.md) and [Contributing Guide](./docs/CONTRIBUTING.md).
-
----
-
-## Community & Support
-
-* **Issues**: use GitHub Issues for bugs and feature requests
-* **Discussions**: architecture ideas and Q\&A
-* **Monitoring**: Grafana (dev): `http://localhost:3001`
-* **API Docs**: Swagger UI: `http://localhost:5000/api-docs`
+1. Fork
+2. `git checkout -b feat/your-change`
+3. Commit แบบ Conventional Commits
+4. เปิด PR พร้อมรายละเอียด/ภาพหน้าจอ
 
 ---
 
 ## License
 
-This project is licensed under the **MIT License**. See [LICENSE](./LICENSE).
+โครงการนี้ใช้สัญญาอนุญาต **MIT** — ดูที่ [LICENSE](./LICENSE)
 
 ---
 

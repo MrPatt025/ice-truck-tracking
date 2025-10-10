@@ -1,4 +1,4 @@
-import { io, Socket } from 'socket.io-client'
+﻿import { io, Socket } from 'socket.io-client'
 
 export interface TruckLocation {
   id: string
@@ -82,3 +82,5 @@ class SocketService {
 
 export const socketService = new SocketService()
 export default socketService
+
+
