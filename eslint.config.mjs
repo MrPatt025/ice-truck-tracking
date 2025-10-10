@@ -1,8 +1,8 @@
 // eslint.config.mjs
 import js from '@eslint/js';
-import ts from 'typescript-eslint';
-import react from 'eslint-plugin-react';
+import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
+import reactPlugin from 'eslint-plugin-react';
 import globals from 'globals';
 import { FlatCompat } from '@eslint/eslintrc';
 import { fileURLToPath } from 'node:url';
@@ -12,12 +12,26 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const compat = new FlatCompat({ baseDirectory: __dirname });
 
 export default [
-    // ignore ทั้งโมโนรีโป
-    { ignores: ['**/node_modules/**', '**/.next/**', '**/dist/**', '**/build/**', '**/.turbo/**', '**/coverage/**'] },
+    {
+        ignores: [
+            'node_modules/**',
+            '**/.next/**',
+            '**/dist/**',
+            '**/build/**',
+            '**/coverage/**',
+            'pnpm-lock.yaml',
+            'eslint.config.*',
+            'lint-staged.config.*',
+            '**/*.config.{js,cjs,mjs,ts}',
+            'backend/database/**',
+        ],
+    },
 
     // base recommended
     js.configs.recommended,
-    ...ts.configs.recommended,
+    ...tseslint.configs.recommended,
+    reactPlugin.configs.recommended,
+    { plugins: { 'react-hooks': reactHooks }, rules: { ...reactHooks.configs.recommended.rules } },
 
     // แปลง config แบบ eslintrc ของปลั๊กอินให้ใช้กับ flat ได้
     ...compat.extends('plugin:react/recommended'),
@@ -28,11 +42,11 @@ export default [
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'module',
-            parser: ts.parser,
+            parser: tseslint.parser,
             parserOptions: { tsconfigRootDir: process.cwd(), projectService: true },
             globals: { ...globals.browser, ...globals.node },
         },
-        plugins: { react, 'react-hooks': reactHooks },
+        plugins: { react: reactPlugin, 'react-hooks': reactHooks },
         settings: { react: { version: 'detect' } },
         rules: {
             'react/react-in-jsx-scope': 'off',
