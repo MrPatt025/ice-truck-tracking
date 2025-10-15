@@ -43,7 +43,6 @@
         "deps:update": "npx npm-check-updates -u && pnpm install",
         "deps:dedupe": "pnpm dedupe",
         "health:check": "node scripts/health-check.js",
-        "load:test": "node scripts/load-test.js",
         "setup": "pnpm install && turbo run build && npm run docker:up",
         "prepare": "husky install",
         "bootstrap": "npm install && npm run build --workspaces && npm run lint --workspaces && npm test --workspaces",
