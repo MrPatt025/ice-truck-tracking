@@ -1,52 +1,54 @@
-import React, { useState, useEffect } from 'react'
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import MapView, { Marker, Callout, Circle } from 'react-native-maps'
-import { Ionicons } from '@expo/vector-icons'
-import * as Location from 'expo-location'
+import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import MapView, { Marker, Callout, Circle } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useRealTimeTracking } from '../hooks/useRealTimeTracking'
-import { ConnectionStatus } from '../components/ConnectionStatus'
+import { ConnectionStatus } from '../components/ConnectionStatus';
+import { useRealTimeTracking } from '../hooks/useRealTimeTracking';
 
 interface Truck {
-  id: string
-  latitude: number
-  longitude: number
-  driver_name: string
-  temperature: number
-  speed: number
-  status: 'active' | 'inactive'
+  id: string;
+  latitude: number;
+  longitude: number;
+  driver_name: string;
+  temperature: number;
+  speed: number;
+  status: 'active' | 'inactive';
 }
 
 export function MapScreen() {
-  const [location, setLocation] = useState<Location.LocationObject | null>(null)
-  const [mapType, setMapType] = useState<'standard' | 'satellite'>('standard')
-  const { trucks, isConnected } = useRealTimeTracking()
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null,
+  );
+  const [mapType, setMapType] = useState<'standard' | 'satellite'>('standard');
+  const { trucks, isConnected } = useRealTimeTracking();
 
   useEffect(() => {
-    getCurrentLocation()
-  }, [])
+    getCurrentLocation();
+  }, []);
 
   const getCurrentLocation = async () => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync()
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        return
+        return;
       }
 
-      const currentLocation = await Location.getCurrentPositionAsync({})
-      setLocation(currentLocation)
+      const currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation(currentLocation);
     } catch (error) {
-      console.error('Location error:', error)
+      console.error('Location error:', error);
     }
-  }
+  };
 
   const initialRegion = {
     latitude: location?.coords.latitude || 13.7563,
     longitude: location?.coords.longitude || 100.5018,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -80,7 +82,7 @@ export function MapScreen() {
                 },
               ]}
             >
-              <Ionicons name='car' size={20} color='white' />
+              <Ionicons name="car" size={20} color="white" />
             </View>
 
             <Callout style={styles.callout}>
@@ -112,8 +114,8 @@ export function MapScreen() {
         <Circle
           center={{ latitude: 13.7563, longitude: 100.5018 }}
           radius={1000}
-          strokeColor='rgba(33, 150, 243, 0.5)'
-          fillColor='rgba(33, 150, 243, 0.1)'
+          strokeColor="rgba(33, 150, 243, 0.5)"
+          fillColor="rgba(33, 150, 243, 0.1)"
         />
       </MapView>
 
@@ -124,18 +126,18 @@ export function MapScreen() {
             setMapType(mapType === 'standard' ? 'satellite' : 'standard')
           }
         >
-          <Ionicons name='layers-outline' size={24} color='#2196F3' />
+          <Ionicons name="layers-outline" size={24} color="#2196F3" />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.controlButton}
           onPress={getCurrentLocation}
         >
-          <Ionicons name='locate-outline' size={24} color='#2196F3' />
+          <Ionicons name="locate-outline" size={24} color="#2196F3" />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -210,4 +212,4 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-})
+});

@@ -1,0 +1,13 @@
+﻿
+
+OsName                : Microsoft Windows 11 Home Single Language
+OsVersion             : 10.0.26100
+OsBuildNumber         : 26100
+OsArchitecture        : 64-bit
+CsName                : LAPTOP-ATIIVP6V
+CsManufacturer        : Acer
+CsModel               : Nitro AN515-47
+CsTotalPhysicalMemory : 16312729600
+
+
+

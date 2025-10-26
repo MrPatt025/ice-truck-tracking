@@ -1,13 +1,13 @@
-const API_BASE_URL = 'http://localhost:5000/api/v1'
+const API_BASE_URL = 'http://localhost:5000/api/v1';
 
 interface LoginResponse {
-  token: string
+  token: string;
   user: {
-    id: string
-    email: string
-    name: string
-    role: string
-  }
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+  };
 }
 
 class AuthService {
@@ -18,13 +18,13 @@ class AuthService {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password }),
-    })
+    });
 
     if (!response.ok) {
-      throw new Error('Login failed')
+      throw new Error('Login failed');
     }
 
-    return response.json()
+    return response.json();
   }
 
   async validateToken(token: string): Promise<LoginResponse['user']> {
@@ -32,14 +32,14 @@ class AuthService {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    })
+    });
 
     if (!response.ok) {
-      throw new Error('Token validation failed')
+      throw new Error('Token validation failed');
     }
 
-    const data = await response.json()
-    return data.user
+    const data = await response.json();
+    return data.user;
   }
 
   async refreshToken(token: string): Promise<LoginResponse> {
@@ -48,14 +48,14 @@ class AuthService {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    })
+    });
 
     if (!response.ok) {
-      throw new Error('Token refresh failed')
+      throw new Error('Token refresh failed');
     }
 
-    return response.json()
+    return response.json();
   }
 }
 
-export const authService = new AuthService()
+export const authService = new AuthService();

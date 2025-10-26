@@ -1,12 +1,8 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
     "target": "ES2022",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -20,59 +16,26 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
     "baseUrl": ".",
-    "types": [
-      "node",
-      "react",
-      "react-dom",
-      "next"
-    ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@/components/*": [
-        "./src/components/*"
-      ],
-      "@/lib/*": [
-        "./src/lib/*"
-      ],
-      "@/types/*": [
-        "./src/types/*"
-      ],
-      "@backend/*": [
-        "backend/*"
-      ],
-      "@dashboard/*": [
-        "dashboard/*"
-      ],
-      "@mobile-app/*": [
-        "mobile-app/*"
-      ],
-      "@sdk-edge/*": [
-        "sdk/edge/*"
-      ],
-      "@sdk-mobile/*": [
-        "sdk/mobile/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/types/*": ["./src/types/*"],
+      "@backend/*": ["backend/*"],
+      "@dashboard/*": ["dashboard/*"],
+      "@mobile-app/*": ["mobile-app/*"],
+      "@sdk-edge/*": ["sdk/edge/*"],
+      "@sdk-mobile/*": ["sdk/mobile/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": [
     "node_modules",
     "dist",
     "build",
     ".next",
-    "coverage"
+    "coverage",
+    "frontend/**"
   ]
 }

@@ -11,7 +11,9 @@ const createLimiter = (maxRequests, windowMs) => {
 
     // Clean old requests
     if (requests.has(ip)) {
-      const userRequests = requests.get(ip).filter(time => time > windowStart);
+      const userRequests = requests
+        .get(ip)
+        .filter((time) => time > windowStart);
       requests.set(ip, userRequests);
     } else {
       requests.set(ip, []);
@@ -32,7 +34,10 @@ const createLimiter = (maxRequests, windowMs) => {
 };
 
 const generalLimiter = createLimiter(50, config.RATE_LIMIT_WINDOW_MS);
-const authLimiter = createLimiter(config.RATE_LIMIT_MAX_REQUESTS, config.RATE_LIMIT_WINDOW_MS);
+const authLimiter = createLimiter(
+  config.RATE_LIMIT_MAX_REQUESTS,
+  config.RATE_LIMIT_WINDOW_MS,
+);
 
 module.exports = {
   generalLimiter,

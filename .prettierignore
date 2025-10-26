@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+coverage
+.next
+out
+dashboard/.next
+dashboard/out
+frontend/frontend/.expo
+**/*.min.js
+backend/html
+backend/prisma/migrations
+**/__snapshots__/**
+**/generated

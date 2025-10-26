@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,35 +9,34 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Ionicons } from '@expo/vector-icons'
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/AuthContext';
 
 export function LoginScreen() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-  const { login } = useAuth()
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields')
-      return
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await login(email, password)
+      await login(email, password);
     } catch (error) {
-      Alert.alert('Login Failed', 'Invalid email or password')
+      Alert.alert('Login Failed', 'Invalid email or password');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -46,7 +46,7 @@ export function LoginScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <Ionicons name='snow' size={64} color='#2196F3' />
+            <Ionicons name="snow" size={64} color="#2196F3" />
             <Text style={styles.title}>Ice Truck Tracking</Text>
             <Text style={styles.subtitle}>Sign in to continue</Text>
           </View>
@@ -54,36 +54,36 @@ export function LoginScreen() {
           <View style={styles.form}>
             <View style={styles.inputContainer}>
               <Ionicons
-                name='mail-outline'
+                name="mail-outline"
                 size={20}
-                color='#666'
+                color="#666"
                 style={styles.inputIcon}
               />
               <TextInput
                 style={styles.input}
-                placeholder='Email'
+                placeholder="Email"
                 value={email}
                 onChangeText={setEmail}
-                keyboardType='email-address'
-                autoCapitalize='none'
+                keyboardType="email-address"
+                autoCapitalize="none"
                 autoCorrect={false}
               />
             </View>
 
             <View style={styles.inputContainer}>
               <Ionicons
-                name='lock-closed-outline'
+                name="lock-closed-outline"
                 size={20}
-                color='#666'
+                color="#666"
                 style={styles.inputIcon}
               />
               <TextInput
                 style={styles.input}
-                placeholder='Password'
+                placeholder="Password"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                autoCapitalize='none'
+                autoCapitalize="none"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -92,7 +92,7 @@ export function LoginScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                   size={20}
-                  color='#666'
+                  color="#666"
                 />
               </TouchableOpacity>
             </View>
@@ -113,7 +113,7 @@ export function LoginScreen() {
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -183,4 +183,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-})
+});

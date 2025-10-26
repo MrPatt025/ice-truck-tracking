@@ -3,11 +3,13 @@
 ## ไฟล์ฐานข้อมูล
 
 ### `original_ice_tracking_database.sql`
+
 ไฟล์หลักสำหรับสร้างฐานข้อมูลเดิมตามโครงสร้าง backend ที่มีอยู่
 
 ## โครงสร้างตาราง (9 ตาราง)
 
 ### ตารางหลัก
+
 1. **users** - ผู้ใช้ระบบ (admin, owner, driver)
 2. **drivers** - พนักงานขับรถ
 3. **trucks** - รถส่งน้ำแข็ง
@@ -21,6 +23,7 @@
 ## แอดมิน 1 คนสำหรับทำงานทุกระบบ
 
 ### ข้อมูลแอดมิน
+
 - **Username:** `admin`
 - **Password:** `admin123` (เข้ารหัสด้วย bcrypt)
 - **Role:** `admin`
@@ -29,7 +32,9 @@
 - **Phone:** `0812345678`
 
 ### สิทธิ์การทำงาน
+
 แอดมินสามารถทำงานได้ทุกอย่างในระบบ:
+
 - จัดการผู้ใช้ (users)
 - จัดการพนักงานขับรถ (drivers)
 - จัดการรถ (trucks)
@@ -42,12 +47,14 @@
 ## วิธีการใช้งาน
 
 ### สร้างฐานข้อมูลใหม่
+
 ```sql
 -- รันไฟล์หลัก
 SOURCE backend/database/original_ice_tracking_database.sql;
 ```
 
 ### เข้าสู่ระบบแอดมิน
+
 ```
 Username: admin
 Password: admin123
@@ -56,21 +63,25 @@ Password: admin123
 ## ข้อมูลตัวอย่าง
 
 ### รถ
+
 - TRK001 - กข-1234 (ISUZU NPR)
 - TRK002 - กข-5678 (HINO 300)
 
 ### ร้านค้า
+
 - SHP001 - ร้านน้ำแข็งปากซอย
 - SHP002 - ร้านน้ำแข็งตลาดนัด
 - SHP003 - ร้านน้ำแข็งชุมชน
 
 ### เส้นทาง
+
 - เส้นทางส่งน้ำแข็งเขตกรุงเทพ
 - เส้นทางส่งน้ำแข็งชานเมือง
 
 ## ความแตกต่างจากฐานข้อมูลใหม่
 
 ### โครงสร้างเดิม
+
 - ใช้ `truck_code` แทน `truck_id`
 - ใช้ `shop_code` แทน `shop_id`
 - ใช้ `driver_code` แทน `driver_id`
@@ -78,6 +89,7 @@ Password: admin123
 - ใช้ `latitude/longitude` แทน `lat/lng`
 
 ### ไม่มี Foreign Key Constraints
+
 - ไม่มี foreign key relationships
 - ใช้ UNIQUE KEY แทน
 - เหมาะสำหรับการพัฒนาและทดสอบ

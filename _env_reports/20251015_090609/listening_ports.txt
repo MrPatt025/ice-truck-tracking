@@ -1,0 +1,36 @@
+﻿
+LocalAddress   LocalPort OwningProcess Process              
+------------   --------- ------------- -------              
+::                   135          1628 svchost              
+0.0.0.0              135          1628 svchost              
+10.161.238.145       139             4 System               
+192.168.56.1         139             4 System               
+::                   445             4 System               
+127.0.0.1           3701         14000 Code                 
+0.0.0.0             5000         13960 node                 
+0.0.0.0             5040         10496 svchost              
+::                  5357             4 System               
+::                  5432          6688 postgres             
+0.0.0.0             5432          6688 postgres             
+127.0.0.1           6432          5076 pgbouncer            
+::1                 6432          5076 pgbouncer            
+::                  7680          7620 svchost              
+0.0.0.0             8080          5068 httpd                
+127.0.0.1           9093         13712 refact-lsp           
+::1                42050         19072 OneDrive.Sync.Service
+0.0.0.0            49664          1396 lsass                
+::                 49664          1396 lsass                
+::                 49665          1292 wininit              
+0.0.0.0            49665          1292 wininit              
+::                 49666          2096 svchost              
+0.0.0.0            49666          2096 svchost              
+::                 49667          3236 svchost              
+0.0.0.0            49667          3236 svchost              
+0.0.0.0            49668          4496 spoolsv              
+::                 49668          4496 spoolsv              
+::                 49673          1368 services             
+0.0.0.0            49673          1368 services             
+0.0.0.0            54112         11104 Code                 
+::                 54113         11104 Code                 
+
+

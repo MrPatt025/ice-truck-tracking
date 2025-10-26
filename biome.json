@@ -1,0 +1,4 @@
+{
+  "formatter": { "enabled": true, "ignore": ["dist", "build"] },
+  "linter": { "enabled": true }
+}

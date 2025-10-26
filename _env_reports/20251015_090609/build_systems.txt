@@ -1,0 +1,7 @@
+﻿Get-ChildItem : A positional parameter cannot be found that accepts argument 'pom.xml'.
+At line:2 char:3
++   Get-ChildItem -File -ea 0 pom.xml build.gradle* settings.gradle* pa ...
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-ChildItem], ParameterBindingException
+    + FullyQualifiedErrorId : PositionalParameterNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+ 

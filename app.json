@@ -1,5 +1,3 @@
 {
-  "plugins": [
-    "expo-font"
-  ]
+  "plugins": ["expo-font"]
 }

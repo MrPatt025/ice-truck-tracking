@@ -1,0 +1,5 @@
+{
+  "name": "ice-truck-tracking",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-24-bullseye",
+  "postCreateCommand": "corepack enable && pnpm i"
+}

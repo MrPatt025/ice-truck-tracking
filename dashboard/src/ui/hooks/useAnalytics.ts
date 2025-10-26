@@ -1,76 +1,76 @@
-﻿'use client'
+'use client';
 
-import { useEffect, useCallback } from 'react'
+import { useCallback } from 'react';
 
 interface AnalyticsEvent {
-  action: string
-  category: string
-  label?: string
-  value?: number
-  custom_parameters?: Record<string, any>
+  action: string;
+  category: string;
+  label?: string;
+  value?: number;
+  custom_parameters?: Record<string, any>;
 }
 
 interface UserProperties {
-  user_id?: string
-  language: string
-  map_style_preference: string
-  dashboard_layout: string
-  notifications_enabled: boolean
+  user_id?: string;
+  language: string;
+  map_style_preference: string;
+  dashboard_layout: string;
+  notifications_enabled: boolean;
 }
 
 export function useAnalytics() {
   const track = useCallback((event: AnalyticsEvent) => {
     // Check if user has opted in to analytics
     const analyticsEnabled =
-      localStorage.getItem('analytics-enabled') === 'true'
-    if (!analyticsEnabled) return
+      localStorage.getItem('analytics-enabled') === 'true';
+    if (!analyticsEnabled) return;
 
     // Google Analytics 4
     if (typeof window !== 'undefined' && (window as any).gtag) {
-      ;(window as any).gtag('event', event.action, {
+      (window as any).gtag('event', event.action, {
         event_category: event.category,
         event_label: event.label,
         value: event.value,
         ...event.custom_parameters,
-      })
+      });
     }
 
     // Development logging
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Analytics]', event)
+      console.log('[Analytics]', event);
     }
-  }, [])
+  }, []);
 
   const trackPageView = useCallback(
     (page_path: string, page_title?: string) => {
       const analyticsEnabled =
-        localStorage.getItem('analytics-enabled') === 'true'
-      if (!analyticsEnabled) return
+        localStorage.getItem('analytics-enabled') === 'true';
+      if (!analyticsEnabled) return;
 
       if (typeof window !== 'undefined' && (window as any).gtag) {
-        ;(window as any).gtag('config', process.env.NEXT_PUBLIC_GA_ID, {
+        (window as any).gtag('config', process.env.NEXT_PUBLIC_GA_ID, {
           page_path,
           page_title,
-        })
+        });
       }
     },
-    []
-  )
+    [],
+  );
 
   const setUserProperties = useCallback(
     (properties: Partial<UserProperties>) => {
       const analyticsEnabled =
-        localStorage.getItem('analytics-enabled') === 'true'
-      if (!analyticsEnabled) return
+        localStorage.getItem('analytics-enabled') === 'true';
+      if (!analyticsEnabled) return;
 
       if (typeof window !== 'undefined' && (window as any).gtag) {
-        ;(window as any).gtag('config', process.env.NEXT_PUBLIC_GA_ID, {
+        (window as any).gtag('config', process.env.NEXT_PUBLIC_GA_ID, {
           custom_map: properties,
-        })
+        });
       }
     },
-    []
-  )
+    [],
+  );
 
   const trackMapInteraction = useCallback(
     (interaction: string, details?: Record<string, any>) => {
@@ -82,10 +82,10 @@ export function useAnalytics() {
           interaction_type: interaction,
           ...details,
         },
-      })
+      });
     },
-    [track]
-  )
+    [track],
+  );
 
   const trackTruckSelection = useCallback(
     (truckId: string, method: 'click' | 'keyboard') => {
@@ -97,10 +97,10 @@ export function useAnalytics() {
           selection_method: method,
           truck_id: truckId,
         },
-      })
+      });
     },
-    [track]
-  )
+    [track],
+  );
 
   const trackPreferenceChange = useCallback(
     (preference: string, value: any) => {
@@ -112,10 +112,10 @@ export function useAnalytics() {
           preference_name: preference,
           preference_value: value,
         },
-      })
+      });
     },
-    [track]
-  )
+    [track],
+  );
 
   const trackError = useCallback(
     (error: Error, context?: string) => {
@@ -128,10 +128,10 @@ export function useAnalytics() {
           error_stack: error.stack?.substring(0, 500), // Limit stack trace length
           error_context: context,
         },
-      })
+      });
     },
-    [track]
-  )
+    [track],
+  );
 
   return {
     track,
@@ -141,38 +141,36 @@ export function useAnalytics() {
     trackTruckSelection,
     trackPreferenceChange,
     trackError,
-  }
+  };
 }
 
 export function useAnalyticsOptIn() {
   const isOptedIn =
     typeof window !== 'undefined'
       ? localStorage.getItem('analytics-enabled') === 'true'
-      : false
+      : false;
 
   const optIn = useCallback(() => {
-    localStorage.setItem('analytics-enabled', 'true')
+    localStorage.setItem('analytics-enabled', 'true');
 
     // Initialize analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
-      ;(window as any).gtag('consent', 'update', {
+      (window as any).gtag('consent', 'update', {
         analytics_storage: 'granted',
-      })
+      });
     }
-  }, [])
+  }, []);
 
   const optOut = useCallback(() => {
-    localStorage.setItem('analytics-enabled', 'false')
+    localStorage.setItem('analytics-enabled', 'false');
 
     // Disable analytics
     if (typeof window !== 'undefined' && (window as any).gtag) {
-      ;(window as any).gtag('consent', 'update', {
+      (window as any).gtag('consent', 'update', {
         analytics_storage: 'denied',
-      })
+      });
     }
-  }, [])
+  }, []);
 
-  return { isOptedIn, optIn, optOut }
+  return { isOptedIn, optIn, optOut };
 }
-
-

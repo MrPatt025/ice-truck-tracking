@@ -1,0 +1,36 @@
+﻿
+
+Name  : PSVersion
+Key   : PSVersion
+Value : 5.1.26100.4652
+
+Name  : PSEdition
+Key   : PSEdition
+Value : Desktop
+
+Name  : PSCompatibleVersions
+Key   : PSCompatibleVersions
+Value : {1.0, 2.0, 3.0, 4.0...}
+
+Name  : BuildVersion
+Key   : BuildVersion
+Value : 10.0.26100.4652
+
+Name  : CLRVersion
+Key   : CLRVersion
+Value : 4.0.30319.42000
+
+Name  : WSManStackVersion
+Key   : WSManStackVersion
+Value : 3.0
+
+Name  : PSRemotingProtocolVersion
+Key   : PSRemotingProtocolVersion
+Value : 2.3
+
+Name  : SerializationVersion
+Key   : SerializationVersion
+Value : 1.1.0.1
+
+
+

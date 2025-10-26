@@ -1,10 +1,10 @@
-import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
-import { Ionicons } from '@expo/vector-icons'
+import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
 interface ConnectionStatusProps {
-  isConnected: boolean
-  queueCount?: number
+  isConnected: boolean;
+  queueCount?: number;
 }
 
 export function ConnectionStatus({
@@ -21,7 +21,7 @@ export function ConnectionStatus({
       <Ionicons
         name={isConnected ? 'wifi' : 'wifi-outline'}
         size={16}
-        color='white'
+        color="white"
       />
       <Text style={styles.text}>{isConnected ? 'Online' : 'Offline'}</Text>
       {!isConnected && queueCount > 0 && (
@@ -30,7 +30,7 @@ export function ConnectionStatus({
         </View>
       )}
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -59,4 +59,4 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
   },
-})
+});

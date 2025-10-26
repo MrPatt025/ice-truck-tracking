@@ -1,0 +1,8 @@
+﻿ForEach-Object : The term 'Get-Version' is not recognized as the name of a cmdlet, function, script file, or operable 
+program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:10 char:45
++ ... rt 'tool_versions.txt' { $tools | ForEach-Object { Get-Version $_ } }
++                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (Get-Version:String) [ForEach-Object], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException,Microsoft.PowerShell.Commands.ForEachObjectCommand
+ 

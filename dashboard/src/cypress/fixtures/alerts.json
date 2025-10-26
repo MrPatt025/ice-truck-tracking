@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1",
+    "level": "info",
+    "message": "Ping from truck-001",
+    "ts": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "2",
+    "level": "warn",
+    "message": "Temp high on truck-002",
+    "ts": "2025-01-01T00:01:00.000Z"
+  }
+]

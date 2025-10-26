@@ -1,10 +1,77 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'leaflet/dist/leaflet.css';
+@import '@tomtom-international/web-sdk-maps/dist/maps.css';
 
-/* ตัวอย่าง class แทน inline styles ที่ใช้บ่อย */
+/* 1. Global Performance & Aesthetics */
+@layer base {
+  html {
+    /* Set dark theme and default font settings */
+    color-scheme: dark;
+    background-color: #0d121c; /* A deep, slightly purplish dark blue */
+  }
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* 2. Custom Scrollbar for Aesthetics */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #8b5cf6, #06b6d4);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #a78bfa, #22d3ee);
+  }
+
+  /* Map Styles Override: Ensure the map container respects the rounded corners */
+  .map-container-style .maplibre-gl-canvas {
+    border-radius: 14px; /* Matches the parent container's style */
+  }
+}
+
+/* 3. Aesthetic and Utility Layers */
 @layer utilities {
-  .abs-tr-2 { @apply absolute top-2 right-2; }
-  .card { @apply rounded-2xl shadow p-4 bg-white dark:bg-neutral-900; }
-  .btn { @apply inline-flex items-center gap-2 rounded-xl px-3 py-2 border; }
+  .noise-bg {
+    /* High-res noise texture for visual depth (Performance: Small SVG) */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    pointer-events: none;
+  }
+
+  .holographic-grid {
+    /* Grid for Sci-Fi Aesthetic */
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(circle at center, black 50%, transparent 80%);
+    -webkit-mask-image: radial-gradient(
+      circle at center,
+      black 50%,
+      transparent 80%
+    );
+  }
+
+  .shadow-glow {
+    /* Subtle Outer Glow for Cards */
+    box-shadow:
+      0 0 10px rgba(139, 92, 246, 0.5),
+      0 0 20px rgba(6, 182, 212, 0.3);
+  }
+
+  .vfx-glow {
+    /* Icon/Text Shadow */
+    filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.8));
+  }
 }

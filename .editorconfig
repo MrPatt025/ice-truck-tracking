@@ -2,8 +2,94 @@ root = true
 
 [*]
 charset = utf-8
+end_of_line = lf
 indent_style = space
 indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Markdown: คงช่องว่างท้ายบรรทัดสำหรับ hard line breaks
+[*.{md,mdx,markdown}]
+trim_trailing_whitespace = false
+insert_final_newline = true
+
+# JSON / JSONC
+[*.{json,jsonc}]
+indent_style = space
+indent_size = 2
+
+# YAML (รวม docker-compose*.yml)
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# TypeScript / JavaScript
+[*.{ts,tsx,js,jsx,cjs,mjs}]
+indent_style = space
+indent_size = 2
+
+# Stylesheets
+[*.{css,scss,less}]
+indent_style = space
+indent_size = 2
+
+# Prisma schema
+[*.prisma]
+indent_style = space
+indent_size = 2
+
+# SQL
+[*.sql]
+indent_style = space
+indent_size = 2
+
+# GraphQL
+[*.graphql]
+indent_style = space
+indent_size = 2
+
+# .env files
+[.env*]
 end_of_line = lf
 insert_final_newline = true
-trim_trailing_whitespace = true 
+trim_trailing_whitespace = false
+
+# Lockfiles: กัน EOL เพี้ยน
+[pnpm-lock.yaml]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = false
+
+[package-lock.json]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = false
+
+[yarn.lock]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = false
+
+# Dockerfile
+[Dockerfile*]
+indent_style = space
+indent_size = 2
+
+# Unix shell scripts
+[*.{sh,bash}]
+end_of_line = lf
+insert_final_newline = true
+
+# Windows scripts
+[*.{bat,cmd,ps1}]
+end_of_line = crlf
+insert_final_newline = true
+
+# Makefile ต้องใช้แท็บ
+[Makefile]
+indent_style = tab
+indent_size = tab
+
+# Diffs/Patches — คงช่องว่างท้ายบรรทัด
+[*.{diff,patch}]
+trim_trailing_whitespace = false

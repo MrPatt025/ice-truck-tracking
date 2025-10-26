@@ -1,7 +1,13 @@
-﻿'use client'
-import React from 'react'
+'use client';
+import React from 'react';
 
-type Item = { id: number; left: number; top: number; delay: number; duration: number }
+type Item = {
+  id: number;
+  left: number;
+  top: number;
+  delay: number;
+  duration: number;
+};
 
 export default function AnimatedPings({ count = 12 }: { count?: number }) {
   // Generate once on client to avoid SSR mismatch
@@ -12,8 +18,8 @@ export default function AnimatedPings({ count = 12 }: { count?: number }) {
       top: 20 + Math.random() * 60,
       delay: i * 0.3 + Math.random() * 0.5,
       duration: 3 + Math.random() * 1,
-    }))
-  )
+    })),
+  );
 
   return (
     <div className="absolute inset-0 opacity-60" suppressHydrationWarning>
@@ -33,7 +39,5 @@ export default function AnimatedPings({ count = 12 }: { count?: number }) {
         </React.Fragment>
       ))}
     </div>
-  )
+  );
 }
-
-

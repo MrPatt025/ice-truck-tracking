@@ -1,0 +1,26 @@
+﻿
+FullName                                                         Length LastWriteTime        
+--------                                                         ------ -------------        
+C:\Users\PATTANAKORN\ice-truck-tracking\backend\.env               1184 10/14/2025 7:35:41 PM
+C:\Users\PATTANAKORN\ice-truck-tracking\backend\.env.development    161 10/12/2025 1:55:18 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\dashboard\.env.example      429 10/10/2025 4:37:09 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\dashboard\.env.local        285 10/14/2025 4:47:42 PM
+C:\Users\PATTANAKORN\ice-truck-tracking\frontend\frontend\.env      245 10/10/2025 7:21:04 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\mobile-app\node_modul...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\mobile-app\.env.example     364 10/10/2025 4:37:09 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\@e...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\@r...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\@r...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\@r...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\@r...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\@r...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\@r...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\@r...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\@s...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\@t...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\ex...    482 10/10/2025 5:37:35 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\no...   1184 10/14/2025 7:35:41 PM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\no...    161 10/12/2025 1:55:18 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\no...    429 10/10/2025 4:37:09 AM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\no...    285 10/14/2025 4:47:42 PM
+C:\Users\PATTANAKORN\ice-truck-tracking\node_modules\.pnpm\no...    482 10/10/2025 5:37:35 AM

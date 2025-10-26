@@ -1,83 +1,132 @@
-const logger = require('../config/logger');
+'use strict';
+
 const config = require('../config/env');
+const logger = require('../config/logger');
 
+/** Operational error wrapper */
 class AppError extends Error {
-  constructor(message, statusCode) {
-    super(message);
-    this.statusCode = statusCode;
-    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
+  constructor(message, statusCode = 500, meta) {
+    super(message || 'internal_error');
+    this.name = 'AppError';
+    this.statusCode = Number(statusCode) || 500;
+    this.status = `${this.statusCode}`.startsWith('4') ? 'fail' : 'error';
     this.isOperational = true;
-
-    Error.captureStackTrace(this, this.constructor);
+    if (meta && typeof meta === 'object') this.meta = meta;
+    Error.captureStackTrace?.(this, this.constructor);
   }
 }
 
-const handleCastErrorDB = err => {
-  const message = `Invalid ${err.path}: ${err.value}`;
-  return new AppError(message, 400);
+/** Mappers -> AppError */
+const fromPrisma = (err) => {
+  const code = err && err.code;
+  if (code === 'P2002') {
+    const fields = Array.isArray(err.meta?.target)
+      ? err.meta.target.join(',')
+      : err.meta?.target || 'unique';
+    return new AppError(`Duplicate value for unique field(s): ${fields}`, 409, {
+      code,
+    });
+  }
+  if (code === 'P2025')
+    return new AppError('Resource not found', 404, { code });
+  return null;
 };
 
-const handleDuplicateFieldsDB = err => {
-  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
-  const message = `Duplicate field value: ${value}. Please use another value!`;
-  return new AppError(message, 400);
+const fromFastify = (err) => {
+  if (err?.code === 'FST_ERR_CTP_INVALID_JSON')
+    return new AppError('Invalid JSON body', 400);
+  if (err?.code === 'FST_ERR_CTP_INVALID_MEDIA_TYPE')
+    return new AppError('Unsupported media type', 415);
+  if (err?.validation)
+    return new AppError('Invalid request data', 400, {
+      validation: err.validation,
+    });
+  return null;
 };
 
-const handleValidationErrorDB = err => {
-  const errors = Object.values(err.errors).map(el => el.message);
-  const message = `Invalid input data. ${errors.join('. ')}`;
-  return new AppError(message, 400);
+const fromJWT = (err) => {
+  if (err?.name === 'JsonWebTokenError')
+    return new AppError('Invalid token', 401);
+  if (err?.name === 'TokenExpiredError')
+    return new AppError('Token expired', 401);
+  return null;
 };
 
-const handleJWTError = () => new AppError('Invalid token. Please log in again!', 401);
+const fromMongoose = (err) => {
+  if (err?.name === 'CastError')
+    return new AppError(`Invalid ${err.path}: ${err.value}`, 400);
+  if (err?.name === 'ValidationError') {
+    const errors = Object.values(err.errors || {})
+      .map((e) => e.message)
+      .filter(Boolean);
+    return new AppError(`Invalid input data. ${errors.join('. ')}`.trim(), 400);
+  }
+  if (err?.code === 11000) return new AppError('Duplicate field value', 400);
+  return null;
+};
 
-const handleJWTExpiredError = () =>
-  new AppError('Your token has expired! Please log in again.', 401);
+const toOperationalError = (err) =>
+  err instanceof AppError
+    ? err
+    : fromPrisma(err) ||
+      fromFastify(err) ||
+      fromJWT(err) ||
+      fromMongoose(err) ||
+      null;
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
+/** Reply type detector (Fastify vs Express) */
+const isFastifyReply = (obj) =>
+  !!obj && typeof obj.code === 'function' && typeof obj.send === 'function';
+
+/** Responders */
+const sendDev = (err, replyLike) => {
+  const body = {
     status: err.status,
-    error: err,
     message: err.message,
     stack: err.stack,
-  });
+    ...(err.meta ? { meta: err.meta } : {}),
+  };
+  if (isFastifyReply(replyLike)) replyLike.code(err.statusCode).send(body);
+  else replyLike.status(err.statusCode).json(body);
 };
 
-const sendErrorProd = (err, res) => {
-  // Operational, trusted error: send message to client
+const sendProd = (err, replyLike) => {
   if (err.isOperational) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
-    });
-  } else {
-    // Programming or other unknown error: don't leak error details
-    logger.error('ERROR 💥', err);
-    res.status(500).json({
-      status: 'error',
-      message: 'Something went wrong!',
-    });
+    const body = { status: err.status, message: err.message };
+    if (isFastifyReply(replyLike)) replyLike.code(err.statusCode).send(body);
+    else replyLike.status(err.statusCode).json(body);
+    return;
   }
+  logger.error({ err }, 'unhandled error');
+  const body = { status: 'error', message: 'Something went wrong' };
+  if (isFastifyReply(replyLike)) replyLike.code(500).send(body);
+  else replyLike.status(500).json(body);
 };
 
-module.exports = (err, req, res, next) => {
-  err.statusCode = err.statusCode || 500;
-  err.status = err.status || 'error';
+/** Unified handler (Fastify + Express) */
+function unifiedErrorHandler(err, req, replyOrRes, _next) {
+  const mapped =
+    toOperationalError(err) ||
+    new AppError(
+      err?.message || 'internal_error',
+      typeof err?.statusCode === 'number' ? err.statusCode : 500,
+    );
 
-  if (config.isDevelopment) {
-    sendErrorDev(err, res);
-  } else {
-    let error = { ...err };
-    error.message = err.message;
+  if (config?.isDevelopment) sendDev(mapped, replyOrRes);
+  else sendProd(mapped, replyOrRes);
+}
 
-    if (error.name === 'CastError') error = handleCastErrorDB(error);
-    if (error.code === 11000) error = handleDuplicateFieldsDB(error);
-    if (error.name === 'ValidationError') error = handleValidationErrorDB(error);
-    if (error.name === 'JsonWebTokenError') error = handleJWTError();
-    if (error.name === 'TokenExpiredError') error = handleJWTExpiredError();
+/** Fastify adapter: app.setErrorHandler(unifiedErrorHandler) */
+function fastifyErrorHandler(err, req, reply) {
+  unifiedErrorHandler(err, req, reply);
+}
 
-    sendErrorProd(error, res);
-  }
-};
+/** Express adapter (kept for compatibility) */
+function expressErrorHandler(err, req, res, _next) {
+  unifiedErrorHandler(err, req, res);
+}
 
+module.exports = expressErrorHandler; // default CommonJS export (Express-style)
+module.exports.fastify = fastifyErrorHandler; // Fastify-style handler
 module.exports.AppError = AppError;
+module.exports.toOperationalError = toOperationalError;

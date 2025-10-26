@@ -1,37 +1,38 @@
-﻿import { forwardRef, InputHTMLAttributes, useId } from 'react'
-import { cn } from '../utils'
+﻿import { forwardRef, InputHTMLAttributes, useId } from 'react';
+
+import { cn } from '../utils';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  error?: string
-  helperText?: string
-  leftIcon?: React.ReactNode
-  rightIcon?: React.ReactNode
+  label?: string;
+  error?: string;
+  helperText?: string;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     { className, label, error, helperText, leftIcon, rightIcon, id, ...props },
-    ref
+    ref,
   ) => {
     const reactId = useId();
-    const inputId = id || `input-${reactId.replace(/[:]/g, '')}`
+    const inputId = id || `input-${reactId.replace(/[:]/g, '')}`;
 
     return (
-      <div className='space-y-1'>
+      <div className="space-y-1">
         {label && (
           <label
             htmlFor={inputId}
-            className='block text-sm font-medium text-gray-700'
+            className="block text-sm font-medium text-gray-700"
           >
             {label}
           </label>
         )}
 
-        <div className='relative'>
+        <div className="relative">
           {leftIcon && (
-            <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-              <span className='text-gray-400 text-sm'>{leftIcon}</span>
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span className="text-gray-400 text-sm">{leftIcon}</span>
             </div>
           )}
 
@@ -45,7 +46,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               error && 'border-red-300 focus:ring-red-500 focus:border-red-500',
               Boolean(leftIcon) && 'pl-10',
               Boolean(rightIcon) && 'pr-10',
-              className
+              className,
             )}
             aria-invalid={error ? 'true' : 'false'}
             aria-describedby={
@@ -59,8 +60,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           />
 
           {rightIcon && (
-            <div className='absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none'>
-              <span className='text-gray-400 text-sm'>{rightIcon}</span>
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <span className="text-gray-400 text-sm">{rightIcon}</span>
             </div>
           )}
         </div>
@@ -68,26 +69,24 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {error && (
           <p
             id={`${inputId}-error`}
-            className='text-sm text-red-600'
-            role='alert'
+            className="text-sm text-red-600"
+            role="alert"
           >
             {error}
           </p>
         )}
 
         {helperText && !error && (
-          <p id={`${inputId}-helper`} className='text-sm text-gray-500'>
+          <p id={`${inputId}-helper`} className="text-sm text-gray-500">
             {helperText}
           </p>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-Input.displayName = 'Input'
+Input.displayName = 'Input';
 
-export { Input }
-export type { InputProps }
-
-
+export { Input };
+export type { InputProps };

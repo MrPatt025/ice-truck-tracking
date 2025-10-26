@@ -1,27 +1,28 @@
-import { useState, useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useState, useEffect } from 'react';
+
+import { useAuth } from '../contexts/AuthContext';
 
 interface Truck {
-  id: string
-  latitude: number
-  longitude: number
-  driver_name: string
-  temperature: number
-  speed: number
-  status: 'active' | 'inactive'
+  id: string;
+  latitude: number;
+  longitude: number;
+  driver_name: string;
+  temperature: number;
+  speed: number;
+  status: 'active' | 'inactive';
 }
 
 export function useRealTimeTracking() {
-  const [trucks, setTrucks] = useState<Truck[]>([])
-  const [isConnected, setIsConnected] = useState(false)
-  const { user } = useAuth()
+  const [trucks, setTrucks] = useState<Truck[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (!user) return
+    if (!user) return;
 
     // Mock WebSocket connection
     const mockConnection = () => {
-      setIsConnected(true)
+      setIsConnected(true);
 
       // Mock truck data
       const mockTrucks: Truck[] = [
@@ -52,35 +53,35 @@ export function useRealTimeTracking() {
           speed: 0,
           status: 'inactive',
         },
-      ]
+      ];
 
-      setTrucks(mockTrucks)
+      setTrucks(mockTrucks);
 
       // Simulate real-time updates
       const interval = setInterval(() => {
-        setTrucks(prevTrucks =>
-          prevTrucks.map(truck => ({
+        setTrucks((prevTrucks) =>
+          prevTrucks.map((truck) => ({
             ...truck,
             latitude: truck.latitude + (Math.random() - 0.5) * 0.001,
             longitude: truck.longitude + (Math.random() - 0.5) * 0.001,
             speed: Math.max(0, truck.speed + (Math.random() - 0.5) * 10),
             temperature: truck.temperature + (Math.random() - 0.5) * 0.5,
-          }))
-        )
-      }, 5000)
+          })),
+        );
+      }, 5000);
 
       return () => {
-        clearInterval(interval)
-        setIsConnected(false)
-      }
-    }
+        clearInterval(interval);
+        setIsConnected(false);
+      };
+    };
 
-    const cleanup = mockConnection()
-    return cleanup
-  }, [user])
+    const cleanup = mockConnection();
+    return cleanup;
+  }, [user]);
 
   return {
     trucks,
     isConnected,
-  }
+  };
 }

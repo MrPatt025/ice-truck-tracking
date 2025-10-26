@@ -1,199 +1,87 @@
-﻿'use client'
+﻿'use client';
 
-import { useState, useEffect } from 'react'
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
+import { memo, useMemo } from 'react';
 
-interface AnalyticsData {
-  dailyDistance: { date: string; distance: number }[]
-  truckUtilization: { truck: string; utilization: number }[]
-  alertFrequency: { type: string; count: number }[]
-  performanceMetrics: {
-    avgResponseTime: number
-    successRate: number
-    activeConnections: number
-  }
+type Stats = Readonly<{
+  active: number;
+  distance: number; // kilometers
+  avgSpeed: number; // km/h
+}>;
+
+type Props = Readonly<{
+  stats: Stats;
+  locale?: string; // ใช้กำหนดรูปแบบตัวเลขตาม locale ถ้าไม่ระบุจะ fallback เป็นค่าเริ่มต้นของบราวเซอร์
+}>;
+
+function safeNumber(n: unknown, fallback = 0): number {
+  const v = typeof n === 'number' ? n : Number(n);
+  return Number.isFinite(v) ? v : fallback;
 }
 
-export function AnalyticsDashboard() {
-  const [data, setData] = useState<AnalyticsData | null>(null)
-  const [timeRange, setTimeRange] = useState('7d')
+const AnalyticsDashboard = ({ stats, locale }: Props) => {
+  const active = safeNumber(stats.active, 0);
+  const distance = safeNumber(stats.distance, 0);
+  const avgSpeed = safeNumber(stats.avgSpeed, 0);
 
-  useEffect(() => {
-    fetchAnalytics()
-  }, [timeRange])
-
-  const fetchAnalytics = async () => {
-    try {
-      // Mock data for demo
-      setData({
-        dailyDistance: [
-          { date: '2025-01-01', distance: 245 },
-          { date: '2025-01-02', distance: 312 },
-          { date: '2025-01-03', distance: 189 },
-          { date: '2025-01-04', distance: 278 },
-          { date: '2025-01-05', distance: 356 },
-          { date: '2025-01-06', distance: 298 },
-          { date: '2025-01-07', distance: 334 },
-        ],
-        truckUtilization: [
-          { truck: 'Truck-001', utilization: 85 },
-          { truck: 'Truck-002', utilization: 92 },
-          { truck: 'Truck-003', utilization: 78 },
-          { truck: 'Truck-004', utilization: 88 },
-        ],
-        alertFrequency: [
-          { type: 'Geofence', count: 12 },
-          { type: 'Temperature', count: 8 },
-          { type: 'Speed', count: 15 },
-          { type: 'Offline', count: 5 },
-        ],
-        performanceMetrics: {
-          avgResponseTime: 145,
-          successRate: 99.2,
-          activeConnections: 24,
-        },
-      })
-    } catch (error) {
-      console.error('Failed to fetch analytics:', error)
-    }
-  }
-
-  if (!data) return <div>Loading analytics...</div>
+  const { intFmt, oneDecFmt } = useMemo(() => {
+    return {
+      intFmt: new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }),
+      oneDecFmt: new Intl.NumberFormat(locale, {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }),
+    };
+  }, [locale]);
 
   return (
-    <div className='p-6 space-y-6'>
-      <div className='flex justify-between items-center'>
-        <h2 className='text-2xl font-bold'>ðŸ“Š Analytics Dashboard</h2>
-        <div className="flex items-center">
-          <label htmlFor="timeRange" className="sr-only">Time range</label>
-          <select
-            id="timeRange"
-            aria-label="Time range"
-            value={timeRange}
-            onChange={e => setTimeRange(e.target.value)}
-            className='px-3 py-2 border rounded-lg'
-          >
-          <option value='24h'>Last 24 Hours</option>
-          <option value='7d'>Last 7 Days</option>
-          <option value='30d'>Last 30 Days</option>
-          </select>
-        </div>
-      </div>
+    <section
+      id="analytics"
+      role="region"
+      aria-labelledby="analytics-heading"
+      data-testid="analytics-dashboard"
+      className="grid grid-cols-1 gap-3 sm:grid-cols-3"
+    >
+      <h2 id="analytics-heading" className="sr-only">
+        Analytics
+      </h2>
 
-      {/* KPI Cards */}
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-        <div className='bg-white p-4 rounded-lg shadow'>
-          <h3 className='text-sm font-medium text-gray-500'>
-            Avg Response Time
-          </h3>
-          <p className='text-2xl font-bold text-blue-600'>
-            {data.performanceMetrics.avgResponseTime}ms
-          </p>
-        </div>
-        <div className='bg-white p-4 rounded-lg shadow'>
-          <h3 className='text-sm font-medium text-gray-500'>Success Rate</h3>
-          <p className='text-2xl font-bold text-green-600'>
-            {data.performanceMetrics.successRate}%
-          </p>
-        </div>
-        <div className='bg-white p-4 rounded-lg shadow'>
-          <h3 className='text-sm font-medium text-gray-500'>
-            Active Connections
-          </h3>
-          <p className='text-2xl font-bold text-purple-600'>
-            {data.performanceMetrics.activeConnections}
-          </p>
-        </div>
-      </div>
+      <article
+        data-testid="active-trucks"
+        aria-label="Active Trucks"
+        className="rounded-xl border border-white/10 bg-white/5 p-3"
+      >
+        <div className="text-sm opacity-70">Active Trucks</div>
+        <div className="text-2xl font-semibold">{intFmt.format(active)}</div>
+      </article>
 
-      {/* Charts */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-        {/* Daily Distance Chart */}
-        <div className='bg-white p-4 rounded-lg shadow'>
-          <h3 className='text-lg font-semibold mb-4'>
-            ðŸ“ˆ Daily Distance Traveled
-          </h3>
-          <ResponsiveContainer width='100%' height={300}>
-            <LineChart data={data.dailyDistance}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis dataKey='date' />
-              <YAxis />
-              <Tooltip />
-              <Line
-                type='monotone'
-                dataKey='distance'
-                stroke='#2196F3'
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+      <article
+        data-testid="total-distance"
+        aria-label="Total Distance"
+        className="rounded-xl border border-white/10 bg-white/5 p-3"
+      >
+        <div className="text-sm opacity-70">
+          Total Distance <span className="opacity-60">(km)</span>
         </div>
-
-        {/* Truck Utilization Chart */}
-        <div className='bg-white p-4 rounded-lg shadow'>
-          <h3 className='text-lg font-semibold mb-4'>ðŸšš Truck Utilization</h3>
-          <ResponsiveContainer width='100%' height={300}>
-            <BarChart data={data.truckUtilization}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis dataKey='truck' />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey='utilization' fill='#4CAF50' />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="text-2xl font-semibold">
+          {oneDecFmt.format(distance)}
         </div>
+      </article>
 
-        {/* Alert Frequency Chart */}
-        <div className='bg-white p-4 rounded-lg shadow'>
-          <h3 className='text-lg font-semibold mb-4'>ðŸš¨ Alert Frequency</h3>
-          <ResponsiveContainer width='100%' height={300}>
-            <BarChart data={data.alertFrequency}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis dataKey='type' />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey='count' fill='#FF9800' />
-            </BarChart>
-          </ResponsiveContainer>
+      <article
+        data-testid="average-speed"
+        aria-label="Average Speed"
+        className="rounded-xl border border-white/10 bg-white/5 p-3"
+      >
+        <div className="text-sm opacity-70">
+          Average Speed <span className="opacity-60">(km/h)</span>
         </div>
-
-        {/* Performance Trends */}
-        <div className='bg-white p-4 rounded-lg shadow'>
-          <h3 className='text-lg font-semibold mb-4'>âš¡ Performance Trends</h3>
-          <div className='space-y-4'>
-            <div className='flex justify-between items-center'>
-              <span>API Response Time</span>
-              <div className='w-32 bg-gray-200 rounded-full h-2'>
-                <div className='bg-blue-600 h-2 rounded-full w-[75%]'></div>
-              </div>
-            </div>
-            <div className='flex justify-between items-center'>
-              <span>Database Performance</span>
-              <div className='w-32 bg-gray-200 rounded-full h-2'>
-                <div className='bg-green-600 h-2 rounded-full w-[90%]'></div>
-              </div>
-            </div>
-            <div className='flex justify-between items-center'>
-              <span>WebSocket Stability</span>
-              <div className='w-32 bg-gray-200 rounded-full h-2'>
-                <div className='bg-purple-600 h-2 rounded-full w-[85%]'></div>
-              </div>
-            </div>
-          </div>
+        <div className="text-2xl font-semibold">
+          {oneDecFmt.format(avgSpeed)}
         </div>
-      </div>
-    </div>
-  )
-}
+      </article>
+    </section>
+  );
+};
 
-
+export default memo(AnalyticsDashboard);
+export type { Props as AnalyticsDashboardProps, Stats as AnalyticsStats };

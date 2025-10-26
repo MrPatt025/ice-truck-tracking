@@ -1,1 +1,1 @@
-npx lint-staged
+pnpm dlx lint-staged -c lint-staged.config.mjs --debug

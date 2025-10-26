@@ -1,0 +1,20 @@
+[
+  {
+    "id": "truck-001",
+    "latitude": 13.75,
+    "longitude": 100.5,
+    "driver_name": "Somchai",
+    "speed": 25,
+    "temp": -7,
+    "updatedAt": "2025-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "truck-002",
+    "latitude": 13.76,
+    "longitude": 100.51,
+    "driver_name": "Suda",
+    "speed": 30,
+    "temp": -10,
+    "updatedAt": "2025-01-01T00:00:00.000Z"
+  }
+]

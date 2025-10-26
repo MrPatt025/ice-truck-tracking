@@ -3,18 +3,23 @@
 ## ไฟล์ฐานข้อมูล
 
 ### 1. `complete_ice_tracking_database.sql`
+
 ไฟล์หลักสำหรับสร้างฐานข้อมูลทั้งหมด ประกอบด้วย:
+
 - สร้างฐานข้อมูล `ice_tracking`
 - สร้างตารางทั้งหมด 10 ตาราง
 - สร้าง indexes เพื่อเพิ่มประสิทธิภาพ
 - เพิ่มข้อมูลตัวอย่าง (sample data)
 
 ### 2. `reset_database.sql`
+
 ไฟล์สำหรับรีเซ็ตฐานข้อมูล:
+
 - ลบตารางทั้งหมด
 - ใช้สำหรับเริ่มต้นใหม่
 
 ### 3. ไฟล์อื่นๆ
+
 - `ice_tracking.sql` - ไฟล์เดิม (พื้นฐาน)
 - `route_management.sql` - ตารางจัดการเส้นทาง
 - `add_tracking_columns.sql` - เพิ่มคอลัมน์ GPS
@@ -23,6 +28,7 @@
 ## โครงสร้างตาราง
 
 ### ตารางหลัก
+
 1. **users** - ผู้ใช้ระบบ (admin, owner, driver)
 2. **drivers** - พนักงานขับรถ
 3. **trucks** - รถส่งน้ำแข็ง
@@ -37,12 +43,14 @@
 ## วิธีการใช้งาน
 
 ### สร้างฐานข้อมูลใหม่
+
 ```sql
 -- รันไฟล์หลัก
 SOURCE backend/database/complete_ice_tracking_database.sql;
 ```
 
 ### รีเซ็ตฐานข้อมูล
+
 ```sql
 -- รีเซ็ตฐานข้อมูล
 SOURCE backend/database/reset_database.sql;
@@ -52,6 +60,7 @@ SOURCE backend/database/complete_ice_tracking_database.sql;
 ```
 
 ### ตรวจสอบฐานข้อมูล
+
 ```sql
 -- ดูตารางทั้งหมด
 SHOW TABLES;
@@ -66,16 +75,19 @@ DESCRIBE trucks;
 ## ข้อมูลตัวอย่าง
 
 ### ผู้ใช้
+
 - **admin** / password: admin123
 - **owner** / password: owner123
 - **driver1** / password: driver123
 - **driver2** / password: driver123
 
 ### รถ
+
 - TRK001 - กข-1234 (ISUZU NPR)
 - TRK002 - กข-5678 (HINO 300)
 
 ### ร้านค้า
+
 - SHP001 - ร้านน้ำแข็งปากซอย
 - SHP002 - ร้านน้ำแข็งตลาดนัด
 - SHP003 - ร้านน้ำแข็งชุมชน
@@ -97,6 +109,7 @@ drivers (1) ←→ (N) route_assignments
 ## Indexes
 
 ฐานข้อมูลมี indexes สำหรับ:
+
 - การค้นหาตาม truck_id, driver_id
 - การเรียงลำดับตาม timestamp
 - การค้นหาตามสถานะ (status)

@@ -1,0 +1,7 @@
+﻿Get-ChildItem : A positional parameter cannot be found that accepts argument 'requirements*.txt'.
+At line:5 char:13
++   "files:"; Get-ChildItem -File -ea 0 requirements*.txt pyproject.tom ...
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-ChildItem], ParameterBindingException
+    + FullyQualifiedErrorId : PositionalParameterNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+ 

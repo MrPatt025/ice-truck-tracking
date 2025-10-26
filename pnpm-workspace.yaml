@@ -1,9 +1,5 @@
 packages:
-  - backend
-  - dashboard
-  - mobile-app
-  - sdk/*
-
-ignoredBuiltDependencies:
-  - snyk
-  - unrs-resolver
+  - 'backend'
+  - 'dashboard'
+  - 'mobile-app'
+  - 'sdk/*'

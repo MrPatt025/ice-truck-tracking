@@ -1,0 +1,120 @@
+// backend/src/services/alertService.ts
+import { prisma } from '../lib/prisma';
+import type { Prisma, Alert } from '@prisma/client';
+
+/** Prisma error codes ที่ใช้ */
+const PRISMA = {
+  NOT_FOUND: 'P2025',
+  FK_FAIL: 'P2003',
+} as const;
+
+/** ดึง code จาก Prisma error แบบปลอดภัย */
+function getErrCode(e: unknown): string | undefined {
+  if (e && typeof e === 'object' && 'code' in e) {
+    const code = (e as { code?: unknown }).code;
+    if (typeof code === 'string') return code;
+  }
+  return undefined;
+}
+
+function assertPositiveInt(id: number) {
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new TypeError('id must be a positive integer');
+  }
+}
+
+function normalizeMessage(m?: string | null): string | undefined {
+  if (m == null) return undefined;
+  const t = m.trim();
+  if (!t) throw new TypeError('message cannot be empty');
+  return t;
+}
+
+/** รายการทั้งหมด เรียงตาม id เพื่อความเสถียร */
+export function getAllAlerts(): Promise<Alert[]> {
+  return prisma.alert.findMany({ orderBy: { id: 'asc' } });
+}
+
+export function getAlertById(id: number): Promise<Alert | null> {
+  assertPositiveInt(id);
+  return prisma.alert.findUnique({ where: { id } });
+}
+
+export function createAlert(data: Prisma.AlertCreateInput): Promise<Alert> {
+  // ถ้ามี message ให้ trim และกันค่าว่าง
+  const msg = normalizeMessage(
+    typeof data.message === 'string' ? data.message : undefined,
+  );
+  const payload: Prisma.AlertCreateInput = {
+    ...data,
+    ...(msg !== undefined ? { message: msg } : {}),
+  };
+  return prisma.alert.create({ data: payload });
+}
+
+/**
+ * สร้าง Alert ผูกกับ Truck
+ * - สำเร็จ -> Alert
+ * - FK ผิดหรือไม่พบ Truck (P2003/P2025) -> null
+ */
+export async function createAlertForTruck(
+  truckId: number,
+  level: Alert['level'],
+  message: string,
+): Promise<Alert | null> {
+  assertPositiveInt(truckId);
+  const msg = normalizeMessage(message)!;
+
+  try {
+    return await prisma.alert.create({
+      data: { level, message: msg, truck: { connect: { id: truckId } } },
+    });
+  } catch (err: unknown) {
+    const code = getErrCode(err);
+    if (code === PRISMA.FK_FAIL || code === PRISMA.NOT_FOUND) return null;
+    throw err;
+  }
+}
+
+/** ลบ alert: true เมื่อสำเร็จ, false เมื่อไม่พบ */
+export async function deleteAlert(id: number): Promise<boolean> {
+  assertPositiveInt(id);
+  try {
+    await prisma.alert.delete({ where: { id } });
+    return true;
+  } catch (err: unknown) {
+    const code = getErrCode(err);
+    if (code === PRISMA.NOT_FOUND) return false;
+    throw err;
+  }
+}
+
+/** อัปเดตข้อความหรือระดับ ถ้าไม่พบคืน null */
+export async function updateAlert(
+  id: number,
+  data: Pick<Prisma.AlertUpdateInput, 'message' | 'level'>,
+): Promise<Alert | null> {
+  assertPositiveInt(id);
+
+  // รองรับทั้งรูปแบบ string และ { set: string }
+  const payload: Pick<Prisma.AlertUpdateInput, 'message' | 'level'> = {
+    ...data,
+  };
+
+  if (typeof payload.message === 'string') {
+    const msg = normalizeMessage(payload.message);
+    if (msg !== undefined) payload.message = msg;
+  } else if (payload.message && typeof payload.message.set === 'string') {
+    const setVal = payload.message.set;
+    const msg = normalizeMessage(setVal)!;
+    payload.message = { set: msg };
+  }
+
+  try {
+    return await prisma.alert.update({ where: { id }, data: payload });
+  } catch (err: unknown) {
+    const code = getErrCode(err);
+    if (code === PRISMA.NOT_FOUND) return null;
+    throw err;
+  }
+}

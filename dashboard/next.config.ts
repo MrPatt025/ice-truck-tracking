@@ -1,9 +1,4 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  experimental: {
-    allowedDevOrigins: ["http://localhost:3000", "http://192.168.56.1:3000"],
-  },
-};
-
+// dashboard/next.config.ts
+import path from 'node:path';
+const nextConfig = { outputFileTracingRoot: path.join(__dirname, '..') };
 export default nextConfig;

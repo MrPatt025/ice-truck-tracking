@@ -1,0 +1,174 @@
+﻿COUNT=134
+DUPLICATES:
+C:\Program Files\ImageMagick-7.1.2-Q16-HDRI  x2
+C:\Python313\Scripts\  x3
+C:\Python313\  x3
+C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\bin  x3
+C:\Program Files\Common Files\Oracle\Java\javapath  x3
+C:\Program Files (x86)\Common Files\Oracle\Java\java8path  x3
+C:\Program Files (x86)\Common Files\Oracle\Java\javapath  x3
+C:\Program Files\Python39\Scripts\  x3
+C:\Program Files\Python39\  x3
+C:\Program Files\Python310\Scripts\  x3
+C:\Program Files\Python310\  x3
+C:\Windows\system32  x6
+C:\Windows  x6
+C:\Windows\System32\Wbem  x6
+C:\Windows\System32\WindowsPowerShell\v1.0\  x6
+C:\Windows\System32\OpenSSH\  x6
+C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common  x3
+C:\Program Files\NVIDIA Corporation\NVIDIA app\NvDLISR  x3
+C:\Program Files\Microsoft SQL Server\150\Tools\Binn\  x3
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin  x3
+C:\ProgramData\chocolatey\bin  x4
+C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\\bin  x3
+C:\ngrok  x3
+C:\Program Files\Microsoft VS Code\bin  x3
+C:\Program Files\MySQL\MySQL Server 8.0\bin  x2
+C:\terrafrom  x2
+C:\Program Files\Microchip\xc-dsc\v3.21\bin  x2
+C:\Program Files\Microchip\xc16\v2.10\bin  x2
+C:\Program Files\Microchip\xc32\v4.60\bin  x2
+C:\Program Files (x86)\Microchip\MPLAB C32 Suite\bin  x2
+C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_1.26.400.0_x64__8wekyb3d8bbwe  x2
+C:\Program Files\PuTTY\  x2
+C:\Program Files\Git\cmd  x2
+C:\Program Files\Go\bin  x2
+C:\Users\PATTANAKORN\.pyenv\pyenv-win\shims  x2
+C:\Users\PATTANAKORN\.pyenv\pyenv-win\bin  x2
+C:\xampp\php  x5
+ENTRIES:
+%NVM_HOME%
+%NVM_SYMLINK%
+C:\ngrok
+C:\ngrok
+C:\ngrok
+C:\nvm4w\nodejs
+C:\Program Files (x86)\Common Files\Oracle\Java\java8path
+C:\Program Files (x86)\Common Files\Oracle\Java\java8path
+C:\Program Files (x86)\Common Files\Oracle\Java\java8path
+C:\Program Files (x86)\Common Files\Oracle\Java\javapath
+C:\Program Files (x86)\Common Files\Oracle\Java\javapath
+C:\Program Files (x86)\Common Files\Oracle\Java\javapath
+C:\Program Files (x86)\Microchip\MPLAB C32 Suite\bin
+C:\Program Files (x86)\Microchip\MPLAB C32 Suite\bin
+C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common
+C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common
+C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common
+C:\Program Files\Common Files\Oracle\Java\javapath
+C:\Program Files\Common Files\Oracle\Java\javapath
+C:\Program Files\Common Files\Oracle\Java\javapath
+C:\Program Files\Docker\Docker\resources\bin
+C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\\bin
+C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\\bin
+C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\\bin
+C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\bin
+C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\bin
+C:\Program Files\Eclipse Adoptium\jdk-17.0.15.6-hotspot\bin
+C:\Program Files\Git\cmd
+C:\Program Files\Git\cmd
+C:\Program Files\Go\bin
+C:\Program Files\Go\bin
+C:\Program Files\Google\Chrome\Application
+C:\Program Files\ImageMagick-7.1.2-Q16-HDRI
+C:\Program Files\ImageMagick-7.1.2-Q16-HDRI
+C:\Program Files\Microchip\xc16\v2.10\bin
+C:\Program Files\Microchip\xc16\v2.10\bin
+C:\Program Files\Microchip\xc32\v4.60\bin
+C:\Program Files\Microchip\xc32\v4.60\bin
+C:\Program Files\Microchip\xc-dsc\v3.21\bin
+C:\Program Files\Microchip\xc-dsc\v3.21\bin
+C:\Program Files\Microsoft SQL Server\150\Tools\Binn\
+C:\Program Files\Microsoft SQL Server\150\Tools\Binn\
+C:\Program Files\Microsoft SQL Server\150\Tools\Binn\
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin
+C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin
+C:\Program Files\Microsoft VS Code\bin
+C:\Program Files\Microsoft VS Code\bin
+C:\Program Files\Microsoft VS Code\bin
+C:\Program Files\MySQL\MySQL Server 8
+C:\Program Files\MySQL\MySQL Server 8.0\bin
+C:\Program Files\MySQL\MySQL Server 8.0\bin
+C:\Program Files\NVIDIA Corporation\NVIDIA app\NvDLISR
+C:\Program Files\NVIDIA Corporation\NVIDIA app\NvDLISR
+C:\Program Files\NVIDIA Corporation\NVIDIA app\NvDLISR
+C:\Program Files\PuTTY\
+C:\Program Files\PuTTY\
+C:\Program Files\Python310\
+C:\Program Files\Python310\
+C:\Program Files\Python310\
+C:\Program Files\Python310\Scripts\
+C:\Program Files\Python310\Scripts\
+C:\Program Files\Python310\Scripts\
+C:\Program Files\Python39\
+C:\Program Files\Python39\
+C:\Program Files\Python39\
+C:\Program Files\Python39\Scripts\
+C:\Program Files\Python39\Scripts\
+C:\Program Files\Python39\Scripts\
+C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_1.26.400.0_x64__8wekyb3d8bbwe
+C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_1.26.400.0_x64__8wekyb3d8bbwe
+C:\ProgramData\chocolatey\bin
+C:\ProgramData\chocolatey\bin
+C:\ProgramData\chocolatey\bin
+C:\ProgramData\chocolatey\bin
+C:\Python313\
+C:\Python313\
+C:\Python313\
+C:\Python313\Scripts\
+C:\Python313\Scripts\
+C:\Python313\Scripts\
+C:\terrafrom
+C:\terrafrom
+C:\Users\PATTANAKORN\.cargo\bin
+C:\Users\PATTANAKORN\.pyenv\pyenv-win\bin
+C:\Users\PATTANAKORN\.pyenv\pyenv-win\bin
+C:\Users\PATTANAKORN\.pyenv\pyenv-win\shims
+C:\Users\PATTANAKORN\.pyenv\pyenv-win\shims
+C:\Users\PATTANAKORN\AppData\Local\GitHubDesktop\bin
+C:\Users\PATTANAKORN\AppData\Local\Microsoft\WindowsApps
+C:\Users\PATTANAKORN\AppData\Local\nvm
+C:\Users\PATTANAKORN\AppData\Local\Programs\cursor\resources\app\bin
+C:\Users\PATTANAKORN\AppData\Local\Programs\Microsoft VS Code\bin
+C:\Users\PATTANAKORN\AppData\Local\Programs\Python\Launcher\
+c:\Users\PATTANAKORN\AppData\Roaming\Code\User\globalStorage\github.copilot-chat\debugCommand
+C:\Users\PATTANAKORN\AppData\Roaming\Composer\vendor\bin
+C:\Users\PATTANAKORN\AppData\Roaming\npm
+C:\Users\PATTANAKORN\Downloads\terraform_1.12.2_windows_amd64.zip
+C:\Users\PATTANAKORN\go\bin
+C:\Windows
+C:\WINDOWS
+C:\Windows
+C:\WINDOWS
+C:\Windows
+C:\WINDOWS
+C:\Windows\system32
+C:\WINDOWS\system32
+C:\Windows\system32
+C:\WINDOWS\system32
+C:\WINDOWS\system32
+C:\Windows\system32
+C:\Windows\System32\OpenSSH\
+C:\Windows\System32\OpenSSH\
+C:\Windows\System32\OpenSSH\
+C:\WINDOWS\System32\OpenSSH\
+C:\WINDOWS\System32\OpenSSH\
+C:\WINDOWS\System32\OpenSSH\
+C:\Windows\System32\Wbem
+C:\Windows\System32\Wbem
+C:\Windows\System32\Wbem
+C:\WINDOWS\System32\Wbem
+C:\WINDOWS\System32\Wbem
+C:\WINDOWS\System32\Wbem
+C:\WINDOWS\System32\WindowsPowerShell\v1.0\
+C:\Windows\System32\WindowsPowerShell\v1.0\
+C:\WINDOWS\System32\WindowsPowerShell\v1.0\
+C:\Windows\System32\WindowsPowerShell\v1.0\
+C:\WINDOWS\System32\WindowsPowerShell\v1.0\
+C:\Windows\System32\WindowsPowerShell\v1.0\
+C:\xampp\php
+C:\xampp\php
+C:\xampp\php
+C:\xampp\php
+C:\xampp\php

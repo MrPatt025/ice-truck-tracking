@@ -27,7 +27,8 @@
 
 ## Tooling
 
-- **Code Quality**: ESLint, Prettier, Husky, lint-staged, commitlint, conventional commits
+- **Code Quality**: ESLint, Prettier, Husky, lint-staged, commitlint, conventional
+  commits
 - **Security**: Snyk, npm audit, Helmet, CSP, HSTS, rate limiting, input validation
 - **Testing**: Jest (unit/integration), Cypress/Detox (E2E), Stryker (mutation)
 - **Release**: semantic-release, changelog automation
@@ -58,7 +59,8 @@
 
 - **One-command setup**: `npm run bootstrap`
 - **Centralized scripts**: All dev/test/build/lint commands at root
-- **Docs**: README, this file, inline code comments, [Project Wiki](https://github.com/ice-truck-tracking/ice-truck-tracking/wiki)
+- **Docs**: README, this file, inline code comments,
+  [Project Wiki](https://github.com/ice-truck-tracking/ice-truck-tracking/wiki)
 
 ---
 

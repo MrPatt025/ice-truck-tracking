@@ -1,0 +1,7 @@
+﻿Get-ChildItem : A positional parameter cannot be found that accepts argument 'package-lock.json'.
+At line:8 char:19
++ ... ockfiles:"; Get-ChildItem -File -ea 0 package-lock.json pnpm-lock.yam ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [Get-ChildItem], ParameterBindingException
+    + FullyQualifiedErrorId : PositionalParameterNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+ 

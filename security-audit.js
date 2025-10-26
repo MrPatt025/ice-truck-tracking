@@ -1,386 +1,543 @@
-const https = require('https')
-const http = require('http')
-const { exec } = require('child_process')
-const fs = require('fs')
-const path = require('path')
+// security-audit.js
+// Self-contained security audit for the monorepo (backend + nginx).
+// Usage:
+//   node security-audit.js
+//   BASE_URL=http://localhost:5000 node security-audit.js
+
+const { exec } = require('child_process');
+const fs = require('fs');
+const http = require('http');
+const https = require('https');
+const path = require('path');
+
+const DEFAULT_BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
+const TIMEOUT_MS = Number(process.env.AUDIT_TIMEOUT_MS || 5000);
+const MAX_PARALLEL = Number(process.env.AUDIT_MAX_PARALLEL || 10);
 
 class SecurityAuditor {
-  constructor() {
-    this.issues = []
-    this.recommendations = []
-    this.baseUrl = 'http://localhost:5000'
+  constructor(opts = {}) {
+    this.baseUrl = opts.baseUrl || DEFAULT_BASE_URL;
+    this.issues = [];
+    this.recommendations = [];
+    this.findings = [];
+    this.env = {};
+    this.monorepoRoot = path.resolve(__dirname);
+    this.backendDir = path.join(this.monorepoRoot, 'backend');
+    this.nginxDir = path.join(this.monorepoRoot, 'nginx');
   }
 
   async runFullAudit() {
-    console.log('🔒 Starting comprehensive security audit...\n')
+    console.log('🔒 Starting security audit against:', this.baseUrl, '\n');
+    await this.loadBackendEnv();
 
-    await this.checkDependencies()
-    await this.checkSecurityHeaders()
-    await this.checkCORSConfiguration()
-    await this.checkRateLimiting()
-    await this.checkInputValidation()
-    await this.checkAuthentication()
-    await this.checkErrorHandling()
-    await this.checkFilePermissions()
-    await this.checkEnvironmentVariables()
-    await this.checkSSLConfiguration()
+    await this.checkDependencies();
+    await this.checkSecurityHeaders();
+    await this.checkCORS();
+    await this.checkRateLimiting();
+    await this.checkInputRobustness();
+    await this.checkAuthSurface();
+    await this.checkErrorHandling();
+    await this.checkSecretsAndPermissions();
+    await this.checkSSL();
+    await this.outputReport();
+  }
 
-    this.generateReport()
+  // ---------- helpers ----------
+  async makeRequest(relPath, { method = 'GET', headers = {}, body } = {}) {
+    return new Promise((resolve, reject) => {
+      const url = new URL(relPath, this.baseUrl);
+      const client = url.protocol === 'https:' ? https : http;
+      const req = client.request(
+        url,
+        { method, headers, timeout: TIMEOUT_MS },
+        (res) => {
+          let data = '';
+          res.on('data', (chunk) => (data += chunk));
+          res.on('end', () => {
+            let parsed = data;
+            try {
+              parsed = JSON.parse(data);
+            } catch (_) {}
+            resolve({
+              statusCode: res.statusCode,
+              headers: res.headers,
+              body: parsed,
+            });
+          });
+        },
+      );
+      req.on('timeout', () => {
+        req.destroy(new Error(`Request timeout ${url.href}`));
+      });
+      req.on('error', reject);
+      if (body) req.write(body);
+      req.end();
+    });
+  }
+
+  readFileSafe(p) {
+    try {
+      return fs.readFileSync(p, 'utf8');
+    } catch {
+      return null;
+    }
+  }
+
+  exists(p) {
+    try {
+      return fs.existsSync(p);
+    } catch {
+      return false;
+    }
+  }
+
+  // ---------- checks ----------
+  async loadBackendEnv() {
+    const envPath = path.join(this.backendDir, '.env');
+    const examplePath = path.join(this.monorepoRoot, '.env.example');
+    const raw = this.readFileSafe(envPath) || '';
+    const rawExample = this.readFileSafe(examplePath) || '';
+    const parse = (txt) =>
+      Object.fromEntries(
+        txt
+          .split('\n')
+          .map((l) => l.trim())
+          .filter((l) => l && !l.startsWith('#'))
+          .map((l) => {
+            const i = l.indexOf('=');
+            return i > 0 ? [l.slice(0, i).trim(), l.slice(i + 1).trim()] : null;
+          })
+          .filter(Boolean),
+      );
+    this.env = { ...parse(rawExample), ...parse(raw) };
   }
 
   async checkDependencies() {
-    console.log('📦 Checking dependencies for vulnerabilities...')
+    console.log('📦 Checking dependencies (pnpm audit --json)...');
+    const run = (cmd) =>
+      new Promise((resolve) => {
+        exec(
+          cmd,
+          { cwd: this.monorepoRoot, maxBuffer: 1024 * 1024 },
+          (err, stdout) => {
+            if (err && !stdout) return resolve(null);
+            resolve(stdout || null);
+          },
+        );
+      });
+
+    // Prefer pnpm audit; fallback to npm audit
+    const json =
+      (await run('pnpm audit --json --audit-level=high')) ||
+      (await run('npm audit --json'));
+    if (!json) {
+      this.recommendations.push(
+        'Run dependency audit in CI (pnpm audit / Snyk) and fix high severity issues',
+      );
+      return;
+    }
 
     try {
-      // Check for known vulnerabilities in package.json
-      const packagePath = path.join(__dirname, 'api', 'package.json')
-      if (fs.existsSync(packagePath)) {
-        const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'))
-
-        // Check for known vulnerable packages
-        const vulnerablePackages = [
-          'express',
-          'socket.io',
-          'bcrypt',
-          'jsonwebtoken',
-        ]
-
-        for (const pkg of vulnerablePackages) {
-          if (packageJson.dependencies[pkg]) {
-            console.log(`  ✓ ${pkg} version: ${packageJson.dependencies[pkg]}`)
-          }
-        }
+      const report = JSON.parse(json);
+      const totals =
+        report.metadata?.vulnerabilities ||
+        report.totals || // older npm formats
+        {};
+      const { critical = 0, high = 0, moderate = 0, low = 0 } = totals;
+      this.findings.push({
+        area: 'deps',
+        details: { critical, high, moderate, low },
+      });
+      if (critical || high) {
+        this.issues.push(
+          `Dependencies contain ${critical} critical / ${high} high vulnerabilities`,
+        );
+        this.recommendations.push(
+          'Upgrade/patch vulnerable packages; pin versions; consider `pnpm audit fix`',
+        );
+      } else {
+        console.log('  ✓ No high/critical vulnerabilities reported');
       }
-    } catch (error) {
-      this.issues.push(`Dependency check failed: ${error.message}`)
+    } catch {
+      this.recommendations.push(
+        'Could not parse audit JSON; ensure pnpm audit is available in environment',
+      );
     }
   }
 
   async checkSecurityHeaders() {
-    console.log('🛡️ Checking security headers...')
+    console.log('🛡️ Checking security headers...');
+    const res = await this.safeGet('/api/v1/health');
+    if (!res) return;
 
-    try {
-      const response = await this.makeRequest('/api/v1/health')
+    const headers = normalizeHeaders(res.headers);
 
-      const requiredHeaders = {
-        'x-content-type-options': 'nosniff',
-        'x-frame-options': 'DENY',
-        'x-xss-protection': '1; mode=block',
+    // Always recommended
+    const reqd = {
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'DENY',
+      'x-xss-protection': '1; mode=block',
+    };
+
+    Object.entries(reqd).forEach(([k, v]) => {
+      if (headers[k] !== v) {
+        this.issues.push(
+          `Missing/incorrect header: ${k} (got "${headers[k] || 'none'}")`,
+        );
+        this.recommendations.push(`Add header ${k}: ${v}`);
       }
+    });
 
-      for (const [header, expectedValue] of Object.entries(requiredHeaders)) {
-        const actualValue = response.headers[header]
-        if (actualValue === expectedValue) {
-          console.log(`  ✓ ${header}: ${actualValue}`)
-        } else {
-          this.issues.push(`Missing or incorrect security header: ${header}`)
-          this.recommendations.push(`Add header: ${header}: ${expectedValue}`)
-        }
-      }
+    // Hide framework
+    if (headers['x-powered-by']) {
+      this.issues.push(
+        `Framework disclosure via X-Powered-By: ${headers['x-powered-by']}`,
+      );
+      this.recommendations.push(
+        'Disable Express X-Powered-By header (`app.disable("x-powered-by")`)',
+      );
+    }
 
-      // Check for additional security headers
-      const additionalHeaders = [
-        'strict-transport-security',
-        'content-security-policy',
-      ]
-      for (const header of additionalHeaders) {
-        if (!response.headers[header]) {
-          this.recommendations.push(
-            `Consider adding ${header} header for enhanced security`
-          )
-        }
+    // Content-Type correctness
+    const ct = headers['content-type'] || '';
+    if (!ct.includes('application/json')) {
+      this.issues.push(
+        `Unexpected Content-Type for JSON endpoint: ${ct || 'none'}`,
+      );
+      this.recommendations.push(
+        'Ensure JSON endpoints respond with Content-Type: application/json; charset=utf-8',
+      );
+    }
+
+    // HSTS/CSP: recommend in production over HTTPS
+    const isLocalHttp = this.baseUrl.startsWith('http://localhost');
+    if (!isLocalHttp) {
+      if (!headers['strict-transport-security']) {
+        this.recommendations.push(
+          'Add HSTS (strict-transport-security) when serving over HTTPS',
+        );
       }
-    } catch (error) {
-      this.issues.push(`Security headers check failed: ${error.message}`)
+      if (!headers['content-security-policy']) {
+        this.recommendations.push(
+          "Add CSP header to mitigate XSS (at least default-src 'self')",
+        );
+      }
     }
   }
 
-  async checkCORSConfiguration() {
-    console.log('🌐 Checking CORS configuration...')
+  async checkCORS() {
+    console.log('🌐 Checking CORS...');
+    const allowed = this.env.CORS_ORIGIN || 'http://localhost:3000';
+    const maliciousOrigin = 'http://malicious-site.example';
 
-    try {
-      const response = await this.makeRequest('/api/v1/health', {
-        headers: { Origin: 'http://malicious-site.com' },
-      })
+    const resAllowed = await this.safeGet('/api/v1/health', {
+      headers: { Origin: allowed },
+    });
+    const resBad = await this.safeGet('/api/v1/health', {
+      headers: { Origin: maliciousOrigin },
+    });
+    if (!resAllowed || !resBad) return;
 
-      const corsHeader = response.headers['access-control-allow-origin']
-      if (corsHeader === 'http://localhost:3000' || corsHeader === '*') {
-        console.log(`  ✓ CORS origin: ${corsHeader}`)
-      } else {
-        this.issues.push(`Insecure CORS configuration: ${corsHeader}`)
-        this.recommendations.push('Restrict CORS to specific trusted origins')
-      }
-    } catch (error) {
-      this.issues.push(`CORS check failed: ${error.message}`)
+    const good = normalizeHeaders(resAllowed.headers)[
+      'access-control-allow-origin'
+    ];
+    const bad = normalizeHeaders(resBad.headers)['access-control-allow-origin'];
+
+    if (!good) {
+      this.issues.push('CORS missing for allowed origin');
+      this.recommendations.push(`Set CORS to allow trusted origin: ${allowed}`);
+    } else if (!(good === allowed || good === '*')) {
+      this.issues.push(`CORS ACAO unexpected for allowed origin: ${good}`);
+    }
+
+    if (bad && bad !== 'null' && bad !== allowed && bad !== '*') {
+      this.issues.push(`CORS might allow untrusted origin: ${bad}`);
+      this.recommendations.push(
+        'Restrict CORS to explicit trusted origins only',
+      );
     }
   }
 
   async checkRateLimiting() {
-    console.log('⚡ Checking rate limiting...')
-
-    try {
-      const requests = Array(100)
-        .fill()
-        .map(() => this.makeRequest('/api/v1/health'))
-
-      const responses = await Promise.all(requests)
-      const rateLimited = responses.filter(r => r.statusCode === 429)
-
-      if (rateLimited.length > 0) {
-        console.log(
-          `  ✓ Rate limiting active: ${rateLimited.length} requests blocked`
-        )
-      } else {
-        this.issues.push('Rate limiting not properly configured')
-        this.recommendations.push('Implement rate limiting to prevent abuse')
-      }
-    } catch (error) {
-      this.issues.push(`Rate limiting check failed: ${error.message}`)
+    console.log('⚡ Checking rate limiting...');
+    if (String(this.env.DISABLE_RATE_LIMIT).toLowerCase() === 'true') {
+      this.findings.push({ area: 'rate-limit', details: { disabled: true } });
+      this.recommendations.push(
+        'Enable rate limiting in production (DISABLE_RATE_LIMIT should be false)',
+      );
+      return;
     }
-  }
 
-  async checkInputValidation() {
-    console.log('🔍 Checking input validation...')
+    const reqs = Array.from({ length: 40 }).map(() =>
+      this.safeGet('/api/v1/health'),
+    );
+    const results = await throttle(reqs, MAX_PARALLEL);
+    const hits429 = results.filter((r) => r && r.statusCode === 429).length;
 
-    try {
-      // Test SQL injection attempts
-      const sqlInjectionTests = [
-        "' OR '1'='1",
-        "'; DROP TABLE users; --",
-        "' UNION SELECT * FROM users --",
-      ]
-
-      for (const test of sqlInjectionTests) {
-        const response = await this.makeRequest(
-          `/api/v1/health?test=${encodeURIComponent(test)}`
-        )
-        if (response.statusCode === 500) {
-          this.issues.push(`Potential SQL injection vulnerability detected`)
-          this.recommendations.push(
-            'Implement proper input validation and parameterized queries'
-          )
-          break
-        }
-      }
-
-      // Test XSS attempts
-      const xssTests = [
-        '<script>alert("xss")</script>',
-        'javascript:alert("xss")',
-        '<img src="x" onerror="alert(\'xss\')">',
-      ]
-
-      for (const test of xssTests) {
-        const response = await this.makeRequest(
-          `/api/v1/health?test=${encodeURIComponent(test)}`
-        )
-        if (response.body && response.body.includes(test)) {
-          this.issues.push(`Potential XSS vulnerability detected`)
-          this.recommendations.push(
-            'Implement proper output encoding and CSP headers'
-          )
-          break
-        }
-      }
-    } catch (error) {
-      this.issues.push(`Input validation check failed: ${error.message}`)
-    }
-  }
-
-  async checkAuthentication() {
-    console.log('🔐 Checking authentication...')
-
-    try {
-      // Check if JWT secret is properly configured
-      const envPath = path.join(__dirname, 'api', '.env')
-      if (fs.existsSync(envPath)) {
-        const envContent = fs.readFileSync(envPath, 'utf8')
-        if (
-          envContent.includes(
-            'JWT_SECRET=ice-truck-tracking-super-secret-jwt-key-2025'
-          )
-        ) {
-          this.issues.push('Default JWT secret is being used')
-          this.recommendations.push(
-            'Change JWT_SECRET to a strong, unique value'
-          )
-        }
-      }
-
-      // Check for authentication endpoints
-      const authResponse = await this.makeRequest('/api/v1/auth/login')
-      if (authResponse.statusCode === 404) {
+    if (hits429 > 0) {
+      console.log(`  ✓ Rate limit active: ${hits429} requests returned 429`);
+      const any = results.find((r) => r && r.statusCode === 429);
+      if (any && !normalizeHeaders(any.headers)['retry-after']) {
         this.recommendations.push(
-          'Consider implementing authentication endpoints'
-        )
+          'Include Retry-After header on 429 responses',
+        );
       }
-    } catch (error) {
-      this.issues.push(`Authentication check failed: ${error.message}`)
+    } else {
+      this.issues.push('Rate limiting not detected (no 429 responses)');
+      this.recommendations.push(
+        'Implement express-rate-limit (different windows for /metrics, /health as needed)',
+      );
+    }
+  }
+
+  async checkInputRobustness() {
+    console.log('🔍 Checking input robustness (basic fuzz)...');
+    const probes = [
+      '/api/v1/health?test=%27%20OR%20%271%27%3D%271',
+      '/api/v1/trucks?test=<script>alert(1)</script>',
+      '/api/v1/alerts?limit=__proto__',
+    ];
+
+    for (const p of probes) {
+      const res = await this.safeGet(p);
+      if (!res) continue;
+      if (res.statusCode >= 500) {
+        this.issues.push(
+          `Unhandled error (HTTP ${res.statusCode}) on probe ${p}`,
+        );
+        this.recommendations.push(
+          'Harden input validation and add centralized error handling',
+        );
+      }
+      if (
+        typeof res.body === 'string' &&
+        /<script>|javascript:/i.test(res.body)
+      ) {
+        this.issues.push(`Reflected content detected on ${p} (potential XSS)`);
+        this.recommendations.push('Escape untrusted output and add CSP');
+      }
+    }
+  }
+
+  async checkAuthSurface() {
+    console.log('🔐 Checking auth surface...');
+    // If login endpoint exists, it should be POST and not leak info on GET
+    const loginGet = await this.safeGet('/api/v1/auth/login');
+    if (loginGet && loginGet.statusCode === 200) {
+      this.issues.push(
+        'Auth login endpoint responds to GET (should typically be POST or 405)',
+      );
+      this.recommendations.push(
+        'Restrict methods for auth endpoints (POST only), return 405 for others',
+      );
+    }
+
+    // A protected endpoint (if exists) should return 401/403 without token
+    const maybeProtected = [
+      '/api/v1/users/me',
+      '/api/v1/secure',
+      '/api/v1/admin',
+    ];
+    for (const p of maybeProtected) {
+      const res = await this.safeGet(p);
+      if (res && res.statusCode === 200) {
+        this.recommendations.push(
+          `Verify ${p} is intended to be public; if not, enforce auth (401/403)`,
+        );
+      }
+    }
+
+    // JWT secret sanity
+    const jwt = this.env.JWT_SECRET || '';
+    if (!jwt || jwt.length < 16 || /change|secret|default|test/i.test(jwt)) {
+      this.issues.push(
+        'Weak or default JWT_SECRET detected (from backend/.env or .env.example)',
+      );
+      this.recommendations.push(
+        'Use strong, unique JWT_SECRET (32+ random chars) and rotate periodically',
+      );
+    }
+
+    // SALT_ROUNDS sanity (prod)
+    const rounds = Number(this.env.SALT_ROUNDS || 10);
+    if (
+      (this.env.NODE_ENV || '').toLowerCase() === 'production' &&
+      rounds < 10
+    ) {
+      this.issues.push(`Low SALT_ROUNDS (${rounds}) in production`);
+      this.recommendations.push('Use SALT_ROUNDS >= 12 in production');
     }
   }
 
   async checkErrorHandling() {
-    console.log('⚠️ Checking error handling...')
-
-    try {
-      // Test for information disclosure
-      const response = await this.makeRequest('/api/nonexistent')
-
-      if (response.body && response.body.includes('stack trace')) {
-        this.issues.push('Stack traces are exposed in error responses')
-        this.recommendations.push('Disable stack trace exposure in production')
-      }
-
-      if (response.body && response.body.includes('internal server error')) {
-        this.issues.push('Internal error details are exposed')
-        this.recommendations.push('Use generic error messages in production')
-      }
-    } catch (error) {
-      this.issues.push(`Error handling check failed: ${error.message}`)
+    console.log('⚠️ Checking error handling...');
+    const res = await this.safeGet('/api/this-route-does-not-exist');
+    if (!res) return;
+    const bodyStr =
+      typeof res.body === 'string' ? res.body : JSON.stringify(res.body || {});
+    if (/stack|Error:\s|at\s.+\(/i.test(bodyStr)) {
+      this.issues.push(
+        'Stack traces or internal error details exposed in responses',
+      );
+      this.recommendations.push(
+        'Hide stack traces in production; return sanitized error payloads (problem+json)',
+      );
+    }
+    if (res.statusCode !== 404) {
+      this.recommendations.push(
+        'Non-existent routes should return clean 404 JSON consistently',
+      );
     }
   }
 
-  async checkFilePermissions() {
-    console.log('📁 Checking file permissions...')
+  async checkSecretsAndPermissions() {
+    console.log('📁 Checking secrets & file permissions...');
+    const files = [
+      path.join(this.backendDir, 'database.sqlite'),
+      path.join(this.backendDir, '.env'),
+      path.join(this.nginxDir, 'ssl'),
+    ].filter(Boolean);
 
-    try {
-      const criticalFiles = ['api/database.sqlite', 'api/.env', 'nginx/ssl']
-
-      for (const file of criticalFiles) {
-        const filePath = path.join(__dirname, file)
-        if (fs.existsSync(filePath)) {
-          const stats = fs.statSync(filePath)
-          const mode = stats.mode.toString(8)
-
-          if (mode.includes('777') || mode.includes('666')) {
-            this.issues.push(`Insecure file permissions: ${file} (${mode})`)
-            this.recommendations.push(`Restrict permissions on ${file}`)
-          } else {
-            console.log(`  ✓ ${file}: ${mode}`)
-          }
-        }
-      }
-    } catch (error) {
-      this.issues.push(`File permissions check failed: ${error.message}`)
-    }
-  }
-
-  async checkEnvironmentVariables() {
-    console.log('🔧 Checking environment variables...')
-
-    try {
-      const envPath = path.join(__dirname, 'api', '.env')
-      if (fs.existsSync(envPath)) {
-        const envContent = fs.readFileSync(envPath, 'utf8')
-
-        if (envContent.includes('NODE_ENV=development')) {
-          this.issues.push('Running in development mode')
+    for (const f of files) {
+      if (!this.exists(f)) continue;
+      try {
+        const stat = fs.statSync(f);
+        // On POSIX, lower 3 octal digits are permissions; on Windows this is less meaningful.
+        const mode = (stat.mode & 0o777).toString(8);
+        if (/^6|^7/.test(mode)) {
+          this.issues.push(
+            `Insecure permissions for ${rel(this.monorepoRoot, f)} (0${mode})`,
+          );
           this.recommendations.push(
-            'Set NODE_ENV=production for production deployment'
-          )
+            `Set secure permissions e.g. 600/640 (chmod) for ${rel(this.monorepoRoot, f)}`,
+          );
         }
-
-        if (envContent.includes('DEBUG=true')) {
-          this.issues.push('Debug mode is enabled')
-          this.recommendations.push('Disable debug mode in production')
-        }
+      } catch {
+        // ignore
       }
-    } catch (error) {
-      this.issues.push(`Environment variables check failed: ${error.message}`)
     }
   }
 
-  async checkSSLConfiguration() {
-    console.log('🔒 Checking SSL configuration...')
+  async checkSSL() {
+    console.log('🔒 Checking SSL (nginx)...');
+    const confPath = path.join(this.nginxDir, 'nginx.conf');
+    const conf = this.readFileSafe(confPath);
+    if (!conf) {
+      this.recommendations.push(
+        'Provide nginx.conf with TLS hardening for production',
+      );
+      return;
+    }
 
+    if (
+      !/ssl_certificate\s+/i.test(conf) ||
+      !/ssl_certificate_key\s+/i.test(conf)
+    ) {
+      this.recommendations.push(
+        'Configure ssl_certificate and ssl_certificate_key in nginx for HTTPS',
+      );
+    }
+    if (!/ssl_protocols\s+TLSv1\.2\s+TLSv1\.3/i.test(conf)) {
+      this.recommendations.push('Use ssl_protocols TLSv1.2 TLSv1.3 in nginx');
+    }
+    if (!/ssl_prefer_server_ciphers\s+on;/i.test(conf)) {
+      this.recommendations.push(
+        'Enable ssl_prefer_server_ciphers on; in nginx',
+      );
+    }
+    if (!/add_header\s+Strict-Transport-Security/i.test(conf)) {
+      this.recommendations.push(
+        'Add HSTS header in nginx for HTTPS (with preload if appropriate)',
+      );
+    }
+  }
+
+  async safeGet(p, opts = {}) {
     try {
-      // Check if HTTPS is configured
-      const nginxConfig = path.join(__dirname, 'nginx', 'nginx.conf')
-      if (fs.existsSync(nginxConfig)) {
-        const config = fs.readFileSync(nginxConfig, 'utf8')
-
-        if (
-          config.includes('ssl_certificate') &&
-          config.includes('ssl_certificate_key')
-        ) {
-          console.log('  ✓ SSL certificates configured')
-        } else {
-          this.recommendations.push('Configure SSL certificates for HTTPS')
-        }
-
-        if (config.includes('ssl_protocols')) {
-          console.log('  ✓ SSL protocols configured')
-        } else {
-          this.recommendations.push('Configure secure SSL protocols (TLS 1.2+)')
-        }
-      }
-    } catch (error) {
-      this.issues.push(`SSL configuration check failed: ${error.message}`)
+      return await this.makeRequest(p, opts);
+    } catch (e) {
+      this.issues.push(`Request failed ${p}: ${e.message}`);
+      return null;
     }
   }
 
-  makeRequest(path, options = {}) {
-    return new Promise((resolve, reject) => {
-      const url = new URL(this.baseUrl + path)
-      const client = url.protocol === 'https:' ? https : http
+  // ---------- report ----------
+  async outputReport() {
+    console.log('\n📋 Security Audit Report');
+    console.log('='.repeat(60));
 
-      const req = client.request(
-        url,
-        {
-          method: options.method || 'GET',
-          headers: options.headers || {},
-        },
-        res => {
-          let data = ''
-          res.on('data', chunk => (data += chunk))
-          res.on('end', () => {
-            try {
-              const body = JSON.parse(data)
-              resolve({
-                statusCode: res.statusCode,
-                headers: res.headers,
-                body,
-              })
-            } catch {
-              resolve({
-                statusCode: res.statusCode,
-                headers: res.headers,
-                body: data,
-              })
-            }
-          })
-        }
-      )
-
-      req.on('error', reject)
-      req.end()
-    })
-  }
-
-  generateReport() {
-    console.log('\n📋 Security Audit Report')
-    console.log('='.repeat(50))
-
-    if (this.issues.length === 0) {
-      console.log('✅ No critical security issues found!')
+    if (this.issues.length) {
+      console.log(`❌ Issues (${this.issues.length})`);
+      this.issues.forEach((m, i) => console.log(`  ${i + 1}. ${m}`));
     } else {
-      console.log(`❌ Found ${this.issues.length} security issues:`)
-      this.issues.forEach((issue, index) => {
-        console.log(`  ${index + 1}. ${issue}`)
-      })
+      console.log('✅ No critical issues detected');
     }
 
-    if (this.recommendations.length > 0) {
-      console.log(`\n💡 ${this.recommendations.length} recommendations:`)
-      this.recommendations.forEach((rec, index) => {
-        console.log(`  ${index + 1}. ${rec}`)
-      })
+    if (this.recommendations.length) {
+      console.log(`\n💡 Recommendations (${this.recommendations.length})`);
+      this.recommendations.forEach((m, i) => console.log(`  ${i + 1}. ${m}`));
     }
 
-    console.log('\n🔒 Security audit completed!')
+    const reportDir = path.join(this.monorepoRoot, 'reports');
+    fs.mkdirSync(reportDir, { recursive: true });
+    const file = path.join(
+      reportDir,
+      `security-audit-${new Date().toISOString().replace(/[:.]/g, '-')}.json`,
+    );
+    const payload = {
+      baseUrl: this.baseUrl,
+      timestamp: new Date().toISOString(),
+      issues: this.issues,
+      recommendations: this.recommendations,
+      findings: this.findings,
+      envHints: {
+        NODE_ENV: this.env.NODE_ENV,
+        DISABLE_RATE_LIMIT: this.env.DISABLE_RATE_LIMIT,
+        CORS_ORIGIN: this.env.CORS_ORIGIN,
+      },
+    };
+    fs.writeFileSync(file, JSON.stringify(payload, null, 2), 'utf8');
+    console.log(`\n📝 Report saved to: ${rel(this.monorepoRoot, file)}`);
+    console.log('🔒 Security audit completed.');
   }
 }
 
-// Run the audit
-const auditor = new SecurityAuditor()
-auditor.runFullAudit().catch(console.error)
+// ---------- small utils ----------
+function normalizeHeaders(h) {
+  const out = {};
+  for (const k in h || {}) out[k.toLowerCase()] = h[k];
+  return out;
+}
+
+async function throttle(promises, limit) {
+  const ret = [];
+  let i = 0;
+  async function worker() {
+    while (i < promises.length) {
+      const idx = i++;
+      try {
+        ret[idx] = await promises[idx];
+      } catch (e) {
+        ret[idx] = null;
+      }
+    }
+  }
+  const workers = Array.from({ length: Math.min(limit, promises.length) }, () =>
+    worker(),
+  );
+  await Promise.all(workers);
+  return ret;
+}
+
+function rel(root, p) {
+  return path.relative(root, p) || p;
+}
+
+// ---------- run ----------
+if (require.main === module) {
+  const auditor = new SecurityAuditor({ baseUrl: DEFAULT_BASE_URL });
+  auditor.runFullAudit().catch((err) => {
+    console.error('Audit failed:', err);
+    process.exitCode = 1;
+  });
+}
