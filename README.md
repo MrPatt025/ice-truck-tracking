@@ -27,6 +27,7 @@
 - [Security](#security)
 - [Observability](#observability)
 - [Deployment (Docker)](#deployment-docker)
+- [Further docs](#further-docs)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
@@ -37,15 +38,18 @@
 
 **Ice Truck Tracking** ให้การมองเห็นแบบ end-to-end สำหรับรถห้องเย็น: ตำแหน่งเรียลไทม์
 อุณหภูมิสินค้า geofencing analytics และการแจ้งเตือนอัตโนมัติ ภายใน monorepo นี้มีบริการ
-**Backend API (Express + WebSocket)** และ **Next.js Dashboard** พร้อมรองรับ
+**Backend API (Fastify v4 + Zod + Prisma)** และ **Next.js 15 Dashboard (React 19)** พร้อมรองรับ
 metrics/health สำหรับการมอนิเตอร์ระดับโปรดักชัน
+
+หมายเหตุ: การอัปเดตล่าสุดได้ปรับสแต็ก backend จาก Express เป็น Fastify v4 และทำให้ WebSocket
+ถูกปิดชั่วคราวในสภาพแวดล้อม dev โดย UI จะดึงข้อมูลด้วย REST polling แทนในระหว่างนี้
 
 ---
 
 ## Monorepo Layout
 ```
 
-ice-truck-tracking/ ├── backend/ # Express REST + WebSocket, auth, metrics │ └── src/
+ice-truck-tracking/ ├── backend/ # Fastify v4 REST (Zod/Prisma), auth, metrics │ └── src/
 ├── dashboard/ # Next.js (App Router) dashboard: maps, alerts, KPIs │ └── src/ ├── sdk/
 │ ├── edge/ # (optional) Edge SDK/service │ └── mobile/ # (optional) Mobile SDK ├──
 mobile-app/ # (optional) Expo/React Native └── docs/infra/... # (optional) Docs / IaC /
@@ -67,29 +71,32 @@ pipelines
 ---
 
 ## Quick Start (Local)
-
 ```bash
-# 1) Clone & install
+# 1) Clone & install (workspace)
 git clone https://github.com/MrPatt025/ice-truck-tracking.git
 cd ice-truck-tracking
-pnpm install
+pnpm -w install
 
-# 2) ตั้งค่า env (ดูตัวอย่างด้านล่างหรือ .env.example)
+# 2) ตั้งค่า env (ดูตัวอย่างด้านล่างหรือ backend/env.example)
 #   - backend/.env
 #   - dashboard/.env.local
 
-# 3) รันแยกเทอร์มินัล
-# Terminal A: Backend
-pnpm --filter backend start
+# 3) Generate Prisma client (ครั้งแรกหลังติดตั้ง)
+pnpm -C backend prisma:generate
 
-# Terminal B: Dashboard
-pnpm --filter dashboard dev
+# 4) รันแยกเทอร์มินัล (Dev)
+# Terminal A: Backend (Fastify dev server)
+pnpm -C backend dev
+
+# Terminal B: Dashboard (Next.js dev server)
+pnpm -C dashboard dev
 
 # Access
 # API:       http://localhost:5000
 # Dashboard: http://localhost:3000
 # Health:    http://localhost:5000/api/v1/health
 # Metrics:   http://localhost:5000/metrics
+```
 ````
 
 > Windows PowerShell: export ชั่วคราวด้วย `$env:NAME="value"`
@@ -103,24 +110,26 @@ pnpm --filter dashboard dev
 **`backend/.env`**
 
 ```env
+# Server
 NODE_ENV=development
 PORT=5000
 
-# Auth / Security
-JWT_SECRET=change-me
-SALT_ROUNDS=1
-CLIENT_URL=http://localhost:3000
+# CORS (อนุญาต Dashboard ใน dev)
+CORS_ORIGINS=http://localhost:3000
 
-# Dev helpers
-USE_FAKE_DB=true
-DISABLE_RATE_LIMIT=true
+# Auth / Security
+JWT_SECRET=change-me-in-dev
+
+# Database (Prisma - SQLite)
+DATABASE_URL=file:./prisma/dev.db
 ```
 
 **`dashboard/.env.local`**
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:5000
-NEXT_PUBLIC_WS_URL=ws://localhost:5000
+# WS ถูกปิดชั่วคราวใน dev — UI ใช้ REST polling
+# NEXT_PUBLIC_WS_URL=ws://localhost:5000
 # NEXT_PUBLIC_MAPBOX_TOKEN=your-mapbox-token
 ```
 
@@ -133,7 +142,7 @@ NEXT_PUBLIC_WS_URL=ws://localhost:5000
 - โค้ดสไตล์: **ESLint + Prettier**
 - Commit: **Conventional Commits** (`feat:`, `fix:`, `chore:` …)
 - แนะนำทำงานบน branch แล้วเปิด PR เข้า `main`
-- เปิด **Next.js Fast Refresh** และ **WebSocket** สำหรับข้อมูลเรียลไทม์
+- Dev UX: Next.js Fast Refresh; ข้อมูล realtime ปัจจุบันใช้ REST polling (WS ปิดชั่วคราว)
 
 ---
 
@@ -149,8 +158,8 @@ NEXT_PUBLIC_WS_URL=ws://localhost:5000
 
 **Realtime**
 
-- Backend broadcast ผ่าน WebSocket
-- Dashboard subscribe; fallback เป็น polling เมื่อ WS ยังไม่เชื่อมต่อ
+- Dev/Local: ใช้ REST polling เป็นค่าเริ่มต้น
+- WebSocket จะถูกเปิดอีกครั้งเมื่อปลั๊กอิน Fastify จัดการเวอร์ชันเรียบร้อย
 
 ---
 
@@ -160,7 +169,9 @@ NEXT_PUBLIC_WS_URL=ws://localhost:5000
 
 | Command                       | Description                        |
 | ----------------------------- | ---------------------------------- |
-| `pnpm --filter backend start` | Start API + WS                     |
+| `pnpm -C backend dev`         | Start API (Fastify dev)            |
+| `pnpm -C backend build`       | Build backend (tsc)                |
+| `pnpm -C backend start`       | Start compiled API (dist)          |
 | `pnpm --filter dashboard dev` | Start Next.js dev server           |
 | `pnpm dev`                    | Run all dev (ผ่าน turbo)           |
 | `pnpm build`                  | Build ทุกแพ็กเกจ                   |
@@ -182,8 +193,7 @@ NEXT_PUBLIC_WS_URL=ws://localhost:5000
 
 ## Security
 
-- HTTP hardening (Helmet), CORS, JWT, rate-limit
-- Dev mode สามารถตั้ง `DISABLE_RATE_LIMIT=true`
+- HTTP hardening (Helmet), CORS, JWT, rate-limit (บางปลั๊กอินอาจถูกปิดใน dev เพื่อความเสถียร)
 - ตรวจ dependencies: `pnpm audit` / Snyk
 - แจ้งประเด็นความปลอดภัยผ่าน **GitHub Security Advisories**
 
@@ -213,6 +223,17 @@ pnpm docker:build
 pnpm docker:up
 # http://localhost (nginx), :3000 dashboard, :5000 api, :9090 prometheus, :3001 grafana
 ```
+
+---
+
+## Further docs
+
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Production deployment checklist
+- [`docs/SENTRY.md`](docs/SENTRY.md) — Sentry setup for Next.js 15 + React 19
+  
+เพิ่มเติม:
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) (ถ้ามี)
 
 ---
 

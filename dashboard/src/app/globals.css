@@ -1,77 +1,278 @@
-@import 'tailwindcss';
-@import 'leaflet/dist/leaflet.css';
-@import '@tomtom-international/web-sdk-maps/dist/maps.css';
+/* globals.css — Dashboard (polished, performant, production-ready) */
 
-/* 1. Global Performance & Aesthetics */
+/* Tailwind (v4 syntax). If you're on Tailwind v3, replace with:
+   @tailwind base;
+   @tailwind components;
+   @tailwind utilities;
+*/
+@import 'tailwindcss';
+
+/* Third-party map styles */
+@import 'leaflet/dist/leaflet.css';
+
+/* -----------------------------------------------------------
+   CSS Variables (tokens)
+----------------------------------------------------------- */
+:root {
+  /* Brand */
+  --brand-start: #8b5cf6; /* violet-500 */
+  --brand-end: #06b6d4; /* cyan-500 */
+  --accent-start: var(--brand-start);
+  --accent-end: var(--brand-end);
+
+  /* Elevation */
+  --shadow-glow-1: 0 0 10px rgba(139, 92, 246, 0.5);
+  --shadow-glow-2: 0 0 20px rgba(6, 182, 212, 0.3);
+
+  /* Geometry */
+  --radius-lg: 14px;
+
+  /* A11y / focus */
+  --focus-ring-color: color-mix(in oklab, var(--brand-end) 60%, white 20%);
+  --focus-ring: 0 0 0 3px var(--focus-ring-color);
+
+  /* Surfaces (Layered) */
+  --bg-root: #0d121c; /* page background */
+  --bg-elev: #0f172a; /* legacy alias */
+  --surface-0: #0b0f19; /* layer0 */
+  --surface-1: #0f172a; /* layer1 */
+  --surface-2: #111827; /* layer2 */
+  --scroll-track: rgba(15, 23, 42, 0.5);
+
+  /* Cards / outlines */
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-outline: rgba(255, 255, 255, 0.16);
+  --card-shadow:
+    0 8px 30px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.03);
+
+  /* Semantic status */
+  --status-info: #38bdf8; /* sky-400 */
+  --status-success: #22c55e; /* green-500 */
+  --status-warning: #f59e0b; /* amber-500 */
+  --status-critical: #ef4444; /* red-500 */
+
+  /* 3D glow tokens (light/dark balanced) */
+  --glow-ok: #22d3ee; /* cyan-400 */
+  --glow-warning: #f59e0b; /* amber-500 */
+  --glow-critical: #ef4444; /* red-500 */
+  --glow-dim: rgba(255, 255, 255, 0.06);
+}
+
+/* -----------------------------------------------------------
+   Base
+----------------------------------------------------------- */
 @layer base {
   html {
-    /* Set dark theme and default font settings */
     color-scheme: dark;
-    background-color: #0d121c; /* A deep, slightly purplish dark blue */
+    background-color: var(--bg-root);
+    text-rendering: optimizeLegibility;
   }
+
   body {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    accent-color: var(--brand-start);
+    background: var(--bg-root);
   }
 
-  /* 2. Custom Scrollbar for Aesthetics */
+  /* Text selection */
+  ::selection {
+    background: color-mix(in oklab, var(--brand-start) 35%, transparent);
+    color: white;
+  }
+
+  /* Focus visibility */
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 8px;
+  }
+
+  /* Scrollbars */
+  /* Chromium/WebKit */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.5);
+    background: var(--scroll-track);
     border-radius: 10px;
   }
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #8b5cf6, #06b6d4);
+    background: linear-gradient(180deg, var(--brand-start), var(--brand-end));
     border-radius: 10px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #a78bfa, #22d3ee);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--brand-start) 85%, white),
+      color-mix(in oklab, var(--brand-end) 85%, white)
+    );
+  }
+  /* Firefox/modern */
+  @supports (scrollbar-color: red blue) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: color-mix(in oklab, var(--brand-start) 70%, black)
+        var(--scroll-track);
+    }
   }
 
-  /* Map Styles Override: Ensure the map container respects the rounded corners */
+  /* Map libs polish */
+  .leaflet-container {
+    background: transparent;
+    border-radius: var(--radius-lg);
+    outline: none;
+  }
+  .leaflet-control-zoom a {
+    color: white;
+    background: rgba(2, 6, 23, 0.6); /* slate-950/60 */
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  .leaflet-control-zoom a:hover {
+    background: rgba(2, 6, 23, 0.8);
+  }
+
+  /* MapLibre/TomTom canvas rounding (when used) */
+  .map-rounded .maplibre-canvas,
+  .map-rounded .mapboxgl-canvas,
   .map-container-style .maplibre-gl-canvas {
-    border-radius: 14px; /* Matches the parent container's style */
+    border-radius: var(--radius-lg);
   }
 }
 
-/* 3. Aesthetic and Utility Layers */
+/* Provide unprefixed text-size-adjust only on engines that support it */
+@supports (text-size-adjust: 100%) {
+  html {
+    text-size-adjust: 100%;
+  }
+}
+
+/* -----------------------------------------------------------
+   Components layer (tiny, optional shorthands)
+----------------------------------------------------------- */
+@layer components {
+  /* Glass panel utility */
+  .glass-surface {
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in oklab, white 6%, transparent),
+        color-mix(in oklab, white 2%, transparent)
+      ),
+      var(--surface-1);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--card-shadow);
+  }
+
+  /* Soft depth shadow */
+  .depth-soft {
+    box-shadow: var(--card-shadow);
+  }
+
+  /* Theme-aware focus utility */
+  .focus-ring-theme:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-radius: 10px;
+  }
+  /* Glass card */
+  .card-glass {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.04),
+        rgba(255, 255, 255, 0.02)
+      ),
+      var(--surface-1);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-lg);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--card-shadow);
+  }
+
+  /* Gradient text */
+  .text-brand-gradient {
+    background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* -----------------------------------------------------------
+   Utilities (visual FX, performant)
+----------------------------------------------------------- */
 @layer utilities {
+  /* Subtle noise for depth (tiny SVG, GPU friendly) */
   .noise-bg {
-    /* High-res noise texture for visual depth (Performance: Small SVG) */
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
     background-size: 200px 200px;
     pointer-events: none;
   }
 
+  /* Holographic grid */
   .holographic-grid {
-    /* Grid for Sci-Fi Aesthetic */
     background-image:
       linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 48px 48px;
-    mask-image: radial-gradient(circle at center, black 50%, transparent 80%);
     -webkit-mask-image: radial-gradient(
       circle at center,
       black 50%,
       transparent 80%
     );
+    mask-image: radial-gradient(circle at center, black 50%, transparent 80%);
   }
 
+  /* Soft neon glow */
   .shadow-glow {
-    /* Subtle Outer Glow for Cards */
-    box-shadow:
-      0 0 10px rgba(139, 92, 246, 0.5),
-      0 0 20px rgba(6, 182, 212, 0.3);
+    box-shadow: var(--shadow-glow-1), var(--shadow-glow-2);
   }
 
+  /* Icon/text glow */
   .vfx-glow {
-    /* Icon/Text Shadow */
     filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.8));
+  }
+
+  /* 3D hover lift (respect reduced motion) */
+  .lift-3d {
+    transform: translateZ(0);
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease,
+      filter 180ms ease;
+    will-change: transform;
+  }
+  .lift-3d:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: var(--shadow-glow-1);
+  }
+
+  /* Smooth edges for map wrappers without extra markup */
+  .rounded-map {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+}
+
+/* -----------------------------------------------------------
+   Motion preferences
+----------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

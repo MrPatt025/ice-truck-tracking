@@ -8332,9 +8332,9 @@ function HA() {
   var e, t, n, i, s, l, u, f, h, p, g, v, y, w, L, $, A, E, M;
   return (
     (y =
-      /\/(?![*\/])(?:\[(?:(?![\]\\]).|\\.)*\]|(?![\/\\]).|\\.)*(\/[$_\u200C\u200D\p{ID_Continue}]*|\\)?/uy),
+      /\/(?![*/])(?:\[(?:(?![\]\\]).|\\.)*\]|(?![/\\]).|\\.)*(\/[$_\u200C\u200D\p{ID_Continue}]*|\\)?/uy),
     (v =
-      /--|\+\+|=>|\.{3}|\??\.(?!\d)|(?:&&|\|\||\?\?|[+\-%&|^]|\*{1,2}|<{1,2}|>{1,3}|!=?|={1,2}|\/(?![\/*]))=?|[?~,:;[\](){}]/y),
+      /--|\+\+|=>|\.{3}|\??\.(?!\d)|(?:&&|\|\||\?\?|[+\-%&|^]|\*{1,2}|<{1,2}|>{1,3}|!=?|={1,2}|\/(?![/*]))=?|[?~,:;[\](){}]/y),
     (e =
       /(\x23?)(?=[$_\p{ID_Start}\\])(?:[$_\u200C\u200D\p{ID_Continue}]|\\u[\da-fA-F]{4}|\\u\{[\da-fA-F]+\})+/uy),
     (L = /(['"])(?:(?!\1)[^\\\n\r]|\\(?:\r\n|[^]))*(\1)?/y),
@@ -8345,12 +8345,12 @@ function HA() {
     (f = /\r?\n|[\r\u2028\u2029]/y),
     (h = /\/\*(?:[^*]|\*(?!\/))*(\*\/)?/y),
     (w = /\/\/.*/y),
-    (n = /[<>.:={}]|\/(?![\/*])/y),
+    (n = /[<>.:={}]|\/(?![/*])/y),
     (t = /[$_\p{ID_Start}][$_\u200C\u200D\p{ID_Continue}-]*/uy),
     (i = /(['"])(?:(?!\1)[^])*(\1)?/y),
     (s = /[^<>{}]+/y),
     (E =
-      /^(?:[\/+-]|\.{3}|\?(?:InterpolationIn(?:JSX|Template)|NoLineTerminatorHere|NonExpressionParenEnd|UnaryIncDec))?$|[{}([,;<>=*%&|^!~?:]$/),
+      /^(?:[/+-]|\.{3}|\?(?:InterpolationIn(?:JSX|Template)|NoLineTerminatorHere|NonExpressionParenEnd|UnaryIncDec))?$|[{}([,;<>=*%&|^!~?:]$/),
     (A =
       /^(?:=>|[;\]){}]|else|\?(?:NoLineTerminatorHere|NonExpressionParenEnd))?$/),
     (l =
@@ -9305,9 +9305,9 @@ function OL() {
   var e, t, n, i, s, l, u, f, h, p, g, v, y, w, L, $, A, E, M, O;
   return (
     (w =
-      /\/(?![*\/])(?:\[(?:[^\]\\\n\r\u2028\u2029]+|\\.)*\]?|[^\/[\\\n\r\u2028\u2029]+|\\.)*(\/[$_\u200C\u200D\p{ID_Continue}]*|\\)?/uy),
+      /\/(?![*/])(?:\[(?:[^\]\\\n\r\u2028\u2029]+|\\.)*\]?|[^/[\\\n\r\u2028\u2029]+|\\.)*(\/[$_\u200C\u200D\p{ID_Continue}]*|\\)?/uy),
     (y =
-      /--|\+\+|=>|\.{3}|\??\.(?!\d)|(?:&&|\|\||\?\?|[+\-%&|^]|\*{1,2}|<{1,2}|>{1,3}|!=?|={1,2}|\/(?![\/*]))=?|[?~,:;[\](){}]/y),
+      /--|\+\+|=>|\.{3}|\??\.(?!\d)|(?:&&|\|\||\?\?|[+\-%&|^]|\*{1,2}|<{1,2}|>{1,3}|!=?|={1,2}|\/(?![/*]))=?|[?~,:;[\](){}]/y),
     (t =
       /(\x23?)(?=[$_\p{ID_Start}\\])(?:[$_\u200C\u200D\p{ID_Continue}]+|\\u[\da-fA-F]{4}|\\u\{[\da-fA-F]+\})+/uy),
     ($ = /(['"])(?:[^'"\\\n\r]+|(?!\1)['"]|\\(?:\r\n|[^]))*(\1)?/y),
@@ -9319,12 +9319,12 @@ function OL() {
     (p = /\/\*(?:[^*]+|\*(?!\/))*(\*\/)?/y),
     (L = /\/\/.*/y),
     (e = /^#!.*/),
-    (i = /[<>.:={}]|\/(?![\/*])/y),
+    (i = /[<>.:={}]|\/(?![/*])/y),
     (n = /[$_\p{ID_Start}][$_\u200C\u200D\p{ID_Continue}-]*/uy),
     (s = /(['"])(?:[^'"]+|(?!\1)['"])*(\1)?/y),
     (l = /[^<>{}]+/y),
     (M =
-      /^(?:[\/+-]|\.{3}|\?(?:InterpolationIn(?:JSX|Template)|NoLineTerminatorHere|NonExpressionParenEnd|UnaryIncDec))?$|[{}([,;<>=*%&|^!~?:]$/),
+      /^(?:[/+-]|\.{3}|\?(?:InterpolationIn(?:JSX|Template)|NoLineTerminatorHere|NonExpressionParenEnd|UnaryIncDec))?$|[{}([,;<>=*%&|^!~?:]$/),
     (E =
       /^(?:=>|[;\]){}]|else|\?(?:NoLineTerminatorHere|NonExpressionParenEnd))?$/),
     (u =
@@ -11770,7 +11770,7 @@ function sM(e = {}) {
       emitAuto: p,
       disableTransition: g = !0,
     } = e,
-    v = { auto: '', light: 'light', dark: 'dark', ...(e.modes || {}) },
+    v = { auto: '', light: 'light', dark: 'dark', ...e.modes },
     y = nM({ window: s }),
     w = _e(() => (y.value ? 'dark' : 'light')),
     L =
@@ -12221,7 +12221,7 @@ function vM(e) {
 }
 function yM() {
   Eh(Ae.root.tasks);
-  const e = [...Jn.value.filter(On)];
+  const e = Jn.value.filter(On);
   (Eh(e), (Rr.value = []), (pn.value.expandAll = !0), (Jn.value = e));
 }
 function Eh(e) {
@@ -20502,9 +20502,9 @@ b`.split(/\n/).length != 3
                 (r = De(o, r)),
                 (r.name = o.name));
             } else {
-              if (typeof r == 'string' && /^[\w\-]+\/[\w\-]+\+xml$/.test(r))
+              if (typeof r == 'string' && /^[\w-]+\/[\w-]+\+xml$/.test(r))
                 return es('application/xml');
-              if (typeof r == 'string' && /^[\w\-]+\/[\w\-]+\+json$/.test(r))
+              if (typeof r == 'string' && /^[\w-]+\/[\w-]+\+json$/.test(r))
                 return es('application/json');
             }
             return typeof r == 'string' ? { name: r } : r || { name: 'null' };
@@ -26978,7 +26978,7 @@ b`.split(/\n/).length != 3
             if (d) {
               if ($m(o)) return 'handled';
               if (
-                (/\'$/.test(o)
+                (o.endsWith("'")
                   ? (r.state.keySeq = null)
                   : Q_.set(50, function () {
                       r.state.keySeq == d &&
@@ -29840,16 +29840,16 @@ function m1() {
               var de = N.next();
               if (de == '"' || de == "'")
                 return ((G.tokenize = k(de)), G.tokenize(N, G));
-              if (de == '.' && N.match(/^\d[\d_]*(?:[eE][+\-]?[\d_]+)?/))
+              if (de == '.' && N.match(/^\d[\d_]*(?:[eE][+-]?[\d_]+)?/))
                 return M('number', 'number');
               if (de == '.' && N.match('..')) return M('spread', 'meta');
-              if (/[\[\]{}\(\),;\:\.]/.test(de)) return M(de);
+              if (/[[\]{}(),;:.]/.test(de)) return M(de);
               if (de == '=' && N.eat('>')) return M('=>', 'operator');
               if (de == '0' && N.match(/^(?:x[\dA-Fa-f_]+|o[0-7_]+|b[01_]+)n?/))
                 return M('number', 'number');
               if (/\d/.test(de))
                 return (
-                  N.match(/^[\d_]*(?:n|(?:\.[\d_]*)?(?:[eE][+\-]?[\d_]+)?)?/),
+                  N.match(/^[\d_]*(?:n|(?:\.[\d_]*)?(?:[eE][+-]?[\d_]+)?)?/),
                   M('number', 'number')
                 );
               if (de == '/')
@@ -29894,7 +29894,7 @@ function m1() {
                   }
                   if (
                     xe == 'async' &&
-                    N.match(/^(\s|\/\*([^*]|\*(?!\/))*?\*\/)*[\[\(\w]/, !1)
+                    N.match(/^(\s|\/\*([^*]|\*(?!\/))*?\*\/)*[[(\w]/, !1)
                   )
                     return M('async', 'keyword', xe);
                 }
@@ -29957,7 +29957,7 @@ function m1() {
                     }
                   } else if (_n >= 3 && _n < 6) ++le;
                   else if (v.test(Kt)) Le = !0;
-                  else if (/["'\/`]/.test(Kt))
+                  else if (/["'/`]/.test(Kt))
                     for (; ; --pt) {
                       if (pt == 0) return;
                       var is = N.string.charAt(pt - 1);
@@ -30290,7 +30290,7 @@ function m1() {
                                   : S();
             }
             function fe(N) {
-              return N.match(/[;\}\)\],]/) ? I() : I(ge);
+              return N.match(/[;})\],]/) ? I() : I(ge);
             }
             function pe(N, G) {
               return N == ',' ? S(fe) : he(N, G, !1);
@@ -30464,7 +30464,7 @@ function m1() {
               if (N == '=>') return S(tt);
             }
             function He(N) {
-              return N.match(/[\}\)\]]/)
+              return N.match(/[})\]]/)
                 ? S()
                 : N == ',' || N == ';'
                   ? S(He)
@@ -30477,7 +30477,7 @@ function m1() {
               if (N == ':') return S(tt);
               if (N == '[') return S(Q('variable'), Hr, Q(']'), oi);
               if (N == '(') return I(Ni, oi);
-              if (!N.match(/[;\}\)\],]/)) return S();
+              if (!N.match(/[;})\],]/)) return S();
             }
             function cn(N, G) {
               return N != 'quasi'
@@ -30698,7 +30698,7 @@ function m1() {
             function Yn(N, G, de) {
               return (
                 (G.tokenize == O &&
-                  /^(?:operator|sof|keyword [bcd]|case|new|export|default|spread|[\[{}\(,;:]|=>)$/.test(
+                  /^(?:operator|sof|keyword [bcd]|case|new|export|default|spread|[[{}(,;:]|=>)$/.test(
                     G.lastType,
                   )) ||
                 (G.lastType == 'quasi' &&
@@ -30760,7 +30760,7 @@ function m1() {
                   (de == '}' ||
                     ((le = N.cc[N.cc.length - 1]) &&
                       (le == pe || le == he) &&
-                      !/^[,\.=+\-*:?[\(]/.test(G)));
+                      !/^[,.=+\-*:?[(]/.test(G)));
 
                 )
                   xe = xe.prev;
@@ -30961,10 +30961,10 @@ function v1() {
                     : S.match('--')
                       ? B(A('comment', '-->'))
                       : S.match('DOCTYPE', !0, !0)
-                        ? (S.eatWhile(/[\w\._\-]/), B(E(1)))
+                        ? (S.eatWhile(/[\w._-]/), B(E(1)))
                         : null
                   : S.eat('?')
-                    ? (S.eatWhile(/[\w\._\-]/),
+                    ? (S.eatWhile(/[\w._-]/),
                       (R.tokenize = A('meta', '?>')),
                       'meta')
                     : ((v = S.eat('/') ? 'closeTag' : 'openTag'),
@@ -30977,7 +30977,7 @@ function v1() {
                     ? S.eat('x')
                       ? (ue = S.eatWhile(/[a-fA-F\d]/) && S.eat(';'))
                       : (ue = S.eatWhile(/[\d]/) && S.eat(';'))
-                    : (ue = S.eatWhile(/[\w\.\-:]/) && S.eat(';')),
+                    : (ue = S.eatWhile(/[\w.\-:]/) && S.eat(';')),
                   ue ? 'atom' : 'error'
                 );
               } else return (S.eatWhile(/[^&<]/), null);
@@ -30999,12 +30999,11 @@ function v1() {
                 var oe = R.tokenize(S, R);
                 return oe ? oe + ' tag error' : 'tag error';
               } else
-                return /[\'\"]/.test(B)
+                return /['"]/.test(B)
                   ? ((R.tokenize = $(B)),
                     (R.stringStartCol = S.column()),
                     R.tokenize(S, R))
-                  : (S.match(/^[^\s\u00a0=<>\"\']*[^\s\u00a0=<>\"\'\/]/),
-                    'word');
+                  : (S.match(/^[^\s\u00a0=<>"']*[^\s\u00a0=<>"'/]/), 'word');
             }
             function $(S) {
               var R = function (B, oe) {
@@ -31181,7 +31180,7 @@ function v1() {
                     ? S.tagStart + S.tagName.length + 2
                     : S.tagStart + f * (h.multilineTagIndentFactor || 1);
                 if (h.alignCDATA && /<!\[CDATA\[/.test(R)) return 0;
-                var ue = R && /^<(\/)?([\w_:\.-]*)/.exec(R);
+                var ue = R && /^<(\/)?([\w_:.-]*)/.exec(R);
                 if (ue && ue[1])
                   for (; oe; )
                     if (oe.tagName == ue[2]) {
@@ -31316,11 +31315,11 @@ function Ade() {
                   k;
                 return (
                   /\btag\b/.test(M)
-                    ? />$/.test(O)
+                    ? O.endsWith('>')
                       ? $.state.context
                         ? ($.depth = 0)
                         : (L.context = L.context.prev)
-                      : /^</.test(O) && ($.depth = 1)
+                      : O.startsWith('<') && ($.depth = 1)
                     : !M && (k = O.indexOf('{')) > -1 && w.backUp(O.length - k),
                   M
                 );
@@ -42628,7 +42627,7 @@ function Cwe(e) {
     if (Ls) {
       const t = document.querySelector('base');
       ((e = (t && t.getAttribute('href')) || '/'),
-        (e = e.replace(/^\w+:\/\/[^\/]+/, '')));
+        (e = e.replace(/^\w+:\/\/[^/]+/, '')));
     } else e = '/';
   return (e[0] !== '/' && e[0] !== '#' && (e = '/' + e), xwe(e));
 }

@@ -18,3 +18,181 @@ paths:
       responses:
         '200':
           description: OK
+
+  /api/v1/health:
+    get:
+      summary: API health
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required: [ok]
+
+  /api/v1/trucks:
+    get:
+      summary: List trucks
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 1, default: 1 }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - in: query
+          name: sort
+          schema:
+            { type: string, enum: [name, createdAt, updatedAt], default: name }
+        - in: query
+          name: order
+          schema: { type: string, enum: [asc, desc], default: asc }
+      responses:
+        '200':
+          description: List of trucks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer }
+                    name: { type: string }
+                    createdAt: { type: string }
+                    updatedAt: { type: string }
+                  required: [id, name, createdAt, updatedAt]
+
+  /api/v1/alerts:
+    get:
+      summary: List alerts
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer }
+                    level: { type: string }
+                    message: { type: string }
+                    truckId: { type: integer, nullable: true }
+                    createdAt: { type: string }
+                  required: [id, level, message, createdAt]
+
+  /api/v1/stats:
+    get:
+      summary: Dashboard KPI summary
+      parameters:
+        - in: query
+          name: range
+          schema: { type: string, enum: [1h, 24h, 7d], default: 24h }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: object
+                    properties:
+                      activeTrucks: { type: integer }
+                      avgCargoTempC: { type: number }
+                      onTimeRatePct: { type: number }
+                      fuelEfficiencyKmPerL: { type: number }
+                      deliveriesCompleted: { type: integer }
+                      anomalyIndex: { type: number }
+                    required:
+                      [
+                        activeTrucks,
+                        avgCargoTempC,
+                        onTimeRatePct,
+                        fuelEfficiencyKmPerL,
+                        deliveriesCompleted,
+                        anomalyIndex,
+                      ]
+                  revenueSeries:
+                    type: array
+                    items:
+                      {
+                        type: object,
+                        properties:
+                          { t: { type: string }, value: { type: number } },
+                        required: [t, value],
+                      }
+                  fleetSeries:
+                    type: array
+                    items:
+                      {
+                        type: object,
+                        properties:
+                          {
+                            t: { type: string },
+                            active: { type: number },
+                            efficiency: { type: number },
+                          },
+                        required: [t, active, efficiency],
+                      }
+                  alertsSeries:
+                    type: array
+                    items:
+                      {
+                        type: object,
+                        properties:
+                          {
+                            t: { type: string },
+                            critical: { type: number },
+                            warning: { type: number },
+                            info: { type: number },
+                          },
+                        required: [t, critical, warning, info],
+                      }
+                  tempBuckets:
+                    type: array
+                    items:
+                      {
+                        type: object,
+                        properties:
+                          { label: { type: string }, value: { type: number } },
+                        required: [label, value],
+                      }
+                  performanceRadar:
+                    type: array
+                    items:
+                      {
+                        type: object,
+                        properties:
+                          {
+                            key: { type: string },
+                            score: { type: number },
+                            max: { type: number },
+                          },
+                        required: [key, score, max],
+                      }
+                  lastCalc: { type: string }
+                required:
+                  [
+                    summary,
+                    revenueSeries,
+                    fleetSeries,
+                    alertsSeries,
+                    tempBuckets,
+                    performanceRadar,
+                    lastCalc,
+                  ]
+
+  /api/v1/telemetry:
+    get:
+      summary: WebSocket telemetry endpoint (upgrade required)
+      responses:
+        '101':
+          description: Switching Protocols

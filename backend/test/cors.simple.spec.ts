@@ -9,6 +9,9 @@ describe('CORS simple request', () => {
       headers: { origin: 'http://example.com' },
     });
     expect(r.statusCode).toBe(200);
-    expect(r.headers['access-control-allow-origin']).toBe('*');
+    // Server echoes a specific allowed origin from config (dev uses http://localhost:3000)
+    expect(r.headers['access-control-allow-origin']).toBe(
+      'http://localhost:3000',
+    );
   });
 });

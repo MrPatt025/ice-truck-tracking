@@ -127,12 +127,12 @@ export function setup() {
   // best-effort warmup/seed; ignore failures
   try {
     http.post(`${BASE_URL}/api/v1/alerts/clear`);
-  } catch (e) {
+  } catch {
     // ignore
   }
   try {
     http.post(`${BASE_URL}/api/v1/trucks/test?count=3`);
-  } catch (e) {
+  } catch {
     // ignore
   }
 

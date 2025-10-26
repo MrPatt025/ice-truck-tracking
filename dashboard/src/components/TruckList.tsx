@@ -1,7 +1,14 @@
 // src/components/TruckList.tsx
 'use client';
 
-import { useMemo, useState } from 'react';
+import React, {
+  memo,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useState,
+} from 'react';
+import clsx from 'clsx';
 
 export type Truck = {
   id: string;
@@ -15,6 +22,37 @@ export type Truck = {
   lastUpdate?: string | number | Date;
 };
 
+// ค่าคงที่สำหรับโหมดพัฒนา (อ้างอิงเดิมเพื่อให้ e2e/assert ได้)
+const DEMO_TRUCKS: ReadonlyArray<Truck> = Object.freeze([
+  {
+    id: 'T-101',
+    name: 'North Hauler',
+    driver: 'Ann',
+    speed: 54,
+    temp: -12,
+    status: 'online',
+  },
+  {
+    id: 'T-102',
+    name: 'East Rider',
+    driver: 'Ben',
+    speed: 0,
+    temp: -10,
+    status: 'offline',
+  },
+  {
+    id: 'T-103',
+    name: 'Cold Express',
+    driver: 'Chan',
+    speed: 38,
+    temp: -15,
+    status: 'online',
+  },
+]);
+const EMPTY_TRUCKS: ReadonlyArray<Truck> = Object.freeze([]);
+
+type SortKey = 'id' | 'speed' | 'temp' | 'status';
+
 export default function TruckList({
   trucks,
   onSelect,
@@ -23,66 +61,66 @@ export default function TruckList({
   onSelect?: (t: Truck) => void;
 }) {
   const [query, setQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'id' | 'speed' | 'temp' | 'status'>(
-    'id',
-  );
+  const [sortBy, setSortBy] = useState<SortKey>('id');
 
-  // Dev-only fallback so Cypress has something to assert even if no data wired yet.
-  const source: Truck[] =
-    trucks && trucks.length > 0
-      ? trucks
-      : process.env.NODE_ENV !== 'production'
-        ? [
-            {
-              id: 'T-101',
-              name: 'North Hauler',
-              driver: 'Ann',
-              speed: 54,
-              temp: -12,
-              status: 'online',
-            },
-            {
-              id: 'T-102',
-              name: 'East Rider',
-              driver: 'Ben',
-              speed: 0,
-              temp: -10,
-              status: 'offline',
-            },
-            {
-              id: 'T-103',
-              name: 'Cold Express',
-              driver: 'Chan',
-              speed: 38,
-              temp: -15,
-              status: 'online',
-            },
-          ]
-        : [];
+  // ปรับให้พิมพ์ค้นหาลื่นขึ้นในลิสต์ยาว ๆ
+  const deferredQuery = useDeferredValue(query);
+
+  // เลือกแหล่งข้อมูลให้เสถียร และไม่มี conditional ใน deps อีกต่อไป
+  const base: ReadonlyArray<Truck> = useMemo(() => {
+    if (trucks && trucks.length > 0) return trucks;
+    if (process.env.NODE_ENV !== 'production') return DEMO_TRUCKS;
+    return EMPTY_TRUCKS;
+  }, [trucks]);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    let list = source;
+    const q = deferredQuery.trim().toLowerCase();
+
+    let list = base;
     if (q) {
-      list = list.filter((t) => {
+      list = base.filter((t) => {
         const pack = [t.id, t.name, t.driver, t.status].join(' ').toLowerCase();
         return pack.includes(q);
       });
     }
+
+    const statusRank = (s?: string) =>
+      s === 'online' ? 0 : s === 'offline' ? 1 : 2;
+
     const sorted = [...list].sort((a, b) => {
       switch (sortBy) {
         case 'speed':
-          return (b.speed ?? -1) - (a.speed ?? -1);
+          // มากไปน้อย, undefined ไปท้าย
+          return (
+            (b.speed ?? Number.NEGATIVE_INFINITY) -
+            (a.speed ?? Number.NEGATIVE_INFINITY)
+          );
         case 'temp':
-          return (a.temp ?? 999) - (b.temp ?? 999); // colder first
+          // หนาวกว่าก่อน, undefined ไปท้าย
+          return (
+            (a.temp ?? Number.POSITIVE_INFINITY) -
+            (b.temp ?? Number.POSITIVE_INFINITY)
+          );
         case 'status':
-          return (a.status ?? '').localeCompare(b.status ?? '');
+          // online ก่อน offline ก่อนสถานะอื่น แล้วค่อยเทียบข้อความ
+          return (
+            statusRank(a.status) - statusRank(b.status) ||
+            (a.status ?? '').localeCompare(b.status ?? '', undefined, {
+              sensitivity: 'base',
+            })
+          );
         default:
-          return a.id.localeCompare(b.id);
+          return a.id.localeCompare(b.id, undefined, {
+            numeric: true,
+            sensitivity: 'base',
+          });
       }
     });
+
     return sorted;
-  }, [query, sortBy, source]);
+  }, [base, deferredQuery, sortBy]);
+
+  const handleSelect = useCallback((t: Truck) => onSelect?.(t), [onSelect]);
 
   return (
     <section
@@ -108,7 +146,7 @@ export default function TruckList({
           data-testid="truck-sort"
           className="rounded-lg bg-black/30 border border-white/10 px-2 py-2"
           value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+          onChange={(e) => setSortBy(e.target.value as SortKey)}
           aria-label="Sort trucks"
         >
           <option value="id">ID</option>
@@ -130,79 +168,90 @@ export default function TruckList({
       ) : (
         <ul className="divide-y divide-white/10">
           {filtered.map((t) => (
-            <li key={t.id} className="py-3">
-              <article
-                data-testid="truck-item"
-                data-truck-id={t.id}
-                className="flex items-center justify-between gap-3"
-                tabIndex={0}
-                role="button"
-                aria-label={`Truck ${t.id}${t.status ? ` ${t.status}` : ''}`}
-                onClick={() => onSelect?.(t)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    onSelect?.(t);
-                  }
-                }}
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span
-                      data-testid="truck-status"
-                      className={`inline-block h-2 w-2 rounded-full ${
-                        (t.status ?? 'online') === 'offline'
-                          ? 'bg-red-500'
-                          : 'bg-emerald-400'
-                      }`}
-                      aria-hidden="true"
-                    />
-                    <span
-                      data-testid="truck-id"
-                      className="font-semibold text-sm truncate"
-                      title={t.id}
-                    >
-                      {t.id}
-                    </span>
-                  </div>
-                  <div className="text-xs opacity-70 truncate">
-                    <span data-testid="truck-name">{t.name ?? 'Unnamed'}</span>
-                    {t.driver ? (
-                      <span className="ml-2">• Driver: {t.driver}</span>
-                    ) : null}
-                    {t.status ? (
-                      <span className="ml-2">• {t.status}</span>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 items-center gap-4 text-right text-sm">
-                  <div>
-                    <div className="opacity-70 text-xs">Speed</div>
-                    <div data-testid="truck-speed">{fmtSpeed(t.speed)}</div>
-                  </div>
-                  <div>
-                    <div className="opacity-70 text-xs">Temp</div>
-                    <div data-testid="truck-temp">{fmtTemp(t.temp)}</div>
-                  </div>
-                  <div className="text-xs opacity-70">
-                    {t.lastUpdate ? (
-                      <time dateTime={toISO(t.lastUpdate)}>
-                        {timeAgo(t.lastUpdate)}
-                      </time>
-                    ) : (
-                      <span>—</span>
-                    )}
-                  </div>
-                </div>
-              </article>
-            </li>
+            <TruckRow key={t.id} t={t} onSelect={handleSelect} />
           ))}
         </ul>
       )}
     </section>
   );
 }
+
+const TruckRow = memo(function TruckRow({
+  t,
+  onSelect,
+}: {
+  t: Truck;
+  onSelect?: (t: Truck) => void;
+}) {
+  return (
+    <li className="py-3">
+      <article
+        data-testid="truck-item"
+        data-truck-id={t.id}
+        className="flex items-center justify-between gap-3 hover:bg-white/5 rounded-lg px-2 py-2 transition"
+        tabIndex={0}
+        role="button"
+        aria-label={`Truck ${t.id}${t.status ? ` ${t.status}` : ''}`}
+        onClick={() => onSelect?.(t)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onSelect?.(t);
+          }
+        }}
+      >
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span
+              data-testid="truck-status"
+              className={clsx(
+                'inline-block h-2 w-2 rounded-full',
+                (t.status ?? 'online') === 'offline'
+                  ? 'bg-red-500'
+                  : 'bg-emerald-400',
+              )}
+              aria-hidden="true"
+            />
+            <span
+              data-testid="truck-id"
+              className="font-semibold text-sm truncate"
+              title={t.id}
+            >
+              {t.id}
+            </span>
+          </div>
+          <div className="text-xs opacity-70 truncate">
+            <span data-testid="truck-name">{t.name ?? 'Unnamed'}</span>
+            {t.driver ? (
+              <span className="ml-2">• Driver: {t.driver}</span>
+            ) : null}
+            {t.status ? <span className="ml-2">• {t.status}</span> : null}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 items-center gap-4 text-right text-sm">
+          <div>
+            <div className="opacity-70 text-xs">Speed</div>
+            <div data-testid="truck-speed">{fmtSpeed(t.speed)}</div>
+          </div>
+          <div>
+            <div className="opacity-70 text-xs">Temp</div>
+            <div data-testid="truck-temp">{fmtTemp(t.temp)}</div>
+          </div>
+          <div className="text-xs opacity-70">
+            {t.lastUpdate ? (
+              <time dateTime={toISO(t.lastUpdate)}>
+                {timeAgo(t.lastUpdate)}
+              </time>
+            ) : (
+              <span>—</span>
+            )}
+          </div>
+        </div>
+      </article>
+    </li>
+  );
+});
 
 function fmtSpeed(v?: number) {
   if (v == null) return '—';

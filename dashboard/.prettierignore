@@ -1,0 +1,13 @@
+.next
+coverage
+dist
+build
+out
+storybook-static
+
+# รายงาน/อาร์ติแฟกต์จากการทดสอบ
+playwright-report
+test-results
+
+# อื่น ๆ
+*.log

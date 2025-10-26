@@ -9,6 +9,8 @@ describe('CORS on /health simple request', () => {
       headers: { origin: 'http://example.com' },
     });
     expect(r.statusCode).toBe(200);
-    expect(r.headers['access-control-allow-origin']).toBe('*');
+    expect(r.headers['access-control-allow-origin']).toBe(
+      'http://localhost:3000',
+    );
   });
 });

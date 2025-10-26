@@ -1,16 +1,19 @@
-﻿'use client';
+﻿// /dashboard/src/components/dashboard/AnalyticsDashboard.tsx
+'use client';
+
+import type { JSX } from 'react';
 
 import { memo, useMemo } from 'react';
 
 type Stats = Readonly<{
-  active: number;
+  active: number; // count
   distance: number; // kilometers
   avgSpeed: number; // km/h
 }>;
 
 type Props = Readonly<{
   stats: Stats;
-  locale?: string; // ใช้กำหนดรูปแบบตัวเลขตาม locale ถ้าไม่ระบุจะ fallback เป็นค่าเริ่มต้นของบราวเซอร์
+  locale?: string;
 }>;
 
 function safeNumber(n: unknown, fallback = 0): number {
@@ -18,7 +21,53 @@ function safeNumber(n: unknown, fallback = 0): number {
   return Number.isFinite(v) ? v : fallback;
 }
 
-const AnalyticsDashboard = ({ stats, locale }: Props) => {
+type MetricCardProps = Readonly<{
+  id: string;
+  label: string;
+  unit?: string;
+  formatted: string;
+  raw: number;
+  testid: string;
+}>;
+
+const MetricCard = memo(function MetricCard({
+  id,
+  label,
+  unit,
+  formatted,
+  raw,
+  testid,
+}: MetricCardProps) {
+  return (
+    <article
+      data-testid={testid}
+      aria-labelledby={`${id}-label`}
+      className="min-w-0 rounded-2xl border border-white/10 bg-white/5 p-4 shadow-sm backdrop-blur"
+    >
+      <div id={`${id}-label`} className="text-sm opacity-70">
+        {label}
+        {unit ? (
+          <abbr title={unit} className="opacity-60 no-underline">
+            {' '}
+            ({unit})
+          </abbr>
+        ) : null}
+      </div>
+      <div
+        role="status"
+        aria-live="polite"
+        className="mt-1 tabular-nums text-3xl font-semibold tracking-tight"
+        title={String(raw)}
+        data-value={raw}
+        suppressHydrationWarning
+      >
+        {formatted}
+      </div>
+    </article>
+  );
+});
+
+const AnalyticsDashboard = ({ stats, locale }: Props): JSX.Element => {
   const active = safeNumber(stats.active, 0);
   const distance = safeNumber(stats.distance, 0);
   const avgSpeed = safeNumber(stats.avgSpeed, 0);
@@ -33,6 +82,15 @@ const AnalyticsDashboard = ({ stats, locale }: Props) => {
     };
   }, [locale]);
 
+  const formatted = useMemo(
+    () => ({
+      active: intFmt.format(active),
+      distance: oneDecFmt.format(distance),
+      avgSpeed: oneDecFmt.format(avgSpeed),
+    }),
+    [intFmt, oneDecFmt, active, distance, avgSpeed],
+  );
+
   return (
     <section
       id="analytics"
@@ -45,43 +103,43 @@ const AnalyticsDashboard = ({ stats, locale }: Props) => {
         Analytics
       </h2>
 
-      <article
-        data-testid="active-trucks"
-        aria-label="Active Trucks"
-        className="rounded-xl border border-white/10 bg-white/5 p-3"
-      >
-        <div className="text-sm opacity-70">Active Trucks</div>
-        <div className="text-2xl font-semibold">{intFmt.format(active)}</div>
-      </article>
+      <MetricCard
+        id="active-trucks"
+        testid="active-trucks"
+        label="Active Trucks"
+        formatted={formatted.active}
+        raw={active}
+      />
 
-      <article
-        data-testid="total-distance"
-        aria-label="Total Distance"
-        className="rounded-xl border border-white/10 bg-white/5 p-3"
-      >
-        <div className="text-sm opacity-70">
-          Total Distance <span className="opacity-60">(km)</span>
-        </div>
-        <div className="text-2xl font-semibold">
-          {oneDecFmt.format(distance)}
-        </div>
-      </article>
+      <MetricCard
+        id="total-distance"
+        testid="total-distance"
+        label="Total Distance"
+        unit="km"
+        formatted={formatted.distance}
+        raw={distance}
+      />
 
-      <article
-        data-testid="average-speed"
-        aria-label="Average Speed"
-        className="rounded-xl border border-white/10 bg-white/5 p-3"
-      >
-        <div className="text-sm opacity-70">
-          Average Speed <span className="opacity-60">(km/h)</span>
-        </div>
-        <div className="text-2xl font-semibold">
-          {oneDecFmt.format(avgSpeed)}
-        </div>
-      </article>
+      <MetricCard
+        id="average-speed"
+        testid="average-speed"
+        label="Average Speed"
+        unit="km/h"
+        formatted={formatted.avgSpeed}
+        raw={avgSpeed}
+      />
     </section>
   );
 };
 
-export default memo(AnalyticsDashboard);
+function arePropsEqual(prev: Props, next: Props): boolean {
+  return (
+    prev.locale === next.locale &&
+    prev.stats.active === next.stats.active &&
+    prev.stats.distance === next.stats.distance &&
+    prev.stats.avgSpeed === next.stats.avgSpeed
+  );
+}
+
+export default memo(AnalyticsDashboard, arePropsEqual);
 export type { Props as AnalyticsDashboardProps, Stats as AnalyticsStats };

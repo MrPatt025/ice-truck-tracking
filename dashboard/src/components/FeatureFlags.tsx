@@ -118,7 +118,7 @@ export function FeatureFlags({ isAdmin = false }: FeatureFlagsProps) {
 
               <Switch
                 checked={flag.enabled}
-                onChange={(enabled) => toggleFlag(flag.key, enabled)}
+                onChange={(enabled: boolean) => toggleFlag(flag.key, enabled)}
                 disabled={!isAdmin}
                 className={`${
                   flag.enabled ? 'bg-blue-600' : 'bg-gray-200'

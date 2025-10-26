@@ -1,131 +1,161 @@
-﻿'use client';
+﻿
+'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { useEffect, useId, useRef, useState, type ReactNode, type JSX } from 'react';
+import clsx from 'clsx';
 
-import { cn } from '../utils';
+type Side = 'top' | 'right' | 'bottom' | 'left';
 
-interface TooltipProps {
-  content: string;
-  children: React.ReactNode;
-  position?: 'top' | 'bottom' | 'left' | 'right';
+export interface TooltipProps {
+  /** เนื้อหา tooltip */
+  content: ReactNode;
+  /** องค์ประกอบที่ต้องการแสดง tooltip ครอบไว้ */
+  children: ReactNode;
+  /** ตำแหน่ง tooltip รอบๆ trigger */
+  side?: Side;
+  /** หน่วงเวลาการแสดง (ms) */
   delay?: number;
+  /** ปิดการทำงาน */
+  disabled?: boolean;
+  /** class เพิ่มเติมให้กับกล่อง tooltip */
   className?: string;
 }
 
+/**
+ * Tooltip ที่คำนึงถึง A11y:
+ * - ใช้ role="tooltip", aria-describedby
+ * - เปิดด้วย hover/focus ปิดด้วย blur/leave/Escape
+ * - ไม่มี dependency ภายนอก / ไม่มี implicit any
+ */
 export function Tooltip({
   content,
   children,
-  position = 'top',
-  delay = 500,
+  side = 'top',
+  delay = 200,
+  disabled = false,
   className,
-}: TooltipProps) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const triggerRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+}: TooltipProps): JSX.Element {
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  const showTimer = useRef<number | null>(null);
+  const hideTimer = useRef<number | null>(null);
+  const wrapperRef = useRef<HTMLSpanElement | null>(null);
 
-  const showTooltip = () => {
-    timeoutRef.current = setTimeout(() => {
-      if (triggerRef.current) {
-        const rect = triggerRef.current.getBoundingClientRect();
-        const scrollX = window.pageXOffset;
-        const scrollY = window.pageYOffset;
-
-        let x = rect.left + scrollX + rect.width / 2;
-        let y = rect.top + scrollY;
-
-        switch (position) {
-          case 'top':
-            y -= 8;
-            break;
-          case 'bottom':
-            y += rect.height + 8;
-            break;
-          case 'left':
-            x = rect.left + scrollX - 8;
-            y += rect.height / 2;
-            break;
-          case 'right':
-            x = rect.right + scrollX + 8;
-            y += rect.height / 2;
-            break;
-        }
-
-        setTooltipPosition({ x, y });
-        setIsVisible(true);
-      }
-    }, delay);
-  };
-
-  const hideTooltip = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+  const clearTimers = () => {
+    if (showTimer.current) {
+      window.clearTimeout(showTimer.current);
+      showTimer.current = null;
     }
-    setIsVisible(false);
+    if (hideTimer.current) {
+      window.clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
   };
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
+    return () => clearTimers();
   }, []);
 
-  const positionClasses = {
-    top: 'mb-2 -translate-x-1/2',
-    bottom: 'mt-2 -translate-x-1/2',
-    left: 'mr-2 -translate-y-1/2',
-    right: 'ml-2 -translate-y-1/2',
+  const scheduleOpen = () => {
+    if (disabled) return;
+    clearTimers();
+    showTimer.current = window.setTimeout(() => setOpen(true), delay);
   };
 
-  const arrowClasses = {
-    top: 'top-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-b-transparent border-t-gray-900',
-    bottom:
-      'bottom-full left-1/2 -translate-x-1/2 border-l-transparent border-r-transparent border-t-transparent border-b-gray-900',
-    left: 'left-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-r-transparent border-l-gray-900',
-    right:
-      'right-full top-1/2 -translate-y-1/2 border-t-transparent border-b-transparent border-l-transparent border-r-gray-900',
+  const scheduleClose = () => {
+    clearTimers();
+    // ปิดทันทีให้รู้สึก responsive
+    hideTimer.current = window.setTimeout(() => setOpen(false), 0);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setOpen(false);
+      (wrapperRef.current as HTMLSpanElement | null)?.blur?.();
+    }
+  };
+
+  const posClass = (s: Side) => {
+    switch (s) {
+      case 'top':
+        return 'bottom-full left-1/2 -translate-x-1/2 -translate-y-2';
+      case 'right':
+        return 'left-full top-1/2 -translate-y-1/2 translate-x-2';
+      case 'bottom':
+        return 'top-full left-1/2 -translate-x-1/2 translate-y-2';
+      case 'left':
+        return 'right-full top-1/2 -translate-y-1/2 -translate-x-2';
+      default:
+        return '';
+    }
+  };
+
+  const arrowClass = (s: Side) => {
+    // ลูกศรเล็กๆ ด้วย border
+    const base = 'absolute w-0 h-0 border-4';
+    switch (s) {
+      case 'top':
+        return clsx(
+          base,
+          'left-1/2 -translate-x-1/2 top-full border-transparent border-t-neutral-900/90',
+        );
+      case 'right':
+        return clsx(
+          base,
+          'top-1/2 -translate-y-1/2 left-0 -translate-x-full border-transparent border-r-neutral-900/90',
+        );
+      case 'bottom':
+        return clsx(
+          base,
+          'left-1/2 -translate-x-1/2 bottom-full border-transparent border-b-neutral-900/90',
+        );
+      case 'left':
+        return clsx(
+          base,
+          'top-1/2 -translate-y-1/2 right-0 translate-x-full border-transparent border-l-neutral-900/90',
+        );
+      default:
+        return base;
+    }
   };
 
   return (
-    <>
-      <div
-        ref={triggerRef}
-        onMouseEnter={showTooltip}
-        onMouseLeave={hideTooltip}
-        onFocus={showTooltip}
-        onBlur={hideTooltip}
-        className="inline-block"
-      >
-        {children}
-      </div>
+    <span
+      ref={wrapperRef}
+      className="relative inline-flex items-center"
+      tabIndex={disabled ? -1 : 0}
+      aria-describedby={open && !disabled ? id : undefined}
+      onMouseEnter={scheduleOpen}
+      onMouseLeave={scheduleClose}
+      onFocus={scheduleOpen}
+      onBlur={scheduleClose}
+      onKeyDown={onKeyDown}
+    >
+      {children}
 
-      {isVisible &&
-        createPortal(
-          <div
-            className={cn(
-              'absolute z-50 px-2 py-1 text-sm text-white bg-gray-900 rounded shadow-lg pointer-events-none',
-              positionClasses[position],
-              className,
-            )}
-            style={{
-              left: tooltipPosition.x,
-              top: tooltipPosition.y,
-            }}
-            role="tooltip"
-          >
-            {content}
-            <div
-              className={cn(
-                'absolute w-0 h-0 border-4',
-                arrowClasses[position],
-              )}
-            />
-          </div>,
-          document.body,
-        )}
-    </>
+      {/* Tooltip bubble */}
+      {!disabled && (
+        <span
+          id={id}
+          role="tooltip"
+          className={clsx(
+            'pointer-events-none absolute z-50 whitespace-nowrap rounded-xl px-3 py-1.5 text-xs font-medium',
+            'bg-neutral-900/90 text-white shadow-lg backdrop-blur',
+            // animation
+            'transition-opacity transition-transform duration-150 ease-out',
+            open ? 'opacity-100 scale-100' : 'opacity-0 scale-95',
+            posClass(side),
+            className,
+          )}
+          aria-hidden={!open}
+        >
+          {content}
+          {/* Arrow */}
+          <span className={arrowClass(side)} />
+        </span>
+      )}
+    </span>
   );
 }
+
+export default Tooltip;

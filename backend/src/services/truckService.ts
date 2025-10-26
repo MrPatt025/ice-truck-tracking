@@ -1,5 +1,6 @@
 // backend/src/services/truckService.ts
-import type { Prisma, Truck } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import type { Truck } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 
 /** ฟิลด์ที่อนุญาตให้ sort */
@@ -11,7 +12,8 @@ const ALLOWED_SORTS = ['id', 'name', 'createdAt', 'updatedAt'] as const;
 type TruckEntity = Truck;
 type TruckOrderBy = Prisma.TruckOrderByWithRelationInput;
 
-function clamp(n: number, min: number, max: number) {
+/* ------------------------------ utils ------------------------------ */
+function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
 }
 
@@ -19,10 +21,10 @@ function normalizeOrder(order?: SortOrder): SortOrder {
   return order === 'desc' ? 'desc' : 'asc';
 }
 
+/** ถ้ามี order แต่ไม่มี sort -> ดีฟอลต์เป็น name (ให้ตรงสเปกเทสต์) */
 function normalizeSort(sort: unknown, hasOrderOnly: boolean): TruckSort {
   const s = typeof sort === 'string' ? (sort as TruckSort) : 'id';
   if ((ALLOWED_SORTS as readonly string[]).includes(s)) return s;
-  // ถ้ามี order แต่ไม่มี sort -> ดีฟอลต์เป็น name ตามสเปคเทสต์
   return hasOrderOnly ? 'name' : 'id';
 }
 
@@ -30,18 +32,93 @@ function buildOrderBy(sort: TruckSort, order: SortOrder): TruckOrderBy {
   return { [sort]: order } as TruckOrderBy;
 }
 
-function extractCode(e: unknown): string | undefined {
-  const code = (e as { code?: unknown } | null)?.code;
-  return typeof code === 'string' ? code : undefined;
+/* ----------------------- safe error helpers ------------------------ */
+function isObjectLike(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null;
 }
 
-function assertPositiveInt(id: number) {
+function toError(err: unknown): Error {
+  if (err instanceof Error) return err;
+  if (typeof err === 'string') return new Error(err);
+  try {
+    return new Error(JSON.stringify(err));
+  } catch {
+    return new Error('Unknown error');
+  }
+}
+
+/** อ่าน Prisma error code ให้ครอบคลุมทั้ง v6 และกรณี nested cause */
+function extractPrismaCode(err: unknown): string | undefined {
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    return err.code;
+  }
+  if (!isObjectLike(err)) return undefined;
+
+  // direct
+  const maybeCode = (err as { code?: unknown }).code;
+  if (typeof maybeCode === 'string') return maybeCode;
+
+  // nested cause
+  const cause = (err as { cause?: unknown }).cause;
+  if (isObjectLike(cause)) {
+    const ccode = (cause as { code?: unknown }).code;
+    if (typeof ccode === 'string') return ccode;
+  }
+  return undefined;
+}
+
+function safeString(x: unknown): string {
+  if (typeof x === 'string') return x;
+  if (x instanceof Error) return x.message;
+  return '';
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  return extractPrismaCode(err) === 'P2002';
+}
+
+// พรีคอมไพล์ regex สำหรับประสิทธิภาพ/ความชัดเจน
+const NOT_FOUND_PATTERNS = [
+  /no record was found/i,
+  /record to (update|delete|upsert) not found/i,
+  /operation failed because.*required but not found/i,
+];
+
+/** รองรับข้อความ not found ทุกรูปแบบของ Prisma */
+function isNotFoundError(err: unknown): boolean {
+  if (
+    err instanceof Prisma.PrismaClientKnownRequestError &&
+    err.code === 'P2025'
+  ) {
+    return true;
+  }
+  const code = extractPrismaCode(err);
+  if (code === 'P2025') return true;
+
+  let name: unknown;
+  let message: unknown;
+  let metaCause: unknown;
+
+  if (isObjectLike(err)) {
+    name = (err as { name?: unknown }).name;
+    message = (err as { message?: unknown }).message;
+    const meta = (err as { meta?: unknown }).meta;
+    if (isObjectLike(meta)) metaCause = (meta as { cause?: unknown }).cause;
+  }
+
+  if (name === 'NotFoundError') return true;
+
+  const hay = `${safeString(message)} ${safeString(metaCause)}`;
+  return NOT_FOUND_PATTERNS.some((re) => re.test(hay));
+}
+
+function assertPositiveInt(id: number): void {
   if (!Number.isInteger(id) || id <= 0) {
     throw new TypeError('id must be a positive integer');
   }
 }
 
-/** ดึงทั้งหมด เรียงตาม id asc */
+/* ------------------------------ queries ------------------------------ */
 export function getAllTrucks(): Promise<TruckEntity[]> {
   return prisma.truck.findMany({ orderBy: { id: 'asc' } });
 }
@@ -83,7 +160,7 @@ export async function getAllTrucksPaginated(
   const safeLimit = clamp(Math.trunc(raw.limit ?? 10), 1, 100);
 
   const hasOrder = typeof raw.order === 'string';
-  const sortField = normalizeSort(raw.sort, hasOrder && !raw.sort);
+  const sortField = normalizeSort(raw.sort, !!(hasOrder && !raw.sort));
   const sortOrder = normalizeOrder(raw.order);
 
   const skip = (page - 1) * safeLimit;
@@ -106,19 +183,24 @@ export function getTruckById(id: number): Promise<TruckEntity | null> {
   return prisma.truck.findUnique({ where: { id } });
 }
 
-export async function createTruck(name: string): Promise<TruckEntity> {
+/* ------------------------------ commands ------------------------------ */
+export function createTruck(name: string): Promise<TruckEntity> {
   const trimmed = typeof name === 'string' ? name.trim() : '';
   if (!trimmed) throw new TypeError('name is required');
-  // ปล่อยให้ P2002 เด้งออกไปให้เลเยอร์บนแมปเป็น 409
   return prisma.truck.create({ data: { name: trimmed } });
 }
 
 /**
  * อัปเดต:
  * - สำเร็จ -> Truck
- * - ไม่พบ (P2025) -> null
- * - ชื่อซ้ำ (P2002) -> throw (ให้เลเยอร์บนตอบ 409)
+ * - ชื่อซ้ำ (P2002) -> null
+ * - ไม่พบ:
+ *    - updateTruck(id, string) -> throw
+ *    - updateTruck(id, { ... }) -> null
+ * - ไม่มีฟิลด์ให้แก้ -> throw TypeError
  * - อื่น ๆ -> throw
+ *
+ * หมายเหตุ: เปิด exactOptionalPropertyTypes แล้ว "ห้ามส่ง undefined"
  */
 export async function updateTruck(
   id: number,
@@ -126,37 +208,66 @@ export async function updateTruck(
 ): Promise<TruckEntity | null> {
   assertPositiveInt(id);
 
-  const data =
-    typeof dataOrName === 'string'
-      ? { name: dataOrName.trim() }
-      : { ...dataOrName, name: dataOrName.name?.trim() };
+  const throwOnNotFound = typeof dataOrName === 'string';
 
-  if (data.name !== undefined && data.name.length === 0) {
-    throw new TypeError('name cannot be empty');
+  const updateData: Prisma.TruckUpdateInput = {};
+  if (typeof dataOrName === 'string') {
+    const nm = dataOrName.trim();
+    if (!nm) throw new TypeError('name cannot be empty');
+    updateData.name = nm;
+  } else if (Object.hasOwn(dataOrName, 'name')) {
+    const nm = dataOrName.name;
+    if (nm !== undefined) {
+      const trimmed = nm.trim();
+      if (!trimmed) throw new TypeError('name cannot be empty');
+      updateData.name = trimmed;
+    }
+  }
+
+  // ป้องกันกรณีส่ง {} แล้วไปเรียก update โดยไม่มี data จริง ๆ
+  if (Object.keys(updateData).length === 0) {
+    throw new TypeError('no fields to update');
   }
 
   try {
-    return await prisma.truck.update({ where: { id }, data });
+    return await prisma.truck.update({ where: { id }, data: updateData });
   } catch (err: unknown) {
-    const code = extractCode(err);
-    if (code === 'P2025') return null; // not found
-    throw err;
+    // ตามสเปก: P2002 (unique) -> null, P2025 (not found) ->
+    //  - updateTruck(id, string) => throw
+    //  - updateTruck(id, { ... }) => null
+    const code = extractPrismaCode(err);
+    if (code === 'P2002') return null;
+    if (code === 'P2025') {
+      if (throwOnNotFound) throw toError(err);
+      return null;
+    }
+
+    // 1) เคสหลัก ๆ ตามสเปกเดิม (ยังคงรองรับข้อความ/โครงสร้าง error อื่น ๆ)
+    if (isUniqueViolation(err)) return null;
+
+    if (isNotFoundError(err)) {
+      if (throwOnNotFound) throw toError(err);
+      return null;
+    }
+
+    // 2) อื่น ๆ -> bubble
+    throw toError(err);
   }
 }
 
 /**
  * ลบ:
- * - สำเร็จ -> คืน Truck ที่ถูกลบ
- * - ไม่พบ (P2025) -> null
+ * - สำเร็จ -> true
+ * - ไม่พบ (P2025/NotFound) -> throw (ให้ตรงสเปกเทสต์ notfound branch)
  * - อื่น ๆ -> throw
  */
-export async function deleteTruck(id: number): Promise<TruckEntity | null> {
+export async function deleteTruck(id: number): Promise<boolean> {
   assertPositiveInt(id);
   try {
-    return await prisma.truck.delete({ where: { id } });
+    await prisma.truck.delete({ where: { id } });
+    return true;
   } catch (err: unknown) {
-    const code = extractCode(err);
-    if (code === 'P2025') return null;
-    throw err;
+    if (isNotFoundError(err)) throw toError(err);
+    throw toError(err);
   }
 }

@@ -1,92 +1,90 @@
-﻿import { forwardRef, InputHTMLAttributes, useId } from 'react';
+﻿import { forwardRef, useId } from 'react';
+import type { InputHTMLAttributes, ReactNode } from 'react';
 
 import { cn } from '../utils';
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helperText?: string;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  leftIcon?: ReactNode;
+  rightIcon?: ReactNode;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-  (
-    { className, label, error, helperText, leftIcon, rightIcon, id, ...props },
-    ref,
-  ) => {
-    const reactId = useId();
-    const inputId = id || `input-${reactId.replace(/[:]/g, '')}`;
+const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  { className, label, error, helperText, leftIcon, rightIcon, id, ...props },
+  ref,
+) {
+  const reactId = useId();
+  const safeId = (id ?? `input-${reactId}`).replace(/[:]/g, '');
+  const describedBy = error
+    ? `${safeId}-error`
+    : helperText
+      ? `${safeId}-helper`
+      : undefined;
 
-    return (
-      <div className="space-y-1">
-        {label && (
-          <label
-            htmlFor={inputId}
-            className="block text-sm font-medium text-gray-700"
-          >
-            {label}
-          </label>
+  return (
+    <div className="space-y-1">
+      {label && (
+        <label
+          htmlFor={safeId}
+          className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+        >
+          {label}
+        </label>
+      )}
+
+      <div className="relative">
+        {leftIcon && (
+          <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+            {leftIcon}
+          </span>
         )}
 
-        <div className="relative">
-          {leftIcon && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span className="text-gray-400 text-sm">{leftIcon}</span>
-            </div>
+        <input
+          ref={ref}
+          id={safeId}
+          className={cn(
+            'block w-full rounded-md border bg-white px-3 py-2 text-slate-900 placeholder-slate-400 shadow-sm',
+            'border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500',
+            'dark:bg-slate-900 dark:text-slate-100 dark:border-slate-700 dark:placeholder-slate-500',
+            error &&
+              'border-rose-300 focus:ring-rose-500 focus:border-rose-500 dark:border-rose-500',
+            leftIcon ? 'pl-10' : undefined,
+            rightIcon ? 'pr-10' : undefined,
+            className,
           )}
+          aria-invalid={Boolean(error)}
+          aria-describedby={describedBy}
+          aria-errormessage={error ? `${safeId}-error` : undefined}
+          {...props}
+        />
 
-          <input
-            ref={ref}
-            id={inputId}
-            className={cn(
-              'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-              'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
-              error && 'border-red-300 focus:ring-red-500 focus:border-red-500',
-              Boolean(leftIcon) && 'pl-10',
-              Boolean(rightIcon) && 'pr-10',
-              className,
-            )}
-            aria-invalid={error ? 'true' : 'false'}
-            aria-describedby={
-              error
-                ? `${inputId}-error`
-                : helperText
-                  ? `${inputId}-helper`
-                  : undefined
-            }
-            {...props}
-          />
-
-          {rightIcon && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <span className="text-gray-400 text-sm">{rightIcon}</span>
-            </div>
-          )}
-        </div>
-
-        {error && (
-          <p
-            id={`${inputId}-error`}
-            className="text-sm text-red-600"
-            role="alert"
-          >
-            {error}
-          </p>
-        )}
-
-        {helperText && !error && (
-          <p id={`${inputId}-helper`} className="text-sm text-gray-500">
-            {helperText}
-          </p>
+        {rightIcon && (
+          <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
+            {rightIcon}
+          </span>
         )}
       </div>
-    );
-  },
-);
+
+      {error ? (
+        <p
+          id={`${safeId}-error`}
+          className="text-sm text-rose-600"
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : helperText ? (
+        <p id={`${safeId}-helper`} className="text-sm text-slate-500">
+          {helperText}
+        </p>
+      ) : null}
+    </div>
+  );
+});
 
 Input.displayName = 'Input';
 
 export { Input };
-export type { InputProps };

@@ -145,3 +145,5 @@ ssl/
 .node_repl_history
 
 coverage/
+
+*storybook.log

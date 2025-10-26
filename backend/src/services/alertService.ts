@@ -8,21 +8,24 @@ const PRISMA = {
   FK_FAIL: 'P2003',
 } as const;
 
+/* ------------------------------ utils ------------------------------ */
+function isObj(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object';
+}
+
 /** ดึง code จาก Prisma error แบบปลอดภัย */
 function getErrCode(e: unknown): string | undefined {
-  if (e && typeof e === 'object' && 'code' in e) {
-    const code = (e as { code?: unknown }).code;
-    if (typeof code === 'string') return code;
-  }
+  if (isObj(e) && typeof e.code === 'string') return e.code;
   return undefined;
 }
 
-function assertPositiveInt(id: number) {
+function assertPositiveInt(id: number): void {
   if (!Number.isInteger(id) || id <= 0) {
     throw new TypeError('id must be a positive integer');
   }
 }
 
+/** trim แล้วคืน undefined ถ้า null/undefined, แต่ถ้าเป็นสตริงว่าง -> โยน error */
 function normalizeMessage(m?: string | null): string | undefined {
   if (m == null) return undefined;
   const t = m.trim();
@@ -30,6 +33,14 @@ function normalizeMessage(m?: string | null): string | undefined {
   return t;
 }
 
+/** สำหรับ input ที่บังคับต้องเป็น string */
+function normalizeMessageStrict(m: string): string {
+  const t = m.trim();
+  if (!t) throw new TypeError('message cannot be empty');
+  return t;
+}
+
+/* ------------------------------ queries ------------------------------ */
 /** รายการทั้งหมด เรียงตาม id เพื่อความเสถียร */
 export function getAllAlerts(): Promise<Alert[]> {
   return prisma.alert.findMany({ orderBy: { id: 'asc' } });
@@ -40,6 +51,7 @@ export function getAlertById(id: number): Promise<Alert | null> {
   return prisma.alert.findUnique({ where: { id } });
 }
 
+/* ------------------------------ commands ------------------------------ */
 export function createAlert(data: Prisma.AlertCreateInput): Promise<Alert> {
   // ถ้ามี message ให้ trim และกันค่าว่าง
   const msg = normalizeMessage(
@@ -63,7 +75,7 @@ export async function createAlertForTruck(
   message: string,
 ): Promise<Alert | null> {
   assertPositiveInt(truckId);
-  const msg = normalizeMessage(message)!;
+  const msg = normalizeMessageStrict(message);
 
   try {
     return await prisma.alert.create({
@@ -89,14 +101,18 @@ export async function deleteAlert(id: number): Promise<boolean> {
   }
 }
 
-/** อัปเดตข้อความหรือระดับ ถ้าไม่พบคืน null */
+/**
+ * อัปเดตข้อความหรือระดับ:
+ * - สำเร็จ -> Alert
+ * - ไม่พบ -> null
+ */
 export async function updateAlert(
   id: number,
   data: Pick<Prisma.AlertUpdateInput, 'message' | 'level'>,
 ): Promise<Alert | null> {
   assertPositiveInt(id);
 
-  // รองรับทั้งรูปแบบ string และ { set: string }
+  // รองรับทั้งรูปแบบ string และ { set: string } สำหรับ message
   const payload: Pick<Prisma.AlertUpdateInput, 'message' | 'level'> = {
     ...data,
   };
@@ -106,7 +122,7 @@ export async function updateAlert(
     if (msg !== undefined) payload.message = msg;
   } else if (payload.message && typeof payload.message.set === 'string') {
     const setVal = payload.message.set;
-    const msg = normalizeMessage(setVal)!;
+    const msg = normalizeMessageStrict(setVal);
     payload.message = { set: msg };
   }
 

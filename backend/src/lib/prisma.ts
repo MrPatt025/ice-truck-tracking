@@ -1,62 +1,74 @@
 // backend/src/lib/prisma.ts
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, type Prisma } from '@prisma/client';
 
-const env = process.env.NODE_ENV ?? 'development';
-const isProd = env === 'production';
-const isTest = env === 'test';
+const ENV = process.env.NODE_ENV ?? 'development';
+const isProd = ENV === 'production';
+const isTest = ENV === 'test';
 
 const options: Prisma.PrismaClientOptions = {
   errorFormat: isTest ? 'minimal' : 'colorless',
-  log: isTest ? [] : ['warn', 'error'],
+  log: isTest ? [] : (['warn', 'error'] satisfies Prisma.LogLevel[]),
 };
 
-// ป้องกันสร้างหลายอินสแตนซ์เมื่อ hot-reload
-const globalForPrisma = globalThis as unknown as {
-  __prisma?: PrismaClient;
-  __prismaHooksRegistered?: boolean;
-};
+/**
+ * Augment globalThis for a type-safe Prisma singleton & one-time hook flag
+ */
+declare global {
+  var __PRISMA__: PrismaClient | undefined;
 
-const created = !globalForPrisma.__prisma;
-export const prisma: PrismaClient =
-  globalForPrisma.__prisma ?? new PrismaClient(options);
-
-if (!isProd) {
-  globalForPrisma.__prisma = prisma;
+  var __PRISMA_HOOKS__: boolean | undefined;
 }
 
-if (created && !globalForPrisma.__prismaHooksRegistered) {
-  const shutdown = async () => {
+/**
+ * Create a new Prisma client (isolated for easier typing/testing)
+ */
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient(options);
+}
+
+/**
+ * Singleton:
+ * - Dev/Test: reuse on globalThis to avoid HMR connection leaks
+ * - Prod: let GC collect normally (no global caching)
+ */
+export const prisma: PrismaClient =
+  (!isProd ? globalThis.__PRISMA__ : undefined) ?? createPrismaClient();
+
+if (!isProd) {
+  globalThis.__PRISMA__ = prisma;
+}
+
+/**
+ * Graceful shutdown hooks, register once
+ */
+if (!globalThis.__PRISMA_HOOKS__) {
+  const shutdown = async (): Promise<void> => {
     try {
       await prisma.$disconnect();
     } catch {
-      // no-op
+      // swallow disconnect errors on shutdown
     }
   };
 
-  // หลีกเลี่ยง async listener เพื่อไม่ให้ชน @typescript-eslint/no-misused-promises
   if (!isTest) {
     process.once('SIGINT', () => {
-      void shutdown().finally(() => {
-        process.exit(0);
-      });
+      void shutdown().finally(() => process.exit(0));
     });
     process.once('SIGTERM', () => {
-      void shutdown().finally(() => {
-        process.exit(0);
-      });
+      void shutdown().finally(() => process.exit(0));
     });
-    // รองรับ Windows
+    // Windows console (Ctrl+Break)
     process.once('SIGBREAK', () => {
-      void shutdown().finally(() => {
-        process.exit(0);
-      });
+      void shutdown().finally(() => process.exit(0));
     });
   }
 
-  // ปิดคอนเนกชันก่อนโปรเซสจบ โดยไม่คืน Promise ออกจาก listener
+  // Ensure connections close before process exits
   process.once('beforeExit', () => {
     void shutdown();
   });
 
-  globalForPrisma.__prismaHooksRegistered = true;
+  globalThis.__PRISMA_HOOKS__ = true;
 }
+
+export default prisma;

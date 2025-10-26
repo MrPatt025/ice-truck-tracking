@@ -32,9 +32,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
           <button
             data-testid="retry-button"
             className="px-2 py-1 rounded border border-white/20 bg-white/10 hover:bg-white/15"
-            onClick={() =>
-              this.setState({ hasError: false, message: undefined })
-            }
+            onClick={() => this.setState({ hasError: false })}
           >
             Retry
           </button>

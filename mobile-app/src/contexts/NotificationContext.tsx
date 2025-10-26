@@ -7,6 +7,9 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
+    // Expo SDK 50+ (expo-notifications >= 0.32) requires these additional fields
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 

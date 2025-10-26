@@ -1,23 +1,26 @@
 // /dashboard/src/hooks/useMetrics.ts
-import React from 'react';
+import { useMemo } from 'react';
 import useSWR from 'swr';
 import {
-  Truck,
+  Truck as TruckIcon,
   ThermometerSun,
   Bell,
   Activity,
-  LucideIcon,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { UiTruck } from '../types/truck';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+const REFRESH_MS = Number(process.env.NEXT_PUBLIC_POLL_MS ?? 5000);
 
-interface TruckData {
-  temp: number;
-}
-interface AlertData {
-  level: 'info' | 'warn' | 'critical';
-}
+const fetcher = async <T>(url: string): Promise<T> => {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return (await res.json()) as T;
+};
+
+type AlertData = { level?: string };
+
 export interface Metric {
   title: string;
   value: string;
@@ -30,39 +33,51 @@ export interface Metric {
 export const useMetrics = (): {
   metrics: Metric[];
   isLoading: boolean;
-  error: any;
+  error: unknown;
 } => {
   const {
     data: trucks,
     error: trucksError,
     isLoading: trucksLoading,
-  } = useSWR<TruckData[]>(`${API_URL}/api/v1/trucks`, fetcher, {
-    refreshInterval: 5000,
-  });
+  } = useSWR<UiTruck[]>(
+    `${API_URL}/api/v1/trucks`,
+    (u) => fetcher<UiTruck[]>(u),
+    {
+      refreshInterval: REFRESH_MS,
+      dedupingInterval: REFRESH_MS,
+    },
+  );
+
   const {
     data: alerts,
     error: alertsError,
     isLoading: alertsLoading,
-  } = useSWR<AlertData[]>(`${API_URL}/api/v1/alerts`, fetcher, {
-    refreshInterval: 5000,
-  });
+  } = useSWR<AlertData[]>(
+    `${API_URL}/api/v1/alerts`,
+    (u) => fetcher<AlertData[]>(u),
+    {
+      refreshInterval: REFRESH_MS,
+      dedupingInterval: REFRESH_MS,
+    },
+  );
 
-  const isLoading = trucksLoading || alertsLoading;
+  const isLoading = Boolean(trucksLoading || alertsLoading);
   const error = trucksError || alertsError;
 
-  const metrics = React.useMemo<Metric[]>(() => {
-    const loadingMetrics: Metric[] = [
+  // ทำให้ skeleton metrics คงที่ข้ามเรนเดอร์ เพื่อแก้ missing-deps warning
+  const loadingMetrics = useMemo<Metric[]>(
+    () => [
       {
         title: 'Active Trucks',
-        value: '...',
+        value: '…',
         change: '',
         trend: 'stable',
-        icon: Truck,
+        icon: TruckIcon,
         'data-testid': 'active-trucks',
       },
       {
         title: 'Avg Cargo Temp',
-        value: '...',
+        value: '…',
         change: '',
         trend: 'stable',
         icon: ThermometerSun,
@@ -70,7 +85,7 @@ export const useMetrics = (): {
       },
       {
         title: 'Open Alerts',
-        value: '...',
+        value: '…',
         change: '',
         trend: 'stable',
         icon: Bell,
@@ -78,43 +93,41 @@ export const useMetrics = (): {
       },
       {
         title: 'On-time Rate',
-        value: '...',
+        value: '…',
         change: '',
         trend: 'stable',
         icon: Activity,
         'data-testid': 'on-time-rate',
       },
-    ];
+    ],
+    [],
+  );
 
-    // **FIXED:** เพิ่ม Guard Clause เพื่อป้องกัน Runtime Error
-    if (isLoading || error || !trucks || !alerts) {
-      return loadingMetrics;
-    }
-
-    // ตรวจสอบให้แน่ใจว่าเป็น Array ก่อนใช้งาน
-    if (!Array.isArray(trucks) || !Array.isArray(alerts)) {
-      console.error('API did not return an array for trucks or alerts', {
-        trucks,
-        alerts,
-      });
+  const metrics = useMemo<Metric[]>(() => {
+    if (error || !Array.isArray(trucks) || !Array.isArray(alerts)) {
       return loadingMetrics;
     }
 
     const activeTrucks = trucks.length;
-    const totalTemp = trucks.reduce((sum, truck) => sum + truck.temp, 0);
-    const avgTemp =
-      activeTrucks > 0 ? (totalTemp / activeTrucks).toFixed(1) : '0.0';
-    const openAlerts = alerts.filter(
-      (alert) => alert.level === 'warn' || alert.level === 'critical',
+
+    const temps = trucks
+      .map((t) => t.temp)
+      .filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+    const avgTempNum =
+      temps.length > 0 ? temps.reduce((a, b) => a + b, 0) / temps.length : 0;
+    const avgTemp = avgTempNum.toFixed(1);
+
+    const openAlerts = alerts.filter((a) =>
+      /^(warn|warning|critical|error)$/i.test(String(a.level ?? '')),
     ).length;
 
     return [
       {
         title: 'Active Trucks',
-        value: activeTrucks.toString(),
+        value: String(activeTrucks),
         change: '+1',
         trend: 'up',
-        icon: Truck,
+        icon: TruckIcon,
         'data-testid': 'active-trucks',
       },
       {
@@ -127,7 +140,7 @@ export const useMetrics = (): {
       },
       {
         title: 'Open Alerts',
-        value: openAlerts.toString(),
+        value: String(openAlerts),
         change: '+0',
         trend: 'stable',
         icon: Bell,
@@ -142,7 +155,7 @@ export const useMetrics = (): {
         'data-testid': 'on-time-rate',
       },
     ];
-  }, [trucks, alerts, isLoading, error]);
+  }, [trucks, alerts, error, loadingMetrics]);
 
   return { metrics, isLoading, error };
 };

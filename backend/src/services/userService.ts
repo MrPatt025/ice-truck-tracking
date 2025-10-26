@@ -38,7 +38,9 @@ function parseBoolFlag(v: string | undefined, fallback: boolean): boolean {
 export function isDemoLoginAllowed(
   env: NodeJS.ProcessEnv = process.env,
 ): boolean {
-  return parseBoolFlag(env.DEMO_LOGIN, true);
+  // Prefer DEMO_LOGIN; fall back to ALLOW_DEMO_LOGIN for backward compatibility
+  const flag = env.DEMO_LOGIN ?? env.ALLOW_DEMO_LOGIN;
+  return parseBoolFlag(flag, true);
 }
 
 /** utils สำหรับอ่านสตริงจาก path ใน object */
@@ -62,30 +64,57 @@ function firstStr(o: unknown, candidates: string[][]): string | undefined {
 }
 
 /** อ่าน DEMO creds จาก ENV.DEMO_CREDS (รองรับทั้งแบบ flat และ nested) */
-export function readDemoCreds(env: NodeJS.ProcessEnv = process.env) {
+export function readDemoCreds(env: NodeJS.ProcessEnv = process.env): DemoCreds {
+  // 1) Try JSON in DEMO_CREDS/DEMO_CREDENTIALS. Only accept when all four values exist and are non-empty strings.
   const raw = (env.DEMO_CREDS ?? env.DEMO_CREDENTIALS)?.trim();
-  if (!raw) return { ...DEMO_DEFAULT };
-  try {
-    const o = JSON.parse(raw) as unknown;
-    if (o === null || typeof o !== 'object') return { ...DEMO_DEFAULT };
-
-    const adminUser =
-      firstStr(o, [['adminUser'], ['admin', 'username'], ['adminUsername']]) ??
-      DEMO_DEFAULT.adminUser;
-    const adminPass =
-      firstStr(o, [['adminPass'], ['admin', 'password'], ['adminPassword']]) ??
-      DEMO_DEFAULT.adminPass;
-    const userUser =
-      firstStr(o, [['userUser'], ['user', 'username'], ['userUsername']]) ??
-      DEMO_DEFAULT.userUser;
-    const userPass =
-      firstStr(o, [['userPass'], ['user', 'password'], ['userPassword']]) ??
-      DEMO_DEFAULT.userPass;
-
-    return { adminUser, adminPass, userUser, userPass } as const;
-  } catch {
-    return { ...DEMO_DEFAULT };
+  if (raw) {
+    try {
+      const o = JSON.parse(raw) as unknown;
+      if (o && typeof o === 'object') {
+        const aU = firstStr(o, [['adminUser']]);
+        const aP = firstStr(o, [['adminPass']]);
+        const uU = firstStr(o, [['userUser']]);
+        const uP = firstStr(o, [['userPass']]);
+        if (
+          typeof aU === 'string' &&
+          typeof aP === 'string' &&
+          typeof uU === 'string' &&
+          typeof uP === 'string'
+        ) {
+          return {
+            adminUser: aU,
+            adminPass: aP,
+            userUser: uU,
+            userPass: uP,
+          };
+        }
+      }
+    } catch {
+      // ignore parse errors -> fall through to env vars/default
+    }
   }
+
+  // 2) Try flat env vars (support both DEMO_* and legacy non-prefixed). Only accept when all four are provided.
+  const envAdminUser = (env.DEMO_ADMIN_USER ?? env.ADMIN_USER)?.trim();
+  const envAdminPass = (env.DEMO_ADMIN_PASS ?? env.ADMIN_PASS)?.trim();
+  const envUserUser = (env.DEMO_USER_USER ?? env.USER_USER)?.trim();
+  const envUserPass = (env.DEMO_USER_PASS ?? env.USER_PASS)?.trim();
+  if (
+    typeof envAdminUser === 'string' &&
+    typeof envAdminPass === 'string' &&
+    typeof envUserUser === 'string' &&
+    typeof envUserPass === 'string'
+  ) {
+    return {
+      adminUser: envAdminUser,
+      adminPass: envAdminPass,
+      userUser: envUserUser,
+      userPass: envUserPass,
+    };
+  }
+
+  // 3) Fallback defaults
+  return { ...DEMO_DEFAULT };
 }
 
 /** นอร์มัลไลซ์ข้อความ */

@@ -1,7 +1,8 @@
 'use client';
+import type { JSX } from 'react';
 import { useEffect, useState } from 'react';
 
-export default function ConnectionBadge() {
+export default function ConnectionBadge(): JSX.Element {
   const [online, setOnline] = useState(true);
   useEffect(() => {
     const h1 = () => setOnline(true);

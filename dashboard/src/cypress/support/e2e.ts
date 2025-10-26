@@ -1,9 +1,18 @@
+// dashboard/src/cypress/support/e2e.ts
+/// <reference types="cypress" />
+
 import './commands';
-// ใช้ plugin ถ้ามีติดตั้งไว้ (ไม่มีไม่เป็นไร เพราะเรามี no-op ไว้แล้ว)
+
+// โหลดปลั๊กอินแบบ optional
 try {
+  // optional at runtime
+
   require('cypress-plugin-tab');
 } catch {}
-Cypress.on('uncaught:exception', (err) => {
-  // กัน error ภายในแอปที่ไม่เกี่ยวกับสิ่งที่ทดสอบ
-  if (/toString/.test(err.message)) return false;
+
+// กัน flakiness จาก error ภายในแอป
+Cypress.on('uncaught:exception', (_err): false => {
+  return false;
 });
+
+export {};

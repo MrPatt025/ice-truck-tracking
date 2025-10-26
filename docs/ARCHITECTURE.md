@@ -65,3 +65,13 @@
 ---
 
 **For full details, see the [root README](../README.md) and [docs/](./)**
+
+## Dashboard stats time ranges
+
+The dashboard’s KPIs and charts are powered by the backend endpoint `GET /api/v1/stats`.
+
+- Supported time ranges today: `1h`, `24h`, `7d`.
+- These values are enforced end-to-end via typed contracts in the dashboard (the `GetApiV1StatsRange` type) and the backend service logic.
+- UI selectors are constrained to these values to ensure perfect API compatibility and to avoid runtime mismatches.
+
+Future extension: If longer windows are required (e.g., `30d`, `90d`), extend the backend’s stats service and OpenAPI schema first, then surface the new values in the dashboard’s range selector. The current charts and KPIs will automatically adapt to the extended series if the response shape remains consistent.

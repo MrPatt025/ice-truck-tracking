@@ -57,7 +57,7 @@ class SecurityAuditor {
             let parsed = data;
             try {
               parsed = JSON.parse(data);
-            } catch (_) {}
+            } catch {}
             resolve({
               statusCode: res.statusCode,
               headers: res.headers,
@@ -517,7 +517,7 @@ async function throttle(promises, limit) {
       const idx = i++;
       try {
         ret[idx] = await promises[idx];
-      } catch (e) {
+      } catch {
         ret[idx] = null;
       }
     }

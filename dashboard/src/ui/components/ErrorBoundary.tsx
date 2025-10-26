@@ -1,7 +1,8 @@
 ﻿'use client';
 
-import { Component, ErrorInfo, ReactNode } from 'react';
-
+import { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { Button } from './Button';
 
 interface Props {
@@ -26,77 +27,68 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-
-    // Log to external service (Sentry, etc.)
+    // Report to Sentry (client)
+    try {
+      Sentry.captureException(error, { extra: { errorInfo } });
+    } catch {}
+    // Optional consumer hook
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
-    }
-
-    // Log to analytics
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'exception', {
-        description: error.toString(),
-        fatal: false,
-      });
     }
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, error: undefined });
+    this.setState({ hasError: false });
+    try {
+      if (typeof window !== 'undefined') window.location.reload();
+    } catch {}
   };
 
-  render() {
+  render(): ReactNode {
     if (this.state.hasError) {
-      if (this.props.fallback) {
-        return this.props.fallback;
-      }
+      if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div className="flex flex-col items-center justify-center min-h-64 p-8 text-center">
-          <div className="mb-4">
-            <svg
-              className="w-16 h-16 text-red-500 mx-auto"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-              />
-            </svg>
+        <section
+          role="alert"
+          aria-live="assertive"
+          className="glass-surface mx-auto my-8 max-w-2xl rounded-xl p-6 text-white text-center"
+        >
+          <div className="mb-3 flex items-center justify-center gap-3">
+            <div
+              className="h-2.5 w-2.5 rounded-full bg-(--status-critical) shadow-[0_0_12px_var(--status-critical)]"
+              aria-hidden
+            />
+            <h2 className="text-lg font-semibold text-brand-gradient">
+              Something went wrong
+            </h2>
           </div>
-
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Something went wrong
-          </h2>
-
-          <p className="text-gray-600 mb-6 max-w-md">
-            We encountered an unexpected error. Please try refreshing the page
-            or contact support if the problem persists.
+          <p className="mx-auto max-w-md text-sm text-white/80">
+            An unexpected error occurred. It has been reported. Try reloading
+            the page or return to your dashboard.
           </p>
 
           {process.env.NODE_ENV === 'development' && this.state.error && (
-            <details className="mb-4 p-4 bg-red-50 rounded-lg text-left max-w-2xl">
-              <summary className="cursor-pointer font-medium text-red-800">
+            <details className="mx-auto mt-4 max-w-2xl rounded-lg bg-red-950/30 p-4 text-left ring-1 ring-red-400/30">
+              <summary className="cursor-pointer font-medium text-red-200">
                 Error Details (Development)
               </summary>
-              <pre className="mt-2 text-sm text-red-700 whitespace-pre-wrap">
+              <pre className="mt-2 whitespace-pre-wrap text-sm text-red-200/90">
                 {this.state.error.stack}
               </pre>
             </details>
           )}
 
-          <div className="flex gap-3">
-            <Button onClick={this.handleRetry}>Try Again</Button>
-            <Button variant="outline" onClick={() => window.location.reload()}>
-              Refresh Page
-            </Button>
+          <div className="mt-5 flex justify-center gap-3">
+            <Button onClick={this.handleRetry}>Reload</Button>
+            <a
+              href="/dashboard"
+              className="rounded-md border border-(--card-border) px-4 py-2 text-sm focus-ring-theme"
+            >
+              Go to dashboard
+            </a>
           </div>
-        </div>
+        </section>
       );
     }
 

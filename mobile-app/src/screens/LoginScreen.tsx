@@ -31,7 +31,7 @@ export function LoginScreen() {
     setIsLoading(true);
     try {
       await login(email, password);
-    } catch (error) {
+    } catch {
       Alert.alert('Login Failed', 'Invalid email or password');
     } finally {
       setIsLoading(false);

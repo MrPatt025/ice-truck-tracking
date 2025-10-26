@@ -22,5 +22,7 @@ test('preflight > OPTIONS /api/v1/alerts -> 200/204 with CORS headers', async ()
   });
   expect([200, 204]).toContain(res.statusCode);
   // เปิดกว้างไว้ตามที่ตั้งค่าไว้ใน dev
-  expect(res.headers['access-control-allow-origin']).toBe('*');
+  expect(res.headers['access-control-allow-origin']).toBe(
+    'http://localhost:3000',
+  );
 });

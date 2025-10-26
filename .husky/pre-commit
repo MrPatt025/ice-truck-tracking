@@ -1,1 +1,1 @@
-pnpm dlx lint-staged -c lint-staged.config.mjs --debug
+pnpm dlx lint-staged --concurrent false --relative

@@ -1,4 +1,5 @@
 ﻿'use client';
+import type { JSX } from 'react';
 
 interface DashboardProps {
   trucks: any[];
@@ -6,7 +7,11 @@ interface DashboardProps {
   selectedTruck: string | null;
 }
 
-export function Dashboard({ trucks, alerts, selectedTruck }: DashboardProps) {
+export function Dashboard({
+  trucks,
+  alerts,
+  selectedTruck,
+}: DashboardProps): JSX.Element {
   const activeTrucks = trucks.filter((t) => t.status === 'active').length;
   const totalAlerts = alerts.length;
   const selectedTruckData = trucks.find((t) => t.id === selectedTruck);

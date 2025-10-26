@@ -1,6 +1,9 @@
-// backend/test/unit/__mocks__/prisma.mock.ts
-
+// backend/test/__mocks__/prisma.mock.ts
 import { vi } from 'vitest';
+
+/* -------------------------------------------------------------------------- */
+/*                                  Types                                      */
+/* -------------------------------------------------------------------------- */
 
 export type Truck = {
   id: number;
@@ -60,12 +63,10 @@ interface AlertCreateArgs {
   };
 }
 
-class NotFoundError extends Error {
-  constructor(msg = 'NotFound') {
-    super(msg);
-    this.name = 'NotFoundError';
-  }
-}
+/* -------------------------------------------------------------------------- */
+/*                                Error shapes                                 */
+/*  Match Prisma's well-known codes so production code can branch on `code`.   */
+/* -------------------------------------------------------------------------- */
 
 class PrismaP2002Error extends Error {
   readonly code = 'P2002';
@@ -74,6 +75,20 @@ class PrismaP2002Error extends Error {
     this.name = 'PrismaClientKnownRequestError';
   }
 }
+
+class PrismaP2025Error extends Error {
+  readonly code = 'P2025';
+  constructor(
+    msg = 'An operation failed because it depends on one or more records that were required but not found.',
+  ) {
+    super(msg);
+    this.name = 'PrismaClientKnownRequestError';
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                In-memory DB                                 */
+/* -------------------------------------------------------------------------- */
 
 let autoId = 1;
 let autoAlertId = 1;
@@ -92,7 +107,11 @@ function compareVals(
   return String(a).localeCompare(String(b));
 }
 
-/** ใช้ใน beforeEach ของเทสเพื่อเคลียร์สตอเรจ */
+/* -------------------------------------------------------------------------- */
+/*                                 Test utils                                  */
+/* -------------------------------------------------------------------------- */
+
+/** เคลียร์สตอเรจ ก่อนแต่ละเทสต์ */
 export function reset(): void {
   autoId = 1;
   autoAlertId = 1;
@@ -100,20 +119,51 @@ export function reset(): void {
   alerts.length = 0;
 }
 
-/** helper สำหรับ seed ในเทส */
-export function seedTrucks(names: string[]) {
+/** seed ชื่อรถบรรทุกแบบรวดเร็ว */
+export function seedTrucks(names: string[]): void {
   for (const name of names) {
     trucks.push({ id: autoId++, name, createdAt: now(), updatedAt: now() });
   }
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                  Mock API                                   */
+/* -------------------------------------------------------------------------- */
+
 export const prismaMock = {
+  /* -------------------------------- $transaction ------------------------------- */
+  /**
+   * รองรับทั้ง 2 รูปแบบ:
+   *  - prisma.$transaction([promise1, promise2])
+   *  - prisma.$transaction(async (tx) => { ... })
+   *
+   * ใน mock จะทำงานเทียบเท่า Promise.all / เรียก callback ด้วย delegate เดิม
+   */
+  $transaction: vi.fn(async (arg: unknown) => {
+    if (Array.isArray(arg)) {
+      // แบบ array: รวมผลพร้อมกัน
+      return Promise.all(arg as Promise<unknown>[]);
+    }
+    if (typeof arg === 'function') {
+      // แบบ interactive callback
+      // ส่ง "tx client" ที่มี shape เดียวกับ prismaMock (พอสำหรับยูนิตเทสต์)
+      const tx = {
+        truck: prismaMock.truck,
+        alert: prismaMock.alert,
+        $transaction: prismaMock.$transaction,
+      };
+      return (arg as (tx: typeof tx) => unknown | Promise<unknown>)(tx);
+    }
+    throw new TypeError('$transaction: invalid argument');
+  }),
+
+  /* --------------------------------- Truck --------------------------------- */
   truck: {
     findMany: vi.fn(async (args?: TruckFindManyArgs): Promise<Truck[]> => {
       let rows = [...trucks];
 
       const ob = args?.orderBy;
-      if (ob) {
+      if (ob && Object.keys(ob).length) {
         const [key, dir] = Object.entries(ob)[0] as [keyof Truck, SortDir];
         const sign = dir === 'desc' ? -1 : 1;
         rows.sort(
@@ -142,10 +192,10 @@ export const prismaMock = {
     ),
 
     create: vi.fn(async (args: TruckCreateArgs): Promise<Truck> => {
-      const name = args.data.name;
-      if (trucks.some((t) => t.name === name)) {
-        throw new PrismaP2002Error();
-      }
+      const name = args.data.name.trim();
+      if (!name) throw new PrismaP2002Error('Name cannot be empty'); // mimic validation failure path
+      if (trucks.some((t) => t.name === name)) throw new PrismaP2002Error();
+
       const row: Truck = {
         id: autoId++,
         name,
@@ -159,7 +209,7 @@ export const prismaMock = {
     update: vi.fn(async (args: TruckUpdateArgs): Promise<Truck> => {
       const id = args.where.id;
       const t = trucks.find((x) => x.id === id);
-      if (!t) throw new NotFoundError();
+      if (!t) throw new PrismaP2025Error();
 
       if (
         args.data.name &&
@@ -169,7 +219,7 @@ export const prismaMock = {
         throw new PrismaP2002Error();
       }
 
-      if (typeof args.data.name === 'string') t.name = args.data.name;
+      if (typeof args.data.name === 'string') t.name = args.data.name.trim();
       t.updatedAt = now();
       return t;
     }),
@@ -177,7 +227,7 @@ export const prismaMock = {
     delete: vi.fn(async (args: TruckDeleteArgs): Promise<Truck> => {
       const id = args.where.id;
       const i = trucks.findIndex((x) => x.id === id);
-      if (i < 0) throw new NotFoundError();
+      if (i < 0) throw new PrismaP2025Error();
       const [removed] = trucks.splice(i, 1);
       return removed;
     }),
@@ -185,6 +235,7 @@ export const prismaMock = {
     count: vi.fn(async (): Promise<number> => trucks.length),
   },
 
+  /* --------------------------------- Alert --------------------------------- */
   alert: {
     findMany: vi.fn(async (): Promise<Alert[]> => [...alerts]),
 
@@ -198,7 +249,7 @@ export const prismaMock = {
       const { level, message, truck } = args.data;
       const truckId = truck.connect.id;
       const exists = trucks.some((t) => t.id === truckId);
-      if (!exists) throw new NotFoundError('Truck not found');
+      if (!exists) throw new PrismaP2025Error('Truck not found');
 
       const row: Alert = {
         id: autoAlertId++,
@@ -213,7 +264,11 @@ export const prismaMock = {
   },
 } as const;
 
-// เผื่อบางเทส mock เป็น { prisma: prismaMock }
+/* -------------------------------------------------------------------------- */
+/*                        Compatibility named export                           */
+/*  บางเทสต์ import { prisma } จาก lib – ให้ alias เป็น prismaMock เช่นกัน      */
+/* -------------------------------------------------------------------------- */
+
 export const prisma = prismaMock;
 
 export default prismaMock;

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 
 export default function ConnectionAnnouncer() {
-  const [online, setOnline] = useState<boolean>(true);
+  const [_online, setOnline] = useState<boolean>(true);
 
   useEffect(() => {
     const el = document.getElementById('sr-announcer');

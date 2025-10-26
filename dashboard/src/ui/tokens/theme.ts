@@ -1,79 +1,64 @@
-export const theme = {
-  colors: {
-    primary: {
-      50: '#e3f2fd',
-      100: '#bbdefb',
-      500: '#2196f3',
-      600: '#1976d2',
-      900: '#0d47a1',
-    },
-    gray: {
-      50: '#fafafa',
-      100: '#f5f5f5',
-      200: '#eeeeee',
-      300: '#e0e0e0',
-      500: '#9e9e9e',
-      700: '#616161',
-      900: '#212121',
-    },
-    success: {
-      50: '#e8f5e8',
-      500: '#4caf50',
-      600: '#43a047',
-    },
-    warning: {
-      50: '#fff3e0',
-      500: '#ff9800',
-      600: '#f57c00',
-    },
-    error: {
-      50: '#ffebee',
-      500: '#f44336',
-      600: '#e53935',
-    },
+// Centralized theme tokens for the "command center" aesthetic, backed by CSS variables.
+export const colors = {
+  // Surfaces
+  surface0: 'var(--surface-0)',
+  surface1: 'var(--surface-1)',
+  surface2: 'var(--surface-2)',
+
+  // Borders / outlines
+  cardBorder: 'var(--card-border)',
+  cardOutline: 'var(--card-outline)',
+
+  // Accent gradient
+  accentStart: 'var(--accent-start)',
+  accentEnd: 'var(--accent-end)',
+
+  // Semantic statuses
+  info: 'var(--status-info)',
+  success: 'var(--status-success)',
+  warning: 'var(--status-warning)',
+  critical: 'var(--status-critical)',
+
+  // 3D glow
+  glowOk: 'var(--glow-ok)',
+  glowWarning: 'var(--glow-warning)',
+  glowCritical: 'var(--glow-critical)',
+  glowDim: 'var(--glow-dim)',
+
+  // Focus
+  focusRing: 'var(--focus-ring-color)',
+} as const;
+
+export const motion = {
+  easing: {
+    standard: [0.2, 0.8, 0.2, 1] as const,
+    entrance: [0.16, 1, 0.3, 1] as const,
   },
-  spacing: {
-    xs: '0.25rem',
-    sm: '0.5rem',
-    md: '1rem',
-    lg: '1.5rem',
-    xl: '2rem',
-    '2xl': '3rem',
+  duration: {
+    short: 160,
+    medium: 220,
   },
-  typography: {
-    fontFamily: {
-      sans: ['Inter', 'system-ui', 'sans-serif'],
-      mono: ['JetBrains Mono', 'monospace'],
-    },
-    fontSize: {
-      xs: '0.75rem',
-      sm: '0.875rem',
-      base: '1rem',
-      lg: '1.125rem',
-      xl: '1.25rem',
-      '2xl': '1.5rem',
-      '3xl': '1.875rem',
-    },
-    fontWeight: {
-      normal: '400',
-      medium: '500',
-      semibold: '600',
-      bold: '700',
-    },
-  },
-  borderRadius: {
-    sm: '0.25rem',
-    md: '0.375rem',
-    lg: '0.5rem',
-    xl: '0.75rem',
-    full: '9999px',
-  },
-  shadows: {
-    sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-    md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-    lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-    xl: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+  distance: {
+    sm: 12, // px
+    md: 16, // px
   },
 } as const;
 
-export type Theme = typeof theme;
+export const radii = {
+  sm: 8,
+  md: 12,
+  lg: 14,
+} as const;
+
+export const shadows = {
+  card: 'var(--card-shadow)',
+} as const;
+
+export type ThemeTokens = {
+  colors: typeof colors;
+  motion: typeof motion;
+  radii: typeof radii;
+  shadows: typeof shadows;
+};
+
+export const theme: ThemeTokens = { colors, motion, radii, shadows };

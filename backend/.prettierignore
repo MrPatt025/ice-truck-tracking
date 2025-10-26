@@ -1,0 +1,2 @@
+# Ignore knip config which is not valid JSON for Prettier
+knip.json

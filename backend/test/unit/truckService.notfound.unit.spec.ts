@@ -6,8 +6,11 @@ vi.mock('../../src/lib/prisma', () => ({ prisma: prismaMock }));
 import { updateTruck } from '../../src/services/truckService';
 
 describe('truckService notfound', () => {
-  it('update ไม่พบ id -> throw', async () => {
-    // ฟังก์ชันจริงรับ string ไม่ใช่ object
+  it('update ไม่พบ id + ส่ง string -> throw', async () => {
     await expect(updateTruck(999999, 'ANY')).rejects.toBeTruthy();
+  });
+
+  it('update ไม่พบ id + ส่ง object -> คืน null', async () => {
+    await expect(updateTruck(999999, { name: 'X' })).resolves.toBeNull();
   });
 });

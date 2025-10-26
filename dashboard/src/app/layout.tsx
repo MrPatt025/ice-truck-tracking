@@ -1,15 +1,26 @@
-﻿// /app/layout.tsx
-
+﻿// dashboard/src/app/layout.tsx
 import './globals.css';
-
-import { Inter } from 'next/font/google';
+// Load MapLibre CSS locally via bundler to avoid CORB and external CDN issues
+// maplibre-gl CSS removed after consolidating to TomTom map stack
 import type { Metadata, Viewport } from 'next';
+import type { JSX, ReactNode } from 'react';
+import { Inter } from 'next/font/google';
+import Providers from './providers';
+import { AuthProvider } from '@/shared/auth/AuthContext';
 import { ThemeProvider } from '@/components/ThemeProvider';
-import MapLibreBoot from '@/components/MapLibreBoot';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
+  ),
+  applicationName:
+    'Apollo ColdChain | Real-time Telemetry & Predictive Analytics Console',
   title:
     'Apollo ColdChain | Real-time Telemetry & Predictive Analytics Console',
   description:
@@ -24,26 +35,39 @@ export const metadata: Metadata = {
     'TomTom',
     'Maplibre',
   ],
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  formatDetection: { telephone: false },
+  robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0b0f17' },
+  ],
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
-}) {
+  children: ReactNode;
+}): JSX.Element {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider>{children}</ThemeProvider>
-
-        {/* This component handles loading the MapLibre script and exposing it globally */}
-        <MapLibreBoot />
+    <html lang="en" dir="ltr" suppressHydrationWarning>
+      <body className={`${inter.variable} antialiased`}>
+        {/* Client providers (React Query hydrate inside) */}
+        <Providers>
+          <AuthProvider>
+            <ThemeProvider>{children}</ThemeProvider>
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

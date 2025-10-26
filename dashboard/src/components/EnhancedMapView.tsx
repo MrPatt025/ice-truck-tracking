@@ -1,33 +1,34 @@
 ﻿'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-
-interface Truck {
-  id: string;
-  latitude: number;
-  longitude: number;
-  status: 'active' | 'inactive';
-  driver_name: string;
-  temperature: number;
-  speed: number;
-}
-
-interface MapViewProps {
-  trucks: Truck[];
-  selectedTruck: string | null;
-  onSelectTruck: (truckId: string | null) => void;
-  geofences: any[];
-}
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import type React from 'react';
+import type { UiTruck } from '@/types/truck';
 
 type MapStyle = 'streets' | 'satellite' | 'terrain' | 'dark';
+
+/** รองรับพิกัดทางเลือกและชื่อ field อุณหภูมิ */
+type Truck = UiTruck & {
+  latitude?: number;
+  longitude?: number;
+  temperature?: number;
+  status?: 'active' | 'inactive';
+};
+
+type MapViewProps = Readonly<{
+  trucks: ReadonlyArray<Truck>;
+  selectedTruck: string | number | null;
+  onSelectTruck: (truckId: string | number | null) => void;
+  geofences: ReadonlyArray<unknown>;
+}>;
 
 export function EnhancedMapView({
   trucks,
   selectedTruck,
   onSelectTruck,
-  geofences,
+  geofences: _geofences, // eslint config อนุญาตตัวแปรขึ้นต้น _
 }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+
   const [mapStyle, setMapStyle] = useState<MapStyle>('streets');
   const [showClusters, setShowClusters] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(false);
@@ -37,161 +38,218 @@ export function EnhancedMapView({
     truck?: Truck;
   } | null>(null);
 
-  // Mock map implementation for demo
-  const handleMapClick = useCallback(
-    (event: React.MouseEvent) => {
-      const rect = mapRef.current?.getBoundingClientRect();
-      if (!rect) return;
-
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      // Find truck near click position (mock)
-      const clickedTruck = trucks.find((truck) => {
-        const truckX = (truck.longitude + 180) * (rect.width / 360);
-        const truckY = (90 - truck.latitude) * (rect.height / 180);
-        const distance = Math.sqrt((x - truckX) ** 2 + (y - truckY) ** 2);
-        return distance < 20;
-      });
-
-      if (clickedTruck) {
-        onSelectTruck(clickedTruck.id);
-      } else {
-        onSelectTruck(null);
-      }
-    },
-    [trucks, onSelectTruck],
+  const mapStyles = useMemo<Record<MapStyle, string>>(
+    () => ({
+      streets: 'bg-green-100',
+      satellite: 'bg-blue-200',
+      terrain: 'bg-yellow-100',
+      dark: 'bg-gray-800',
+    }),
+    [],
   );
 
-  const handleContextMenu = useCallback(
-    (event: React.MouseEvent) => {
+  const getLatLon = (t: Truck) => {
+    const lat = (t.lat ?? t.latitude) as number | undefined;
+    const lon = (t.lon ?? t.longitude) as number | undefined;
+    return { lat, lon };
+  };
+
+  const toPercentXY = (lat: number, lon: number) => {
+    const x = ((lon + 180) * 100) / 360;
+    const y = ((90 - lat) * 100) / 180;
+    return { x, y };
+  };
+
+  const plotted = useMemo(() => {
+    return trucks
+      .map((t) => {
+        const { lat, lon } = getLatLon(t);
+        if (lat == null || lon == null) return null;
+        const { x, y } = toPercentXY(lat, lon);
+        return { t, x, y };
+      })
+      .filter(Boolean) as Array<{ t: Truck; x: number; y: number }>;
+  }, [trucks]);
+
+  const findTruckNear = useCallback(
+    (px: number, py: number, rect: DOMRect) => {
+      const HIT_RADIUS = 20;
+      for (const { t } of plotted) {
+        const { lat, lon } = getLatLon(t);
+        if (lat == null || lon == null) continue;
+        const tx = (lon + 180) * (rect.width / 360);
+        const ty = (90 - lat) * (rect.height / 180);
+        if (Math.hypot(px - tx, py - ty) < HIT_RADIUS) return t;
+      }
+      return undefined;
+    },
+    [plotted],
+  );
+
+  const handleMapClick = useCallback<
+    (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
+  >(
+    (event) => {
+      const rect = mapRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const x = event.clientX - rect.left;
+      const y = event.clientY - rect.top;
+      const clicked = findTruckNear(x, y, rect);
+      onSelectTruck(clicked ? clicked.id : null);
+    },
+    [findTruckNear, onSelectTruck],
+  );
+
+  const handleContextMenu = useCallback<
+    (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
+  >(
+    (event) => {
       event.preventDefault();
       const rect = mapRef.current?.getBoundingClientRect();
       if (!rect) return;
-
       const x = event.clientX - rect.left;
       const y = event.clientY - rect.top;
+      const clicked = findTruckNear(x, y, rect);
 
-      // Find truck near right-click position
-      const clickedTruck = trucks.find((truck) => {
-        const truckX = (truck.longitude + 180) * (rect.width / 360);
-        const truckY = (90 - truck.latitude) * (rect.height / 180);
-        const distance = Math.sqrt((x - truckX) ** 2 + (y - truckY) ** 2);
-        return distance < 20;
-      });
-
-      setContextMenu({
+      const next: { x: number; y: number; truck?: Truck } = {
         x: event.clientX,
         y: event.clientY,
-        truck: clickedTruck,
-      });
+      };
+      if (clicked) next.truck = clicked;
+      setContextMenu(next);
     },
-    [trucks],
+    [findTruckNear],
   );
 
   useEffect(() => {
-    const handleClickOutside = () => setContextMenu(null);
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    const close = () => setContextMenu(null);
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setContextMenu(null);
+    };
+    document.addEventListener('click', close);
+    document.addEventListener('contextmenu', close);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('click', close);
+      document.removeEventListener('contextmenu', close);
+      document.removeEventListener('keydown', onEsc);
+    };
   }, []);
 
-  const mapStyles = {
-    streets: 'bg-green-100',
-    satellite: 'bg-blue-200',
-    terrain: 'bg-yellow-100',
-    dark: 'bg-gray-800',
-  };
-
   return (
-    <div className="relative w-full h-full">
-      {/* Map Controls */}
+    <div className="relative w-full h-full min-w-0">
+      {/* Controls */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-        <div className="bg-white rounded-lg shadow-md p-2">
+        <div className="bg-white/95 backdrop-blur rounded-xl shadow-sm p-2">
+          <label className="sr-only" htmlFor="map-style">
+            Map style
+          </label>
           <select
+            id="map-style"
             value={mapStyle}
             onChange={(e) => setMapStyle(e.target.value as MapStyle)}
-            className="text-sm border-none outline-none"
+            className="text-sm rounded-md border border-gray-200 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
-            <option value="streets">ðŸ—ºï¸ Streets</option>
-            <option value="satellite">ðŸ›°ï¸ Satellite</option>
-            <option value="terrain">ðŸ”ï¸ Terrain</option>
-            <option value="dark">ðŸŒ™ Dark</option>
+            <option value="streets">🗺️ Streets</option>
+            <option value="satellite">🛰️ Satellite</option>
+            <option value="terrain">⛰️ Terrain</option>
+            <option value="dark">🌙 Dark</option>
           </select>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-2 space-y-1">
-          <label className="flex items-center text-sm">
+        <div className="bg-white/95 backdrop-blur rounded-xl shadow-sm p-3 space-y-2">
+          <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
               checked={showClusters}
               onChange={(e) => setShowClusters(e.target.checked)}
-              className="mr-2"
+              className="h-4 w-4 rounded border-gray-300"
             />
             Clustering
           </label>
-          <label className="flex items-center text-sm">
+          <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
               checked={showHeatmap}
               onChange={(e) => setShowHeatmap(e.target.checked)}
-              className="mr-2"
+              className="h-4 w-4 rounded border-gray-300"
             />
             Heatmap
           </label>
         </div>
       </div>
 
-      {/* Map Container */}
+      {/* Map */}
       <div
         ref={mapRef}
-        className={`w-full h-full ${mapStyles[mapStyle]} relative overflow-hidden cursor-crosshair`}
+        className={`w-full h-full ${mapStyles[mapStyle]} relative overflow-hidden cursor-crosshair rounded-xl`}
         onClick={handleMapClick}
         onContextMenu={handleContextMenu}
+        role="application"
+        aria-label="Fleet map"
       >
         {/* Trucks */}
-        {trucks.map((truck) => {
-          const x = ((truck.longitude + 180) * 100) / 360;
-          const y = ((90 - truck.latitude) * 100) / 180;
-          const isSelected = selectedTruck === truck.id;
+        {plotted.map(({ t, x, y }) => {
+          const isSelected =
+            selectedTruck != null && String(selectedTruck) === String(t.id);
+          const scale = isSelected ? 1.25 : showClusters ? 1 : 0.95;
+          const active = t.status === 'active';
 
           return (
             <div
-              key={truck.id}
-              className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-                isSelected ? 'scale-125 z-20' : 'z-10'
-              }`}
+              key={t.id}
+              className="absolute -translate-x-1/2 -translate-y-1/2"
               style={{ left: `${x}%`, top: `${y}%` }}
+              title={t.driver_name ?? 'Truck'}
+              aria-label={`Truck ${t.driver_name ?? t.id}`}
             >
               <div
-                className={`w-6 h-6 rounded-full border-2 ${
-                  truck.status === 'active'
-                    ? 'bg-green-500 border-green-600'
-                    : 'bg-gray-400 border-gray-500'
-                } ${isSelected ? 'ring-4 ring-blue-300' : ''}`}
+                className={`transition-transform duration-300 ${
+                  isSelected ? 'z-20 ring-4 ring-blue-300 rounded-full' : 'z-10'
+                }`}
+                style={{ transform: `scale(${scale})` }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelectTruck(t.id);
+                }}
               >
-                <span className="text-xs text-white font-bold flex items-center justify-center h-full">
-                  ðŸšš
-                </span>
+                <div
+                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
+                    active
+                      ? 'bg-green-500 border-green-600 text-white'
+                      : 'bg-gray-400 border-gray-500 text-white'
+                  }`}
+                >
+                  🚚
+                </div>
               </div>
 
               {isSelected && (
-                <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-3 min-w-48 z-30">
-                  <h3 className="font-semibold text-sm">{truck.driver_name}</h3>
-                  <p className="text-xs text-gray-600">ID: {truck.id}</p>
+                <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-white rounded-lg shadow-lg p-3 min-w-48 z-30 border">
+                  <h3 className="font-semibold text-sm">
+                    {t.driver_name ?? '—'}
+                  </h3>
+                  <p className="text-xs text-gray-600">ID: {String(t.id)}</p>
                   <p className="text-xs text-gray-600">
-                    Speed: {truck.speed} km/h
+                    Speed:{' '}
+                    {typeof t.speed === 'number'
+                      ? `${Math.round(t.speed)} km/h`
+                      : '—'}
                   </p>
                   <p className="text-xs text-gray-600">
-                    Temp: {truck.temperature}Â°C
+                    Temp:{' '}
+                    {typeof t.temp === 'number'
+                      ? `${t.temp.toFixed(1)}°C`
+                      : typeof t.temperature === 'number'
+                        ? `${t.temperature.toFixed(1)}°C`
+                        : '—'}
                   </p>
                   <p
                     className={`text-xs font-medium ${
-                      truck.status === 'active'
-                        ? 'text-green-600'
-                        : 'text-gray-600'
+                      active ? 'text-green-600' : 'text-gray-600'
                     }`}
                   >
-                    Status: {truck.status}
+                    Status: {t.status ?? '—'}
                   </p>
                 </div>
               )}
@@ -201,35 +259,69 @@ export function EnhancedMapView({
 
         {/* Heatmap Overlay */}
         {showHeatmap && (
-          <div className="absolute inset-0 bg-gradient-radial from-red-500/20 via-yellow-500/10 to-transparent pointer-events-none" />
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(circle at 50% 50%, rgba(239,68,68,0.2), rgba(234,179,8,0.1), transparent 60%)',
+            }}
+          />
         )}
       </div>
 
       {/* Context Menu */}
       {contextMenu && (
         <div
-          className="fixed bg-white rounded-lg shadow-lg border py-2 z-50"
+          role="menu"
+          className="fixed bg-white rounded-lg shadow-lg border py-2 z-50 min-w-40"
           style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(e) => e.stopPropagation()}
         >
           {contextMenu.truck ? (
             <>
-              <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
-                ðŸ” Zoom to Truck
+              <button
+                type="button"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                onClick={() => setContextMenu(null)}
+                role="menuitem"
+              >
+                🔍 Zoom to Truck
               </button>
-              <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
-                ðŸ“Š View History
+              <button
+                type="button"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                onClick={() => setContextMenu(null)}
+                role="menuitem"
+              >
+                📊 View History
               </button>
-              <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
-                ðŸš¨ Create Alert
+              <button
+                type="button"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                onClick={() => setContextMenu(null)}
+                role="menuitem"
+              >
+                🚨 Create Alert
               </button>
             </>
           ) : (
             <>
-              <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
-                ðŸ“ Add Geofence
+              <button
+                type="button"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                onClick={() => setContextMenu(null)}
+                role="menuitem"
+              >
+                📍 Add Geofence
               </button>
-              <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
-                ðŸŽ¯ Center Map
+              <button
+                type="button"
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                onClick={() => setContextMenu(null)}
+                role="menuitem"
+              >
+                🎯 Center Map
               </button>
             </>
           )}
