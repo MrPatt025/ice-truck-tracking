@@ -1,2 +1,12 @@
-// Note: intentionally empty. R3F JSX types were disabled in Fleet3DCanvas.tsx via // @ts-nocheck.
-// If we re-enable typing later, this file can be replaced with a proper IntrinsicElements augmentation.
+// R3F JSX IntrinsicElements augmentation compatible with React 19/TS 5.9
+// Augment the automatic JSX runtime module where IntrinsicElements are sourced.
+import '@react-three/fiber';
+import type { ThreeElements } from '@react-three/fiber';
+
+declare module 'react/jsx-runtime' {
+    namespace JSX {
+        interface IntrinsicElements extends ThreeElements { }
+    }
+}
+
+export { };

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useRef, useState, type JSX } from 'react';
-// Ensure R3F JSX namespace augmentation is loaded for this file
-import type {} from '@react-three/fiber';
+// Ensure R3F JSX namespace augmentation is loaded
+import '@react-three/fiber';
 import { Canvas, useFrame } from '@react-three/fiber';
 import type { Group } from 'three';
 import { AdditiveBlending, Color, Vector3 } from 'three';
