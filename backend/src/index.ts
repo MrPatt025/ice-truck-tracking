@@ -970,9 +970,7 @@ export function buildServer(opts: BuildOpts = {}) {
 
 /* --------------------------- lifecycle helpers --------------------------- */
 
-export function registerShutdown(
-  instance: FastifyInstance<any, any, any, any, any>,
-) {
+export function registerShutdown<I extends FastifyInstance>(instance: I) {
   const handler = () => {
     instance
       .close()

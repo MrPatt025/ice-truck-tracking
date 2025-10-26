@@ -1,7 +1,8 @@
-// @ts-nocheck
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, type JSX } from 'react';
+// Ensure R3F JSX namespace augmentation is loaded for this file
+import type {} from '@react-three/fiber';
 import { Canvas, useFrame } from '@react-three/fiber';
 import type { Group } from 'three';
 import { AdditiveBlending, Color, Vector3 } from 'three';
@@ -64,7 +65,7 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
-function Scene({ points }: { points: TelemetryPoint[] }) {
+function Scene({ points }: { points: TelemetryPoint[] }): JSX.Element {
   const groupRef = useRef<Group>(null);
   const reduced = usePrefersReducedMotion();
   const { ok, warn, crit, dim } = useThemeColors();
@@ -138,7 +139,7 @@ export default function Fleet3DCanvas({
   points,
 }: {
   points: TelemetryPoint[];
-}) {
+}): JSX.Element {
   return (
     <Canvas
       className="rounded-map"
