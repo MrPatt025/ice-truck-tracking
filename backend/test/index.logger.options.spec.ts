@@ -1,18 +1,22 @@
-import { describe, it, expect } from 'vitest';
-import { buildServer } from '../src/index';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { app, registerPlugins } from '../src/index';
 
-describe('buildServer logger options branches', () => {
-  it('logger=false branch', async () => {
-    const app = buildServer({ logger: false });
-    const r = await app.inject({ method: 'GET', url: '/health' });
-    expect(r.statusCode).toBe(200);
+describe('singleton app responds', () => {
+  beforeAll(async () => {
+    await registerPlugins();
+    await app.ready();
+  });
+  afterAll(async () => {
     await app.close();
   });
 
-  it('logger=true branch', async () => {
-    const app = buildServer({ logger: true });
+  it('GET /health 200', async () => {
+    const r = await app.inject({ method: 'GET', url: '/health' });
+    expect(r.statusCode).toBe(200);
+  });
+
+  it('GET /api/v1/health 200', async () => {
     const r = await app.inject({ method: 'GET', url: '/api/v1/health' });
     expect(r.statusCode).toBe(200);
-    await app.close();
   });
 });

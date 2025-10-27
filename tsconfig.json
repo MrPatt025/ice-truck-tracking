@@ -16,8 +16,8 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-  "baseUrl": ".",
-  "ignoreDeprecations": "5.0",
+    "baseUrl": ".",
+    "ignoreDeprecations": "5.0",
     "paths": {
       "@/*": ["./src/*"],
       "@/components/*": ["./src/components/*"],

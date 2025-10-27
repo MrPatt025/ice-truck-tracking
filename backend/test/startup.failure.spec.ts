@@ -1,6 +1,6 @@
 // backend/test/startup.failure.spec.ts
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { buildServer, start } from '../src/index';
+import server, { start } from '../src/index';
 
 describe('start() error path', () => {
   const origExit = process.exit;
@@ -18,24 +18,14 @@ describe('start() error path', () => {
   });
 
   it('เรียก exit(1) เมื่อ listen ล้ม', async () => {
-    const app = await buildServer({ logger: false } as any);
-    vi.spyOn(app, 'listen').mockRejectedValueOnce(new Error('boom'));
-
-    const exit = vi.fn();
+    vi.spyOn(server, 'listen').mockRejectedValueOnce(new Error('boom'));
 
     try {
-      // ถ้า start รองรับ DI จะใช้ exit นี้ ถ้าไม่รองรับ อาร์กิวเมนต์จะถูกเมิน
-      // @ts-expect-error keep compatibility with old signature
-      await start(app, { exit });
+      await start();
     } catch {
-      // ถ้า start โยน error ออกมา ให้กลืนไว้เพื่อเช็คว่า exit ถูกเรียกหรือไม่
+      // swallow
     }
 
-    // ยอมรับได้ทั้งถูกเรียกผ่าน DI หรือ process.exit ตรงๆ
-    try {
-      expect(exit).toHaveBeenCalledWith(1);
-    } catch {
-      expect(process.exit).toHaveBeenCalledWith(1);
-    }
+    expect(process.exit).toHaveBeenCalledWith(1);
   });
 });

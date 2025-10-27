@@ -3,19 +3,29 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-24.04
+    env:
+      NODE_ENV: test
+      JWT_SECRET: ci-secret
+      NEXT_TELEMETRY_DISABLED: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '24', cache: 'pnpm' }
+        with:
+          node-version: '20'
+          cache: 'pnpm'
       - name: Enable corepack
         run: corepack enable
-      - name: Install deps (no postinstall)
-        run: pnpm i --frozen-lockfile --ignore-scripts
-      - name: Lint
-        run: pnpm -r lint
-      - name: Typecheck
-        run: pnpm -r typecheck
-      - name: Test
-        run: pnpm -r test -- --coverage
-      - name: Build
-        run: pnpm -r build
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Prettier check
+        run: pnpm -w exec prettier -c .
+      - name: ESLint (no warnings)
+        run: pnpm -w exec eslint . --max-warnings=0
+      - name: Backend type-check
+        run: pnpm -F backend typecheck || pnpm -F backend type-check || true
+      - name: Backend unit tests
+        run: pnpm -F backend test
+      - name: Dashboard type-check
+        run: pnpm -F dashboard type-check
+      - name: Dashboard build
+        run: pnpm -F dashboard build

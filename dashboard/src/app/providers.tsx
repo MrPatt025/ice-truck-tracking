@@ -10,6 +10,7 @@ import {
   type DehydratedState,
 } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/ui/components/ErrorBoundary';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 type ProvidersProps = {
   children: ReactNode;
@@ -41,7 +42,9 @@ export default function Providers({
   return (
     <QueryClientProvider client={client}>
       <HydrationBoundary state={state}>
-        <ErrorBoundary>{children}</ErrorBoundary>
+        <ThemeProvider>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </ThemeProvider>
       </HydrationBoundary>
     </QueryClientProvider>
   );

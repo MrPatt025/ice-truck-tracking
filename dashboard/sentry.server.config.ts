@@ -1,13 +1,5 @@
-// Minimal Sentry server init (safe-by-default)
-import * as Sentry from '@sentry/nextjs';
-
-const dsn = process.env.SENTRY_DSN ?? process.env.NEXT_PUBLIC_SENTRY_DSN;
-
-if (dsn) {
-  Sentry.init({
-    dsn,
-    tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0.1),
-    enabled: true,
-    integrations: (integrations) => integrations,
-  });
-}
+// Disable server-side Sentry init to avoid bundling OpenTelemetry/require-in-the-middle
+// and emitting critical-dependency warnings during Next builds.
+// If server error capture is needed later, re-enable behind a strict production flag
+// with a minimal SDK that avoids OTel, or use Edge Runtime reporting.
+export {};

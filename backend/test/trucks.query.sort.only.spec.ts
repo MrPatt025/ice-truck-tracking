@@ -1,15 +1,12 @@
 // test/trucks.query.order.only.spec.ts
 import { describe, beforeAll, afterAll, test, expect } from 'vitest';
-import { buildServer } from '../src/index';
-import type { FastifyInstance } from 'fastify';
+import { app, registerPlugins } from '../src/index';
 
 type Truck = { name: string };
 
 describe('trucks query order-only uses default sort=name', () => {
-  let app: FastifyInstance;
-
   beforeAll(async () => {
-    app = buildServer();
+    await registerPlugins();
     await app.ready();
   });
 

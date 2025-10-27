@@ -1,5 +1,23 @@
 import axios, { type AxiosRequestConfig } from 'axios';
-import * as Sentry from '@sentry/nextjs';
+
+// Lazy, client-only Sentry breadcrumb helper to avoid server build warnings
+function addBreadcrumbSafe(breadcrumb: {
+  category?: string;
+  type?: string;
+  level?: 'info' | 'warning' | 'error';
+  data?: Record<string, unknown>;
+}) {
+  if (typeof window === 'undefined') return;
+  if (process.env.NODE_ENV !== 'production') return;
+  // Fire-and-forget dynamic import; do not block requests
+  import('@sentry/browser')
+    .then((m) => {
+      try {
+        m.addBreadcrumb?.(breadcrumb as any);
+      } catch {}
+    })
+    .catch(() => {});
+}
 
 declare module 'axios' {
   interface AxiosRequestConfig {
@@ -14,17 +32,20 @@ export const api = axios.create({
 
 api.interceptors.request.use((cfg) => {
   const token =
-    typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    typeof window !== 'undefined'
+      ? (localStorage.getItem('authToken') ??
+        localStorage.getItem('auth_token'))
+      : null;
   if (token) {
     cfg.headers = cfg.headers ?? {};
     (cfg.headers as Record<string, string>).Authorization = `Bearer ${token}`;
   }
-  // Add Sentry breadcrumb for outgoing request (PII-safe)
+  // Add breadcrumb for outgoing request (PII-safe)
   try {
     const url = cfg.baseURL
       ? `${String(cfg.baseURL).replace(/\/+$/, '')}${cfg.url ?? ''}`
       : String(cfg.url ?? '');
-    Sentry.addBreadcrumb({
+    addBreadcrumbSafe({
       category: 'http',
       type: 'http',
       level: 'info',
@@ -45,7 +66,7 @@ api.interceptors.response.use(
       const url = r.config?.baseURL
         ? `${String(r.config.baseURL).replace(/\/+$/, '')}${r.config.url ?? ''}`
         : String(r.config?.url ?? '');
-      Sentry.addBreadcrumb({
+      addBreadcrumbSafe({
         category: 'http',
         type: 'http',
         level: r.status >= 400 ? 'warning' : 'info',
@@ -64,7 +85,7 @@ api.interceptors.response.use(
       const url = cfg?.baseURL
         ? `${String(cfg.baseURL).replace(/\/+$/, '')}${cfg.url ?? ''}`
         : String(cfg?.url ?? '');
-      Sentry.addBreadcrumb({
+      addBreadcrumbSafe({
         category: 'http',
         type: 'http',
         level: 'error',
@@ -85,14 +106,22 @@ api.interceptors.response.use(
         process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000'
       ).replace(/\/+$/, '');
       const refreshUrl = `${base}/api/v1/auth/refresh`;
-      const bearer = localStorage.getItem('auth_token');
+      const bearer =
+        localStorage.getItem('authToken') ?? localStorage.getItem('auth_token');
       const init: RequestInit = { method: 'POST', credentials: 'include' };
       if (bearer) init.headers = { Authorization: `Bearer ${bearer}` };
       refreshing ??= fetch(refreshUrl, init)
         .then((r) => (r.ok ? r.json() : null))
         .then((j) => {
           const token = j?.accessToken ?? j?.token ?? null;
-          if (token) localStorage.setItem('auth_token', token);
+          if (token) {
+            try {
+              localStorage.setItem('authToken', token);
+            } catch {}
+            try {
+              localStorage.setItem('auth_token', token);
+            } catch {}
+          }
           return token as string | null;
         })
         .finally(() => {
@@ -108,6 +137,9 @@ api.interceptors.response.use(
       }
 
       // refresh failed: force logout and redirect
+      try {
+        localStorage.removeItem('authToken');
+      } catch {}
       try {
         localStorage.removeItem('auth_token');
       } catch {}

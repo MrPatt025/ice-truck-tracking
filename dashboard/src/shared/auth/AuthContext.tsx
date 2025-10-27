@@ -8,7 +8,8 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import axios, { AxiosError, type AxiosInstance } from 'axios';
+import { AxiosError } from 'axios';
+import { api } from '@/shared/lib/apiClient';
 
 // -----------------------------
 // Types
@@ -46,42 +47,36 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 // -----------------------------
 // Storage helpers
 // -----------------------------
-const ACCESS_KEY = 'auth_token';
+const ACCESS_KEYS = ['authToken', 'auth_token'] as const;
 
 function readToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(ACCESS_KEY);
+  for (const k of ACCESS_KEYS) {
+    const v = window.localStorage.getItem(k);
+    if (v) return v;
+  }
+  return null;
 }
 
 function writeToken(token: string) {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(ACCESS_KEY, token);
+  for (const k of ACCESS_KEYS) {
+    try {
+      window.localStorage.setItem(k, token);
+    } catch {}
+  }
 }
 
 function clearToken() {
   if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(ACCESS_KEY);
+  for (const k of ACCESS_KEYS) {
+    try {
+      window.localStorage.removeItem(k);
+    } catch {}
+  }
 }
 
-// -----------------------------
-// Axios client
-// -----------------------------
-const http: AxiosInstance = axios.create({
-  baseURL: (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(
-    /\/$/,
-    '',
-  ),
-  withCredentials: true,
-});
-
-http.interceptors.request.use((config) => {
-  const t = readToken();
-  if (t) {
-    config.headers = config.headers ?? {};
-    (config.headers as Record<string, string>).Authorization = `Bearer ${t}`;
-  }
-  return config;
-});
+// Use the shared axios API client (with auth and Sentry breadcrumbs)
 
 // -----------------------------
 // Auth Provider
@@ -102,7 +97,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchMe = useCallback(async (): Promise<User | null> => {
     try {
-      const res = await http.get<User>('/api/v1/auth/me');
+      const base = (
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      ).replace(/\/+$/, '');
+      const res = await api.get<User>(`${base}/api/v1/auth/me`);
       const me = res.data as any;
       if (!me || !me.id) return null;
       return {
@@ -132,8 +130,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!me) {
         // try refresh if backend supports it
         try {
-          const rr = await http.post<RefreshResponse>(
-            '/api/v1/auth/refresh',
+          const base = (
+            process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+          ).replace(/\/+$/, '');
+          const rr = await api.post<RefreshResponse>(
+            `${base}/api/v1/auth/refresh`,
             {},
           );
           const t = rr.data?.accessToken ?? rr.data?.token ?? null;
@@ -162,7 +163,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       setLoading(true);
       try {
-        const res = await http.post<LoginResponse>('/api/v1/auth/login', {
+        const base = (
+          process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+        ).replace(/\/+$/, '');
+        const res = await api.post<LoginResponse>(`${base}/api/v1/auth/login`, {
           username,
           password,
         });
@@ -200,7 +204,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setTokenBoth(null);
     setUser(null);
     try {
-      await http.post('/api/v1/auth/logout', {});
+      const base = (
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+      ).replace(/\/+$/, '');
+      await api.post(`${base}/api/v1/auth/logout`, {});
     } catch {
       // ignore
     }

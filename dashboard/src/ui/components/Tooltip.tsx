@@ -1,7 +1,13 @@
-﻿
-'use client';
+﻿'use client';
 
-import { useEffect, useId, useRef, useState, type ReactNode, type JSX } from 'react';
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+  type JSX,
+} from 'react';
 import clsx from 'clsx';
 
 type Side = 'top' | 'right' | 'bottom' | 'left';

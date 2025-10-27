@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { api } from '@/shared/lib/apiClient';
 
 /** ---------- Types ---------- */
 export type Truck = Readonly<{
@@ -182,17 +183,9 @@ export function useRealtimeTrucks(
         abortRef.current?.abort();
         const ac = new AbortController();
         abortRef.current = ac;
-
-        const res = await fetch(
-          `${apiBase.replace(/\/+$/, '')}/api/v1/trucks`,
-          {
-            cache: 'no-store',
-            signal: ac.signal,
-          },
-        );
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const raw = await res.json();
+        const url = `${apiBase.replace(/\/\/+$/, '')}/api/v1/trucks`;
+        const res = await api.get(url, { signal: ac.signal });
+        const raw = res.data as any;
         if (cancelled) return;
 
         const list: Truck[] = Array.isArray(raw)

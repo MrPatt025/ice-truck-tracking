@@ -1,10 +1,16 @@
 // backend/test/logger.test-branch.spec.ts
-import { it, expect } from 'vitest';
-import { buildServer } from '../src/index';
+import { it, expect, beforeAll, afterAll } from 'vitest';
+import { app, registerPlugins } from '../src/index';
 
-it('logger disabled on test build flag', async () => {
-  const app = await buildServer({ forTest: true });
+beforeAll(async () => {
+  await registerPlugins();
+  await app.ready();
+});
+afterAll(async () => {
+  await app.close();
+});
+
+it('responds on /health under test env', async () => {
   const r = await app.inject({ method: 'GET', url: '/health' });
   expect(r.statusCode).toBe(200);
-  await app.close();
 });

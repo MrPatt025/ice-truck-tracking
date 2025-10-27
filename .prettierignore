@@ -12,3 +12,4 @@ backend/html
 backend/prisma/migrations
 **/__snapshots__/**
 **/generated
+pnpm-lock.yaml

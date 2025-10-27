@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { buildServer } from '../src/index';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
+import { app, registerPlugins } from '../src/index';
 
 vi.mock('../src/services/userService', () => ({
   login: vi.fn(() => {
@@ -8,9 +8,16 @@ vi.mock('../src/services/userService', () => ({
 }));
 
 describe('login route 500', () => {
+  beforeAll(async () => {
+    await registerPlugins();
+    await app.ready();
+  });
+  afterAll(async () => {
+    await app.close();
+  });
+
   it('POST /api/v1/auth/login -> 500 when service throws', async () => {
-    const server = buildServer({ logger: false });
-    const r = await server.inject({
+    const r = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/login',
       payload: { username: 'u', password: 'p' },

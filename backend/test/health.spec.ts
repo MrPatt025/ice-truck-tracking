@@ -1,10 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { buildServer, type FastifyInstance } from '../src/index';
-
-let app: FastifyInstance;
+import { app, registerPlugins } from '../src/index';
 
 beforeAll(async () => {
-  app = buildServer();
+  await registerPlugins();
   await app.ready();
 });
 

@@ -1,6 +1,6 @@
 // backend/test/startup.sigterm.branch.spec.ts
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { buildServer, registerShutdown } from '../src/index';
+import { app, registerShutdown } from '../src/index';
 
 afterEach(() => {
   process.removeAllListeners('SIGTERM');
@@ -9,8 +9,7 @@ afterEach(() => {
 
 describe('SIGTERM branch', () => {
   it('closes server on SIGTERM', async () => {
-    const app = await buildServer({ logger: false });
-    const closeSpy = vi.spyOn(app, 'close').mockResolvedValue(undefined);
+    const closeSpy = vi.spyOn(app, 'close').mockResolvedValue(undefined as any);
 
     // ผูก handler สำหรับ SIGTERM ให้แน่ใจว่าเทสเห็น
     registerShutdown(app);

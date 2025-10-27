@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
+import { api } from '@/shared/lib/apiClient';
 
 export type HealthState = {
   apiHealthy: boolean | null;
@@ -37,34 +38,26 @@ const POLL_MS = (() => {
 // per-request timeout 1–9s
 const REQUEST_TIMEOUT_MS = clamp(POLL_MS - 100, 1000, 9000);
 
-// fetcher supports { ok:true } or { status:"ok" }
+// fetcher supports { ok:true } or { status:"ok" } using the shared axios client
 const healthFetcher = async (url: string): Promise<boolean> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const res = await fetch(url, {
-      method: 'GET',
-      cache: 'no-store',
-      keepalive: true,
-      signal: controller.signal,
+    const res = await api.get(url, {
       headers: { Accept: 'application/json' },
+      signal: controller.signal,
     });
-    if (!res.ok) return false;
-
-    const ctype = res.headers.get('content-type') || '';
+    const ctype = String(res.headers['content-type'] ?? '');
     if (ctype.includes('application/json')) {
-      try {
-        const data = await res.json();
-        if (typeof data?.ok === 'boolean') return data.ok;
-        if (typeof data?.status === 'string') {
-          const s = data.status.toLowerCase();
-          if (s === 'ok' || s === 'healthy' || s === 'pass') return true;
-          if (s === 'fail' || s === 'down') return false;
-        }
-      } catch {
-        // fall through to HTTP ok
+      const data = res.data as any;
+      if (typeof data?.ok === 'boolean') return data.ok;
+      if (typeof data?.status === 'string') {
+        const s = data.status.toLowerCase();
+        if (s === 'ok' || s === 'healthy' || s === 'pass') return true;
+        if (s === 'fail' || s === 'down') return false;
       }
     }
+    // If not JSON, but request succeeded, treat as healthy
     return true;
   } catch {
     return false;

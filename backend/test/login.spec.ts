@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
-import { buildServer, type FastifyInstance } from '../src/index';
+import { app, registerPlugins } from '../src/index';
 import * as userService from '../src/services/userService';
 
-let app: FastifyInstance;
 beforeAll(async () => {
-  app = buildServer();
+  await registerPlugins();
   await app.ready();
 });
 afterAll(async () => {

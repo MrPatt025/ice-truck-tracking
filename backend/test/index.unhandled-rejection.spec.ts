@@ -1,11 +1,10 @@
 // test/index.unhandled-rejection.spec.ts
 import { describe, it, expect } from 'vitest';
-import { buildServer, registerShutdown } from '../src/index';
+import { app, registerShutdown } from '../src/index';
 
 describe('unhandledRejection branch', () => {
   it('captures and asserts the unhandledRejection without leaking listeners', async () => {
-    const s = buildServer({ logger: false });
-    const cleanupSignals = registerShutdown(s);
+    const cleanupSignals = registerShutdown(app);
 
     // สร้างพรอมิสที่ resolve เมื่อ event เกิด
     await new Promise<void>((resolve) => {
@@ -21,6 +20,6 @@ describe('unhandledRejection branch', () => {
 
     // ทำความสะอาดตัวดักสัญญาณและปิดอินสแตนซ์
     cleanupSignals();
-    await s.close();
+    await app.close();
   });
 });

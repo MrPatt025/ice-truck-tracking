@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="135" failures="8" errors="0" time="6.4843822">
+    <testsuite name="test/alerts.byid.null.spec.ts" timestamp="2025-10-27T09:37:19.587Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0100909">
+        <testcase classname="test/alerts.byid.null.spec.ts" name="alerts &gt; getAlertById null branch" time="0.003453">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/alerts.list.generic-500.spec.ts" timestamp="2025-10-27T09:37:19.590Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1424291">
+        <testcase classname="test/alerts.list.generic-500.spec.ts" name="alerts list generic error -&gt; 500 &gt; returns 500 when prisma throws" time="0.1368123">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/alerts.spec.ts" timestamp="2025-10-27T09:37:19.592Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1419102">
+        <testcase classname="test/alerts.spec.ts" name="alerts &gt; GET /api/v1/alerts returns array" time="0.0966121">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/badjson.spec.ts" timestamp="2025-10-27T09:37:19.593Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1360841">
+        <testcase classname="test/badjson.spec.ts" name="bad json body -&gt; 400 &gt; POST /api/v1/trucks with invalid JSON" time="0.1284852">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/cors.alerts.preflight.spec.ts" timestamp="2025-10-27T09:37:19.593Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1591188">
+        <testcase classname="test/cors.alerts.preflight.spec.ts" name="preflight &gt; OPTIONS /api/v1/alerts -&gt; 200/204 with CORS headers" time="0.1541983">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/cors.health.simple.spec.ts" timestamp="2025-10-27T09:37:19.594Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="1" errors="0" skipped="0" time="0.1109692">
+        <testcase classname="test/cors.health.simple.spec.ts" name="CORS on /health simple request &gt; GET /health with Origin sets ACAO" time="0.1053367">
+            <failure message="expected 500 to be 200 // Object.is equality" type="AssertionError">
+AssertionError: expected 500 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 500
+
+ ❯ test/cors.health.simple.spec.ts:11:26
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/cors.preflight.spec.ts" timestamp="2025-10-27T09:37:19.599Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1082416">
+        <testcase classname="test/cors.preflight.spec.ts" name="preflight &gt; OPTIONS /api/v1/trucks -&gt; 200/204" time="0.1021021">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/cors.simple.spec.ts" timestamp="2025-10-27T09:37:19.602Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="1" errors="0" skipped="0" time="0.1267364">
+        <testcase classname="test/cors.simple.spec.ts" name="CORS simple request &gt; GET /api/v1/trucks returns CORS headers when Origin present" time="0.1209855">
+            <failure message="expected 500 to be 200 // Object.is equality" type="AssertionError">
+AssertionError: expected 500 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 500
+
+ ❯ test/cors.simple.spec.ts:11:26
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/health.api.spec.ts" timestamp="2025-10-27T09:37:19.606Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0967559">
+        <testcase classname="test/health.api.spec.ts" name="GET /api/v1/health -&gt; { ok: true }" time="0.0886422">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/health.spec.ts" timestamp="2025-10-27T09:37:19.607Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0968028">
+        <testcase classname="test/health.spec.ts" name="health &gt; GET /health 200" time="0.0669375">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/index.app.spec.ts" timestamp="2025-10-27T09:37:19.607Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="1" errors="0" skipped="0" time="0.0146391">
+        <testcase classname="test/index.app.spec.ts" name="app() init path &gt; creates a Fastify instance and responds /health" time="0.0094414">
+            <failure message="(0 , app) is not a function" type="TypeError">
+TypeError: (0 , app) is not a function
+ ❯ test/index.app.spec.ts:7:21
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/index.default.export.spec.ts" timestamp="2025-10-27T09:37:19.610Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0850387">
+        <testcase classname="test/index.default.export.spec.ts" name="default export is Fastify instance &gt; responds on /health" time="0.0790729">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/index.logger.options.spec.ts" timestamp="2025-10-27T09:37:19.612Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.0924183">
+        <testcase classname="test/index.logger.options.spec.ts" name="singleton app responds &gt; GET /health 200" time="0.0610187">
+        </testcase>
+        <testcase classname="test/index.logger.options.spec.ts" name="singleton app responds &gt; GET /api/v1/health 200" time="0.0023651">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/index.onerror.spec.ts" timestamp="2025-10-27T09:37:19.613Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="1" errors="0" skipped="0" time="0.0540459">
+        <testcase classname="test/index.onerror.spec.ts" name="global error handler branch &gt; throws inside route -&gt; 500" time="0.0130437">
+            <failure message="Fastify instance is already listening. Cannot add route!" type="FastifyError">
+FastifyError: Fastify instance is already listening. Cannot add route!
+ ❯ throwIfAlreadyStarted ../node_modules/.pnpm/fastify@4.29.1/node_modules/fastify/fastify.js:534:40
+ ❯ Object.route ../node_modules/.pnpm/fastify@4.29.1/node_modules/fastify/lib/route.js:218:5
+ ❯ Object.prepareRoute ../node_modules/.pnpm/fastify@4.29.1/node_modules/fastify/lib/route.js:167:18
+ ❯ Object._get [as get] ../node_modules/.pnpm/fastify@4.29.1/node_modules/fastify/fastify.js:262:34
+ ❯ test/index.onerror.spec.ts:13:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: &apos;FST_ERR_INSTANCE_ALREADY_LISTENING&apos;, statusCode: 500 }
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/index.registerShutdown.idempotent.spec.ts" timestamp="2025-10-27T09:37:19.617Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0064098">
+        <testcase classname="test/index.registerShutdown.idempotent.spec.ts" name="registerShutdown idempotent &gt; does not register duplicate handlers" time="0.0022875">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/index.registerShutdown.spec.ts" timestamp="2025-10-27T09:37:19.618Z" hostname="LAPTOP-ATIIVP6V" tests="3" failures="0" errors="0" skipped="0" time="0.030363">
+        <testcase classname="test/index.registerShutdown.spec.ts" name="registerShutdown ในโหมดเทส: ปิด server แต่ไม่ exit &gt; ติดตั้งแฮนด์เลอร์สัญญาณครบและครั้งเดียว" time="0.0117109">
+        </testcase>
+        <testcase classname="test/index.registerShutdown.spec.ts" name="registerShutdown ในโหมดเทส: ปิด server แต่ไม่ exit &gt; SIGTERM: เรียก close แล้วไม่เรียก exit" time="0.011353">
+        </testcase>
+        <testcase classname="test/index.registerShutdown.spec.ts" name="registerShutdown ในโหมดเทส: ปิด server แต่ไม่ exit &gt; SIGINT: เรียก close แล้วไม่เรียก exit" time="0.0012657">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/index.unhandled-rejection.spec.ts" timestamp="2025-10-27T09:37:19.619Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0749641">
+        <testcase classname="test/index.unhandled-rejection.spec.ts" name="unhandledRejection branch &gt; captures and asserts the unhandledRejection without leaking listeners" time="0.0691994">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/logger.prod.branch.spec.ts" timestamp="2025-10-27T09:37:19.619Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1286321">
+        <testcase classname="test/logger.prod.branch.spec.ts" name="app responds in production env" time="0.1240795">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/logger.test-branch.spec.ts" timestamp="2025-10-27T09:37:19.620Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1058702">
+        <testcase classname="test/logger.test-branch.spec.ts" name="responds on /health under test env" time="0.0667828">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/login.demo.spec.ts" timestamp="2025-10-27T09:37:19.621Z" hostname="LAPTOP-ATIIVP6V" tests="3" failures="0" errors="0" skipped="0" time="0.1819474">
+        <testcase classname="test/login.demo.spec.ts" name="login DEMO branches &gt; DEMO enabled + valid creds -&gt; 200" time="0.1060718">
+        </testcase>
+        <testcase classname="test/login.demo.spec.ts" name="login DEMO branches &gt; DEMO enabled + invalid DEMO_CREDS JSON -&gt; 401 (fallback ปกติ)" time="0.0300882">
+        </testcase>
+        <testcase classname="test/login.demo.spec.ts" name="login DEMO branches &gt; DEMO disabled -&gt; 401" time="0.0031592">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/login.error.500.spec.ts" timestamp="2025-10-27T09:37:19.623Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1773469">
+        <testcase classname="test/login.error.500.spec.ts" name="login route 500 &gt; POST /api/v1/auth/login -&gt; 500 when service throws" time="0.135797">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/login.jwt.env.secret.spec.ts" timestamp="2025-10-27T09:37:19.623Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0622856">
+        <testcase classname="test/login.jwt.env.secret.spec.ts" name="login with JWT_SECRET in env &gt; POST /api/v1/auth/login -&gt; 200 uses env secret branch" time="0.0566573">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/login.jwt.secret.spec.ts" timestamp="2025-10-27T09:37:19.624Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.1236245">
+        <testcase classname="test/login.jwt.secret.spec.ts" name="login jwt secret branches &gt; fallback secret when JWT_SECRET is undefined" time="0.0999774">
+        </testcase>
+        <testcase classname="test/login.jwt.secret.spec.ts" name="login jwt secret branches &gt; use custom JWT_SECRET when defined" time="0.0060897">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/login.missing-fields.spec.ts" timestamp="2025-10-27T09:37:19.624Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.0985773">
+        <testcase classname="test/login.missing-fields.spec.ts" name="login validation single field missing &gt; missing username -&gt; 400" time="0.0874293">
+        </testcase>
+        <testcase classname="test/login.missing-fields.spec.ts" name="login validation single field missing &gt; missing password -&gt; 400" time="0.0048685">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/login.spec.ts" timestamp="2025-10-27T09:37:19.625Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.1304077">
+        <testcase classname="test/login.spec.ts" name="auth login &gt; 401 on invalid credentials" time="0.0884753">
+        </testcase>
+        <testcase classname="test/login.spec.ts" name="auth login &gt; 200 with token on valid credentials" time="0.0086795">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/login.validation.spec.ts" timestamp="2025-10-27T09:37:19.626Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.1083223">
+        <testcase classname="test/login.validation.spec.ts" name="login validation &gt; rejects empty body -&gt; 400" time="0.0992643">
+        </testcase>
+        <testcase classname="test/login.validation.spec.ts" name="login validation &gt; rejects wrong types -&gt; 400" time="0.0040736">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/notfound.spec.ts" timestamp="2025-10-27T09:37:19.627Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1222165">
+        <testcase classname="test/notfound.spec.ts" name="not found &gt; GET /__missing__ -&gt; 404" time="0.116816">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/readyz.spec.ts" timestamp="2025-10-27T09:37:19.628Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1534638">
+        <testcase classname="test/readyz.spec.ts" name="ready &gt; GET /readyz 200" time="0.1479166">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/security.headers.spec.ts" timestamp="2025-10-27T09:37:19.629Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="2" errors="0" skipped="0" time="0.1353372">
+        <testcase classname="test/security.headers.spec.ts" name="helmet + cors &gt; helmet sets common security headers" time="0.0824429">
+            <failure message="expected undefined to be defined" type="AssertionError">
+AssertionError: expected undefined to be defined
+ ❯ test/security.headers.spec.ts:16:49
+            </failure>
+        </testcase>
+        <testcase classname="test/security.headers.spec.ts" name="helmet + cors &gt; CORS preflight returns 200/204" time="0.0125904">
+            <failure message="expected [ 200, 204 ] to include 500" type="AssertionError">
+AssertionError: expected [ 200, 204 ] to include 500
+ ❯ test/security.headers.spec.ts:29:24
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/services.spec.ts" timestamp="2025-10-27T09:37:19.632Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.0673676">
+        <testcase classname="test/services.spec.ts" name="services direct &gt; truckService.getAllTrucks returns array" time="0.0537309">
+        </testcase>
+        <testcase classname="test/services.spec.ts" name="services direct &gt; alertService.getAllAlerts returns array" time="0.0079202">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/startup.exit.branch.spec.ts" timestamp="2025-10-27T09:37:19.633Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="1" errors="0" skipped="0" time="0.1078915">
+        <testcase classname="test/startup.exit.branch.spec.ts" name="start() failure branch calls exitFn &gt; covers exit branch without killing process" time="0.0990224">
+            <failure message="process.exit unexpectedly called with &quot;1&quot;" type="Error">
+Error: process.exit unexpectedly called with &quot;1&quot;
+ ❯ start src/index.ts:1038:13
+ ❯ test/startup.exit.branch.spec.ts:16:5
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/startup.failure.spec.ts" timestamp="2025-10-27T09:37:19.635Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.171485">
+        <testcase classname="test/startup.failure.spec.ts" name="start() error path &gt; เรียก exit(1) เมื่อ listen ล้ม" time="0.1671017">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/startup.sigint.branch.spec.ts" timestamp="2025-10-27T09:37:19.636Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0647859">
+        <testcase classname="test/startup.sigint.branch.spec.ts" name="SIGINT branch &gt; closes server on SIGINT" time="0.0581822">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/startup.sigterm.branch.spec.ts" timestamp="2025-10-27T09:37:19.636Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0095608">
+        <testcase classname="test/startup.sigterm.branch.spec.ts" name="SIGTERM branch &gt; closes server on SIGTERM" time="0.0047607">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/startup.success.spec.ts" timestamp="2025-10-27T09:37:19.637Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.0630966">
+        <testcase classname="test/startup.success.spec.ts" name="startup branches &gt; success path: listen resolves -&gt; not exit" time="0.0408416">
+        </testcase>
+        <testcase classname="test/startup.success.spec.ts" name="startup branches &gt; failure path: listen rejects -&gt; calls process.exit(1) (spied)" time="0.01593">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/stats.spec.ts" timestamp="2025-10-27T09:37:19.638Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="1" errors="0" skipped="1" time="0.020094">
+        <testcase classname="test/stats.spec.ts" name="GET /api/v1/stats &gt; returns 200 and expected keys" time="0">
+            <skipped/>
+        </testcase>
+        <testcase classname="test/stats.spec.ts" name="GET /api/v1/stats" time="0.0162365">
+            <failure message="(0 , app) is not a function" type="TypeError">
+TypeError: (0 , app) is not a function
+ ❯ test/stats.spec.ts:9:20
+            </failure>
+            <failure message="Cannot read properties of undefined (reading &apos;close&apos;)" type="TypeError">
+TypeError: Cannot read properties of undefined (reading &apos;close&apos;)
+ ❯ test/stats.spec.ts:17:18
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.list.generic-500.spec.ts" timestamp="2025-10-27T09:37:19.642Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1835552">
+        <testcase classname="test/trucks.list.generic-500.spec.ts" name="trucks list generic error -&gt; 500 &gt; returns 500 when prisma throws" time="0.1715625">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.post.generic-500.spec.ts" timestamp="2025-10-27T09:37:19.643Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1248397">
+        <testcase classname="test/trucks.post.generic-500.spec.ts" name="trucks POST generic error -&gt; 500 &gt; returns 500 when prisma throws non-P2002" time="0.117353">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.post.spec.ts" timestamp="2025-10-27T09:37:19.643Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.1744078">
+        <testcase classname="test/trucks.post.spec.ts" name="trucks POST &gt; create truck success (201 preferred)" time="0.1369006">
+        </testcase>
+        <testcase classname="test/trucks.post.spec.ts" name="trucks POST &gt; reject duplicate name (409)" time="0.0315512">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.query.asc.spec.ts" timestamp="2025-10-27T09:37:19.644Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1568709">
+        <testcase classname="test/trucks.query.asc.spec.ts" name="trucks query asc branch &gt; GET /trucks with order=asc triggers asc branch" time="0.1445313">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.query.defaults.spec.ts" timestamp="2025-10-27T09:37:19.644Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1393921">
+        <testcase classname="test/trucks.query.defaults.spec.ts" name="trucks query defaults &gt; omit sort/order -&gt; 200 via default branch" time="0.13377">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.query.invalid.spec.ts" timestamp="2025-10-27T09:37:19.645Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1703131">
+        <testcase classname="test/trucks.query.invalid.spec.ts" name="trucks query validation &gt; invalid page/limit/order -&gt; 400" time="0.1539222">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.query.order.only.spec.ts" timestamp="2025-10-27T09:37:19.646Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1320987">
+        <testcase classname="test/trucks.query.order.only.spec.ts" name="trucks query order only &gt; defaults sort when only order=desc is provided" time="0.1260517">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.query.sort.invalid.spec.ts" timestamp="2025-10-27T09:37:19.647Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1826264">
+        <testcase classname="test/trucks.query.sort.invalid.spec.ts" name="trucks query invalid sort &gt; sort invalid -&gt; 400" time="0.1776443">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.query.sort.only.spec.ts" timestamp="2025-10-27T09:37:19.648Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.2692921">
+        <testcase classname="test/trucks.query.sort.only.spec.ts" name="trucks query order-only uses default sort=name &gt; order=desc without sort =&gt; default sort=name with desc order" time="0.2344519">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.sort.createdAt.spec.ts" timestamp="2025-10-27T09:37:19.648Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1391982">
+        <testcase classname="test/trucks.sort.createdAt.spec.ts" name="trucks sort=createdAt branch &gt; GET /api/v1/trucks?sort=createdAt&amp;order=asc -&gt; 200" time="0.1338334">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.sort.desc.spec.ts" timestamp="2025-10-27T09:37:19.649Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1492983">
+        <testcase classname="test/trucks.sort.desc.spec.ts" name="trucks &gt; sorting desc branch" time="0.1416305">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.sort.updatedAt.spec.ts" timestamp="2025-10-27T09:37:19.650Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1510579">
+        <testcase classname="test/trucks.sort.updatedAt.spec.ts" name="trucks sort=updatedAt branch &gt; GET /api/v1/trucks?sort=updatedAt&amp;order=asc -&gt; 200" time="0.145591">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/trucks.spec.ts" timestamp="2025-10-27T09:37:19.651Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.2059037">
+        <testcase classname="test/trucks.spec.ts" name="trucks &gt; list (GET /api/v1/trucks) returns array" time="0.1356984">
+        </testcase>
+        <testcase classname="test/trucks.spec.ts" name="trucks &gt; create unique name (POST /api/v1/trucks) -&gt; 201" time="0.040023">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/types.usage.spec.ts" timestamp="2025-10-27T09:37:19.652Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0057693">
+        <testcase classname="test/types.usage.spec.ts" name="type usage marker" time="0.0015393">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/userService.branches.last.spec.ts" timestamp="2025-10-27T09:37:19.653Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0074045">
+        <testcase classname="test/userService.branches.last.spec.ts" name="login trims and rejects whitespace-only" time="0.0027694">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/validation.spec.ts" timestamp="2025-10-27T09:37:19.654Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.1193218">
+        <testcase classname="test/validation.spec.ts" name="validation &gt; POST /trucks ชื่อว่าง -&gt; 400" time="0.1133606">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/alertService.branches.spec.ts" timestamp="2025-10-27T09:37:19.655Z" hostname="LAPTOP-ATIIVP6V" tests="3" failures="0" errors="0" skipped="0" time="0.0117178">
+        <testcase classname="test/unit/alertService.branches.spec.ts" name="alertService branches &gt; getAlertById returns null when missing" time="0.003321">
+        </testcase>
+        <testcase classname="test/unit/alertService.branches.spec.ts" name="alertService branches &gt; getAlertById returns a record when found" time="0.0018782">
+        </testcase>
+        <testcase classname="test/unit/alertService.branches.spec.ts" name="alertService branches &gt; createAlert success" time="0.0014093">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/alertService.byid.unit.spec.ts" timestamp="2025-10-27T09:37:19.656Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.1071867">
+        <testcase classname="test/unit/alertService.byid.unit.spec.ts" name="alertService getAlertById &gt; คืน null เมื่อไม่พบ" time="0.0462687">
+        </testcase>
+        <testcase classname="test/unit/alertService.byid.unit.spec.ts" name="alertService getAlertById &gt; คืน object เมื่อมีจริง" time="0.0549672">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/alertService.create.ref.spec.ts" timestamp="2025-10-27T09:37:19.657Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0074025">
+        <testcase classname="test/unit/alertService.create.ref.spec.ts" name="alertService shape &gt; exports createAlert" time="0.0024924">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/alertService.unit.spec.ts" timestamp="2025-10-27T09:37:19.658Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0082718">
+        <testcase classname="test/unit/alertService.unit.spec.ts" name="alertService &gt; list alert ได้และ getAlertById คืน null เมื่อไม่มี" time="0.0034485">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/alertService.update-delete.branches.spec.ts" timestamp="2025-10-27T09:37:19.659Z" hostname="LAPTOP-ATIIVP6V" tests="3" failures="0" errors="0" skipped="0" time="0.0124329">
+        <testcase classname="test/unit/alertService.update-delete.branches.spec.ts" name="alertService delete/update branches &gt; deleteAlert: returns false on P2025, true on success" time="0.0041994">
+        </testcase>
+        <testcase classname="test/unit/alertService.update-delete.branches.spec.ts" name="alertService delete/update branches &gt; updateAlert: returns null on P2025, trims/accepts string message" time="0.00133">
+        </testcase>
+        <testcase classname="test/unit/alertService.update-delete.branches.spec.ts" name="alertService delete/update branches &gt; updateAlert: supports { message: { set } } and throws on empty" time="0.001698">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/statsService.branches.unit.spec.ts" timestamp="2025-10-27T09:37:19.660Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0158129">
+        <testcase classname="test/unit/statsService.branches.unit.spec.ts" name="statsService branches &gt; covers range switches and caching" time="0.0085084">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/truckService.branches.unit.spec.ts" timestamp="2025-10-27T09:37:19.661Z" hostname="LAPTOP-ATIIVP6V" tests="5" failures="0" errors="0" skipped="0" time="0.0354261">
+        <testcase classname="test/unit/truckService.branches.unit.spec.ts" name="truckService branches &gt; getAllTrucksPaginated: default branch (sort/order ไม่ส่งค่า)" time="0.0049377">
+        </testcase>
+        <testcase classname="test/unit/truckService.branches.unit.spec.ts" name="truckService branches &gt; getAllTrucksPaginated: order &quot;desc&quot; branch" time="0.0166018">
+        </testcase>
+        <testcase classname="test/unit/truckService.branches.unit.spec.ts" name="truckService branches &gt; updateTruck: generic-error branch (non-P2002)" time="0.0056597">
+        </testcase>
+        <testcase classname="test/unit/truckService.branches.unit.spec.ts" name="truckService branches &gt; deleteTruck: notfound branch" time="0.0011006">
+        </testcase>
+        <testcase classname="test/unit/truckService.branches.unit.spec.ts" name="truckService branches &gt; getTruckById: notfound branch" time="0.0006429">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/truckService.delete.success.spec.ts" timestamp="2025-10-27T09:37:19.663Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.143288">
+        <testcase classname="test/unit/truckService.delete.success.spec.ts" name="truckService.deleteTruck &gt; deletes existing and returns true" time="0.137112">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/truckService.notfound.unit.spec.ts" timestamp="2025-10-27T09:37:19.663Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.0116769">
+        <testcase classname="test/unit/truckService.notfound.unit.spec.ts" name="truckService notfound &gt; update ไม่พบ id + ส่ง string -&gt; throw" time="0.0052217">
+        </testcase>
+        <testcase classname="test/unit/truckService.notfound.unit.spec.ts" name="truckService notfound &gt; update ไม่พบ id + ส่ง object -&gt; คืน null" time="0.0013227">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/truckService.sort.fallback.unit.spec.ts" timestamp="2025-10-27T09:37:19.665Z" hostname="LAPTOP-ATIIVP6V" tests="4" failures="0" errors="0" skipped="0" time="0.0679733">
+        <testcase classname="test/unit/truckService.sort.fallback.unit.spec.ts" name="truckService sort/order branches &gt; maps sort=createdAt, order=asc" time="0.0295681">
+        </testcase>
+        <testcase classname="test/unit/truckService.sort.fallback.unit.spec.ts" name="truckService sort/order branches &gt; maps sort=updatedAt, order=asc" time="0.0109339">
+        </testcase>
+        <testcase classname="test/unit/truckService.sort.fallback.unit.spec.ts" name="truckService sort/order branches &gt; fallbacks unknown sort -&gt; id asc" time="0.0074071">
+        </testcase>
+        <testcase classname="test/unit/truckService.sort.fallback.unit.spec.ts" name="truckService sort/order branches &gt; fallbacks unknown order -&gt; asc" time="0.0144694">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/truckService.unit.spec.ts" timestamp="2025-10-27T09:37:19.666Z" hostname="LAPTOP-ATIIVP6V" tests="4" failures="0" errors="0" skipped="0" time="0.0309832">
+        <testcase classname="test/unit/truckService.unit.spec.ts" name="truckService &gt; createTruck success และ list ได้" time="0.0039084">
+        </testcase>
+        <testcase classname="test/unit/truckService.unit.spec.ts" name="truckService &gt; createTruck ซ้ำ -&gt; P2002" time="0.0038693">
+        </testcase>
+        <testcase classname="test/unit/truckService.unit.spec.ts" name="truckService &gt; pagination + sorting asc" time="0.0163564">
+        </testcase>
+        <testcase classname="test/unit/truckService.unit.spec.ts" name="truckService &gt; get/update/delete by id ครบ flow" time="0.0016518">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/truckService.update.conflict.spec.ts" timestamp="2025-10-27T09:37:19.667Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0113382">
+        <testcase classname="test/unit/truckService.update.conflict.spec.ts" name="truckService.update conflict &gt; อัปเดตชื่อซ้ำ -&gt; ควรคืนค่า null (handle P2002)" time="0.0042078">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/truckService.update.error-branches.spec.ts" timestamp="2025-10-27T09:37:19.667Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.0563172">
+        <testcase classname="test/unit/truckService.update.error-branches.spec.ts" name="truckService.updateTruck branches &gt; returns null when target not found (object payload variant)" time="0.0163075">
+        </testcase>
+        <testcase classname="test/unit/truckService.update.error-branches.spec.ts" name="truckService.updateTruck branches &gt; handles conflict (P2002) and returns null" time="0.0355093">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/truckService.update.unknown-error.spec.ts" timestamp="2025-10-27T09:37:19.668Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0132932">
+        <testcase classname="test/unit/truckService.update.unknown-error.spec.ts" name="truckService.updateTruck unknown error path &gt; throws an Error(&quot;Unknown error&quot;) when err is not serializable" time="0.0074332">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/userService.branches.extra.spec.ts" timestamp="2025-10-27T09:37:19.669Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0073624">
+        <testcase classname="test/unit/userService.branches.extra.spec.ts" name="userService extra branches &gt; normalize username (trim + lowercase)" time="0.0029621">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/userService.branches.full.spec.ts" timestamp="2025-10-27T09:37:19.670Z" hostname="LAPTOP-ATIIVP6V" tests="4" failures="0" errors="0" skipped="0" time="0.0093733">
+        <testcase classname="test/unit/userService.branches.full.spec.ts" name="userService branches full &gt; trim/normalize username" time="0.0026414">
+        </testcase>
+        <testcase classname="test/unit/userService.branches.full.spec.ts" name="userService branches full &gt; wrong password branch" time="0.0009099">
+        </testcase>
+        <testcase classname="test/unit/userService.branches.full.spec.ts" name="userService branches full &gt; unknown user branch" time="0.0005386">
+        </testcase>
+        <testcase classname="test/unit/userService.branches.full.spec.ts" name="userService branches full &gt; non-string inputs branch" time="0.000591">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/userService.branches.unit.spec.ts" timestamp="2025-10-27T09:37:19.671Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.0107475">
+        <testcase classname="test/unit/userService.branches.unit.spec.ts" name="userService branches &gt; invalid username + valid password -&gt; null" time="0.0031231">
+        </testcase>
+        <testcase classname="test/unit/userService.branches.unit.spec.ts" name="userService branches &gt; valid username + invalid password -&gt; null" time="0.0010774">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/userService.coverage.spec.ts" timestamp="2025-10-27T09:37:19.672Z" hostname="LAPTOP-ATIIVP6V" tests="5" failures="0" errors="0" skipped="0" time="0.0108676">
+        <testcase classname="test/unit/userService.coverage.spec.ts" name="userService branches full &gt; unknown user -&gt; null" time="0.0025971">
+        </testcase>
+        <testcase classname="test/unit/userService.coverage.spec.ts" name="userService branches full &gt; password mismatch -&gt; null" time="0.0005068">
+        </testcase>
+        <testcase classname="test/unit/userService.coverage.spec.ts" name="userService branches full &gt; admin ok -&gt; role admin" time="0.0006482">
+        </testcase>
+        <testcase classname="test/unit/userService.coverage.spec.ts" name="userService branches full &gt; non-admin username -&gt; null" time="0.0003797">
+        </testcase>
+        <testcase classname="test/unit/userService.coverage.spec.ts" name="userService branches full &gt; trimming/case branch" time="0.0004018">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/userService.edges.spec.ts" timestamp="2025-10-27T09:37:19.674Z" hostname="LAPTOP-ATIIVP6V" tests="3" failures="0" errors="0" skipped="0" time="0.0105471">
+        <testcase classname="test/unit/userService.edges.spec.ts" name="userService edge cases &gt; trims spaces in username and password" time="0.0038156">
+        </testcase>
+        <testcase classname="test/unit/userService.edges.spec.ts" name="userService edge cases &gt; accepts case-insensitive username" time="0.0006251">
+        </testcase>
+        <testcase classname="test/unit/userService.edges.spec.ts" name="userService edge cases &gt; rejects password mismatch" time="0.0006413">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/userService.extra-branch.spec.ts" timestamp="2025-10-27T09:37:19.675Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0069333">
+        <testcase classname="test/unit/userService.extra-branch.spec.ts" name="userService extra branches &gt; returns null for unknown user" time="0.0025914">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/userService.jwt-secret.spec.ts" timestamp="2025-10-27T09:37:19.675Z" hostname="LAPTOP-ATIIVP6V" tests="9" failures="0" errors="0" skipped="0" time="0.0114898">
+        <testcase classname="test/unit/userService.jwt-secret.spec.ts" name="resolveJwtSecret &gt; uses process.env by default" time="0.0029537">
+        </testcase>
+        <testcase classname="test/unit/userService.jwt-secret.spec.ts" name="resolveJwtSecret &gt; returns expected for {}" time="0.0005064">
+        </testcase>
+        <testcase classname="test/unit/userService.jwt-secret.spec.ts" name="resolveJwtSecret &gt; returns expected for {&quot;JWT_SECRET&quot;:&quot;&quot;}" time="0.0002832">
+        </testcase>
+        <testcase classname="test/unit/userService.jwt-secret.spec.ts" name="resolveJwtSecret &gt; returns expected for {&quot;JWT_SECRET&quot;:&quot;   &quot;}" time="0.0002585">
+        </testcase>
+        <testcase classname="test/unit/userService.jwt-secret.spec.ts" name="resolveJwtSecret &gt; returns expected for {&quot;JWT_SECRET&quot;:&quot;abc&quot;}" time="0.0003089">
+        </testcase>
+        <testcase classname="test/unit/userService.jwt-secret.spec.ts" name="resolveJwtSecret &gt; returns expected for {&quot;JWT_SECRET&quot;:&quot;  abc  &quot;}" time="0.0002316">
+        </testcase>
+        <testcase classname="test/unit/userService.jwt-secret.spec.ts" name="resolveJwtSecret &gt; returns expected for {&quot;JWT_SECRET&quot;:&quot;0&quot;}" time="0.0002958">
+        </testcase>
+        <testcase classname="test/unit/userService.jwt-secret.spec.ts" name="resolveJwtSecret &gt; returns expected for {&quot;JWT_SECRET&quot;:&quot;false&quot;}" time="0.0001689">
+        </testcase>
+        <testcase classname="test/unit/userService.jwt-secret.spec.ts" name="resolveJwtSecret &gt; does not mutate provided env object" time="0.0014811">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/userService.password-mismatch.unit.spec.ts" timestamp="2025-10-27T09:37:19.678Z" hostname="LAPTOP-ATIIVP6V" tests="1" failures="0" errors="0" skipped="0" time="0.0094768">
+        <testcase classname="test/unit/userService.password-mismatch.unit.spec.ts" name="userService password mismatch &gt; returns null when password mismatch" time="0.0032463">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/userService.remaining.spec.ts" timestamp="2025-10-27T09:37:19.679Z" hostname="LAPTOP-ATIIVP6V" tests="5" failures="0" errors="0" skipped="0" time="0.0142527">
+        <testcase classname="test/unit/userService.remaining.spec.ts" name="userService remaining branches &gt; isDemoLoginAllowed: ค่าเริ่มต้น = true และ parse on/off ถูกต้อง" time="0.0035897">
+        </testcase>
+        <testcase classname="test/unit/userService.remaining.spec.ts" name="userService remaining branches &gt; readDemoCreds: ไม่มี -&gt; ดีฟอลต์, รูปแบบรองรับ -&gt; override, รูปแบบไม่รองรับ/พัง/ว่าง -&gt; ดีฟอลต์" time="0.0032026">
+        </testcase>
+        <testcase classname="test/unit/userService.remaining.spec.ts" name="userService remaining branches &gt; toPublicUser: ตัดฟิลด์ลับออก เหลือเฉพาะ id/username/role" time="0.0007979">
+        </testcase>
+        <testcase classname="test/unit/userService.remaining.spec.ts" name="userService remaining branches &gt; isAdmin: true/false ตาม role" time="0.0007055">
+        </testcase>
+        <testcase classname="test/unit/userService.remaining.spec.ts" name="userService remaining branches &gt; resolveJwtSecret: มี JWT_SECRET ใช้ค่านั้น ไม่มีก็คืน fallback" time="0.001016">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/userService.roles.unit.spec.ts" timestamp="2025-10-27T09:37:19.681Z" hostname="LAPTOP-ATIIVP6V" tests="4" failures="0" errors="0" skipped="0" time="0.0096898">
+        <testcase classname="test/unit/userService.roles.unit.spec.ts" name="userService branches &gt; returns null for unknown user" time="0.003548">
+        </testcase>
+        <testcase classname="test/unit/userService.roles.unit.spec.ts" name="userService branches &gt; returns null for password mismatch" time="0.0005979">
+        </testcase>
+        <testcase classname="test/unit/userService.roles.unit.spec.ts" name="userService branches &gt; returns user for valid admin/password" time="0.0004089">
+        </testcase>
+        <testcase classname="test/unit/userService.roles.unit.spec.ts" name="userService branches &gt; covers non-admin path when present" time="0.0006373">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/unit/userService.unit.spec.ts" timestamp="2025-10-27T09:37:19.683Z" hostname="LAPTOP-ATIIVP6V" tests="2" failures="0" errors="0" skipped="0" time="0.0198407">
+        <testcase classname="test/unit/userService.unit.spec.ts" name="userService.login &gt; reject invalid" time="0.0102129">
+        </testcase>
+        <testcase classname="test/unit/userService.unit.spec.ts" name="userService.login &gt; accept admin/password when demo enabled" time="0.0050447">
+        </testcase>
+    </testsuite>
+</testsuites>

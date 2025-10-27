@@ -1,12 +1,9 @@
 // backend/test/trucks.spec.ts
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import type { FastifyInstance } from 'fastify';
-import { buildServer } from '../src/index';
-
-let app: FastifyInstance;
+import { app, registerPlugins } from '../src/index';
 
 beforeAll(async () => {
-  app = buildServer();
+  await registerPlugins();
   await app.ready();
 });
 

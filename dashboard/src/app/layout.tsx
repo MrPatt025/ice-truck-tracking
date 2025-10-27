@@ -7,7 +7,6 @@ import type { JSX, ReactNode } from 'react';
 import { Inter } from 'next/font/google';
 import Providers from './providers';
 import { AuthProvider } from '@/shared/auth/AuthContext';
-import { ThemeProvider } from '@/components/ThemeProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -62,11 +61,9 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <body className={`${inter.variable} antialiased`}>
-        {/* Client providers (React Query hydrate inside) */}
+        {/* Client providers (React Query, Theme, ErrorBoundary) */}
         <Providers>
-          <AuthProvider>
-            <ThemeProvider>{children}</ThemeProvider>
-          </AuthProvider>
+          <AuthProvider>{children}</AuthProvider>
         </Providers>
       </body>
     </html>

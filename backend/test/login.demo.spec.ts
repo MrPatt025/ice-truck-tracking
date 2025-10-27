@@ -1,24 +1,19 @@
 // backend/test/login.demo.spec.ts
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { buildServer } from '../src/index';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { app, registerPlugins } from '../src/index';
 
 const BASE_ENV = { ...process.env };
-let app: ReturnType<typeof buildServer> | null = null;
-
-async function closeApp() {
-  if (app) {
-    await app.close();
-    app = null;
-  }
-}
 
 describe('login DEMO branches', () => {
+  beforeAll(async () => {
+    await registerPlugins();
+    await app.ready();
+  });
+  afterAll(async () => {
+    await app.close();
+  });
   beforeEach(() => {
     process.env = { ...BASE_ENV };
-  });
-
-  afterEach(async () => {
-    await closeApp();
   });
 
   it('DEMO enabled + valid creds -> 200', async () => {
@@ -28,7 +23,6 @@ describe('login DEMO branches', () => {
       password: 'pass',
     });
 
-    app = buildServer({ logger: false });
     const r = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/login',
@@ -46,7 +40,6 @@ describe('login DEMO branches', () => {
     process.env.DEMO_LOGIN = 'true';
     process.env.DEMO_CREDS = '{invalid';
 
-    app = buildServer({ logger: false });
     const r = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/login',
@@ -59,7 +52,6 @@ describe('login DEMO branches', () => {
   it('DEMO disabled -> 401', async () => {
     delete process.env.DEMO_LOGIN;
 
-    app = buildServer({ logger: false });
     const r = await app.inject({
       method: 'POST',
       url: '/api/v1/auth/login',

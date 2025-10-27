@@ -7,8 +7,9 @@
     "node": ">=18.17"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3000",
     "prebuild": "",
+    "build": "next build",
     "start": "next start -p 3000",
     "clean": "rimraf .next dist coverage storybook-static",
     "lint": "eslint . --max-warnings=0",
@@ -27,7 +28,7 @@
     "build-storybook": "storybook build",
     "start-storybook": "storybook dev -p 6006 --ci",
     "a11y": "start-server-and-test start-storybook http://127.0.0.1:6006 \"test-storybook --ci --url http://127.0.0.1:6006\"",
-    "analyze": "ANALYZE=true next build",
+    "analyze": "cross-env ANALYZE=true next build",
     "size": "size-limit",
     "prepare": "husky install",
     "gen:openapi": "openapi-typescript ../backend/openapi.json -o src/types/api.d.ts",
@@ -40,7 +41,7 @@
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.2.2",
     "@react-three/fiber": "^9.4.0",
-    "@sentry/nextjs": "^10.21.0",
+    "@sentry/browser": "^8.28.0",
     "@tanstack/react-query": "^5.90.5",
     "@tomtom-international/web-sdk-maps": "6.25.0",
     "@turf/turf": "^7.2.0",

@@ -2,7 +2,6 @@
 
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
-import * as Sentry from '@sentry/nextjs';
 import { Button } from './Button';
 
 interface Props {
@@ -27,10 +26,20 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Report to Sentry (client)
-    try {
-      Sentry.captureException(error, { extra: { errorInfo } });
-    } catch {}
+    // Report to Sentry (client) via dynamic import to avoid noisy dev warnings
+    // and reduce initial bundle impact in development.
+    if (process.env.NODE_ENV === 'production') {
+      void (async () => {
+        try {
+          const Sentry = await import('@sentry/browser');
+          if (Sentry?.captureException) {
+            Sentry.captureException(error, { extra: { errorInfo } } as any);
+          }
+        } catch {
+          // ignore
+        }
+      })();
+    }
     // Optional consumer hook
     if (this.props.onError) {
       this.props.onError(error, errorInfo);

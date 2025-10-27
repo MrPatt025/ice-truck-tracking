@@ -81,6 +81,8 @@ export default function LoginPage() {
 
       // Persist auth token for subsequent API calls (dashboard data, etc)
       try {
+        // Write to both keys for compatibility with existing clients
+        localStorage.setItem('authToken', data.token);
         localStorage.setItem('auth_token', data.token);
         if (data.user) {
           localStorage.setItem('auth_user', JSON.stringify(data.user));
