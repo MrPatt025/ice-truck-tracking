@@ -2,18 +2,9 @@
 'use client';
 import React from 'react';
 
-export type TruckPoint = {
-  id: number | string;
-  name: string;
-  lat: number;
-  lon: number;
-  driver_name?: string;
-  speed?: number;
-  temp?: number;
-};
-
+// Accept any truck shape; this is a stub and shouldn't constrain callers
 type Props = {
-  trucks: ReadonlyArray<TruckPoint>;
+  trucks?: ReadonlyArray<any>;
   height?: number | string;
   className?: string;
 };

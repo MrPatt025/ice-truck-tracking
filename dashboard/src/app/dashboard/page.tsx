@@ -96,6 +96,11 @@ const TomTomMap = dynamic(() => import('../../components/TomTomMap'), {
   ssr: false,
 });
 
+// Lightweight fallback map (Leaflet) for lower-end devices or troubleshooting
+const LeafletFleetMap = dynamic(() => import('@/components/LeafletFleetMap'), {
+  ssr: false,
+});
+
 const Fleet3DCanvas = dynamic(() => import('@/components/Fleet3DCanvas'), {
   ssr: false,
   loading: () => <StaticHero />,
@@ -365,6 +370,17 @@ function RegisterForm({ onRegistered }: { onRegistered?: () => void }) {
 function AuthPanel() {
   const { bootstrapped, loading } = useAuth();
   const [tab, setTab] = useState<'login' | 'register'>('login');
+
+  // Respect a session-scoped preferred tab set by header actions (e.g., "Register")
+  useEffect(() => {
+    try {
+      const pref = sessionStorage.getItem('auth.defaultTab');
+      if (pref === 'register') {
+        setTab('register');
+        sessionStorage.removeItem('auth.defaultTab');
+      }
+    } catch {}
+  }, []);
 
   if (!bootstrapped || loading) {
     return (
@@ -782,6 +798,7 @@ const ClientOnlyText: React.FC<{ children: React.ReactNode }> = ({
    ================================================================= */
 // eslint-disable-next-line sonarjs/cognitive-complexity
 export default function Dashboard() {
+  const { token, logout, user } = useAuth();
   const enableThree =
     typeof process !== 'undefined' &&
     typeof process.env !== 'undefined' &&
@@ -806,6 +823,59 @@ export default function Dashboard() {
   const [simulationSpeed, setSimulationSpeed] = useState(1);
   const [paused, setPaused] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [mapEngine, setMapEngine] = useState<'tomtom' | 'leaflet'>('tomtom');
+
+  // Hydrate persisted UI preferences on first mount
+  useEffect(() => {
+    try {
+      const prefEngine = localStorage.getItem('ui.mapEngine');
+      if (prefEngine === 'tomtom' || prefEngine === 'leaflet') {
+        setMapEngine(prefEngine);
+      }
+      const prefTheme = localStorage.getItem('ui.theme') as Theme | null;
+      if (
+        prefTheme &&
+        ['dark', 'neon', 'ocean', 'forest'].includes(prefTheme)
+      ) {
+        setTheme(prefTheme as Theme);
+      }
+      const prefShow3D = localStorage.getItem('ui.show3D');
+      if (prefShow3D === '0' || prefShow3D === 'false') {
+        setShow3D(false);
+      }
+      const prefGrid = localStorage.getItem('ui.showGrid');
+      if (prefGrid === '0' || prefGrid === 'false') {
+        setShowGrid(false);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
+  // Persist changes to preferences
+  useEffect(() => {
+    try {
+      localStorage.setItem('ui.mapEngine', mapEngine);
+    } catch {}
+  }, [mapEngine]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ui.theme', theme);
+    } catch {}
+  }, [theme]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ui.show3D', show3D ? '1' : '0');
+    } catch {}
+  }, [show3D]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('ui.showGrid', showGrid ? '1' : '0');
+    } catch {}
+  }, [showGrid]);
 
   // Hooks Integration
   const { trucks, lastDataTimestamp } = useRealtimeTrucks(
@@ -1588,6 +1658,55 @@ export default function Dashboard() {
                     </button>
                   ))}
                 </div>
+
+                {/* Account Controls */}
+                <div className="flex items-center gap-2">
+                  {token ? (
+                    <>
+                      <Pill intent="neutral">
+                        <Users className="h-4 w-4" />
+                        <span className="hidden sm:inline">
+                          {typeof (user as any)?.username === 'string'
+                            ? (user as any).username
+                            : 'Account'}
+                        </span>
+                      </Pill>
+                      <button
+                        onClick={() => logout?.()}
+                        className="rounded-xl px-3 py-2 ring-1 ring-white/15 bg-white/10 hover:bg-white/15 backdrop-blur-xl text-sm font-semibold transition-all"
+                      >
+                        Logout
+                      </button>
+                      <button
+                        onClick={() => {
+                          try {
+                            sessionStorage.setItem('auth.defaultTab', 'login');
+                          } catch {}
+                          logout?.();
+                        }}
+                        className="rounded-xl px-3 py-2 ring-1 ring-white/15 bg-white/10 hover:bg-white/15 backdrop-blur-xl text-sm font-semibold transition-all"
+                        title="Login as a different user"
+                      >
+                        Login
+                      </button>
+                      <button
+                        onClick={() => {
+                          try {
+                            sessionStorage.setItem(
+                              'auth.defaultTab',
+                              'register',
+                            );
+                          } catch {}
+                          logout?.();
+                        }}
+                        className="rounded-xl px-3 py-2 ring-1 ring-cyan-400/30 bg-cyan-500/20 hover:bg-cyan-500/30 backdrop-blur-xl text-sm font-semibold text-cyan-100 transition-all"
+                        title="Register a new account"
+                      >
+                        Register
+                      </button>
+                    </>
+                  ) : null}
+                </div>
               </div>
             </div>
 
@@ -1676,6 +1795,23 @@ export default function Dashboard() {
                     >
                       {flags['anomaly-index'] ? 'ACTIVE' : 'INACTIVE'}
                     </button>
+                  </div>
+
+                  {/* Map Engine Selector */}
+                  <div className="flex items-center gap-2 ml-4">
+                    <span className="text-slate-200">Map Engine:</span>
+                    <select
+                      id="mapEngine"
+                      aria-label="Map engine"
+                      value={mapEngine}
+                      onChange={(e) =>
+                        setMapEngine(e.target.value as 'tomtom' | 'leaflet')
+                      }
+                      className="rounded-lg bg-white/5 px-3 py-1 ring-1 ring-white/10 outline-none text-white cursor-pointer"
+                    >
+                      <option value="tomtom">TomTom (Performance)</option>
+                      <option value="leaflet">Leaflet (Lightweight)</option>
+                    </select>
                   </div>
                 </div>
 
@@ -2105,12 +2241,18 @@ export default function Dashboard() {
           </section>
           {/* 3D Hero (lazy-loaded, client-only) */}
           <section className="p-4">
-            <ClientOnly>
-              <Fleet3DCanvas />
-            </ClientOnly>
+            {show3D && (
+              <ClientOnly>
+                <Fleet3DCanvas />
+              </ClientOnly>
+            )}
           </section>
           <section className="p-4">
-            <TomTomMap trucks={uiTrucks} />
+            {mapEngine === 'tomtom' ? (
+              <TomTomMap trucks={uiTrucks} />
+            ) : (
+              <LeafletFleetMap trucks={uiTrucks} />
+            )}
           </section>
 
           {/* Footer */}

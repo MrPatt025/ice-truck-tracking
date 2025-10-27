@@ -2,18 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/shared/auth/AuthContext';
 
-type LoginResponse = {
-  token?: string;
-  user?: {
-    username: string;
-    role?: string;
-  };
-  error?: string;
-};
+// Note: legacy LoginResponse type removed in favor of useAuth().login
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, token, loading, error: ctxError } = useAuth();
 
   // --- hydration-safe mount guard -------------------------
   // We only render the actual <form> after we're on the client.
@@ -44,63 +39,27 @@ export default function LoginPage() {
 
     setError(null);
     setSubmitting(true);
-
     try {
-      const res = await fetch(`${getApiBase()}/api/v1/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // include cookies in case backend sets refresh-token cookies
-        credentials: 'include',
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-      });
-
-      if (!res.ok) {
-        // 401 from backend = bad creds
-        if (res.status === 401) {
-          setError('Invalid username or password');
-        } else {
-          setError(`Login failed (status ${res.status})`);
-        }
-        setSubmitting(false);
-        return;
-      }
-
-      const data: LoginResponse = await res.json();
-
-      // Validate shape
-      if (!data || !data.token) {
-        setError('No token returned from server');
-        setSubmitting(false);
-        return;
-      }
-
-      // Persist auth token for subsequent API calls (dashboard data, etc)
-      try {
-        // Write to both keys for compatibility with existing clients
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('auth_token', data.token);
-        if (data.user) {
-          localStorage.setItem('auth_user', JSON.stringify(data.user));
-        }
-      } catch (storageErr) {
-        console.warn('Failed to persist auth token:', storageErr);
-      }
-
-      // Go to dashboard after successful login
-      router.push('/dashboard');
-    } catch (err) {
-      console.error('Network/CORS error during login:', err);
+      // Use shared AuthContext to ensure consistent token storage and profile fetch
+      await login(username, password);
+      // AuthProvider may redirect to '/'; direct to dashboard for clarity
+      router.replace('/dashboard');
+    } catch {
+      // Any thrown error is already reflected in ctxError; keep a local fallback
       setError(
-        'Network error: cannot reach API. Is backend running on http://localhost:5000 and CORS enabled?',
+        'Login failed. Check credentials or backend availability (CORS, port 5000).',
       );
+    } finally {
       setSubmitting(false);
     }
   }
+
+  // If already authenticated, redirect away from login
+  useEffect(() => {
+    if (token) {
+      router.replace('/dashboard');
+    }
+  }, [router, token]);
 
   // --- if not mounted yet, render lightweight shell only ---
   if (!mounted) {
@@ -149,19 +108,19 @@ export default function LoginPage() {
           </div>
 
           {/* Error message */}
-          {error && (
+          {(error || ctxError) && (
             <div className="text-red-400 bg-red-400/10 border border-red-500/30 rounded p-2 text-[11px] leading-snug">
-              {error}
+              {error ?? ctxError}
             </div>
           )}
 
           {/* Submit button */}
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || loading}
             className="w-full bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-sm font-medium rounded py-2 transition-colors"
           >
-            {submitting ? 'Signing in…' : 'Sign in'}
+            {submitting || loading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 

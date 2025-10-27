@@ -4,8 +4,8 @@
   "private": true,
   "packageManager": "pnpm@10.19.0",
   "engines": {
-    "node": ">=18.18.0",
-    "pnpm": ">=10.19.0"
+    "node": ">=20 <21",
+    "pnpm": "10.19.0"
   },
   "type": "commonjs",
   "sideEffects": false,

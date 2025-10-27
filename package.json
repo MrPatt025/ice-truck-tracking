@@ -118,8 +118,8 @@
     "zod": "^4.1.12"
   },
   "engines": {
-    "node": ">=18.18.0",
-    "pnpm": ">=10.19.0"
+    "node": ">=20 <21",
+    "pnpm": "10.19.0"
   },
   "packageManager": "pnpm@10.19.0",
   "keywords": [
