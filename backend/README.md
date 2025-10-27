@@ -39,7 +39,15 @@ This backend is a Fastify v4 application with Zod type providers and a test-frie
 - `JWT_SECRET` for JWT signing; falls back to a development default if unset.
 - Optional rate limit is enabled in production by default (`RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW`).
 
+## Development
+
+- Dev: `pnpm -F backend dev`
+- Tests: `pnpm -F backend test`
+- Typecheck: `pnpm -F backend typecheck`
+- Lint: `pnpm -F backend lint`
+
 ## Notes
 
 - The code maintains Fastify v4-compatible versions of plugins (`@fastify/cors`, `@fastify/helmet`, `@fastify/websocket`, `@fastify/swagger`, `@fastify/swagger-ui`, `@fastify/jwt`).
 - Swagger is enabled by default in non-production environments.
+- Zod validator/serializer compilers are configured globally on the Fastify instance.
