@@ -352,10 +352,14 @@ export default function TomTomMap({
   const fittedSignatureRef = useRef<string>('');
   const resizeObsRef = useRef<ResizeObserver | null>(null);
   const rafRef = useRef<number | null>(null);
+  const updateRafRef = useRef<number | null>(null);
   const sdkRef = useRef<TTGlobal | null>(null);
   const debounceTimerRef = useRef<number | null>(null);
+  const lastDataSigRef = useRef<string>('');
+  const initCenterRef = useRef(center);
+  const initZoomRef = useRef(zoom);
 
-  // init map once (มี guard กัน re-init แล้ว)
+  // init map once (never re-create on prop changes)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     // In automated e2e environments, skip external SDK initialization to keep tests deterministic
@@ -381,7 +385,12 @@ export default function TomTomMap({
         sdkRef.current = tt;
         if (destroyed) return;
 
-        const map = tt.map({ key: apiKey, container: el, center, zoom });
+        const map = tt.map({
+          key: apiKey,
+          container: el,
+          center: initCenterRef.current,
+          zoom: initZoomRef.current,
+        });
         mapRef.current = map;
 
         // resize observer
@@ -423,7 +432,23 @@ export default function TomTomMap({
         mapRef.current = null;
       }
     };
-    // center/zoom ใส่ได้เพราะมี guard ป้องกัน re-init; ไม่มี dependency ฟังก์ชันใด
+    // run only once
+  }, []);
+
+  // reflect center/zoom prop changes without re-creating map
+  useEffect(() => {
+    const map = mapRef.current as any;
+    if (!map) return;
+    try {
+      if (Array.isArray(center) && center.length === 2) {
+        if (typeof map.setCenter === 'function') map.setCenter(center);
+      }
+      if (typeof zoom === 'number') {
+        if (typeof map.setZoom === 'function') map.setZoom(zoom);
+      }
+    } catch {
+      /* no-op */
+    }
   }, [center, zoom]);
 
   // update markers + optional auto-fit (ผ่านลินต์ exhaustive-deps แล้ว)
@@ -440,45 +465,61 @@ export default function TomTomMap({
       debounceTimerRef.current = window.setTimeout(async () => {
         const tt = sdkRef.current ?? (await ensureTomTomLoaded());
         if (cancelled) return;
+
+        // skip if data signature unchanged (avoid unnecessary DOM work)
+        const nextSig = signatureFor(trucks);
+        if (nextSig === lastDataSigRef.current) return;
+
         const seen: Record<string, true> = {};
         const bounds = new tt.LngLatBounds();
-        if (cluster) {
-          const clusterList = await buildClustersAsync(trucks, zoom);
-          for (const c of clusterList) {
-            seen[c.id] = true;
-            const popupHtml = c.sample ? buildPopupHtml(c.sample) : '';
-            ensureMarker(
-              tt,
-              map,
-              markersRef.current,
-              c.id,
-              c.lngLat,
-              popupHtml,
-              c.count,
-            );
-            bounds.extend(c.lngLat);
-          }
-        } else {
-          for (const t of trucks) {
-            const lngLat = getLngLat(t);
-            if (!lngLat) continue;
-            const key = String(t.id);
-            seen[key] = true;
-            const popupHtml = buildPopupHtml(t);
-            ensureMarker(tt, map, markersRef.current, key, lngLat, popupHtml);
-            bounds.extend(lngLat);
-          }
-        }
 
-        removeStale(markersRef.current, seen);
-        maybeFitBounds(
-          map,
-          bounds,
-          signatureFor(trucks),
-          autoFit,
-          zoom,
-          fittedSignatureRef,
-        );
+        const runDom = async () => {
+          if (cluster) {
+            const clusterList = await buildClustersAsync(trucks, zoom);
+            for (const c of clusterList) {
+              seen[c.id] = true;
+              const popupHtml = c.sample ? buildPopupHtml(c.sample) : '';
+              ensureMarker(
+                tt,
+                map,
+                markersRef.current,
+                c.id,
+                c.lngLat,
+                popupHtml,
+                c.count,
+              );
+              bounds.extend(c.lngLat);
+            }
+          } else {
+            for (const t of trucks) {
+              const lngLat = getLngLat(t);
+              if (!lngLat) continue;
+              const key = String(t.id);
+              seen[key] = true;
+              const popupHtml = buildPopupHtml(t);
+              ensureMarker(tt, map, markersRef.current, key, lngLat, popupHtml);
+              bounds.extend(lngLat);
+            }
+          }
+
+          removeStale(markersRef.current, seen);
+          maybeFitBounds(
+            map,
+            bounds,
+            nextSig,
+            autoFit,
+            zoom,
+            fittedSignatureRef,
+          );
+          lastDataSigRef.current = nextSig;
+        };
+
+        if (updateRafRef.current != null)
+          cancelAnimationFrame(updateRafRef.current);
+        updateRafRef.current = requestAnimationFrame(() => {
+          // runDom may be async due to worker; kick and intentionally ignore returned promise
+          void runDom();
+        });
       }, 50);
     };
 
@@ -489,6 +530,10 @@ export default function TomTomMap({
       if (debounceTimerRef.current != null) {
         window.clearTimeout(debounceTimerRef.current);
         debounceTimerRef.current = null;
+      }
+      if (updateRafRef.current != null) {
+        cancelAnimationFrame(updateRafRef.current);
+        updateRafRef.current = null;
       }
     };
   }, [trucks, autoFit, zoom, cluster]);
