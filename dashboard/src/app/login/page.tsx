@@ -33,10 +33,28 @@ export default function LoginPage() {
     return base;
   }
 
+  const [lastSubmitAt, setLastSubmitAt] = useState<number>(0);
+
+  function validate(): string | null {
+    if (username.trim().length < 3)
+      return 'Username must be at least 3 characters';
+    if (password.length < 8) return 'Password must be at least 8 characters';
+    return null;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting) return; // prevent double click spam
+    // throttle repeat submits within 1.5s
+    const now = Date.now();
+    if (now - lastSubmitAt < 1500) return;
+    setLastSubmitAt(now);
 
+    const msg = validate();
+    if (msg) {
+      setError(msg);
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
@@ -73,7 +91,10 @@ export default function LoginPage() {
   // --- actual login form (client-only render) --------------
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#0a0f1f] text-white">
-      <div className="w-full max-w-sm rounded-md bg-[#0f1b2f] p-6 shadow-lg border border-slate-800/50">
+      <div
+        className="w-full max-w-sm rounded-md bg-[#0f1b2f] p-6 shadow-lg border border-slate-800/50"
+        aria-live="polite"
+      >
         <h2 className="text-lg font-semibold mb-1 text-white">Sign in</h2>
         <p className="text-[11px] text-slate-400 mb-4">
           Use admin/password or demo/demo (local dev)
@@ -109,8 +130,20 @@ export default function LoginPage() {
 
           {/* Error message */}
           {(error || ctxError) && (
-            <div className="text-red-400 bg-red-400/10 border border-red-500/30 rounded p-2 text-[11px] leading-snug">
-              {error ?? ctxError}
+            <div
+              role="alert"
+              className="text-red-200 bg-red-500/20 border border-red-500/40 rounded p-2 text-[11px] leading-snug flex items-start gap-2"
+            >
+              <span className="sr-only">Error:</span>
+              <span>{error ?? ctxError}</span>
+              <button
+                type="button"
+                onClick={() => setError(null)}
+                className="ml-auto text-rose-200/80 hover:text-rose-50"
+                aria-label="Dismiss error"
+              >
+                ✕
+              </button>
             </div>
           )}
 

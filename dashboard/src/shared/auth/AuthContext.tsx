@@ -48,6 +48,33 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 // Storage helpers
 // -----------------------------
 const ACCESS_KEYS = ['authToken', 'auth_token'] as const;
+const COOKIE_NAME = 'authToken';
+const CSRF_COOKIE = 'csrfToken';
+
+function setCookie(name: string, value: string, opts?: { days?: number; secure?: boolean; path?: string; sameSite?: 'Lax' | 'Strict' | 'None' }) {
+  if (typeof document === 'undefined') return;
+  const days = opts?.days ?? 7;
+  const path = opts?.path ?? '/';
+  const sameSite = opts?.sameSite ?? 'Lax';
+  const secure = opts?.secure ?? (typeof location !== 'undefined' && location.protocol === 'https:');
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; Expires=${expires}; Path=${path}; SameSite=${sameSite}${secure ? '; Secure' : ''}`;
+}
+
+function deleteCookie(name: string) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${name}=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; SameSite=Lax`;
+}
+
+function ensureCsrfCookie() {
+  if (typeof document === 'undefined') return;
+  if (!document.cookie.includes(`${CSRF_COOKIE}=`)) {
+    try {
+      const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+      setCookie(CSRF_COOKIE, token, { days: 7, sameSite: 'Lax' });
+    } catch {}
+  }
+}
 
 function readToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -93,6 +120,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (next) writeToken(next);
     else clearToken();
     setToken(next);
+    try {
+      if (next) setCookie(COOKIE_NAME, next, { days: 3, sameSite: 'Lax' });
+      else deleteCookie(COOKIE_NAME);
+    } catch {}
   }, []);
 
   const fetchMe = useCallback(async (): Promise<User | null> => {
@@ -117,6 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      ensureCsrfCookie();
       setLoading(true);
       setError(null);
       const stored = readToken();
@@ -157,6 +189,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, [fetchMe, setTokenBoth, token]);
+
+  // Auto-refresh before expiry using JWT exp
+  useEffect(() => {
+    if (!token) return;
+    let timer: any;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1] || '')) as { exp?: number };
+      const expMs = (payload?.exp ?? 0) * 1000;
+      const now = Date.now();
+      const lead = 60_000; // refresh 60s before expiry
+      const due = Math.max(5_000, expMs - now - lead);
+      const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+      timer = setTimeout(async () => {
+        try {
+          const rr = await api.post<RefreshResponse>(`${base}/api/v1/auth/refresh`, {});
+          const t = rr.data?.accessToken ?? rr.data?.token ?? null;
+          if (t) {
+            setTokenBoth(t);
+            const me = await fetchMe();
+            if (me) setUser(me);
+          } else {
+            await logout();
+          }
+        } catch {
+          await logout();
+        }
+      }, due);
+    } catch {
+      // if cannot decode, fall back to no timer; interceptor will handle 401
+    }
+    return () => clearTimeout(timer);
+  }, [fetchMe, logout, setTokenBoth, token]);
 
   const login = useCallback(
     async (username: string, password: string) => {
@@ -203,6 +267,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // clear local state immediately
     setTokenBoth(null);
     setUser(null);
+    try { deleteCookie(COOKIE_NAME); } catch {}
     try {
       const base = (
         process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'

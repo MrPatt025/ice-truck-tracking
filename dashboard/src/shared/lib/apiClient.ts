@@ -30,6 +30,12 @@ export const api = axios.create({
   withCredentials: true,
 });
 
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
 api.interceptors.request.use((cfg) => {
   const token =
     typeof window !== 'undefined'
@@ -40,6 +46,14 @@ api.interceptors.request.use((cfg) => {
     cfg.headers = cfg.headers ?? {};
     (cfg.headers as Record<string, string>).Authorization = `Bearer ${token}`;
   }
+  // Attach CSRF token when available (double-submit cookie pattern in dev)
+  try {
+    const csrf = getCookie('csrfToken');
+    if (csrf) {
+      cfg.headers = cfg.headers ?? {};
+      (cfg.headers as Record<string, string>)['X-CSRF-Token'] = csrf;
+    }
+  } catch {}
   // Add breadcrumb for outgoing request (PII-safe)
   try {
     const url = cfg.baseURL
