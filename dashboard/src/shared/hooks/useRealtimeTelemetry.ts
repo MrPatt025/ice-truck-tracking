@@ -2,6 +2,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { buildWsUrl } from '@/shared/lib/wsUrl';
 import { useQueryClient } from '@tanstack/react-query';
 import type {
   AlertDto,
@@ -27,21 +28,35 @@ export function useRealtimeTelemetry(): RealtimeState {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const base = (
-      process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000'
-    ).replace(/\/+$/, '');
-    const wsUrl = base.replace(/^http/, 'ws') + '/api/v1/telemetry';
+    const paths = [
+      process.env.NEXT_PUBLIC_WS_PATH || '/ws',
+      '/api/v1/telemetry',
+    ];
+    const urlFor = (idx: number) =>
+      buildWsUrl(paths[idx % paths.length] as string);
     let stop = false;
     let socket: WebSocket | null = null;
     let reconnectTimer: number | null = null;
+    let pingTimer: number | null = null;
+    let attempt = 0;
 
     const connect = () => {
       if (stop) return;
       try {
-        socket = new WebSocket(wsUrl);
+        socket = new WebSocket(urlFor(attempt));
         wsRef.current = socket;
         socket.addEventListener('open', () => {
           setConnected(true);
+          // keepalive ping
+          try {
+            if (pingTimer != null) window.clearInterval(pingTimer);
+          } catch {}
+          pingTimer = window.setInterval(() => {
+            try {
+              if (socket && socket.readyState === socket.OPEN)
+                socket.send('ping');
+            } catch {}
+          }, 25000);
         });
         socket.addEventListener('message', (ev) => {
           try {
@@ -72,20 +87,30 @@ export function useRealtimeTelemetry(): RealtimeState {
         socket.addEventListener('close', () => {
           setConnected(false);
           wsRef.current = null;
+          if (pingTimer != null) window.clearInterval(pingTimer);
           if (!stop) {
             // fallback to polling via react-query: simply do nothing and queries will continue to work
             // schedule reconnect
-            reconnectTimer = window.setTimeout(connect, 3000);
+            attempt += 1; // rotate path as well
+            reconnectTimer = window.setTimeout(
+              connect,
+              Math.min(30000, 1000 * Math.pow(2, attempt)),
+            );
           }
         });
         socket.addEventListener('error', () => {
+          if (pingTimer != null) window.clearInterval(pingTimer);
           try {
             socket?.close();
           } catch {}
         });
       } catch {
         // schedule reconnect
-        reconnectTimer = window.setTimeout(connect, 3000);
+        attempt += 1;
+        reconnectTimer = window.setTimeout(
+          connect,
+          Math.min(30000, 1000 * Math.pow(2, attempt)),
+        );
       }
     };
 
@@ -93,6 +118,7 @@ export function useRealtimeTelemetry(): RealtimeState {
     return () => {
       stop = true;
       if (reconnectTimer != null) window.clearTimeout(reconnectTimer);
+      if (pingTimer != null) window.clearInterval(pingTimer);
       try {
         wsRef.current?.close();
       } catch {}

@@ -58,9 +58,10 @@ import dynamic from 'next/dynamic';
 import StaticHero from '@/components/StaticHero';
 import type { UiTruck } from '@/types/truck';
 import { useAuth } from '@/shared/auth/AuthContext';
-import { Input } from '@/ui/components/Input';
-import { Button } from '@/ui/components/Button';
-import { api } from '@/shared/lib/apiClient';
+// Inline auth UI removed; prune related UI imports
+import { safeParseTelemetryState } from '@/types/contracts.zod';
+import { useRefreshSettings } from '@/shared/refresh/RefreshSettings';
+import { useFlags } from '@/shared/flags/FlagsProvider';
 
 // Lazy charts (client-only) to avoid shipping Recharts in the initial bundle
 const SparklineChart = dynamic(
@@ -105,6 +106,9 @@ const Fleet3DCanvas = dynamic(() => import('@/components/Fleet3DCanvas'), {
   ssr: false,
   loading: () => <StaticHero />,
 });
+
+// Global stale threshold for telemetry (ms)
+const STALE_THRESHOLD_MS = 10_000;
 
 /* =================================================================
    1. CORE UTILITIES & STYLED COMPONENTS (Modularized for Readability)
@@ -203,278 +207,20 @@ const THEME_COLORS = {
    - Uses existing AuthContext.login and mirrors token storage behavior.
    ================================================================= */
 
-function useBaseApiUrl() {
-  return (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000').replace(
-    /\/+$/,
-    '',
-  );
-}
+// function useBaseApiUrl() {}
 
-function LoginForm({ onSuccess }: { onSuccess?: () => void }) {
-  const { login, error, loading } = useAuth();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [localError, setLocalError] = useState<string | null>(null);
+// Inline auth components removed — dashboard is protected by middleware + server layout.
+// Keeping lightweight placeholders to preserve file history.
+// function _LoginForm() {}
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      setLocalError(null);
-      if (username.trim().length < 3) {
-        setLocalError('Username must be at least 3 characters');
-        return;
-      }
-      if (password.length < 8) {
-        setLocalError('Password must be at least 8 characters');
-        return;
-      }
-      await login(username.trim(), password);
-      if (onSuccess) onSuccess();
-    },
-    [login, onSuccess, password, username],
-  );
+// function _RegisterForm() {}
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        label="Username"
-        placeholder="yourname"
-        autoComplete="username"
-        value={username}
-        onChange={(e) => setUsername(e.currentTarget.value)}
-      />
-      <Input
-        label="Password"
-        type="password"
-        placeholder="••••••••"
-        autoComplete="current-password"
-        value={password}
-        onChange={(e) => setPassword(e.currentTarget.value)}
-      />
-      {(localError || error) && (
-        <p className="text-sm text-rose-500" role="alert">
-          {localError ?? error}
-        </p>
-      )}
-      <Button
-        type="submit"
-        variant="primary"
-        size="lg"
-        loading={loading}
-        className="w-full"
-      >
-        Sign in
-      </Button>
-      <p className="text-xs text-slate-500">
-        Tip: demo credentials are often enabled (e.g. demo/demo or
-        admin/password)
-      </p>
-    </form>
-  );
-}
-
-function RegisterForm({ onRegistered }: { onRegistered?: () => void }) {
-  const base = useBaseApiUrl();
-  const { login } = useAuth();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      setError(null);
-      if (username.trim().length < 3) {
-        setError('Username must be at least 3 characters');
-        return;
-      }
-      if (password.length < 8) {
-        setError('Password must be at least 8 characters');
-        return;
-      }
-      if (password !== confirm) {
-        setError('Passwords do not match');
-        return;
-      }
-      setLoading(true);
-      try {
-        const res = await api.post(`${base}/api/v1/auth/register`, {
-          username: username.trim(),
-          password,
-        });
-        if (res.status < 200 || res.status >= 300) {
-          throw new Error(`Register failed (${res.status})`);
-        }
-        // After register, prefer logging in to fetch profile and normalize state
-        await login(username.trim(), password);
-        if (onRegistered) onRegistered();
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Registration failed';
-        setError(msg);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [base, confirm, login, onRegistered, password, username],
-  );
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        label="Username"
-        placeholder="yourname"
-        autoComplete="username"
-        value={username}
-        onChange={(e) => setUsername(e.currentTarget.value)}
-      />
-      <Input
-        label="Password"
-        type="password"
-        placeholder="••••••••"
-        autoComplete="new-password"
-        value={password}
-        onChange={(e) => setPassword(e.currentTarget.value)}
-      />
-      <Input
-        label="Confirm password"
-        type="password"
-        placeholder="••••••••"
-        autoComplete="new-password"
-        value={confirm}
-        onChange={(e) => setConfirm(e.currentTarget.value)}
-      />
-      {error && (
-        <p className="text-sm text-rose-500" role="alert">
-          {error}
-        </p>
-      )}
-      <Button
-        type="submit"
-        variant="secondary"
-        size="lg"
-        loading={loading}
-        className="w-full"
-      >
-        Create account
-      </Button>
-      <p className="text-xs text-slate-500">
-        If registration isn’t enabled on the server, use demo credentials to
-        explore the app.
-      </p>
-    </form>
-  );
-}
-
-function AuthPanel() {
-  const { bootstrapped, loading } = useAuth();
-  const [tab, setTab] = useState<'login' | 'register'>('login');
-
-  // Respect a session-scoped preferred tab set by header actions (e.g., "Register")
-  useEffect(() => {
-    try {
-      const pref = sessionStorage.getItem('auth.defaultTab');
-      if (pref === 'register') {
-        setTab('register');
-        sessionStorage.removeItem('auth.defaultTab');
-      }
-    } catch {}
-  }, []);
-
-  if (!bootstrapped || loading) {
-    return (
-      <div className="flex min-h-screen w-full items-center justify-center text-sm text-gray-400">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex min-h-screen items-center justify-center p-6">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white/90 shadow-2xl backdrop-blur-md ring-1 ring-black/5">
-        <div className="border-b border-slate-200 bg-gradient-to-r from-violet-500/10 to-cyan-500/10 p-4">
-          <div className="flex items-center gap-2">
-            <Truck className="h-5 w-5 text-violet-600" />
-            <h1 className="text-base font-semibold text-slate-900">
-              Ice Truck Tracking — Access
-            </h1>
-          </div>
-        </div>
-
-        <div className="p-6">
-          <div className="mb-5 grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1 text-sm">
-            <button
-              className={
-                'rounded-md px-3 py-2 transition ' +
-                (tab === 'login'
-                  ? 'bg-white text-slate-900 shadow'
-                  : 'text-slate-600 hover:text-slate-900')
-              }
-              onClick={() => setTab('login')}
-              type="button"
-            >
-              Sign in
-            </button>
-            <button
-              className={
-                'rounded-md px-3 py-2 transition ' +
-                (tab === 'register'
-                  ? 'bg-white text-slate-900 shadow'
-                  : 'text-slate-600 hover:text-slate-900')
-              }
-              onClick={() => setTab('register')}
-              type="button"
-            >
-              Register
-            </button>
-          </div>
-
-          {tab === 'login' ? <LoginForm /> : <RegisterForm />}
-        </div>
-      </div>
-    </div>
-  );
-}
+// function _AuthPanel() {}
 
 function InlineAuthGate({ children }: { children: React.ReactNode }) {
-  const { token } = useAuth();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Render a stable skeleton during SSR and the first client render to avoid hydration mismatch.
-  if (!mounted) {
-    return (
-      <div
-        suppressHydrationWarning
-        className="relative min-h-screen text-white selection:bg-violet-500/30 selection:text-white"
-      >
-        <div
-          className="pointer-events-none fixed inset-0 -z-20"
-          style={{ background: THEME_COLORS.dark.gradient }}
-        />
-        <div className="fixed inset-0 -z-10 noise-bg opacity-60" />
-        <div className="flex min-h-screen w-full items-center justify-center text-sm text-gray-400">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
-        </div>
-      </div>
-    );
-  }
-
-  if (!token) {
-    return (
-      <div className="relative min-h-screen text-white selection:bg-violet-500/30 selection:text-white">
-        <div
-          className="pointer-events-none fixed inset-0 -z-20"
-          style={{ background: THEME_COLORS.dark.gradient }}
-        />
-        <div className="fixed inset-0 -z-10 noise-bg opacity-60" />
-        <AuthPanel />
-      </div>
-    );
-  }
+  // Dashboard route is now protected by middleware and server-side guards.
+  // This gate intentionally does nothing and always renders children.
+  // It remains to minimize diffs and preserve component structure.
   return <>{children}</>;
 }
 
@@ -546,13 +292,14 @@ function PingLayer({ count = 12 }: { count?: number }) {
       {dots.map((d, i) => (
         <div
           key={i}
-          className="absolute h-4 w-4 rounded-full bg-cyan-400/80 animate-ping"
-          style={{
-            left: d.left,
-            top: d.top,
-            animationDelay: `${d.delay}s`,
-            animationDuration: '3s',
-          }}
+          className="absolute h-4 w-4 rounded-full bg-cyan-400/80 animate-ping-3s"
+          style={
+            {
+              '--dot-left': d.left,
+              '--dot-top': d.top,
+              '--dot-delay': `${d.delay}s`,
+            } as React.CSSProperties
+          }
         />
       ))}
     </div>
@@ -568,7 +315,7 @@ const ThreeBackground = memo(
     useEffect(() => {
       if (!ready || !containerRef.current || typeof window === 'undefined')
         return;
-      const THREE = (window as any).THREE;
+      const { THREE } = window as any;
       if (!THREE) return;
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(
@@ -681,8 +428,7 @@ const ThreeBackground = memo(
     return (
       <div
         ref={containerRef}
-        className="fixed inset-0 -z-10 noise-bg"
-        style={{ opacity: 0.5 }}
+        className="fixed inset-0 -z-10 noise-bg opacity-50"
       />
     );
   },
@@ -693,10 +439,12 @@ const Pill = memo(
     children,
     intent = 'neutral',
     onClick,
+    title,
   }: {
     children: React.ReactNode;
     intent?: 'neutral' | 'ok' | 'warn' | 'info' | 'error';
     onClick?: () => void;
+    title?: string;
   }) => {
     const cls =
       intent === 'ok'
@@ -709,10 +457,22 @@ const Pill = memo(
               ? 'bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-400/50 shadow-[0_0_12px_0_rgba(6,182,212,.5)]'
               : 'bg-white/10 text-slate-200 ring-1 ring-white/20';
 
+    if (onClick) {
+      return (
+        <button
+          type="button"
+          className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium backdrop-blur-md transition-all cursor-pointer hover:scale-[1.03] focus-ring-theme outline-none ${cls}`}
+          onClick={onClick}
+          title={title}
+        >
+          {children}
+        </button>
+      );
+    }
     return (
       <span
-        className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium backdrop-blur-md transition-all ${cls} ${onClick ? 'cursor-pointer hover:scale-[1.03]' : ''}`}
-        onClick={onClick}
+        className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium backdrop-blur-md transition-all ${cls}`}
+        title={title}
       >
         {children}
       </span>
@@ -720,36 +480,65 @@ const Pill = memo(
   },
 );
 // --- GlassCard V2 (Aesthetic Focus) ---
+type GlassCardProps = {
+  children: React.ReactNode;
+  accent?: string;
+  className?: string;
+  onClick?: () => void;
+};
+
 const GlassCard = memo(
   ({
     children,
     accent = 'from-violet-500/30 via-purple-500/20 to-cyan-500/30',
     className = '',
     onClick,
-  }: {
-    children: React.ReactNode;
-    accent?: string;
-    className?: string;
-    onClick?: () => void;
-  }) => (
-    // Outer glow for volumetric effect
-    <div
-      className={`group relative rounded-3xl p-[1.5px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.015] hover:shadow-2xl hover:shadow-cyan-400/20 ${onClick ? 'cursor-pointer' : ''} will-change-transform`}
-      onClick={onClick}
-    >
+  }: GlassCardProps) => {
+    const content = (
+      <>
+        <div
+          className={`relative rounded-card bg-slate-900/85 backdrop-blur-2xl ring-1 ring-white/10 min-w-0 min-h-0 overflow-hidden ${className}`}
+        >
+          {/* Inner Volumetric Glow */}
+          <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-[radial-gradient(500px_400px_at_50%_0%,rgba(255,255,255,.2),transparent_70%)]" />
+
+          {/* Shimmer/Light Streak - Optimized for performance with opacity/transition */}
+          <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.15),transparent)] bg-size-[200%_100%] animate-shimmer" />
+
+          <div className="relative">{children}</div>
+        </div>
+      </>
+    );
+
+    const baseClasses = `group relative rounded-3xl p-[1.5px] bg-linear-to-br ${accent} transition-all duration-500 hover:scale-[1.015] hover:shadow-2xl hover:shadow-cyan-400/20 will-change-transform`;
+
+    // Always render a non-button root to avoid nested <button> issues.
+    // If clickable, expose role/button semantics and keyboard handlers.
+    const isClickable = typeof onClick === 'function';
+
+    const clickableProps: any = isClickable
+      ? {
+          role: 'button',
+          tabIndex: 0,
+          onClick: () => onClick && onClick(),
+          onKeyDown: (e: React.KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onClick && onClick();
+            }
+          },
+        }
+      : {};
+
+    return (
       <div
-        className={`relative rounded-3xl bg-slate-900/85 backdrop-blur-2xl ring-1 ring-white/10 min-w-0 min-h-0 overflow-hidden ${className}`}
+        {...clickableProps}
+        className={`w-full ${isClickable ? 'cursor-pointer focus-ring-theme outline-none' : ''} ${baseClasses}`}
       >
-        {/* Inner Volumetric Glow */}
-        <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-[radial-gradient(500px_400px_at_50%_0%,rgba(255,255,255,.2),transparent_70%)]" />
-
-        {/* Shimmer/Light Streak - Optimized for performance with opacity/transition */}
-        <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.15),transparent)] bg-[length:200%_100%] animate-shimmer" />
-
-        <div className="relative">{children}</div>
+        {content}
       </div>
-    </div>
-  ),
+    );
+  },
 );
 // --- Tilt/Hover Effect (Performance Focus) ---
 const Tilt = memo(({ children }: { children: React.ReactNode }) => {
@@ -796,7 +585,6 @@ const ClientOnlyText: React.FC<{ children: React.ReactNode }> = ({
 /* =================================================================
    2. MAIN DASHBOARD LOGIC (Computer Engineering focus)
    ================================================================= */
-// eslint-disable-next-line sonarjs/cognitive-complexity
 export default function Dashboard() {
   const { token, logout, user } = useAuth();
   const enableThree =
@@ -810,11 +598,15 @@ export default function Dashboard() {
   const [show3D, setShow3D] = useState(enableThree);
   const [fullscreen, setFullscreen] = useState<Fullscreen>(null);
   const [theme, setTheme] = useState<Theme>('dark');
-  const [autoRefresh, _setAutoRefresh] = useState(true);
+  const {
+    autoRefresh,
+    setAutoRefresh: _setAutoRefresh,
+    refreshSpeed,
+    setRefreshSpeed,
+    paused: tabPaused,
+  } = useRefreshSettings();
   const [_lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [refreshSpeed, setRefreshSpeed] =
-    useState<keyof typeof REFRESH_INTERVALS>('normal');
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [showAlerts, setShowAlerts] = useState(false);
   const [dataPrecision, setDataPrecision] = useState<'low' | 'medium' | 'high'>(
@@ -824,6 +616,14 @@ export default function Dashboard() {
   const [paused, setPaused] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [mapEngine, setMapEngine] = useState<'tomtom' | 'leaflet'>('tomtom');
+  const { mapEngine: flaggedEngine, threeHeroEnabled } = useFlags();
+
+  // Apply feature flag kill-switches
+  useEffect(() => {
+    setMapEngine(flaggedEngine);
+  }, [flaggedEngine]);
+  const show3DEffective = show3D && threeHeroEnabled;
+  const [showHelp, setShowHelp] = useState(false);
 
   // Hydrate persisted UI preferences on first mount
   useEffect(() => {
@@ -877,10 +677,40 @@ export default function Dashboard() {
     } catch {}
   }, [showGrid]);
 
+  // Keyboard shortcuts: '?' opens help, 'g' toggles grid
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      // Ignore when typing in inputs/textareas
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      if (
+        tag === 'input' ||
+        tag === 'textarea' ||
+        (e.target as HTMLElement)?.isContentEditable
+      )
+        return;
+      if (e.key === '?') {
+        e.preventDefault();
+        setShowHelp((v) => !v);
+      }
+      if (e.key.toLowerCase() === 'g') {
+        e.preventDefault();
+        setShowGrid((v) => !v);
+      }
+      if (e.key === 'Escape') {
+        setShowHelp(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   // Hooks Integration
-  const { trucks, lastDataTimestamp } = useRealtimeTrucks(
-    REFRESH_INTERVALS[refreshSpeed] / simulationSpeed,
-  );
+  const pollMs = useMemo(() => {
+    if (!autoRefresh || tabPaused) return 0;
+    return REFRESH_INTERVALS[refreshSpeed] / simulationSpeed;
+  }, [autoRefresh, tabPaused, refreshSpeed, simulationSpeed]);
+
+  const { trucks, lastDataTimestamp } = useRealtimeTrucks(pollMs);
   // Normalize trucks from API/telemetry shape into UiTruck used by UI components
   const uiTrucks = useMemo<UiTruck[]>(() => {
     const src = Array.isArray(trucks) ? trucks : [];
@@ -924,6 +754,17 @@ export default function Dashboard() {
           true,
       );
   }, [trucks]);
+  // Runtime validation of telemetry state using Zod
+  const telemetry = useMemo(() => {
+    return safeParseTelemetryState({
+      activeStreams: uiTrucks.length,
+      lastIngestedAt: lastDataTimestamp ?? null,
+    });
+  }, [uiTrucks.length, lastDataTimestamp]);
+  const isStale = useMemo(() => {
+    if (!telemetry?.lastIngestedAt) return true;
+    return Date.now() - telemetry.lastIngestedAt > STALE_THRESHOLD_MS;
+  }, [telemetry?.lastIngestedAt]);
   const { online: healthOnline } = useHealth();
   const { flags, toggleFlag } = useFeatureFlags({
     'advanced-map-layer': true,
@@ -953,7 +794,7 @@ export default function Dashboard() {
 
   // Timer for alerts/updates (with dynamic interval)
   useEffect(() => {
-    if (!autoRefresh || paused) return;
+    if (!autoRefresh || paused || tabPaused) return;
 
     const intervalDuration = REFRESH_INTERVALS[refreshSpeed] / simulationSpeed;
 
@@ -987,7 +828,7 @@ export default function Dashboard() {
     }, intervalDuration);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshSpeed, simulationSpeed, paused]);
+  }, [autoRefresh, refreshSpeed, simulationSpeed, paused, tabPaused]);
 
   // Keyboard Shortcuts (Automation)
   useEffect(() => {
@@ -1177,10 +1018,10 @@ export default function Dashboard() {
       );
     }
     return [
-      { name: '= -10°C (Deep Freeze)', value: 12, color: '#38bdf8' },
-      { name: '-10 ~ -5°C (Standard)', value: 18, color: '#34d399' },
-      { name: '-5 ~ 2°C (Chilled)', value: 24, color: '#a78bfa' },
-      { name: '> 2°C (Risk Zone)', value: 6, color: '#fb7185' },
+      { name: '= -10°C (Deep Freeze)', value: 0, color: '#38bdf8' },
+      { name: '-10 ~ -5°C (Standard)', value: 0, color: '#34d399' },
+      { name: '-5 ~ 2°C (Chilled)', value: 0, color: '#a78bfa' },
+      { name: '> 2°C (Risk Zone)', value: 0, color: '#fb7185' },
     ];
   }, [stats]);
 
@@ -1248,7 +1089,7 @@ export default function Dashboard() {
       {
         name: 'GPS Telemetry',
         status: gpsStatus && !isHighLatency,
-        latency: isHighLatency ? 'High' : '156ms',
+        latency: !gpsStatus || isStale ? '—' : isHighLatency ? 'High' : '156ms',
         uptime: '98.76%',
       },
       {
@@ -1258,7 +1099,7 @@ export default function Dashboard() {
         uptime: '99.87%',
       },
     ];
-  }, [healthOnline, uiTrucks.length, lastDataTimestamp]);
+  }, [healthOnline, uiTrucks.length, lastDataTimestamp, isStale]);
 
   // Computed Metrics (Anomaly Index)
   const computedMetrics = useMemo(() => {
@@ -1302,11 +1143,16 @@ export default function Dashboard() {
       }));
     }
 
+    const onTimePct =
+      typeof s?.onTimeRatePct === 'number' ? s.onTimeRatePct : undefined;
+    const sufficientSamples = dataPoints >= 24; // guard to avoid over-claiming with tiny samples
+    const industryLeading = !!onTimePct && onTimePct >= 97 && sufficientSamples;
+
     return [
       {
         title: 'Active Trucks',
         value: (s?.activeTrucks ?? uiTrucks.length).toString(),
-        change: '+6.1%',
+        change: '+0.0%',
         trend: 'up' as Trend,
         icon: Truck,
         accent: 'from-cyan-400 via-blue-400 to-indigo-500',
@@ -1319,8 +1165,8 @@ export default function Dashboard() {
         value:
           s?.avgCargoTempC !== undefined
             ? `${s.avgCargoTempC.toFixed(1)}°C`
-            : '-4.2°C',
-        change: '+0.3°C',
+            : '0.0°C',
+        change: '+0.0°C',
         trend: 'up' as Trend,
         icon: ThermometerSun,
         accent: 'from-fuchsia-400 via-violet-400 to-purple-500',
@@ -1361,21 +1207,27 @@ export default function Dashboard() {
       {
         title: 'Anomaly Index',
         value:
-          s?.anomalyIndex !== undefined
-            ? s.anomalyIndex.toFixed(1)
-            : computedMetrics.anomalyIndex.toFixed(1),
+          isStale || uiTrucks.length === 0
+            ? 'N/A'
+            : s?.anomalyIndex !== undefined
+              ? s.anomalyIndex.toFixed(1)
+              : computedMetrics.anomalyIndex.toFixed(1),
         change:
-          computedMetrics.anomalyIndex > 20
-            ? '+Critical'
-            : computedMetrics.anomalyIndex > 10
-              ? '+Warning'
-              : '-Stable',
+          isStale || uiTrucks.length === 0
+            ? '-N/A'
+            : computedMetrics.anomalyIndex > 20
+              ? '+Critical'
+              : computedMetrics.anomalyIndex > 10
+                ? '+Warning'
+                : '-Stable',
         trend:
-          computedMetrics.anomalyIndex > 20
-            ? 'up'
-            : computedMetrics.anomalyIndex > 10
-              ? 'stable'
-              : 'down',
+          isStale || uiTrucks.length === 0
+            ? 'stable'
+            : computedMetrics.anomalyIndex > 20
+              ? 'up'
+              : computedMetrics.anomalyIndex > 10
+                ? 'stable'
+                : 'down',
         icon: Zap,
         accent:
           computedMetrics.anomalyIndex > 20
@@ -1398,9 +1250,12 @@ export default function Dashboard() {
           0,
           computedMetrics.anomalyIndex / 10,
         ], // Simulated index sparkline
-        detail: flags['anomaly-index']
-          ? 'Predictive Anomaly Score (AI)'
-          : 'Disabled (Feature Flag)',
+        detail:
+          isStale || uiTrucks.length === 0
+            ? 'Stale or no telemetry'
+            : flags['anomaly-index']
+              ? 'Predictive Anomaly Score (AI)'
+              : 'Disabled (Feature Flag)',
         color: computedMetrics.anomalyIndex > 20 ? '#ef4444' : '#10b981',
       },
       {
@@ -1408,8 +1263,8 @@ export default function Dashboard() {
         value:
           s?.onTimeRatePct !== undefined
             ? `${s.onTimeRatePct.toFixed(1)}%`
-            : '96.8%',
-        change: '+1.4%',
+            : '0.0%',
+        change: '+0.0%',
         trend: 'up' as Trend,
         icon: Activity,
         accent: 'from-emerald-400 via-teal-400 to-green-500',
@@ -1417,7 +1272,7 @@ export default function Dashboard() {
           94, 94.5, 95, 95.2, 95.5, 95.8, 96, 96.2, 96.4, 96.5, 96.6, 96.7,
           96.7, 96.8, 96.8,
         ],
-        detail: 'Industry leading',
+        detail: industryLeading ? 'Industry leading' : '',
         color: '#34d399',
       },
       {
@@ -1425,8 +1280,8 @@ export default function Dashboard() {
         value:
           s?.fuelEfficiencyKmPerL !== undefined
             ? `${s.fuelEfficiencyKmPerL.toFixed(2)} km/L`
-            : '8.2 MPG',
-        change: '+0.4',
+            : '0.0 MPG',
+        change: '+0.0',
         trend: 'up' as Trend,
         icon: Fuel,
         accent: 'from-lime-400 via-green-400 to-emerald-500',
@@ -1439,8 +1294,8 @@ export default function Dashboard() {
       },
       {
         title: 'Active Drivers',
-        value: '48',
-        change: '+3',
+        value: '0',
+        change: '+0',
         trend: 'up' as Trend,
         icon: Users,
         accent: 'from-pink-400 via-rose-400 to-red-500',
@@ -1450,8 +1305,8 @@ export default function Dashboard() {
       },
       {
         title: 'Deliveries Completed',
-        value: (s?.deliveriesCompleted ?? 234).toString(),
-        change: '+18',
+        value: (s?.deliveriesCompleted ?? 0).toString(),
+        change: '+0',
         trend: 'up' as Trend,
         icon: Package,
         accent: 'from-indigo-400 via-purple-400 to-pink-500',
@@ -1459,7 +1314,7 @@ export default function Dashboard() {
           180, 185, 190, 195, 200, 205, 210, 215, 220, 222, 225, 228, 230, 232,
           234,
         ],
-        detail: '96% success rate',
+        detail: '0% success rate',
         color: '#c084fc',
       },
     ];
@@ -1471,6 +1326,8 @@ export default function Dashboard() {
     flags,
     refreshSpeed,
     stats,
+    dataPoints,
+    isStale,
   ]);
 
   // Removed unused downloadReport to reduce lint noise and hook deps churn
@@ -1488,8 +1345,7 @@ export default function Dashboard() {
       <div className="relative min-h-screen overflow-x-hidden text-white selection:bg-violet-500/30 selection:text-white">
         {/* Base Background: Theme Gradient */}
         <div
-          className="pointer-events-none fixed inset-0 -z-20 transition-all duration-1000"
-          style={{ background: THEME_COLORS[theme].gradient }}
+          className={`pointer-events-none fixed inset-0 -z-20 transition-all duration-1000 theme-gradient-${theme}`}
         />
 
         {/* Aesthetic Noise Layer (using globals.css utility) */}
@@ -1510,7 +1366,7 @@ export default function Dashboard() {
 
         {/* Developer Mode Overlay (Automation/Professionalism) */}
         {flags['developer-mode'] && (
-          <div className="fixed top-2 left-2 z-[100] p-3 rounded-lg bg-black/70 backdrop-blur-sm ring-1 ring-amber-400/50 text-amber-300 text-xs font-mono shadow-glow">
+          <div className="fixed top-2 left-2 z-100 p-3 rounded-lg bg-black/70 backdrop-blur-sm ring-1 ring-amber-400/50 text-amber-300 text-xs font-mono shadow-glow">
             <Code className="inline-block h-3 w-3 mr-1" /> DEVELOPER MODE
             (Ctrl+D)
             <p className="mt-1">
@@ -1530,15 +1386,15 @@ export default function Dashboard() {
             <div className="mx-auto flex max-w-[1800px] items-center justify-between gap-4 px-6 py-4 flex-wrap">
               <div className="flex items-center gap-4">
                 {/* Logo */}
-                <div className="grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-violet-500 via-purple-500 to-cyan-500 ring-2 ring-white/20 shadow-[0_8px_30px_-10px_rgba(139,92,246,.9)] animate-pulse-slow">
+                <div className="grid h-12 w-12 place-items-center rounded-xl bg-linear-to-br from-violet-500 via-purple-500 to-cyan-500 ring-2 ring-white/20 shadow-[0_8px_30px_-10px_rgba(139,92,246,.9)] animate-pulse-slow">
                   <Truck className="h-5 w-5 vfx-glow" />
                 </div>
                 {/* Title */}
                 <div>
                   <p className="text-xs uppercase tracking-[.4em] text-slate-200">
-                    APOLLO COLD CHAIN PLATFORM
+                    ICE TRUCK TRACKING PLATFORM
                   </p>
-                  <h1 className="bg-gradient-to-r from-white via-violet-200 to-cyan-200 bg-clip-text text-xl font-bold text-transparent bg-[length:200%_auto] animate-gradient">
+                  <h1 className="bg-linear-to-r from-white via-violet-200 to-cyan-200 bg-clip-text text-xl font-bold text-transparent bg-size-[200%_auto] animate-gradient">
                     Telemetry & Predictive Analytics
                   </h1>
                 </div>
@@ -1562,23 +1418,35 @@ export default function Dashboard() {
 
                 {/* Utility Buttons */}
                 <button
+                  type="button"
                   onClick={() => setShowGrid((v) => !v)}
                   className={`rounded-xl p-2.5 ring-1 ring-white/15 backdrop-blur-xl transition-all ${showGrid ? 'bg-violet-500/30 text-violet-200 shadow-glow' : 'bg-white/10 hover:bg-white/15'}`}
+                  aria-pressed={showGrid}
+                  aria-label={`${showGrid ? 'Hide' : 'Show'} grid`}
                   title={`${showGrid ? 'Hide' : 'Show'} grid (Ctrl+G)`}
+                  data-testid="toggle-grid-button"
                 >
                   <Grid3X3 className="h-4 w-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => setShow3D((v) => !v)}
                   className={`rounded-xl p-2.5 ring-1 ring-white/15 backdrop-blur-xl transition-all ${show3D ? 'bg-cyan-500/30 text-cyan-200 shadow-glow' : 'bg-white/10 hover:bg-white/15'}`}
+                  aria-pressed={show3D}
+                  aria-label={`${show3D ? 'Disable' : 'Enable'} 3D`}
                   title={`${show3D ? 'Disable' : 'Enable'} 3D`}
+                  data-testid="toggle-3d-button"
                 >
                   <Layers className="h-4 w-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => setPaused((v) => !v)}
                   className={`rounded-xl p-2.5 ring-1 ring-white/15 backdrop-blur-xl transition-all ${paused ? 'bg-amber-500/30 text-amber-200 shadow-glow' : 'bg-white/10 hover:bg-white/15'}`}
+                  aria-pressed={paused}
+                  aria-label={paused ? 'Resume simulation' : 'Pause simulation'}
                   title={`${paused ? 'Resume' : 'Pause'} simulation (Ctrl+P)`}
+                  data-testid="pause-simulation-button"
                 >
                   {paused ? (
                     <Play className="h-4 w-4" />
@@ -1590,6 +1458,7 @@ export default function Dashboard() {
                   onClick={() => setShowAlerts((v) => !v)}
                   className={`relative rounded-xl p-2.5 ring-1 ring-white/15 backdrop-blur-xl transition-all ${showAlerts ? 'bg-rose-500/30 text-rose-200 shadow-glow' : 'bg-white/10 hover:bg-white/15'}`}
                   title="View alerts"
+                  data-testid="view-alerts-button"
                 >
                   <Bell className="h-4 w-4" />
                   {alerts.filter((a) => !a.acknowledged).length > 0 && (
@@ -1624,35 +1493,52 @@ export default function Dashboard() {
                   </span>
                 </Pill>
 
-                {/* Time Range Selector (Cleaned up) */}
-                <div className="flex rounded-xl p-1 ring-1 ring-white/15 bg-white/10 backdrop-blur-xl">
+                {/* Time Range Selector (Tab semantics) */}
+                <div
+                  className="flex rounded-xl p-1 ring-1 ring-white/15 bg-white/10 backdrop-blur-xl"
+                  role="tablist"
+                  aria-label="Time range selection"
+                >
                   {(['1h', '24h', '7d'] as Range[]).map((r) => (
                     <button
                       key={r}
+                      type="button"
+                      role="tab"
                       onClick={() => setTimeRange(r)}
+                      aria-selected={timeRange === r}
                       className={`relative rounded-lg px-3 py-1.5 text-sm font-semibold transition-all ${
                         timeRange === r
-                          ? 'bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg'
+                          ? 'bg-linear-to-r from-violet-500 to-cyan-500 text-white shadow-lg'
                           : 'text-slate-200 hover:bg-white/10'
                       }`}
+                      data-testid={`time-range-${r}-button`}
                     >
                       <span className="relative z-10">{r}</span>
                     </button>
                   ))}
                 </div>
 
-                {/* Theme Selector (Cleaned up) */}
-                <div className="flex rounded-xl p-1 ring-1 ring-white/15 bg-white/10 backdrop-blur-xl">
+                {/* Theme Selector (Tab semantics) */}
+                <div
+                  className="flex rounded-xl p-1 ring-1 ring-white/15 bg-white/10 backdrop-blur-xl"
+                  role="tablist"
+                  aria-label="Theme selection"
+                >
                   {(['dark', 'neon', 'ocean', 'forest'] as Theme[]).map((t) => (
                     <button
                       key={t}
+                      type="button"
+                      role="tab"
                       onClick={() => setTheme(t)}
+                      aria-selected={theme === t}
+                      aria-label={`${t} theme`}
                       className={`rounded-lg px-2 py-1 text-xs font-semibold uppercase tracking-wider transition-all ${
                         theme === t
                           ? 'bg-white/20 text-white'
                           : 'text-slate-300 hover:bg-white/10'
                       }`}
                       title={`${t} theme`}
+                      data-testid={`theme-${t}-button`}
                     >
                       {t[0]}
                     </button>
@@ -1810,7 +1696,6 @@ export default function Dashboard() {
                       className="rounded-lg bg-white/5 px-3 py-1 ring-1 ring-white/10 outline-none text-white cursor-pointer"
                     >
                       <option value="tomtom">TomTom (Performance)</option>
-                      <option value="leaflet">Leaflet (Lightweight)</option>
                     </select>
                   </div>
                 </div>
@@ -1859,9 +1744,8 @@ export default function Dashboard() {
                 </Pill>
               )}
               {autoRefresh && (
-                <Pill intent="info">
+                <Pill intent="info" title="Auto-refresh active">
                   <RefreshCw className="h-4 w-4 animate-spin-slow" />
-                  Auto-refresh active
                 </Pill>
               )}
             </div>
@@ -1879,20 +1763,24 @@ export default function Dashboard() {
           </div>
 
           {/* Section 1: Key Metrics (Enhanced Grid) */}
-          <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
             {metrics.map((m, i) => {
               const Icon = m.icon;
               return (
                 <Tilt key={i}>
                   <GlassCard accent={m.accent}>
-                    <div className="rounded-3xl p-6 min-w-0">
+                    <div className="rounded-card p-6 min-w-0">
                       <div className="mb-4 flex items-start justify-between">
                         <div
-                          className={`grid h-14 w-14 place-items-center rounded-xl bg-gradient-to-br ${m.accent} ring-1 ring-white/30 shadow-[0_8px_20px_-8px] shadow-current`}
+                          className={`grid h-14 w-14 place-items-center rounded-xl bg-linear-to-br ${m.accent} ring-1 ring-white/30 shadow-[0_8px_20px_-8px] shadow-current`}
                         >
                           <Icon
                             className="h-6 w-6 vfx-glow"
-                            style={{ color: m.color }}
+                            style={
+                              {
+                                ['--icon-color' as any]: m.color,
+                              } as React.CSSProperties
+                            }
                           />
                         </div>
                         <Pill
@@ -1922,7 +1810,7 @@ export default function Dashboard() {
                       </p>
                       <p className="text-xs text-slate-500/80">{m.detail}</p>
 
-                      <div className="min-w-0">
+                      <div className="min-w-0 h-12">
                         <ClientOnly fallback={null}>
                           <SparklineChart
                             data={m.spark as number[]}
@@ -1938,9 +1826,9 @@ export default function Dashboard() {
           </section>
 
           {/* Section 2: Charts */}
-          <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <GlassCard onClick={() => setFullscreen('revenue')}>
-              <div className="rounded-3xl p-6">
+          <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <GlassCard>
+              <div className="rounded-card p-lg">
                 <div className="mb-6 flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold flex items-center gap-2">
@@ -1956,9 +1844,12 @@ export default function Dashboard() {
                     </p>
                   </div>
                   <button
-                    className="rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/15 transition-all"
+                    className="rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/15 transition-all focus-ring-theme"
                     title="Fullscreen"
-                    suppressHydrationWarning
+                    aria-label="Open revenue chart fullscreen"
+                    data-testid="fullscreen-revenue-button"
+                    type="button"
+                    onClick={() => setFullscreen('revenue')}
                   >
                     <Maximize2 className="h-4 w-4" />
                   </button>
@@ -1971,11 +1862,8 @@ export default function Dashboard() {
               </div>
             </GlassCard>
 
-            <GlassCard
-              accent="from-cyan-400/30 via-sky-400/20 to-indigo-400/30"
-              onClick={() => setFullscreen('fleet')}
-            >
-              <div className="rounded-3xl p-6">
+            <GlassCard accent="from-cyan-400/30 via-sky-400/20 to-indigo-400/30">
+              <div className="rounded-card p-lg">
                 <div className="mb-6 flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold flex items-center gap-2">
@@ -1987,9 +1875,12 @@ export default function Dashboard() {
                     </p>
                   </div>
                   <button
-                    className="rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/15 transition-all"
+                    className="rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/15 transition-all focus-ring-theme"
                     title="Fullscreen"
-                    suppressHydrationWarning
+                    aria-label="Open fleet chart fullscreen"
+                    data-testid="fullscreen-fleet-button"
+                    type="button"
+                    onClick={() => setFullscreen('fleet')}
                   >
                     <Maximize2 className="h-4 w-4" />
                   </button>
@@ -2004,12 +1895,12 @@ export default function Dashboard() {
           </section>
 
           {/* Section 3: Detailed Insights */}
-          <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <GlassCard
               accent="from-fuchsia-400/30 via-violet-400/20 to-cyan-400/30"
               onClick={() => setFullscreen('temp')}
             >
-              <div className="rounded-3xl p-6">
+              <div className="rounded-card p-lg">
                 <h3 className="mb-6 text-lg font-bold flex items-center gap-2">
                   <ThermometerSun className="h-5 w-5 text-fuchsia-400" />
                   Cargo Temperature Distribution
@@ -2032,7 +1923,11 @@ export default function Dashboard() {
                       <span className="flex items-center gap-3">
                         <span
                           className="h-3 w-3 rounded-full ring-2 ring-white/40 transition-all"
-                          style={{ background: b.color }}
+                          style={
+                            {
+                              '--indicator-color': b.color,
+                            } as React.CSSProperties
+                          }
                         />
                         <span className="text-sm text-slate-300 font-medium">
                           {b.name}
@@ -2051,7 +1946,7 @@ export default function Dashboard() {
               accent="from-rose-400/30 via-orange-400/20 to-amber-400/30"
               onClick={() => setFullscreen('alerts')}
             >
-              <div className="rounded-3xl p-6">
+              <div className="rounded-card p-lg">
                 <h3 className="mb-6 text-lg font-bold flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-rose-400" />
                   Alert Timeline
@@ -2090,7 +1985,7 @@ export default function Dashboard() {
               accent="from-emerald-400/30 via-teal-400/20 to-green-400/30"
               onClick={() => setFullscreen('performance')}
             >
-              <div className="rounded-3xl p-6">
+              <div className="rounded-card p-lg">
                 <h3 className="mb-6 text-lg font-bold flex items-center gap-2">
                   <Zap className="h-5 w-5 text-emerald-400" />
                   Fleet Performance Radar
@@ -2115,9 +2010,9 @@ export default function Dashboard() {
           </section>
 
           {/* Section 4: System Health & Map */}
-          <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <GlassCard>
-              <div className="rounded-3xl p-6">
+              <div className="rounded-card p-lg">
                 <h3 className="mb-6 text-lg font-bold flex items-center gap-2">
                   <Settings className="h-5 w-5 text-violet-400" />
                   System Health Monitor (Tier 1 Services)
@@ -2155,7 +2050,7 @@ export default function Dashboard() {
             </GlassCard>
 
             <GlassCard accent="from-indigo-400/30 via-blue-400/20 to-cyan-400/30">
-              <div className="rounded-3xl p-6">
+              <div className="rounded-card p-lg">
                 <h3 className="mb-6 text-lg font-bold flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-indigo-400" />
                   Live Fleet Map (Sub-Second Telemetry)
@@ -2226,10 +2121,9 @@ export default function Dashboard() {
                       </ul>
 
                       <button
-                        suppressHydrationWarning
                         type="button"
                         aria-label="Open full map view"
-                        className="mt-4 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 font-semibold shadow-lg transition-all"
+                        className="mt-4 px-6 py-3 rounded-xl bg-linear-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 font-semibold shadow-lg transition-all"
                       >
                         Open Full Map View (L3 Data)
                       </button>
@@ -2241,7 +2135,7 @@ export default function Dashboard() {
           </section>
           {/* 3D Hero (lazy-loaded, client-only) */}
           <section className="p-4">
-            {show3D && (
+            {show3DEffective && (
               <ClientOnly>
                 <Fleet3DCanvas />
               </ClientOnly>
@@ -2267,11 +2161,11 @@ export default function Dashboard() {
               <span>•</span>
               <span>
                 Version:{' '}
-                <span className="font-mono text-slate-200">v2.1.0</span>
+                <span className="font-mono text-slate-200">v2.0.0</span>
               </span>
               <span>•</span>
               <span>
-                Build: <span className="font-mono text-slate-200">#4523</span>
+                Build: <span className="font-mono text-slate-200">#2502</span>
               </span>
               <span>•</span>
               <span>
@@ -2280,8 +2174,8 @@ export default function Dashboard() {
               </span>
             </div>
             <p className="text-xs text-slate-300">
-              © 2024 Apollo Telematics Corp. • Advanced Cold Chain Monitoring •
-              All Rights Reserved
+              © 2025 Ice Truck Tracking • Advanced Cold Chain Monitoring • All
+              Rights Reserved
             </p>
             <p className="text-xs text-slate-300">
               Keyboard Shortcuts: Ctrl+G (Grid) • Ctrl+P (Pause) • Ctrl+D (Dev
@@ -2290,12 +2184,63 @@ export default function Dashboard() {
           </div>
         </main>
 
+        {/* Keyboard Shortcuts Overlay */}
+        {showHelp && (
+          <div
+            className="fixed inset-0 z-120 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="keyboard-shortcuts-heading"
+          >
+            <div className="w-full max-w-lg rounded-2xl bg-surface-1 ring-1 ring-white/10 shadow-2xl">
+              <div className="flex items-center justify-between p-4 border-b border-white/10">
+                <h3
+                  id="keyboard-shortcuts-heading"
+                  className="text-lg font-bold"
+                >
+                  Keyboard Shortcuts
+                </h3>
+                <button
+                  onClick={() => setShowHelp(false)}
+                  className="rounded-lg p-2 ring-1 ring-white/10 hover:bg-white/10 focus-ring-theme"
+                  aria-label="Close shortcuts"
+                  data-testid="close-shortcuts-button"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="p-4 text-sm">
+                <ul className="space-y-2">
+                  <li className="flex items-center justify-between">
+                    <span className="text-slate-300">Toggle grid layout</span>
+                    <span className="font-mono text-slate-200">G</span>
+                  </li>
+                  <li className="flex items-center justify-between">
+                    <span className="text-slate-300">Open shortcuts help</span>
+                    <span className="font-mono text-slate-200">?</span>
+                  </li>
+                  <li className="flex items-center justify-between">
+                    <span className="text-slate-300">Close dialog</span>
+                    <span className="font-mono text-slate-200">Esc</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Alert Center and Fullscreen Modals (Left largely intact as requested) */}
         {showAlerts && (
-          <div className="fixed right-0 top-0 bottom-0 w-96 bg-slate-900/95 backdrop-blur-2xl ring-1 ring-white/10 shadow-2xl z-[60] animate-slideInRight overflow-hidden flex flex-col">
+          <section
+            aria-labelledby="alert-center-heading"
+            className="fixed right-0 top-0 bottom-0 w-96 bg-slate-900/95 backdrop-blur-2xl ring-1 ring-white/10 shadow-2xl z-60 animate-slideInRight overflow-hidden flex flex-col"
+          >
             <div className="p-6 border-b border-white/10">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold flex items-center gap-2">
+                <h3
+                  id="alert-center-heading"
+                  className="text-xl font-bold flex items-center gap-2"
+                >
                   <Bell className="h-5 w-5 text-rose-400" />
                   Alert Center
                 </h3>
@@ -2303,6 +2248,7 @@ export default function Dashboard() {
                   onClick={() => setShowAlerts(false)}
                   className="rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/10 transition-all"
                   aria-label="Close alert panel"
+                  data-testid="close-alerts-button"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -2313,7 +2259,9 @@ export default function Dashboard() {
                 </Pill>
                 <button
                   onClick={clearAllAlerts}
+                  aria-label="Clear all alerts"
                   className="text-xs text-cyan-400 hover:text-cyan-300 transition-all"
+                  data-testid="clear-all-alerts-button"
                 >
                   Clear All
                 </button>
@@ -2369,7 +2317,9 @@ export default function Dashboard() {
                       {!alert.acknowledged && (
                         <button
                           onClick={() => acknowledgeAlert(alert.id)}
+                          aria-label="Acknowledge alert"
                           className="rounded-lg px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold transition-all"
+                          data-testid={`acknowledge-alert-${alert.id}`}
                         >
                           Ack
                         </button>
@@ -2379,14 +2329,22 @@ export default function Dashboard() {
                 ))
               )}
             </div>
-          </div>
+          </section>
         )}
 
         {fullscreen && (
-          <div className="fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-2xl animate-fadeIn">
+          <div
+            className="fixed inset-0 z-100 bg-slate-950/90 backdrop-blur-2xl animate-fadeIn"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="fullscreen-heading"
+          >
             <div className="absolute inset-4 lg:inset-10 rounded-3xl ring-1 ring-white/20 bg-slate-900/80 backdrop-blur-xl p-4 lg:p-8 shadow-2xl">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-xl lg:text-2xl font-bold">
+                <h3
+                  id="fullscreen-heading"
+                  className="text-xl lg:text-2xl font-bold"
+                >
                   {fullscreen === 'revenue' && 'Revenue Trend Analysis'}
                   {fullscreen === 'fleet' && 'Fleet Activity & Efficiency'}
                   {fullscreen === 'temp' && 'Cargo Temperature Distribution'}
@@ -2397,7 +2355,9 @@ export default function Dashboard() {
                   <button
                     onClick={() => setFullscreen(null)}
                     className="rounded-xl p-2 ring-1 ring-white/20 hover:bg-white/10 transition-all"
+                    aria-label="Minimize fullscreen"
                     title="Minimize"
+                    data-testid="minimize-fullscreen-button"
                   >
                     <Minimize2 className="h-5 w-5" />
                   </button>
@@ -2405,6 +2365,7 @@ export default function Dashboard() {
                     onClick={() => setFullscreen(null)}
                     className="rounded-xl p-3 ring-1 ring-white/20 hover:bg-white/10 transition-all"
                     aria-label="Close fullscreen"
+                    data-testid="close-fullscreen-button"
                   >
                     <X className="h-6 w-6" />
                   </button>

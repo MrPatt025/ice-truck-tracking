@@ -141,13 +141,7 @@ export default function Fleet3DCanvas(): JSX.Element | null {
         role="status"
         aria-live="polite"
       >
-        <div
-          className="absolute inset-0 opacity-40"
-          style={{
-            background:
-              'radial-gradient(800px 400px at 10% -10%, rgba(56,189,248,.35), transparent 55%), radial-gradient(800px 400px at 100% 10%, rgba(99,102,241,.3), transparent 55%)',
-          }}
-        />
+        <div className="absolute inset-0 opacity-40 hero-gradient-bg" />
         <div className="relative h-full w-full flex items-center justify-center">
           <div className="text-center space-y-2">
             <span className="block text-sm text-slate-400">

@@ -3,3 +3,7 @@ packages:
   - 'dashboard'
   - 'mobile-app'
   - 'sdk/*'
+
+# Relax peer dependency enforcement and auto-install peers to improve local DX
+strictPeerDependencies: false
+autoInstallPeers: true

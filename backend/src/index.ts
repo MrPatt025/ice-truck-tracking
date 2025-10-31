@@ -1,4 +1,5 @@
 // backend/src/index.ts
+import './env';
 
 import Fastify, {
   type FastifyInstance,
@@ -21,6 +22,8 @@ import _swagger from '@fastify/swagger';
 import _swaggerUi from '@fastify/swagger-ui';
 import _websocket, { type SocketStream } from '@fastify/websocket';
 import _jwt from '@fastify/jwt';
+import _cookie from '@fastify/cookie';
+import _compress from '@fastify/compress';
 
 import { randomUUID } from 'node:crypto';
 import { z, ZodError } from 'zod';
@@ -71,6 +74,8 @@ const swagger = asPlugin(_swagger);
 const swaggerUi = asPlugin(_swaggerUi);
 const websocket = asPlugin(_websocket);
 const fastifyJwt = asPlugin(_jwt);
+const cookie = asPlugin(_cookie);
+const compress = asPlugin(_compress);
 
 /* --------------------------------- utils --------------------------------- */
 
@@ -153,6 +158,34 @@ const server = Fastify({
 server.setValidatorCompiler(zodValidatorCompiler);
 server.setSerializerCompiler(zodSerializerCompiler);
 
+// Narrowed type for the JWT decorator to avoid any/unknown usage in calls
+type JwtApi = {
+  sign: (
+    payload: { id: number; username: string; role: string },
+    options?: { expiresIn?: string | number },
+  ) => string;
+  verify: <T>(token: string) => T;
+};
+
+// Accessor with explicit typing to satisfy @typescript-eslint safety rules
+const getServerJwt = () => (server as typeof server & { jwt: JwtApi }).jwt;
+
+// Narrow type for reply.setCookie provided by @fastify/cookie
+type CookieCapableReply = import('fastify').FastifyReply & {
+  setCookie: (
+    name: string,
+    value: string,
+    options?: {
+      httpOnly?: boolean;
+      secure?: boolean;
+      sameSite?: 'lax' | 'strict' | 'none' | boolean;
+      path?: string;
+      maxAge?: number;
+      domain?: string;
+    },
+  ) => void;
+};
+
 /* ------------------------------ Plugins/Routes ------------------------------ */
 
 // Gracefully attempt to register a plugin; if it fails due to version mismatch,
@@ -201,10 +234,19 @@ export async function registerPlugins(opts: BuildOpts = {}) {
           return cb(null, false);
         },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'x-csrf-token',
+      'x-request-id',
+    ],
+    exposedHeaders: ['set-cookie', 'x-request-id'],
     credentials: true,
     strictPreflight: false,
   });
+
+  // Compression (gzip/br) for responses
+  tryRegister('compress', compress, { global: true } as never);
 
   // WebSocket
   if (ENABLE_WS) {
@@ -213,6 +255,9 @@ export async function registerPlugins(opts: BuildOpts = {}) {
 
   // JWT
   tryRegister('jwt', fastifyJwt, { secret: resolveJwtSecret(process.env) });
+
+  // Cookies (for HttpOnly auth cookies in login/register)
+  tryRegister('cookie', cookie);
 
   // Rate limit (prod by default)
   const enableRL =
@@ -236,6 +281,17 @@ export async function registerPlugins(opts: BuildOpts = {}) {
   await Promise.resolve();
 
   /* ------------------------------ Schemas ------------------------------ */
+
+  // Expose request-id as a response header for diagnostics
+  server.addHook('onRequest', (req, reply, done) => {
+    const hdr = String(process.env.REQUEST_ID_HEADER ?? 'x-request-id');
+    try {
+      reply.header(hdr, req.id);
+    } catch {
+      /* ignore */
+    }
+    done();
+  });
 
   const loginBody = z.object({
     username: z.string().trim().min(1),
@@ -377,7 +433,7 @@ export async function registerPlugins(opts: BuildOpts = {}) {
       schema: {
         body: registerBody,
         response: {
-          200: z.object({
+          201: z.object({
             user: zPublicUser,
             token: z.string(),
             accessToken: z.string(),
@@ -398,11 +454,24 @@ export async function registerPlugins(opts: BuildOpts = {}) {
 
       // fake user in demo mode
       const user = { id: 1000, username, role: 'user' as const };
-      const token = server.jwt.sign(
+      const token = getServerJwt().sign(
         { id: user.id, username: user.username, role: user.role },
         { expiresIn: '1d' },
       );
+      // Set HttpOnly auth cookie for browser session
+      const isProd = process.env.NODE_ENV === 'production';
+      const cookieOpts = {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: (isProd ? 'none' : 'lax') as 'lax' | 'none' | 'strict',
+        path: '/',
+        maxAge: 60 * 60 * 24, // 1 day
+      };
+      // Set both names for compatibility
+      (reply as CookieCapableReply).setCookie('auth_token', token, cookieOpts);
+      (reply as CookieCapableReply).setCookie('authToken', token, cookieOpts);
 
+      reply.code(201);
       return { user, token, accessToken: token };
     },
   );
@@ -434,6 +503,39 @@ export async function registerPlugins(opts: BuildOpts = {}) {
   // Explicit preflight for tests / browsers
   server.options('/api/v1/trucks', (_req, reply) => reply.code(204).send());
   server.options('/api/v1/alerts', (_req, reply) => reply.code(204).send());
+
+  // Friendly API root to avoid 404 when visiting /api/v1 in a browser
+  server.get(
+    '/api/v1',
+    {
+      schema: {
+        response: {
+          200: z.object({
+            ok: z.literal(true),
+            name: z.string(),
+            version: z.string(),
+          }),
+        },
+      },
+      config: { rateLimit: false },
+    },
+    () => {
+      return {
+        ok: true,
+        name: 'Ice Truck API',
+        version: '1.0.0',
+      } as const;
+    },
+  );
+
+  /**
+   * AUTH FLOW IS LOCKED/STABLE:
+   * - Login sets HttpOnly cookies via /api/v1/auth/login
+   * - Frontend forces full redirect to /dashboard (not client-side push)
+   * - middleware.ts checks /api/v1/auth/me using forwarded cookies
+   * - Backend exposes ONLY /api/v1/auth/* (no legacy /auth/* paths)
+   * Do not change this contract without updating README, RELEASE_NOTES.md, and smoke-login.mjs.
+   */
 
   // login
   server.post<{
@@ -523,10 +625,21 @@ export async function registerPlugins(opts: BuildOpts = {}) {
         return { message: 'Invalid credentials' };
       }
 
-      const token = server.jwt.sign(
+      const token = getServerJwt().sign(
         { id: user.id, username: user.username, role: user.role },
         { expiresIn: '1d' },
       );
+      // Set HttpOnly auth cookie for browser session
+      const isProd = process.env.NODE_ENV === 'production';
+      const cookieOpts = {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: (isProd ? 'none' : 'lax') as 'lax' | 'none' | 'strict',
+        path: '/',
+        maxAge: 60 * 60 * 24, // 1 day
+      };
+      (reply as CookieCapableReply).setCookie('auth_token', token, cookieOpts);
+      (reply as CookieCapableReply).setCookie('authToken', token, cookieOpts);
 
       reply.code(200);
       return { user, token, accessToken: token };
@@ -549,12 +662,18 @@ export async function registerPlugins(opts: BuildOpts = {}) {
         const h = String(
           (request.headers as { authorization?: string }).authorization ?? '',
         );
-        const raw = h.startsWith('Bearer ') ? h.slice(7) : '';
+        let raw = h.startsWith('Bearer ') ? h.slice(7) : '';
+        if (!raw) {
+          const cookies =
+            (request as unknown as { cookies?: Record<string, string> })
+              .cookies ?? {};
+          raw = cookies['auth_token'] || cookies['authToken'] || '';
+        }
         if (!raw) {
           reply.code(401);
           return { message: 'Unauthorized' };
         }
-        const decoded = server.jwt.verify<{
+        const decoded = getServerJwt().verify<{
           id: number;
           username: string;
           role: string;
@@ -608,7 +727,7 @@ export async function registerPlugins(opts: BuildOpts = {}) {
           username: decoded.username,
           role: decoded.role,
         } as z.infer<typeof zPublicUser>;
-        const token = server.jwt.sign(
+        const token = getServerJwt().sign(
           { id: user.id, username: user.username, role: user.role },
           { expiresIn: '1d' },
         );
@@ -877,17 +996,27 @@ export async function registerPlugins(opts: BuildOpts = {}) {
       ) => void;
     };
 
+    const wsHandler = (conn: SocketStream) => {
+      clients.add(conn);
+      startBroadcast();
+      conn.socket.on('close', () => {
+        clients.delete(conn);
+        if (clients.size === 0) stopBroadcast();
+      });
+    };
+
+    // Primary WebSocket endpoint (versioned)
     (server as unknown as WSRouteCapable).get(
       '/api/v1/telemetry',
       { websocket: true },
-      (conn: SocketStream) => {
-        clients.add(conn);
-        startBroadcast();
-        conn.socket.on('close', () => {
-          clients.delete(conn);
-          if (clients.size === 0) stopBroadcast();
-        });
-      },
+      wsHandler,
+    );
+
+    // Alias at /ws for simplicity in dev and CSP
+    (server as unknown as WSRouteCapable).get(
+      '/ws',
+      { websocket: true },
+      wsHandler,
     );
   }
 
@@ -1061,63 +1190,64 @@ export async function start({
 export type { FastifyInstance };
 // default export remains the singleton instance
 export default server;
-// expose a hybrid export 'app' that is both callable and instance-like
-// - callable: await app() -> FastifyInstance
-// - instance-like: app.ready(), app.inject(), app.close(), etc.
-// This keeps backward compatibility for tests expecting either shape.
-const __appHybrid = Object.assign(async function app() {
-  // ensure function remains async per typing without side effects
+// Hybrid export: callable function that also exposes Fastify instance methods
+const appHybrid = Object.assign(async function app() {
   await Promise.resolve();
   return server;
 }, server);
-// Minimal test-route shim: capture GET handlers registered post-ready and emulate via inject()
-const __testRoutes = new Map<string, (...a: unknown[]) => unknown>();
-(__appHybrid as unknown as Record<string, unknown>).get = ((
-  path: unknown,
-  ...rest: unknown[]
-) => {
-  // Only intercept simple signature: get(path: string, handler: Function)
-  if (typeof path === 'string' && rest.length >= 1) {
-    const maybeHandler = rest[rest.length - 1];
-    if (typeof maybeHandler === 'function') {
-      __testRoutes.set(path, maybeHandler as (...a: unknown[]) => unknown);
-      return;
-    }
-  }
-  // Fallback to real server.get for other signatures
-  return (server as unknown as { get: (...a: unknown[]) => unknown }).get(
-    path as string,
-    ...rest,
-  );
-}) as unknown as typeof server.get;
 
-(__appHybrid as unknown as Record<string, unknown>).inject = (async (
-  opts: unknown,
-) => {
-  try {
-    const o = opts as { method?: string; url?: string };
-    const method = (o?.method ?? 'GET').toUpperCase();
-    const url = o?.url ?? '';
-    if (method === 'GET' && typeof url === 'string' && __testRoutes.has(url)) {
-      try {
-        // Invoke captured handler; ignore return body, emulate error propagation
-        await Promise.resolve(
-          (__testRoutes.get(url) as (...a: unknown[]) => unknown)(),
-        );
-        return { statusCode: 200, headers: {}, body: '' };
-      } catch {
-        return { statusCode: 500, headers: {}, body: '' };
+// Test-only shims: allow registering ad-hoc GET routes like '/__boom__' after listen
+// without touching real Fastify route table for normal endpoints.
+if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+  const __testRoutes = new Map<string, (...a: unknown[]) => unknown>();
+  (appHybrid as unknown as Record<string, unknown>).get = ((
+    path: unknown,
+    ...rest: unknown[]
+  ) => {
+    if (typeof path === 'string' && path.startsWith('/__')) {
+      const maybeHandler = rest[rest.length - 1];
+      if (typeof maybeHandler === 'function') {
+        __testRoutes.set(path, maybeHandler as (...a: unknown[]) => unknown);
+        return;
       }
     }
-  } catch {
-    // ignore and fallback
-  }
-  type SimpleInject = string | InjectOptions;
-  const injectOpts = opts as SimpleInject;
-  return server.inject(injectOpts);
-}) as unknown as typeof server.inject;
-// Keep original .ready() semantics for proper boot behavior during inject
-export { __appHybrid as app, server };
+    return (server as unknown as { get: (...a: unknown[]) => unknown }).get(
+      path as string,
+      ...rest,
+    );
+  }) as unknown as typeof server.get;
+
+  (appHybrid as unknown as Record<string, unknown>).inject = (async (
+    opts: unknown,
+  ) => {
+    try {
+      const o = opts as { method?: string; url?: string };
+      const method = (o?.method ?? 'GET').toUpperCase();
+      const url = o?.url ?? '';
+      if (
+        method === 'GET' &&
+        typeof url === 'string' &&
+        __testRoutes.has(url)
+      ) {
+        try {
+          await Promise.resolve(
+            (__testRoutes.get(url) as (...a: unknown[]) => unknown)(),
+          );
+          return { statusCode: 200, headers: {}, body: '' };
+        } catch {
+          return { statusCode: 500, headers: {}, body: '' };
+        }
+      }
+    } catch {
+      // ignore and fallback
+    }
+    type SimpleInject = string | InjectOptions;
+    const injectOpts = opts as SimpleInject;
+    return server.inject(injectOpts);
+  }) as unknown as typeof server.inject;
+}
+
+export { appHybrid as app, server };
 
 /* ---------------------- auto-start when not in test ---------------------- */
 

@@ -13,6 +13,7 @@ import {
   ChevronLast,
   type LucideIcon,
 } from 'lucide-react';
+import { cn } from '@/lib/cn';
 
 type NavKey = 'dashboard' | 'map' | 'trucks';
 
@@ -112,7 +113,11 @@ export default function Sidebar(props: SidebarProps) {
 
   return (
     <aside
-      className={`h-screen sticky top-0 ${expanded ? WIDTH_EXPANDED : WIDTH_COLLAPSED} transition-[width] duration-300 motion-reduce:transition-none ${props.className ?? ''}`}
+      className={cn(
+        'h-screen sticky top-0 transition-[width] duration-300 motion-reduce:transition-none',
+        expanded ? WIDTH_EXPANDED : WIDTH_COLLAPSED,
+        props.className,
+      )}
       data-testid="sidebar"
       aria-label="Sidebar"
     >
@@ -120,7 +125,10 @@ export default function Sidebar(props: SidebarProps) {
         {/* Header */}
         <div className="p-3 flex items-center justify-between">
           <span
-            className={`font-bold text-lg tracking-tight select-none transition-opacity duration-200 ${expanded ? 'opacity-100' : 'opacity-0'} motion-reduce:transition-none`}
+            className={cn(
+              'font-bold text-lg tracking-tight select-none transition-opacity duration-200 motion-reduce:transition-none',
+              expanded ? 'opacity-100' : 'opacity-0',
+            )}
             aria-hidden={!expanded}
           >
             ICE-TRUCK
@@ -158,7 +166,10 @@ export default function Sidebar(props: SidebarProps) {
             aria-hidden
           />
           <div
-            className={`overflow-hidden transition-all duration-200 motion-reduce:transition-none ${expanded ? 'w-48' : 'w-0'}`}
+            className={cn(
+              'overflow-hidden transition-all duration-200 motion-reduce:transition-none',
+              expanded ? 'w-48' : 'w-0',
+            )}
             aria-hidden={!expanded}
           >
             <div className="flex items-center justify-between gap-2">
@@ -217,14 +228,17 @@ const NavItem = React.memo(function NavItem({
       <Link
         href={href}
         onClick={handleClick}
-        className={`${base} ${active ? activeCls : idleCls}`}
+        className={cn(base, active ? activeCls : idleCls)}
         aria-current={active ? 'page' : undefined}
         data-testid={testId}
         title={expanded ? undefined : label}
       >
         <Icon size={20} aria-hidden />
         <span
-          className={`whitespace-nowrap transition-opacity duration-200 ${expanded ? 'opacity-100' : 'opacity-0'} motion-reduce:transition-none`}
+          className={cn(
+            'whitespace-nowrap transition-opacity duration-200 motion-reduce:transition-none',
+            expanded ? 'opacity-100' : 'opacity-0',
+          )}
           aria-hidden={!expanded}
         >
           {label}

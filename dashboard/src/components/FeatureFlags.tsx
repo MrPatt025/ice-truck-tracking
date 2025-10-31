@@ -1,5 +1,6 @@
 ﻿import { Switch } from '@headlessui/react';
 import React, { useState, useEffect } from 'react';
+import { api } from '@/shared/lib/apiClient';
 
 interface FeatureFlag {
   key: string;
@@ -24,9 +25,12 @@ export function FeatureFlags({ isAdmin = false }: FeatureFlagsProps) {
 
   const fetchFeatureFlags = async () => {
     try {
-      const response = await fetch('/api/v1/feature-flags');
-      const data = await response.json();
-      setFlags(data.flags || []);
+      const { data } = await api.get<{ flags?: FeatureFlag[] } | FeatureFlag[]>(
+        'feature-flags',
+      );
+      // Support either { flags: [...] } or direct array response
+      const items = Array.isArray(data) ? data : (data?.flags ?? []);
+      setFlags(items);
     } catch (error) {
       console.error('Failed to fetch feature flags:', error);
     } finally {
@@ -38,11 +42,7 @@ export function FeatureFlags({ isAdmin = false }: FeatureFlagsProps) {
     if (!isAdmin) return;
 
     try {
-      await fetch(`/api/v1/feature-flags/${flagKey}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ enabled }),
-      });
+      await api.patch(`feature-flags/${flagKey}`, { enabled });
 
       setFlags((prev) =>
         prev.map((flag) =>
@@ -58,10 +58,8 @@ export function FeatureFlags({ isAdmin = false }: FeatureFlagsProps) {
     if (!isAdmin) return;
 
     try {
-      await fetch(`/api/v1/feature-flags/${flagKey}/rollout`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rolloutPercentage: percentage }),
+      await api.patch(`feature-flags/${flagKey}/rollout`, {
+        rolloutPercentage: percentage,
       });
 
       setFlags((prev) =>
@@ -195,9 +193,10 @@ export function useFeatureFlag(flagKey: string): boolean {
   useEffect(() => {
     const checkFlag = async () => {
       try {
-        const response = await fetch(`/api/v1/feature-flags/${flagKey}/check`);
-        const data = await response.json();
-        setEnabled(data.enabled || false);
+        const { data } = await api.get<{ enabled?: boolean }>(
+          `feature-flags/${flagKey}/check`,
+        );
+        setEnabled(Boolean(data?.enabled));
       } catch (error) {
         console.error(`Failed to check feature flag ${flagKey}:`, error);
         setEnabled(false);

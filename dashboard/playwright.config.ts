@@ -5,8 +5,8 @@ const baseURL = `http://localhost:${port}`;
 
 export default defineConfig({
   webServer: {
-    // Use production build (standalone) for stability in CI/Windows
-    command: `pnpm build && cross-env PORT=${port} node .next/standalone/dashboard/server.js`,
+    // Use the built standalone server for faster startup
+    command: `cross-env PORT=${port} NEXT_PUBLIC_E2E=1 node .next/standalone/dashboard/server.js`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

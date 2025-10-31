@@ -3,6 +3,7 @@
 import type { JSX } from 'react';
 
 import {
+  memo,
   useEffect,
   useRef,
   useState,
@@ -27,6 +28,10 @@ type ChartContainerProps = PropsWithChildren<{
   readyThreshold?: number;
   /** รองรับ children เป็น render-prop เพื่อรับขนาดวัดจริง */
   children?: ReactNode | RenderProp;
+  /** แสดงสถานะว่าง (เช่น ซีรีส์เป็นศูนย์ทั้งหมด) */
+  empty?: boolean;
+  /** ข้อความแสดงเมื่อว่าง */
+  emptyMessage?: string;
 }>;
 
 /**
@@ -36,12 +41,14 @@ type ChartContainerProps = PropsWithChildren<{
  * - ลด re-render ด้วยการเช็คเปลี่ยนแปลงมากกว่า 0.5px
  * - คืนขนาดจริงให้ children ได้แบบ render-prop
  */
-export default function ChartContainer({
+function ChartContainer({
   children,
   className,
   style,
   minHeight = 256,
   readyThreshold = 8,
+  empty = false,
+  emptyMessage = 'No data yet',
 }: ChartContainerProps): JSX.Element {
   const ref = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -120,7 +127,7 @@ export default function ChartContainer({
       aria-busy={!ready}
       className={twMerge(
         // สำคัญ: ให้คอนเทนเนอร์ยืดเต็ม, ไม่โดนบีบใน flex/grid
-        'relative w-full h-full min-w-0 overflow-hidden',
+        'relative w-full h-auto min-w-0 overflow-hidden',
         clsx(className),
       )}
       style={mergedStyle}
@@ -128,6 +135,14 @@ export default function ChartContainer({
       {ready ? (
         typeof children === 'function' ? (
           (children as RenderProp)(size)
+        ) : empty ? (
+          <div
+            className="absolute inset-0 grid place-items-center"
+            aria-label={emptyMessage}
+            title={emptyMessage}
+          >
+            <div className="h-16 w-16 rounded-full opacity-40 bg-linear-to-br from-slate-500/20 to-slate-400/10 ring-1 ring-inset ring-white/10" />
+          </div>
         ) : (
           children
         )
@@ -143,3 +158,5 @@ export default function ChartContainer({
     </div>
   );
 }
+
+export default memo(ChartContainer);

@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { api } from '@/shared/lib/apiClient';
+import { buildWsUrl } from '@/shared/lib/wsUrl';
 
 /** ---------- Types ---------- */
 export type Truck = Readonly<{
@@ -102,14 +103,7 @@ function normalizePatch(patch: any): TruckPatch | null {
   return partial;
 }
 
-function httpToWs(base: string, wsPath = '/ws'): string {
-  const u = new URL(base);
-  u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
-  u.pathname = `${u.pathname.replace(/\/+$/, '')}${
-    wsPath.startsWith('/') ? wsPath : `/${wsPath}`
-  }`;
-  return u.toString();
-}
+// moved to shared lib: '@/shared/lib/wsUrl'
 
 /** ---------- Hook ---------- */
 /**
@@ -117,10 +111,10 @@ function httpToWs(base: string, wsPath = '/ws'): string {
  * - ใช้ Map ใน ref เป็น canonical store แล้ว batch flush เข้าสถานะ React เพื่อลด re-render
  * - SSR-safe, ยกเลิก fetch ได้, กันออฟไลน์, เร่งโพลเวลาทดสอบ
  */
-export function useRealtimeTrucks(
-  intervalMs = 10_000,
-  apiBase: string = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
-): { trucks: ReadonlyArray<Truck>; lastDataTimestamp: number | null } {
+export function useRealtimeTrucks(intervalMs = 10_000): {
+  trucks: ReadonlyArray<Truck>;
+  lastDataTimestamp: number | null;
+} {
   const [trucks, setTrucks] = useState<Truck[]>([]);
   const [lastDataTimestamp, setTs] = useState<number | null>(null);
 
@@ -148,27 +142,25 @@ export function useRealtimeTrucks(
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    // In automated e2e/test environments, avoid making network calls (fetch/WebSocket)
-    // to keep console clean and tests deterministic when backend isn't running.
     const isE2E =
       (typeof navigator !== 'undefined' && (navigator as any).webdriver) ||
       process.env.NEXT_PUBLIC_E2E === '1' ||
       process.env.NEXT_PUBLIC_DISABLE_API === '1';
     if (isE2E) {
-      // still emit a minimal telemetry:update so UI that listens won't hang
       try {
         window.dispatchEvent(new CustomEvent('telemetry:update'));
       } catch {}
       return;
     }
-    destroyedRef.current = false;
 
+    destroyedRef.current = false;
     let cancelled = false;
     const w = window as TelemetryWindow;
 
-    // indicator สำหรับทดสอบ/UX
-    if (typeof w.__telemetryBufferCount !== 'number')
+    if (typeof w.__telemetryBufferCount !== 'number') {
       w.__telemetryBufferCount = 0;
+    }
+
     const notifyBuffer = () => {
       w.__telemetryBufferCount = bufferRef.current.length;
       w.dispatchEvent(
@@ -183,8 +175,7 @@ export function useRealtimeTrucks(
         abortRef.current?.abort();
         const ac = new AbortController();
         abortRef.current = ac;
-        const url = `${apiBase.replace(/\/\/+$/, '')}/api/v1/trucks`;
-        const res = await api.get(url, { signal: ac.signal });
+        const res = await api.get('trucks', { signal: ac.signal } as any);
         const raw = res.data as any;
         if (cancelled) return;
 
@@ -196,12 +187,11 @@ export function useRealtimeTrucks(
                 .filter(Boolean) as Truck[])
             : [];
 
-        // เขียนลง Map (replace snapshot)
         const m = mapRef.current;
         m.clear();
         for (const t of list) m.set(t.id, t);
 
-        scheduleFlush(0); // flush ทันทีหลัง snapshot
+        scheduleFlush(0);
       } catch (e: unknown) {
         if (cancelled) return;
         const message = e instanceof Error ? e.message : String(e ?? 'Error');
@@ -212,90 +202,123 @@ export function useRealtimeTrucks(
     // initial fetch
     fetchNow();
 
-    // เร่งโพลเมื่อวิ่งใน Cypress
     const accelerated = w.Cypress
       ? Math.max(500, Math.floor(intervalMs / 2))
       : intervalMs;
     const intervalId = w.setInterval(fetchNow, accelerated);
 
-    // WebSocket (best-effort)
-    try {
-      const wsUrl = httpToWs(apiBase, '/ws');
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
+    const connectWs = (attempt = 0, pathIdx = 0) => {
+      if (cancelled || destroyedRef.current) return;
+      try {
+        const paths = [
+          process.env.NEXT_PUBLIC_WS_PATH || '/ws',
+          '/api/v1/telemetry',
+        ];
+        const ws = new WebSocket(buildWsUrl(paths[pathIdx % paths.length]));
+        wsRef.current = ws;
+        let pingTimer: number | null = null;
 
-      ws.onmessage = (evt: MessageEvent<string>) => {
-        try {
-          const p = normalizePatch(JSON.parse(evt.data));
-          if (!p) return;
+        ws.onopen = () => {
+          attempt = 0; // reset backoff on success
+          // keepalive ping (most servers ignore, but helps proxies)
+          try {
+            if (pingTimer != null) window.clearInterval(pingTimer);
+          } catch {}
+          pingTimer = window.setInterval(() => {
+            try {
+              if (ws.readyState === ws.OPEN) ws.send('ping');
+            } catch {}
+          }, 25000);
+        };
 
-          // ออฟไลน์? buffer แล้วรอ flush
-          if (navigator.onLine === false) {
-            bufferRef.current.push(p);
-            notifyBuffer();
-            return;
+        ws.onmessage = (evt) => {
+          try {
+            const p = normalizePatch(
+              JSON.parse((evt as MessageEvent).data as any),
+            );
+            if (!p) return;
+
+            if (navigator.onLine === false) {
+              bufferRef.current.push(p);
+              notifyBuffer();
+              return;
+            }
+
+            const m = mapRef.current;
+            const current = m.get(p.id);
+            if (current) {
+              const merged: Truck = Object.freeze({
+                ...current,
+                ...p,
+                id: current.id,
+                updatedAt: p.updatedAt ?? current.updatedAt ?? nowIso(),
+              });
+              m.set(merged.id, merged);
+            } else {
+              const created = normalizeTruck(p);
+              if (created) m.set(created.id, created);
+            }
+            scheduleFlush();
+          } catch {
+            // ignore malformed payload
           }
+        };
 
-          // merge ลง Map แบบปลอดภัย (freeze เสมอ)
-          const m = mapRef.current;
-          const current = m.get(p.id);
-          if (current) {
-            const merged: Truck = Object.freeze({
-              ...current,
-              ...p,
-              id: current.id, // คง id เดิม
-              updatedAt: p.updatedAt ?? current.updatedAt ?? nowIso(),
-            });
-            m.set(merged.id, merged);
-          } else {
-            const created = normalizeTruck(p);
-            if (created) m.set(created.id, created);
-          }
-          scheduleFlush(); // batch
-        } catch {
-          /* ignore malformed payload */
+        const scheduleReconnect = () => {
+          if (cancelled || destroyedRef.current) return;
+          const delay = Math.min(30000, 1000 * Math.pow(2, attempt));
+          attempt += 1;
+          // round-robin WS path fallback
+          window.setTimeout(() => connectWs(attempt, pathIdx + 1), delay);
+        };
+
+        ws.onerror = () => {
+          if (pingTimer != null) window.clearInterval(pingTimer);
+          scheduleReconnect();
+        };
+        ws.onclose = () => {
+          if (pingTimer != null) window.clearInterval(pingTimer);
+          scheduleReconnect();
+        };
+      } catch {
+        if (!cancelled && !destroyedRef.current) {
+          const delay = Math.min(30000, 1000 * Math.pow(2, attempt));
+          window.setTimeout(() => connectWs(attempt + 1), delay);
         }
-      };
-
-      // ปิดเองเมื่อ error/close แล้วให้โพลลิ่งรับช่วงต่อ
-      ws.onerror = () => {
-        /* no-op */
-      };
-      ws.onclose = () => {
-        /* no-op */
-      };
-    } catch {
-      /* ignore ws init errors */
-    }
-
-    const onOnline = () => {
-      if (bufferRef.current.length) {
-        w.dispatchEvent(
-          new CustomEvent('telemetry:flush', {
-            detail: { count: bufferRef.current.length },
-          }),
-        );
-        for (const p of bufferRef.current) {
-          const m = mapRef.current;
-          const current = m.get(p.id);
-          if (current) {
-            const merged: Truck = Object.freeze({
-              ...current,
-              ...p,
-              id: current.id,
-              updatedAt: p.updatedAt ?? current.updatedAt ?? nowIso(),
-            });
-            m.set(merged.id, merged);
-          } else {
-            const created = normalizeTruck(p);
-            if (created) m.set(created.id, created);
-          }
-        }
-        bufferRef.current = [];
-        notifyBuffer();
-        scheduleFlush(0);
       }
     };
+
+    // start the WS connection
+    connectWs(0);
+
+    const onOnline = () => {
+      if (!bufferRef.current.length) return;
+      w.dispatchEvent(
+        new CustomEvent('telemetry:flush', {
+          detail: { count: bufferRef.current.length },
+        }),
+      );
+      for (const p of bufferRef.current) {
+        const m = mapRef.current;
+        const current = m.get(p.id);
+        if (current) {
+          const merged: Truck = Object.freeze({
+            ...current,
+            ...p,
+            id: current.id,
+            updatedAt: p.updatedAt ?? current.updatedAt ?? nowIso(),
+          });
+          m.set(merged.id, merged);
+        } else {
+          const created = normalizeTruck(p);
+          if (created) m.set(created.id, created);
+        }
+      }
+      bufferRef.current = [];
+      notifyBuffer();
+      scheduleFlush(0);
+    };
+
     const onOffline = () => notifyBuffer();
 
     w.addEventListener('online', onOnline);
@@ -305,29 +328,24 @@ export function useRealtimeTrucks(
       cancelled = true;
       destroyedRef.current = true;
 
-      // timers
       w.clearInterval(intervalId);
       if (flushTimerRef.current) w.clearTimeout(flushTimerRef.current);
       flushTimerRef.current = null;
 
-      // fetch
       try {
         abortRef.current?.abort();
       } catch {}
       abortRef.current = null;
-      abortRef.current = null;
 
-      // ws
       try {
         wsRef.current?.close();
       } catch {}
       wsRef.current = null;
 
-      // events
       w.removeEventListener('online', onOnline);
       w.removeEventListener('offline', onOffline);
     };
-  }, [intervalMs, apiBase]);
+  }, [intervalMs]);
 
   return { trucks, lastDataTimestamp };
 }

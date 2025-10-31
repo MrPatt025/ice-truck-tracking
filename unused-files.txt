@@ -1,0 +1,5 @@
+
+> ice-truck-tracking-monorepo@2.0.0 unused:files C:\Users\PATTANAKORN\ice-truck-tracking
+> knip
+
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 2.

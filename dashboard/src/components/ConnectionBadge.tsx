@@ -19,7 +19,7 @@ export default function ConnectionBadge(): JSX.Element {
   return (
     <div
       data-testid="offline-indicator"
-      className={`fixed top-4 right-4 px-2 py-1 rounded border text-sm z-[9999] ${
+      className={`fixed top-4 right-4 px-2 py-1 rounded border text-sm z-9999 ${
         online
           ? 'bg-emerald-500/20 border-emerald-400/40'
           : 'bg-orange-500/20 border-orange-400/40'

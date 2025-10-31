@@ -1,0 +1,50 @@
+name: Dashboard Tests
+
+on:
+  pull_request:
+    branches: [main, '**']
+    paths:
+      - 'dashboard/**'
+      - '.github/workflows/dashboard-tests.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      CI: true
+      # Keep E2E deterministic by skipping external map SDKs
+      NEXT_PUBLIC_E2E: '1'
+      PW_PORT: '3100'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+          run_install: true
+
+      - name: Type check (dashboard)
+        working-directory: dashboard
+        run: pnpm type-check
+
+      - name: Unit tests (dashboard)
+        working-directory: dashboard
+        run: pnpm test -- --runInBand
+
+      - name: Install Playwright browsers
+        working-directory: dashboard
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: E2E tests (dashboard)
+        working-directory: dashboard
+        run: pnpm test:e2e --reporter=dot

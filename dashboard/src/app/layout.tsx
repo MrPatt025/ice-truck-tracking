@@ -1,4 +1,5 @@
 ﻿// dashboard/src/app/layout.tsx
+import '@/env';
 import './globals.css';
 // Load MapLibre CSS locally via bundler to avoid CORB and external CDN issues
 // maplibre-gl CSS removed after consolidating to TomTom map stack
@@ -6,6 +7,7 @@ import type { Metadata, Viewport } from 'next';
 import type { JSX, ReactNode } from 'react';
 import { Inter } from 'next/font/google';
 import Providers from './providers';
+import DevtoolsGuard from './devtools-guard';
 import { AuthProvider } from '@/shared/auth/AuthContext';
 
 const inter = Inter({
@@ -61,9 +63,18 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <body className={`${inter.variable} antialiased`}>
+        {/* Optional guard to neutralize incompatible React DevTools extensions */}
+        <DevtoolsGuard />
         {/* Client providers (React Query, Theme, ErrorBoundary) */}
         <Providers>
           <AuthProvider>{children}</AuthProvider>
+          {/* Screen reader announcer for toast/banner updates */}
+          <div
+            id="sr-announcer"
+            aria-live="polite"
+            role="status"
+            className="sr-only"
+          />
         </Providers>
       </body>
     </html>

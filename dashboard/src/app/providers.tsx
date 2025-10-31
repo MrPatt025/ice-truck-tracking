@@ -2,7 +2,7 @@
 
 import type { JSX } from 'react';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   QueryClient,
   QueryClientProvider,
@@ -10,7 +10,10 @@ import {
   type DehydratedState,
 } from '@tanstack/react-query';
 import { ErrorBoundary } from '@/ui/components/ErrorBoundary';
+import { RefreshSettingsProvider } from '@/shared/refresh/RefreshSettings';
+import GlobalFetchIndicator from '@/ui/components/GlobalFetchIndicator';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { FlagsProvider } from '@/shared/flags/FlagsProvider';
 
 type ProvidersProps = {
   children: ReactNode;
@@ -31,6 +34,9 @@ export default function Providers({
             staleTime: 30_000,
             refetchOnWindowFocus: false,
             retry: 2,
+            // Exponential backoff up to 30s
+            retryDelay: (attempt: number) =>
+              Math.min(1000 * Math.pow(2, attempt), 30_000),
           },
           mutations: {
             retry: 0,
@@ -39,12 +45,27 @@ export default function Providers({
       }),
   );
 
+  // Initialize Sentry client-side only in production
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (process.env.NODE_ENV !== 'production') return;
+    // Dynamically import the client config which initializes Sentry
+    import('../../sentry.client.config').catch(() => {});
+  }, []);
+
   return (
     <QueryClientProvider client={client}>
       <HydrationBoundary state={state}>
-        <ThemeProvider>
-          <ErrorBoundary>{children}</ErrorBoundary>
-        </ThemeProvider>
+        <RefreshSettingsProvider>
+          <FlagsProvider>
+            <ThemeProvider>
+              <ErrorBoundary>
+                {children}
+                <GlobalFetchIndicator />
+              </ErrorBoundary>
+            </ThemeProvider>
+          </FlagsProvider>
+        </RefreshSettingsProvider>
       </HydrationBoundary>
     </QueryClientProvider>
   );

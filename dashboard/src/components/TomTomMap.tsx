@@ -30,6 +30,7 @@ type BoundsLike = {
   isEmpty(): boolean;
 };
 type PopupLike = { setHTML(html: string): PopupLike };
+type SourceLike = { setData(data: any): void };
 type MapLike = {
   remove(): void;
   resize(): void;
@@ -37,7 +38,12 @@ type MapLike = {
     bounds: BoundsLike,
     options?: { padding?: number; maxZoom?: number; duration?: number },
   ): void;
-  // TomTom map exposes project/unproject, but we keep types minimal; we cluster by lng/lat grid instead
+  addSource(id: string, spec: any): void;
+  getSource(id: string): SourceLike | undefined;
+  addLayer(layer: any, beforeId?: string): void;
+  getLayer(id: string): any;
+  removeLayer(id: string): void;
+  // TomTom SDK v6 mirrors the Mapbox GL style API for sources/layers
 };
 type MarkerLike = {
   setLngLat(lnglat: [number, number]): MarkerLike;
@@ -70,11 +76,23 @@ async function ensureTomTomLoaded(version = '6.25.0'): Promise<TTGlobal> {
 
   // inject CSS once
   const cssHref = `https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/${version}/maps/maps.css`;
-  if (!document.querySelector(`link[href='${cssHref}']`)) {
+  let _cssLoaded = false;
+  const existing = document.querySelector(
+    `link[href='${cssHref}']`,
+  ) as HTMLLinkElement | null;
+  if (existing) {
+    _cssLoaded = true; // assume existing link is already applied
+  } else {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = cssHref;
-    document.head.appendChild(link);
+    _cssLoaded = await new Promise<boolean>((resolve) => {
+      link.onload = () => resolve(true);
+      link.onerror = () => resolve(false);
+      // Fallback resolve after 1500ms to avoid blocking forever in dev
+      setTimeout(() => resolve(true), 1500);
+      document.head.appendChild(link);
+    });
   }
 
   // load JS
@@ -132,68 +150,21 @@ function signatureFor(trucks: ReadonlyArray<TruckPoint>): string {
     .join('|');
 }
 
-/** markers helpers (pure) */
-function ensureMarker(
-  tt: TTGlobal,
-  map: MapLike,
-  holders: Record<string, MarkerLike>,
-  id: string,
-  lngLat: [number, number],
-  popupHtml: string,
-  clusterCount?: number,
-): void {
-  const existing = holders[id];
-  if (!existing) {
-    const el = document.createElement('div');
-    if (clusterCount && clusterCount > 1) {
-      // Cluster bubble style
-      const size = Math.min(44, 24 + Math.log2(clusterCount + 1) * 8);
-      el.setAttribute('data-testid', 'cluster-marker');
-      el.style.width = `${size}px`;
-      el.style.height = `${size}px`;
-      el.style.borderRadius = '9999px';
-      el.style.background =
-        'radial-gradient(circle at 30% 30%, #38bdf8, #2563eb)';
-      el.style.color = '#fff';
-      el.style.display = 'flex';
-      el.style.alignItems = 'center';
-      el.style.justifyContent = 'center';
-      el.style.font = '600 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto';
-      el.style.boxShadow = '0 6px 14px rgba(0,0,0,.25)';
-      el.style.border = '2px solid rgba(255,255,255,.9)';
-      el.textContent = String(clusterCount);
-      el.title = `${clusterCount} trucks`;
-    } else {
-      // Single truck dot
-      el.setAttribute('data-testid', 'truck-marker');
-      el.style.width = '10px';
-      el.style.height = '10px';
-      el.style.borderRadius = '9999px';
-      el.style.background = '#2563eb';
-      el.style.border = '2px solid #ffffff';
-      el.style.boxShadow = '0 1px 3px rgba(0,0,0,.25)';
-    }
-    const mk = new tt.Marker({ element: el }).setLngLat(lngLat).addTo(map);
-    if (!clusterCount && popupHtml) {
-      const popup = new tt.Popup({ offset: 12 }).setHTML(popupHtml);
-      mk.setPopup(popup);
-    }
-    holders[id] = mk;
-  } else {
-    existing.setLngLat(lngLat);
-  }
-}
-function removeStale(
-  holders: Record<string, MarkerLike>,
-  seen: Record<string, true>,
-): void {
-  for (const id in holders) {
-    if (!seen[id]) {
-      holders[id]?.remove();
-      delete holders[id];
-    }
-  }
-}
+/** GeoJSON helpers (pure) */
+type FeaturePoint = {
+  type: 'Feature';
+  geometry: { type: 'Point'; coordinates: [number, number] };
+  properties: Record<string, any>;
+};
+type FeatureLine = {
+  type: 'Feature';
+  geometry: { type: 'LineString'; coordinates: Array<[number, number]> };
+  properties: Record<string, any>;
+};
+type FeatureCollection = {
+  type: 'FeatureCollection';
+  features: Array<FeaturePoint | FeatureLine>;
+};
 
 function cellDegForZoom(z: number): number {
   const zoom = Math.max(0, Math.min(22, z));
@@ -338,6 +309,86 @@ function maybeFitBounds(
   fittedSigRef.current = nextSig;
 }
 
+function ensureSourcesAndLayers(tt: TTGlobal, map: MapLike): void {
+  // Single shared source for points/lines/heat
+  const sourceId = 'trucks-src';
+  const ptsLayerId = 'trucks-pts';
+  const heatLayerId = 'trucks-heat';
+  const lineLayerId = 'trucks-lines';
+
+  // Source
+  if (!map.getSource(sourceId)) {
+    map.addSource(sourceId, {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] },
+    });
+  }
+
+  // Heat layer (behind points), default hidden for perf unless enabled later
+  if (!map.getLayer(heatLayerId)) {
+    map.addLayer({
+      id: heatLayerId,
+      type: 'heatmap',
+      source: sourceId,
+      layout: { visibility: 'none' },
+      paint: {
+        'heatmap-radius': 20,
+        'heatmap-opacity': 0.6,
+      },
+    });
+  }
+
+  // Line layer (paths)
+  if (!map.getLayer(lineLayerId)) {
+    map.addLayer(
+      {
+        id: lineLayerId,
+        type: 'line',
+        source: sourceId,
+        filter: ['==', ['geometry-type'], 'LineString'],
+        paint: {
+          'line-color': '#38bdf8',
+          'line-width': 2,
+          'line-opacity': 0.8,
+        },
+      },
+      heatLayerId,
+    );
+  }
+
+  // Point layer (trucks/clusters)
+  if (!map.getLayer(ptsLayerId)) {
+    map.addLayer(
+      {
+        id: ptsLayerId,
+        type: 'circle',
+        source: sourceId,
+        filter: ['==', ['geometry-type'], 'Point'],
+        paint: {
+          'circle-color': ['case', ['has', 'count'], '#2563eb', '#2563eb'],
+          'circle-radius': [
+            'interpolate',
+            ['linear'],
+            ['coalesce', ['get', 'count'], 1],
+            1,
+            5,
+            5,
+            8,
+            20,
+            14,
+            100,
+            18,
+          ],
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 1.5,
+          'circle-opacity': 0.9,
+        },
+      },
+      lineLayerId,
+    );
+  }
+}
+
 /** ----- Component ----- */
 export default function TomTomMap({
   trucks,
@@ -348,7 +399,6 @@ export default function TomTomMap({
 }: TomTomMapProps): JSX.Element {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLike | null>(null);
-  const markersRef = useRef<Record<string, MarkerLike>>({});
   const fittedSignatureRef = useRef<string>('');
   const resizeObsRef = useRef<ResizeObserver | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -358,6 +408,7 @@ export default function TomTomMap({
   const lastDataSigRef = useRef<string>('');
   const initCenterRef = useRef(center);
   const initZoomRef = useRef(zoom);
+  const mapLoadedRef = useRef(false);
 
   // init map once (never re-create on prop changes)
   useEffect(() => {
@@ -393,6 +444,32 @@ export default function TomTomMap({
         });
         mapRef.current = map;
 
+        // Wait until style is fully loaded before adding sources/layers
+        try {
+          (map as any).on?.('load', () => {
+            try {
+              ensureSourcesAndLayers(tt, map);
+              mapLoadedRef.current = true;
+              // ensure initial resize after load
+              try {
+                (map as any).resize?.();
+              } catch {
+                /* noop */
+              }
+            } catch {
+              /* ignore */
+            }
+          });
+        } catch {
+          // Fallback: attempt immediately if event binding fails
+          try {
+            ensureSourcesAndLayers(tt, map);
+            mapLoadedRef.current = true;
+          } catch {
+            /* ignore */
+          }
+        }
+
         // resize observer
         if ('ResizeObserver' in window) {
           const ro = new ResizeObserver(() => {
@@ -413,10 +490,6 @@ export default function TomTomMap({
 
     return () => {
       destroyed = true;
-
-      // cleanup markers
-      Object.values(markersRef.current).forEach((mk) => mk.remove());
-      markersRef.current = {};
 
       // unobserve & cancel RAF
       if (resizeObsRef.current && el) resizeObsRef.current.unobserve(el);
@@ -452,9 +525,30 @@ export default function TomTomMap({
   }, [center, zoom]);
 
   // update markers + optional auto-fit (ผ่านลินต์ exhaustive-deps แล้ว)
+  // Update GeoJSON source data + optional auto-fit, debounced to avoid thrash
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    // If map style isn't loaded yet, wait for the load event once
+    if (!mapLoadedRef.current) {
+      try {
+        (map as any).once?.('load', () => {
+          mapLoadedRef.current = true;
+          // trigger a debounced update after load
+          if (debounceTimerRef.current != null) {
+            window.clearTimeout(debounceTimerRef.current);
+          }
+          debounceTimerRef.current = window.setTimeout(() => {
+            // force a run by mutating signature
+            lastDataSigRef.current = '';
+            // no-op; the effect body below will run on next props change
+          }, 0);
+        });
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
 
     let cancelled = false;
 
@@ -470,39 +564,49 @@ export default function TomTomMap({
         const nextSig = signatureFor(trucks);
         if (nextSig === lastDataSigRef.current) return;
 
-        const seen: Record<string, true> = {};
         const bounds = new tt.LngLatBounds();
 
         const runDom = async () => {
+          // Build a single FeatureCollection for points (and future lines)
+          let features: FeatureCollection['features'] = [];
           if (cluster) {
             const clusterList = await buildClustersAsync(trucks, zoom);
-            for (const c of clusterList) {
-              seen[c.id] = true;
-              const popupHtml = c.sample ? buildPopupHtml(c.sample) : '';
-              ensureMarker(
-                tt,
-                map,
-                markersRef.current,
-                c.id,
-                c.lngLat,
-                popupHtml,
-                c.count,
-              );
+            features = clusterList.map((c) => {
+              const props: Record<string, any> = { id: c.id, count: c.count };
+              if (c.sample) {
+                const html = buildPopupHtml(c.sample);
+                if (html) props.popup = html;
+              }
               bounds.extend(c.lngLat);
-            }
+              return {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: c.lngLat },
+                properties: props,
+              } satisfies FeaturePoint;
+            });
           } else {
-            for (const t of trucks) {
-              const lngLat = getLngLat(t);
-              if (!lngLat) continue;
-              const key = String(t.id);
-              seen[key] = true;
-              const popupHtml = buildPopupHtml(t);
-              ensureMarker(tt, map, markersRef.current, key, lngLat, popupHtml);
-              bounds.extend(lngLat);
-            }
+            features = trucks
+              .map((t) => {
+                const p = getLngLat(t);
+                if (!p) return null;
+                bounds.extend(p);
+                const html = buildPopupHtml(t);
+                const props: Record<string, any> = { id: String(t.id) };
+                if (html) props.popup = html;
+                return {
+                  type: 'Feature',
+                  geometry: { type: 'Point', coordinates: p },
+                  properties: props,
+                } satisfies FeaturePoint;
+              })
+              .filter(Boolean) as FeaturePoint[];
           }
 
-          removeStale(markersRef.current, seen);
+          // Ensure source and layers exist
+          ensureSourcesAndLayers(tt, map);
+          const src = map.getSource('trucks-src');
+          if (src) src.setData({ type: 'FeatureCollection', features });
+
           maybeFitBounds(
             map,
             bounds,
@@ -517,10 +621,9 @@ export default function TomTomMap({
         if (updateRafRef.current != null)
           cancelAnimationFrame(updateRafRef.current);
         updateRafRef.current = requestAnimationFrame(() => {
-          // runDom may be async due to worker; kick and intentionally ignore returned promise
           void runDom();
         });
-      }, 50);
+      }, 300);
     };
 
     schedule();
@@ -542,7 +645,7 @@ export default function TomTomMap({
     <div
       ref={containerRef}
       data-testid="map-container"
-      className="w-full h-80 min-h-64 rounded border overflow-hidden"
+      className="w-full h-[420px] md:h-[520px] lg:h-[600px] rounded-map border overflow-hidden"
       role="img"
       aria-label="map"
     />

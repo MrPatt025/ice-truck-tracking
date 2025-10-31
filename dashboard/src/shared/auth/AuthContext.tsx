@@ -34,71 +34,35 @@ type RefreshResponse = {
 
 export type AuthContextValue = {
   user: User | null;
-  token: string | null;
+  token: string | null; // cookie-based; set to non-null sentinel when authenticated
   bootstrapped: boolean;
   loading: boolean;
   error: string | null;
-  login: (username: string, password: string) => Promise<void>;
+  login: (
+    username: string,
+    password: string,
+  ) => Promise<{ ok: true } | { ok: false; status?: number; message?: string }>;
   logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 // -----------------------------
-// Storage helpers
+// CSRF helper (non-HttpOnly)
 // -----------------------------
-const ACCESS_KEYS = ['authToken', 'auth_token'] as const;
-const COOKIE_NAME = 'authToken';
 const CSRF_COOKIE = 'csrfToken';
-
-function setCookie(name: string, value: string, opts?: { days?: number; secure?: boolean; path?: string; sameSite?: 'Lax' | 'Strict' | 'None' }) {
-  if (typeof document === 'undefined') return;
-  const days = opts?.days ?? 7;
-  const path = opts?.path ?? '/';
-  const sameSite = opts?.sameSite ?? 'Lax';
-  const secure = opts?.secure ?? (typeof location !== 'undefined' && location.protocol === 'https:');
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; Expires=${expires}; Path=${path}; SameSite=${sameSite}${secure ? '; Secure' : ''}`;
-}
-
-function deleteCookie(name: string) {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${name}=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; SameSite=Lax`;
-}
-
 function ensureCsrfCookie() {
   if (typeof document === 'undefined') return;
   if (!document.cookie.includes(`${CSRF_COOKIE}=`)) {
     try {
-      const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-      setCookie(CSRF_COOKIE, token, { days: 7, sameSite: 'Lax' });
-    } catch {}
-  }
-}
-
-function readToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  for (const k of ACCESS_KEYS) {
-    const v = window.localStorage.getItem(k);
-    if (v) return v;
-  }
-  return null;
-}
-
-function writeToken(token: string) {
-  if (typeof window === 'undefined') return;
-  for (const k of ACCESS_KEYS) {
-    try {
-      window.localStorage.setItem(k, token);
-    } catch {}
-  }
-}
-
-function clearToken() {
-  if (typeof window === 'undefined') return;
-  for (const k of ACCESS_KEYS) {
-    try {
-      window.localStorage.removeItem(k);
+      const token =
+        Math.random().toString(36).slice(2) +
+        Math.random().toString(36).slice(2);
+      const days = 7;
+      const expires = new Date(Date.now() + days * 864e5).toUTCString();
+      const secure =
+        typeof location !== 'undefined' && location.protocol === 'https:';
+      document.cookie = `${CSRF_COOKIE}=${encodeURIComponent(token)}; Expires=${expires}; Path=/; SameSite=Lax${secure ? '; Secure' : ''}`;
     } catch {}
   }
 }
@@ -109,29 +73,21 @@ function clearToken() {
 // Auth Provider
 // -----------------------------
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Token is read synchronously so post-login redirect sees it immediately
-  const [token, setToken] = useState<string | null>(() => readToken());
+  // Cookie-based session: token is an in-memory sentinel only (non-persistent)
+  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [bootstrapped, setBootstrapped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const setTokenBoth = useCallback((next: string | null) => {
-    if (next) writeToken(next);
-    else clearToken();
-    setToken(next);
-    try {
-      if (next) setCookie(COOKIE_NAME, next, { days: 3, sameSite: 'Lax' });
-      else deleteCookie(COOKIE_NAME);
-    } catch {}
+  const setAuthenticated = useCallback((isAuthed: boolean) => {
+    setToken(isAuthed ? 'cookie' : null);
   }, []);
 
   const fetchMe = useCallback(async (): Promise<User | null> => {
     try {
-      const base = (
-        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      ).replace(/\/+$/, '');
-      const res = await api.get<User>(`${base}/api/v1/auth/me`);
+      // NOTE: Use relative resource path without leading slash so axios preserves baseURL path (/api/v1)
+      const res = await api.get<User>('auth/me');
       const me = res.data as any;
       if (!me || !me.id) return null;
       return {
@@ -144,6 +100,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const login = useCallback(
+    async (username: string, password: string) => {
+      setError(null);
+      setLoading(true);
+      try {
+        await api.post<LoginResponse>('auth/login', { username, password });
+        const me = await fetchMe();
+        if (!me) {
+          setError('Login succeeded but profile not available');
+          setLoading(false);
+          return { ok: false, message: 'Profile not available after login' };
+        }
+        setUser(me);
+        setAuthenticated(true);
+        setLoading(false);
+        // redirect handled by caller (/login)
+        return { ok: true } as const;
+      } catch (err) {
+        const e = err as AxiosError | undefined;
+        if (e?.response) {
+          const status = e.response.status;
+          const msg = (e.response.data as any)?.message;
+          if (status === 401) setError('Invalid credentials');
+          else
+            setError(
+              `Login failed (${status}${msg ? `: ${String(msg)}` : ''})`,
+            );
+          return {
+            ok: false,
+            status,
+            message: String(msg ?? 'Request failed'),
+          };
+        } else if ((e as any)?.code === 'ERR_NETWORK') {
+          setError('Network error or backend unreachable');
+          return { ok: false, message: 'Network error or backend unreachable' };
+        } else {
+          setError('Login failed');
+          return { ok: false, message: 'Login failed' };
+        }
+        setLoading(false);
+      }
+    },
+    [fetchMe, setAuthenticated],
+  );
+
+  const logout = useCallback(async () => {
+    setAuthenticated(false);
+    setUser(null);
+    try {
+      await api.post('auth/logout', {});
+    } catch {}
+    if (typeof window !== 'undefined') window.location.replace('/login');
+  }, [setAuthenticated]);
+
   // Bootstrap on first mount
   useEffect(() => {
     let cancelled = false;
@@ -151,36 +161,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ensureCsrfCookie();
       setLoading(true);
       setError(null);
-      const stored = readToken();
-      if (stored && stored !== token) setTokenBoth(stored);
-
       let me: User | null = null;
-      if (stored) {
+      try {
+        // Try to refresh first to rehydrate session, then fetch profile
+        await api.post<RefreshResponse>('auth/refresh', {});
+      } catch {}
+      try {
         me = await fetchMe();
-      }
-
-      if (!me) {
-        // try refresh if backend supports it
-        try {
-          const base = (
-            process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-          ).replace(/\/+$/, '');
-          const rr = await api.post<RefreshResponse>(
-            `${base}/api/v1/auth/refresh`,
-            {},
-          );
-          const t = rr.data?.accessToken ?? rr.data?.token ?? null;
-          if (t) {
-            setTokenBoth(t);
-            me = await fetchMe();
-          }
-        } catch {
-          // ignore
-        }
-      }
-
+      } catch {}
       if (!cancelled) {
         setUser(me);
+        setAuthenticated(!!me);
         setLoading(false);
         setBootstrapped(true);
       }
@@ -188,96 +179,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [fetchMe, setTokenBoth, token]);
-
-  // Auto-refresh before expiry using JWT exp
-  useEffect(() => {
-    if (!token) return;
-    let timer: any;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1] || '')) as { exp?: number };
-      const expMs = (payload?.exp ?? 0) * 1000;
-      const now = Date.now();
-      const lead = 60_000; // refresh 60s before expiry
-      const due = Math.max(5_000, expMs - now - lead);
-      const base = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
-      timer = setTimeout(async () => {
-        try {
-          const rr = await api.post<RefreshResponse>(`${base}/api/v1/auth/refresh`, {});
-          const t = rr.data?.accessToken ?? rr.data?.token ?? null;
-          if (t) {
-            setTokenBoth(t);
-            const me = await fetchMe();
-            if (me) setUser(me);
-          } else {
-            await logout();
-          }
-        } catch {
-          await logout();
-        }
-      }, due);
-    } catch {
-      // if cannot decode, fall back to no timer; interceptor will handle 401
-    }
-    return () => clearTimeout(timer);
-  }, [fetchMe, logout, setTokenBoth, token]);
-
-  const login = useCallback(
-    async (username: string, password: string) => {
-      setError(null);
-      setLoading(true);
-      try {
-        const base = (
-          process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-        ).replace(/\/+$/, '');
-        const res = await api.post<LoginResponse>(`${base}/api/v1/auth/login`, {
-          username,
-          password,
-        });
-        const t = res.data?.accessToken ?? res.data?.token ?? null;
-        if (!t) {
-          setError('Missing access token');
-          setLoading(false);
-          return;
-        }
-        setTokenBoth(t);
-        const me = await fetchMe();
-        if (!me) {
-          setError('Login succeeded but profile not available');
-          setLoading(false);
-          return;
-        }
-        setUser(me);
-        setLoading(false);
-        // Only redirect after both token and user are in state
-        if (typeof window !== 'undefined') window.location.replace('/');
-      } catch (err) {
-        const e = err as AxiosError | undefined;
-        if (e?.response?.status === 401) setError('Invalid credentials');
-        else if ((e as any)?.code === 'ERR_NETWORK')
-          setError('Network error or backend unreachable');
-        else setError('Login failed');
-        setLoading(false);
-      }
-    },
-    [fetchMe, setTokenBoth],
-  );
-
-  const logout = useCallback(async () => {
-    // clear local state immediately
-    setTokenBoth(null);
-    setUser(null);
-    try { deleteCookie(COOKIE_NAME); } catch {}
-    try {
-      const base = (
-        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
-      ).replace(/\/+$/, '');
-      await api.post(`${base}/api/v1/auth/logout`, {});
-    } catch {
-      // ignore
-    }
-    if (typeof window !== 'undefined') window.location.replace('/login');
-  }, [setTokenBoth]);
+  }, [fetchMe, setAuthenticated]);
+  // Auto-refresh via axios interceptor; no JWT parsing here
 
   const value = useMemo<AuthContextValue>(
     () => ({

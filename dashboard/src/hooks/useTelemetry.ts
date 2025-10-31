@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '@/shared/lib/apiClient';
+import { useAuth } from '@/shared/auth/AuthContext';
 import type { UiTruck } from '@/types/truck';
 import { toUiTruck } from '@/types/truck';
 
@@ -54,6 +55,7 @@ function normalizeTrucks(payload: unknown): UiTruck[] {
 /* ------------------------------ hook ------------------------------- */
 
 export function useTelemetry() {
+  const { token, bootstrapped } = useAuth();
   const [trucks, setTrucks] = useState<UiTruck[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [health, setHealth] = useState<Health>('connected');
@@ -71,6 +73,10 @@ export function useTelemetry() {
   const mounted = useRef(false);
 
   useEffect(() => {
+    if (!token || !bootstrapped) {
+      // Pause polling when not authenticated
+      return;
+    }
     mounted.current = true;
 
     let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -81,15 +87,11 @@ export function useTelemetry() {
       if (mounted.current) setter(v);
     };
 
-    const base = (
-      process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000'
-    ).replace(/\/+$/, '');
-
     const pull = async () => {
       try {
         const [tRes, hRes] = await Promise.all([
-          api.get(`${base}/api/v1/trucks`),
-          api.get(`${base}/api/v1/health`),
+          api.get('trucks'),
+          api.get('health'),
         ]);
         if (!mounted.current) return;
         safeSet(setTrucks, normalizeTrucks(tRes.data));
@@ -104,7 +106,7 @@ export function useTelemetry() {
 
     const pullAlerts = async () => {
       try {
-        const res = await api.get(`${base}/api/v1/alerts`);
+        const res = await api.get('alerts');
         if (!mounted.current) return;
         const a = res.data;
         const arr = Array.isArray(a) ? (a as Alert[]).slice(0, 12) : [];
@@ -158,7 +160,7 @@ export function useTelemetry() {
         document.removeEventListener('visibilitychange', visibilityHandler);
       }
     };
-  }, []);
+  }, [token, bootstrapped]);
 
   const metrics = useMemo(() => {
     const active = trucks.length;
@@ -184,10 +186,7 @@ export function useTelemetry() {
   const retry = async () => {
     setError(null);
     try {
-      const base = (
-        process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000'
-      ).replace(/\/+$/, '');
-      const res = await api.get(`${base}/api/v1/health`);
+      const res = await api.get('health');
       setHealth(isHealthy(res.data) ? 'connected' : 'disconnected');
     } catch {
       setHealth('disconnected');

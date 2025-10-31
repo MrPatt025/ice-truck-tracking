@@ -3,6 +3,9 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/shared/lib/apiClient';
+import { useAuth } from '@/shared/auth/AuthContext';
+import { useRefreshSettings } from '@/shared/refresh/RefreshSettings';
+import { QueryKeys } from '@/shared/queryKeys';
 import type { TruckDto } from '@/shared/types/api';
 
 export type TrucksQuery = Readonly<{
@@ -15,18 +18,20 @@ export type TrucksQuery = Readonly<{
 export function useTrucks(
   params: TrucksQuery = { page: 1, limit: 200, sort: 'name', order: 'asc' },
 ) {
-  const base = (
-    process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000'
-  ).replace(/\/+$/, '');
+  const { token, bootstrapped } = useAuth();
+  const { intervalMs } = useRefreshSettings();
   return useQuery<TruckDto[]>({
-    queryKey: ['trucks', params],
+    queryKey: QueryKeys.trucks(params),
     queryFn: async () => {
-      const { data } = await api.get<TruckDto[]>(`${base}/api/v1/trucks`, {
+      const { data } = await api.get<TruckDto[]>('/trucks', {
         params,
       } as const);
       return data;
     },
+    enabled: !!token && bootstrapped,
     staleTime: 10_000,
     refetchOnWindowFocus: false,
+    refetchInterval: intervalMs || false,
+    refetchIntervalInBackground: false,
   });
 }

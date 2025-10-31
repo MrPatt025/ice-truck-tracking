@@ -1,0 +1,130 @@
+name: PR CI / Quality Gates
+
+on:
+  pull_request:
+    branches: [main, '**']
+
+jobs:
+  commitlint:
+    name: Commitlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Lint PR commits with Conventional Commits
+        uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: commitlint.config.cjs
+
+  dashboard:
+    name: Dashboard Gates
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+      NEXT_PUBLIC_E2E: '1'
+      PW_PORT: '3100'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+          run_install: true
+
+      - name: Type check
+        working-directory: dashboard
+        run: pnpm type-check
+
+      - name: Lint (scoped to dashboard)
+        working-directory: dashboard
+        run: pnpm lint
+
+      - name: Unit tests
+        working-directory: dashboard
+        run: pnpm test -- --runInBand
+
+      - name: Build (production)
+        working-directory: dashboard
+        run: pnpm build
+
+      - name: Size budgets (fail if exceeded)
+        working-directory: dashboard
+        run: pnpm size
+
+      - name: Install Playwright browsers
+        working-directory: dashboard
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: E2E tests
+        working-directory: dashboard
+        run: pnpm test:e2e --reporter=dot
+
+  preview:
+    name: Preview Deploy
+    runs-on: ubuntu-latest
+    needs: [commitlint, dashboard]
+    if: ${{ github.event_name == 'pull_request' }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      NEXT_PUBLIC_E2E: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+          run_install: true
+
+      - name: Build (dashboard)
+        if: env.VERCEL_TOKEN != ''
+        working-directory: dashboard
+        run: pnpm build
+
+      - name: Pull Vercel env (preview)
+        if: env.VERCEL_TOKEN != ''
+        working-directory: dashboard
+        run: npx vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+
+      - name: Vercel build
+        if: env.VERCEL_TOKEN != ''
+        working-directory: dashboard
+        run: npx vercel build --token=$VERCEL_TOKEN
+
+      - name: Deploy preview
+        id: deploy
+        if: env.VERCEL_TOKEN != ''
+        working-directory: dashboard
+        run: |
+          URL=$(npx vercel deploy --prebuilt --token=$VERCEL_TOKEN)
+          echo "preview_url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Post preview URL as PR comment
+        if: steps.deploy.outputs.preview_url != ''
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            🚀 Preview deployed: ${{ steps.deploy.outputs.preview_url }}
+            (This link is ephemeral and may change as you push new commits.)
+
+      - name: Note when preview is not configured
+        if: env.VERCEL_TOKEN == ''
+        run: |
+          echo "Vercel secrets not provided. Skipping preview deployment."

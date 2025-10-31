@@ -7,6 +7,7 @@ import {
   type ManagerOptions,
   type SocketOptions,
 } from 'socket.io-client';
+import { buildWsUrl } from '@/shared/lib/wsUrl';
 
 // ===== Domain types =====
 export interface TruckLocation {
@@ -58,7 +59,7 @@ class SocketService {
    * ใส่ type annotation ชัดเจนเพื่อเลี่ยง TS2742
    */
   connect(
-    url: string = process.env.NEXT_PUBLIC_WS_URL ?? 'http://localhost:5000',
+    url: string = process.env.NEXT_PUBLIC_WS_URL ?? buildWsUrl(),
     opts?: Partial<ManagerOptions & SocketOptions>,
   ): Socket<ServerToClientEvents, ClientToServerEvents> {
     // ป้องกันถูกเรียกตอน SSR

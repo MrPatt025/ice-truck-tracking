@@ -14,16 +14,7 @@ export type HealthState = {
   recheck: () => void;
 };
 
-const ENV = process.env.NEXT_PUBLIC_API_URL?.trim();
-const BASE_URL = ENV && ENV.length > 0 ? ENV : 'http://localhost:5000';
-
-const HEALTH_URL = (() => {
-  try {
-    return new URL('/api/v1/health', BASE_URL).toString();
-  } catch {
-    return `${String(BASE_URL).replace(/\/$/, '')}/api/v1/health`;
-  }
-})();
+const HEALTH_KEY = 'health';
 
 const clamp = (n: number, min: number, max: number) =>
   Math.min(Math.max(n, min), max);
@@ -39,11 +30,11 @@ const POLL_MS = (() => {
 const REQUEST_TIMEOUT_MS = clamp(POLL_MS - 100, 1000, 9000);
 
 // fetcher supports { ok:true } or { status:"ok" } using the shared axios client
-const healthFetcher = async (url: string): Promise<boolean> => {
+const healthFetcher = async (_key: string): Promise<boolean> => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const res = await api.get(url, {
+    const res = await api.get('health', {
       headers: { Accept: 'application/json' },
       signal: controller.signal,
     });
@@ -100,7 +91,7 @@ export const useHealth = (): HealthState => {
   );
 
   const { data, error, isValidating, mutate } = useSWR<boolean>(
-    HEALTH_URL,
+    HEALTH_KEY,
     healthFetcher,
     swrOptions,
   );

@@ -273,7 +273,6 @@ export function EnhancedMapView({
       {/* Context Menu */}
       {contextMenu && (
         <div
-          role="menu"
           className="fixed bg-white rounded-lg shadow-lg border py-2 z-50 min-w-40"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={(e) => e.stopPropagation()}

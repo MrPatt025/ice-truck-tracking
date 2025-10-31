@@ -1,0 +1,466 @@
+
+> ice-truck-tracking-monorepo@2.0.0 unused:exports C:\Users\PATTANAKORN\ice-truck-tracking
+> ts-prune
+
+\playwright.config.ts:7 - default
+\prisma.config.ts:4 - default
+\vitest.config.ts:3 - default
+\backend\vitest.config.ts:3 - default
+\dashboard\middleware.ts:40 - middleware
+\dashboard\middleware.ts:71 - config
+\dashboard\next.config.ts:180 - default
+\dashboard\playwright.config.ts:6 - default
+\dashboard\tailwind.config.ts:93 - default
+\dashboard\vitest.config.ts:12 - default
+\mobile-app\App.tsx:12 - default
+\backend\prisma\seed.ts:42 - main (used in module)
+\backend\src\index.ts:1143 - startServer (used in module)
+\backend\src\index.ts:1132 - ExitFn (used in module)
+\backend\src\index.ts:1250 - server (used in module)
+\dashboard\src\env.ts:4 - env (used in module)
+\src\types\contracts.ts:6 - FleetSummary
+\src\types\contracts.ts:16 - AlertsSummary
+\src\types\contracts.ts:23 - HealthTier1
+\src\types\contracts.ts:31 - TelemetryState
+\backend\dist\config\env.d.ts:1 - NODE_ENV
+\backend\dist\config\env.d.ts:2 - PORT
+\backend\dist\config\env.d.ts:3 - DB_URL
+\backend\dist\config\env.d.ts:4 - JWT_SECRET
+\backend\dist\config\env.d.ts:5 - JWT_EXPIRES_IN
+\backend\dist\config\env.d.ts:6 - SALT_ROUNDS
+\backend\dist\config\env.d.ts:7 - CLIENT_URL
+\backend\dist\config\env.d.ts:8 - RATE_LIMIT_WINDOW_MS
+\backend\dist\config\env.d.ts:9 - RATE_LIMIT_MAX_REQUESTS
+\backend\dist\config\env.d.ts:10 - LOG_LEVEL
+\backend\dist\config\env.d.ts:11 - LOG_FORMAT
+\backend\dist\config\env.d.ts:12 - HEALTH_CHECK_TIMEOUT
+\backend\dist\config\env.d.ts:13 - isDevelopment
+\backend\dist\config\env.d.ts:14 - isProduction
+\backend\dist\config\env.d.ts:15 - isTest
+\backend\dist\config\secure-env.d.ts:Infinity - prototype
+\backend\dist\config\swagger.d.ts:1 - specs (used in module)
+\backend\dist\config\swagger.d.ts:9 - swaggerUi
+\backend\dist\controllers\auth.d.ts:1 - login
+\backend\dist\controllers\auth.d.ts:2 - register
+\backend\dist\controllers\health.d.ts:1 - healthCheck
+\backend\dist\controllers\health.d.ts:2 - readinessCheck
+\backend\dist\controllers\health.d.ts:3 - livenessCheck
+\backend\dist\controllers\metrics.d.ts:1 - getSummary
+\backend\dist\controllers\metrics.d.ts:2 - getRevenueTrend
+\backend\dist\controllers\metrics.d.ts:3 - getFleetActivity
+\backend\dist\controllers\metrics.d.ts:4 - getCargoTempDistribution
+\backend\dist\controllers\metrics.d.ts:9 - getAlertTimeline
+\backend\dist\controllers\metrics.d.ts:10 - getPerformanceRadar
+\backend\dist\controllers\metrics.d.ts:15 - getSystemHealth
+\backend\dist\controllers\metrics.d.ts:16 - getStreams
+\backend\dist\lib\prisma.d.ts:2 - prisma
+\backend\dist\middleware\auth.d.ts:1 - signToken
+\backend\dist\middleware\auth.d.ts:2 - createSendToken
+\backend\dist\middleware\auth.d.ts:3 - protect
+\backend\dist\middleware\auth.d.ts:4 - restrictTo
+\backend\dist\middleware\error.d.ts:3 - AppError (used in module)
+\backend\dist\middleware\logger.d.ts:1 - logger
+\backend\dist\middleware\logger.d.ts:2 - logError
+\backend\dist\middleware\metrics.d.ts:1 - metricsMiddleware
+\backend\dist\middleware\metrics.d.ts:2 - metricsHandler
+\backend\dist\middleware\metrics.d.ts:3 - register
+\backend\dist\middleware\rateLimit.d.ts:1 - generalLimiter
+\backend\dist\middleware\rateLimit.d.ts:2 - authLimiter
+\backend\dist\middleware\rateLimiter.d.ts:1 - generalLimiter
+\backend\dist\middleware\validation.d.ts:1 - validate
+\backend\dist\middleware\validation.d.ts:2 - schemas
+\backend\dist\schemas\user.schema.d.ts:2 - loginSchema (used in module)
+\backend\dist\schemas\user.schema.d.ts:18 - LoginInput
+\backend\dist\services\alertService.d.ts:1 - getAllAlerts
+\backend\dist\services\driverService.d.ts:1 - getAllDrivers
+\backend\dist\services\metricsRoutes.d.ts:1 - default
+\backend\dist\services\metricsService.d.ts:36 - default
+\backend\dist\services\shopService.d.ts:1 - getAllShops
+\backend\dist\services\trackingService.d.ts:2 - recordGpsLog
+\backend\dist\services\truckService.d.ts:1 - getAllTrucks
+\backend\dist\services\userService.d.ts:2 - SafeUser (used in module)
+\backend\dist\services\userService.d.ts:3 - login
+\backend\src\lib\prisma.ts:74 - default
+\backend\src\services\alertService.ts:72 - createAlertForTruck
+\backend\src\services\insightsService.ts:20 - RiskyTruck (used in module)
+\backend\src\services\insightsService.ts:27 - AlertTrend (used in module)
+\backend\src\services\insightsService.ts:29 - InsightsResponse (used in module)
+\backend\test\__mocks__\prisma.mock.ts:123 - seedTrucks
+\backend\test\__mocks__\prisma.mock.ts:8 - Truck (used in module)
+\backend\test\__mocks__\prisma.mock.ts:15 - Alert (used in module)
+\backend\test\__mocks__\prisma.mock.ts:272 - prisma
+\backend\test\__mocks__\prisma.mock.ts:274 - default
+\dashboard\.next\types\routes.d.ts:23 - ParamsOf
+\dashboard\.next\types\routes.d.ts:31 - AppRoutes (used in module)
+\dashboard\.next\types\routes.d.ts:31 - PageRoutes (used in module)
+\dashboard\.next\types\routes.d.ts:31 - LayoutRoutes (used in module)
+\dashboard\.next\types\routes.d.ts:31 - RedirectRoutes (used in module)
+\dashboard\.next\types\routes.d.ts:31 - RewriteRoutes (used in module)
+\dashboard\.next\types\routes.d.ts:31 - ParamMap (used in module)
+\dashboard\.next\types\routes.d.ts:31 - AppRouteHandlerRoutes (used in module)
+\dashboard\src\app\layout.tsx:58 - default
+\dashboard\src\app\layout.tsx:19 - metadata
+\dashboard\src\app\layout.tsx:48 - viewport
+\dashboard\src\app\not-found.tsx:3 - default
+\dashboard\src\components\AlertsPanel.tsx:132 - default
+\dashboard\src\components\AnalyticsDashboard.tsx:144 - default
+\dashboard\src\components\AnalyticsDashboard.tsx:145 - AnalyticsDashboardProps
+\dashboard\src\components\AnalyticsDashboard.tsx:145 - AnalyticsStats
+\dashboard\src\components\AnimatedPings.tsx:12 - default
+\dashboard\src\components\ChartContainer.stories.tsx:21 - default
+\dashboard\src\components\ChartContainer.stories.tsx:28 - Basic
+\dashboard\src\components\ClientOnly.tsx:21 - default
+\dashboard\src\components\ConnectionAnnouncer.tsx:4 - default
+\dashboard\src\components\ConnectionBadge.tsx:5 - default
+\dashboard\src\components\Dashboard.tsx:10 - Dashboard
+\dashboard\src\components\EnhancedMapView.tsx:24 - EnhancedMapView
+\dashboard\src\components\ErrorBoundary.tsx:7 - default
+\dashboard\src\components\FeatureFlags.tsx:18 - FeatureFlags
+\dashboard\src\components\FeatureFlags.tsx:190 - useFeatureFlag
+\dashboard\src\components\Fleet3DCanvas.tsx:121 - default
+\dashboard\src\components\LeafletFleetMap.tsx:12 - default
+\dashboard\src\components\MapLibreBoot.tsx:5 - default
+\dashboard\src\components\MapView.tsx:5 - default
+\dashboard\src\components\OnlineStatus.tsx:4 - default
+\dashboard\src\components\PreferencesPanel.tsx:10 - default
+\dashboard\src\components\Sidebar.tsx:62 - default
+\dashboard\src\components\StaticHero.tsx:6 - default
+\dashboard\src\components\ThemeProvider.tsx:23 - ThemeProvider
+\dashboard\src\components\ThemeProvider.tsx:62 - useTheme
+\dashboard\src\components\TruckList.tsx:56 - default
+\dashboard\src\components\TruckList.tsx:13 - Truck (used in module)
+\dashboard\src\components\TruckMap.tsx:3 - default
+\dashboard\src\hooks\useAlerts.ts:20 - useAlerts (used in module)
+\dashboard\src\hooks\useAlerts.ts:4 - UseAlertsOptions (used in module)
+\dashboard\src\hooks\useAlerts.ts:11 - UseAlertsReturn (used in module)
+\dashboard\src\hooks\useConnection.ts:3 - useConnection
+\dashboard\src\hooks\useHealth.ts:8 - HealthState (used in module)
+\dashboard\src\hooks\useHealth.ts:60 - useHealth
+\dashboard\src\hooks\useMetrics.ts:23 - Metric (used in module)
+\dashboard\src\hooks\useMetrics.ts:32 - useMetrics
+\dashboard\src\hooks\useRealTimeData.ts:26 - useRealTimeData
+\dashboard\src\hooks\useRealtimeTrucks.ts:114 - useRealtimeTrucks
+\dashboard\src\hooks\useRealtimeTrucks.ts:9 - Truck (used in module)
+\dashboard\src\hooks\useStats.ts:12 - useStats
+\dashboard\src\hooks\useTelemetry.ts:57 - useTelemetry
+\dashboard\src\hooks\useTelemetry.ts:10 - Health (used in module)
+\dashboard\src\hooks\useTelemetry.ts:12 - Alert (used in module)
+\dashboard\src\i18n\messages.ts:1 - messages
+\dashboard\src\lib\apiClient.ts:26 - getHealthz (used in module)
+\dashboard\src\lib\apiClient.ts:32 - getGetHealthzQueryKey (used in module)
+\dashboard\src\lib\apiClient.ts:36 - getGetHealthzQueryOptions (used in module)
+\dashboard\src\lib\apiClient.ts:62 - GetHealthzQueryResult
+\dashboard\src\lib\apiClient.ts:65 - GetHealthzQueryError
+\dashboard\src\lib\apiClient.ts:67 - useGetHealthz
+\dashboard\src\lib\apiClient.ts:89 - getReadyz (used in module)
+\dashboard\src\lib\apiClient.ts:95 - getGetReadyzQueryKey (used in module)
+\dashboard\src\lib\apiClient.ts:99 - getGetReadyzQueryOptions (used in module)
+\dashboard\src\lib\apiClient.ts:121 - GetReadyzQueryResult
+\dashboard\src\lib\apiClient.ts:124 - GetReadyzQueryError
+\dashboard\src\lib\apiClient.ts:126 - useGetReadyz
+\dashboard\src\lib\apiClient.ts:144 - getMetrics (used in module)
+\dashboard\src\lib\apiClient.ts:150 - getGetMetricsQueryKey (used in module)
+\dashboard\src\lib\apiClient.ts:154 - getGetMetricsQueryOptions (used in module)
+\dashboard\src\lib\apiClient.ts:180 - GetMetricsQueryResult
+\dashboard\src\lib\apiClient.ts:183 - GetMetricsQueryError
+\dashboard\src\lib\apiClient.ts:185 - useGetMetrics
+\dashboard\src\lib\apiClient.ts:210 - getApiV1Health (used in module)
+\dashboard\src\lib\apiClient.ts:216 - getGetApiV1HealthQueryKey (used in module)
+\dashboard\src\lib\apiClient.ts:220 - getGetApiV1HealthQueryOptions (used in module)
+\dashboard\src\lib\apiClient.ts:246 - GetApiV1HealthQueryResult
+\dashboard\src\lib\apiClient.ts:249 - GetApiV1HealthQueryError
+\dashboard\src\lib\apiClient.ts:254 - useGetApiV1Health
+\dashboard\src\lib\apiClient.ts:279 - getApiV1Trucks (used in module)
+\dashboard\src\lib\apiClient.ts:289 - getGetApiV1TrucksQueryKey (used in module)
+\dashboard\src\lib\apiClient.ts:293 - getGetApiV1TrucksQueryOptions (used in module)
+\dashboard\src\lib\apiClient.ts:322 - GetApiV1TrucksQueryResult
+\dashboard\src\lib\apiClient.ts:325 - GetApiV1TrucksQueryError
+\dashboard\src\lib\apiClient.ts:330 - useGetApiV1Trucks
+\dashboard\src\lib\apiClient.ts:358 - getApiV1Alerts (used in module)
+\dashboard\src\lib\apiClient.ts:364 - getGetApiV1AlertsQueryKey (used in module)
+\dashboard\src\lib\apiClient.ts:368 - getGetApiV1AlertsQueryOptions (used in module)
+\dashboard\src\lib\apiClient.ts:394 - GetApiV1AlertsQueryResult
+\dashboard\src\lib\apiClient.ts:397 - GetApiV1AlertsQueryError
+\dashboard\src\lib\apiClient.ts:402 - useGetApiV1Alerts
+\dashboard\src\lib\apiClient.ts:427 - getApiV1Stats (used in module)
+\dashboard\src\lib\apiClient.ts:437 - getGetApiV1StatsQueryKey (used in module)
+\dashboard\src\lib\apiClient.ts:441 - getGetApiV1StatsQueryOptions (used in module)
+\dashboard\src\lib\apiClient.ts:470 - GetApiV1StatsQueryResult
+\dashboard\src\lib\apiClient.ts:473 - GetApiV1StatsQueryError
+\dashboard\src\lib\apiClient.ts:478 - useGetApiV1Stats
+\dashboard\src\lib\apiClient.ts:506 - getApiV1Telemetry (used in module)
+\dashboard\src\lib\apiClient.ts:512 - getGetApiV1TelemetryQueryKey (used in module)
+\dashboard\src\lib\apiClient.ts:516 - getGetApiV1TelemetryQueryOptions (used in module)
+\dashboard\src\lib\apiClient.ts:542 - GetApiV1TelemetryQueryResult
+\dashboard\src\lib\apiClient.ts:545 - GetApiV1TelemetryQueryError
+\dashboard\src\lib\apiClient.ts:550 - useGetApiV1Telemetry
+\dashboard\src\lib\apiClient.ts:572 - getGetApiV1HealthResponseMock (used in module)
+\dashboard\src\lib\apiClient.ts:576 - getGetApiV1TrucksResponseMock (used in module)
+\dashboard\src\lib\apiClient.ts:590 - getGetApiV1AlertsResponseMock (used in module)
+\dashboard\src\lib\apiClient.ts:611 - getGetApiV1StatsResponseMock (used in module)
+\dashboard\src\lib\apiClient.ts:671 - getGetHealthzMockHandler (used in module)
+\dashboard\src\lib\apiClient.ts:683 - getGetReadyzMockHandler (used in module)
+\dashboard\src\lib\apiClient.ts:695 - getGetMetricsMockHandler (used in module)
+\dashboard\src\lib\apiClient.ts:707 - getGetApiV1HealthMockHandler (used in module)
+\dashboard\src\lib\apiClient.ts:726 - getGetApiV1TrucksMockHandler (used in module)
+\dashboard\src\lib\apiClient.ts:745 - getGetApiV1AlertsMockHandler (used in module)
+\dashboard\src\lib\apiClient.ts:764 - getGetApiV1StatsMockHandler (used in module)
+\dashboard\src\lib\apiClient.ts:783 - getGetApiV1TelemetryMockHandler (used in module)
+\dashboard\src\lib\apiClient.ts:794 - getIceTruckTrackingAPIMock
+\dashboard\src\lib\cn.ts:12 - cn
+\dashboard\src\pages\_document.tsx:6 - default
+\dashboard\src\services\socket.ts:13 - TruckLocation (used in module)
+\dashboard\src\services\socket.ts:23 - GeofenceAlert (used in module)
+\dashboard\src\services\socket.ts:212 - socketService (used in module)
+\dashboard\src\services\socket.ts:213 - default
+\dashboard\src\shared\queryKeys.ts:1 - QueryKeys
+\dashboard\src\shared\queryKeys.ts:8 - QueryKeyOf
+\dashboard\src\stories\Button.stories.ts:25 - default
+\dashboard\src\stories\Button.stories.ts:29 - Primary
+\dashboard\src\stories\Button.stories.ts:36 - Secondary
+\dashboard\src\stories\Button.stories.ts:42 - Large
+\dashboard\src\stories\Button.stories.ts:49 - Small
+\dashboard\src\stories\Button.stories.ts:56 - Icetruck
+\dashboard\src\stories\Button.tsx:4 - ButtonProps (used in module)
+\dashboard\src\stories\Header.stories.ts:23 - default
+\dashboard\src\stories\Header.stories.ts:26 - LoggedIn
+\dashboard\src\stories\Header.stories.ts:34 - LoggedOut
+\dashboard\src\stories\Header.tsx:8 - StoryUser (used in module)
+\dashboard\src\stories\Header.tsx:10 - HeaderProps (used in module)
+\dashboard\src\stories\Page.stories.ts:16 - default
+\dashboard\src\stories\Page.stories.ts:19 - LoggedOut
+\dashboard\src\stories\Page.stories.ts:22 - LoggedIn
+\dashboard\src\types\api.d.ts:6 - paths
+\dashboard\src\types\api.d.ts:339 - webhooks
+\dashboard\src\types\api.d.ts:340 - components
+\dashboard\src\types\api.d.ts:348 - $defs
+\dashboard\src\types\api.d.ts:349 - operations
+\dashboard\src\types\contracts.zod.ts:53 - safeParseFleetSummary
+\dashboard\src\types\contracts.zod.ts:58 - safeParseAlertsSummary
+\dashboard\src\types\contracts.zod.ts:63 - safeParseHealthTier1
+\dashboard\src\types\contracts.zod.ts:68 - safeParseTelemetryState
+\dashboard\src\types\contracts.zod.ts:9 - FleetSummarySchema (used in module)
+\dashboard\src\types\contracts.zod.ts:17 - satisfies (used in module)
+\dashboard\src\types\contracts.zod.ts:17 - z (used in module)
+\dashboard\src\types\contracts.zod.ts:17 - ZodType (used in module)
+\dashboard\src\types\contracts.zod.ts:19 - AlertsSummarySchemaBase (used in module)
+\dashboard\src\types\contracts.zod.ts:26 - AlertsSummarySchema (used in module)
+\dashboard\src\types\contracts.zod.ts:39 - HealthTier1Schema (used in module)
+\dashboard\src\types\contracts.zod.ts:47 - TelemetryStateSchema (used in module)
+\dashboard\src\types\truck.ts:70 - isUiTruck
+\dashboard\src\types\truck.ts:80 - isApiTruck
+\dashboard\src\types\truck.ts:92 - isTelemetry (used in module)
+\dashboard\src\types\truck.ts:109 - hasCoords (used in module)
+\dashboard\src\types\truck.ts:121 - hasVitals
+\dashboard\src\types\truck.ts:142 - toUiTruck (used in module)
+\dashboard\src\types\truck.ts:211 - toUiTruckList
+\dashboard\src\types\truck.ts:224 - mergeTruckTelemetry (used in module)
+\dashboard\src\types\truck.ts:263 - mergeTruckCollections
+\dashboard\src\types\truck.ts:313 - compareByUpdatedDesc (used in module)
+\dashboard\src\types\truck.ts:319 - compareByNameAsc (used in module)
+\dashboard\src\types\truck.ts:324 - compareByIdAsc (used in module)
+\dashboard\src\types\truck.ts:340 - isValidLatLon (used in module)
+\dashboard\src\types\truck.ts:344 - formatSpeed
+\dashboard\src\types\truck.ts:350 - formatTemp
+\dashboard\src\types\truck.ts:357 - toLngLat
+\dashboard\src\types\truck.ts:380 - toGeoJSONFeature (used in module)
+\dashboard\src\types\truck.ts:407 - toGeoJSONFeatureCollection
+\dashboard\src\types\truck.ts:32 - Truck
+\dashboard\src\types\truck.ts:35 - ApiTruck (used in module)
+\dashboard\src\types\truck.ts:43 - Telemetry (used in module)
+\dashboard\src\types\truck.ts:62 - WithRequired (used in module)
+\dashboard\src\types\truck.ts:64 - Comparator (used in module)
+\dashboard\src\types\truck.ts:328 - Sorters
+\dashboard\src\types\truck.ts:332 - satisfies
+\dashboard\src\types\truck.ts:332 - Readonly (used in module)
+\dashboard\src\types\truck.ts:369 - MinimalGeoFeature (used in module)
+\dashboard\src\types\truck.ts:375 - MinimalGeoFeatureCollection (used in module)
+\dashboard\src\types\ui.ts:2 - UIAlert
+\mobile-app\src\contexts\NotificationContext.tsx:92 - useNotifications
+\mobile-app\src\contexts\ThemeContext.tsx:56 - useTheme
+\sdk\edge\dist\index.d.ts:1 - formatDate
+\sdk\edge\dist\index.d.ts:2 - calculateDistance
+\sdk\edge\dist\index.d.ts:3 - validateEmail
+\sdk\edge\src\index.ts:3 - formatDate
+\sdk\edge\src\index.ts:7 - calculateDistance
+\sdk\edge\src\index.ts:26 - validateEmail
+\sdk\mobile\dist\index.d.ts:1 - version
+\sdk\mobile\src\index.ts:1 - version
+\backend\dist\generated\client\edge.d.ts:1 - __esModule
+\backend\dist\generated\client\edge.d.ts:2 - Prisma (used in module)
+\backend\dist\generated\client\edge.d.ts:475 - $Enums
+\backend\dist\generated\client\edge.d.ts:572 - maintenance_maintenance_type (used in module)
+\backend\dist\generated\client\edge.d.ts:582 - routes_status (used in module)
+\backend\dist\generated\client\edge.d.ts:590 - users_role (used in module)
+\backend\dist\generated\client\edge.d.ts:598 - notifications_type (used in module)
+\backend\dist\generated\client\edge.d.ts:608 - alerts_type (used in module)
+\backend\dist\generated\client\edge.d.ts:624 - route_assignments_status (used in module)
+\backend\dist\generated\client\edge.d.ts:636 - maintenance_status (used in module)
+\backend\dist\generated\client\edge.d.ts:646 - route_details_status (used in module)
+\backend\dist\generated\client\edge.d.ts:658 - alerts_priority (used in module)
+\backend\dist\generated\client\edge.d.ts:668 - shops_status (used in module)
+\backend\dist\generated\client\edge.d.ts:674 - deliveries_status (used in module)
+\backend\dist\generated\client\edge.d.ts:686 - drivers_status (used in module)
+\backend\dist\generated\client\edge.d.ts:694 - trucks_status (used in module)
+\backend\dist\generated\client\edge.d.ts:732 - PrismaClient
+\backend\dist\generated\client\index-browser.d.ts:1 - __esModule
+\backend\dist\generated\client\index-browser.d.ts:2 - Prisma (used in module)
+\backend\dist\generated\client\index-browser.d.ts:480 - $Enums
+\backend\dist\generated\client\index-browser.d.ts:577 - alerts_type (used in module)
+\backend\dist\generated\client\index-browser.d.ts:593 - alerts_priority (used in module)
+\backend\dist\generated\client\index-browser.d.ts:603 - deliveries_status (used in module)
+\backend\dist\generated\client\index-browser.d.ts:615 - drivers_status (used in module)
+\backend\dist\generated\client\index-browser.d.ts:623 - maintenance_maintenance_type (used in module)
+\backend\dist\generated\client\index-browser.d.ts:633 - maintenance_status (used in module)
+\backend\dist\generated\client\index-browser.d.ts:643 - notifications_type (used in module)
+\backend\dist\generated\client\index-browser.d.ts:653 - route_assignments_status (used in module)
+\backend\dist\generated\client\index-browser.d.ts:665 - route_details_status (used in module)
+\backend\dist\generated\client\index-browser.d.ts:677 - routes_status (used in module)
+\backend\dist\generated\client\index-browser.d.ts:685 - shops_status (used in module)
+\backend\dist\generated\client\index-browser.d.ts:691 - trucks_status (used in module)
+\backend\dist\generated\client\index-browser.d.ts:699 - users_role (used in module)
+\backend\dist\generated\client\index-browser.d.ts:782 - PrismaClient
+\backend\dist\generated\client\wasm.d.ts:1 - __esModule
+\backend\dist\generated\client\wasm.d.ts:2 - Prisma (used in module)
+\backend\dist\generated\client\wasm.d.ts:475 - $Enums
+\backend\dist\generated\client\wasm.d.ts:572 - maintenance_maintenance_type (used in module)
+\backend\dist\generated\client\wasm.d.ts:582 - routes_status (used in module)
+\backend\dist\generated\client\wasm.d.ts:590 - users_role (used in module)
+\backend\dist\generated\client\wasm.d.ts:598 - notifications_type (used in module)
+\backend\dist\generated\client\wasm.d.ts:608 - alerts_type (used in module)
+\backend\dist\generated\client\wasm.d.ts:624 - route_assignments_status (used in module)
+\backend\dist\generated\client\wasm.d.ts:636 - maintenance_status (used in module)
+\backend\dist\generated\client\wasm.d.ts:646 - route_details_status (used in module)
+\backend\dist\generated\client\wasm.d.ts:658 - alerts_priority (used in module)
+\backend\dist\generated\client\wasm.d.ts:668 - shops_status (used in module)
+\backend\dist\generated\client\wasm.d.ts:674 - deliveries_status (used in module)
+\backend\dist\generated\client\wasm.d.ts:686 - drivers_status (used in module)
+\backend\dist\generated\client\wasm.d.ts:694 - trucks_status (used in module)
+\backend\dist\generated\client\wasm.d.ts:732 - PrismaClient
+\backend\dist\routes\v1\auth.route.d.ts:2 - default
+\backend\src\_legacy\services\driverService.ts:3 - getAllDrivers
+\backend\src\_legacy\services\shopService.ts:3 - getShopById
+\backend\src\_legacy\services\trackingService.ts:4 - getAllTrucks
+\backend\src\_legacy\types\truck.ts:2 - Truck (used in module)
+\dashboard\src\app\dashboard\layout.tsx:1 - default
+\dashboard\src\app\dashboard\page.tsx:577 - default
+\dashboard\src\app\login\page.tsx:905 - default
+\dashboard\src\app\register\page.tsx:4 - default
+\dashboard\src\components\charts\LazyCharts.tsx:40 - CustomTooltip (used in module)
+\dashboard\src\components\charts\LazyCharts.tsx:90 - MetricSparkline
+\dashboard\src\components\charts\LazyCharts.tsx:144 - RevenueChart
+\dashboard\src\components\charts\LazyCharts.tsx:227 - FleetChart
+\dashboard\src\components\charts\LazyCharts.tsx:308 - AlertsChart
+\dashboard\src\components\charts\LazyCharts.tsx:412 - TempDistributionPie
+\dashboard\src\components\charts\LazyCharts.tsx:468 - PerformanceRadar
+\dashboard\src\components\dashboard\AlertsPanel.tsx:16 - AlertsPanel
+\dashboard\src\components\dashboard\AnalyticsDashboard.tsx:41 - default
+\dashboard\src\components\dashboard\DashboardHeader.tsx:81 - default
+\dashboard\src\components\dashboard\Fleet3DScene.tsx:28 - default
+\dashboard\src\components\dashboard\FleetMapPanel.tsx:25 - FleetMapPanel
+\dashboard\src\components\dashboard\HeaderBar.tsx:10 - HeaderBar
+\dashboard\src\components\dashboard\InsightsPanel.tsx:48 - InsightsPanel (used in module)
+\dashboard\src\components\dashboard\InsightsPanel.tsx:140 - default
+\dashboard\src\components\dashboard\MetricCard.tsx:9 - MetricCardProps (used in module)
+\dashboard\src\components\dashboard\MetricCard.tsx:87 - default
+\dashboard\src\components\dashboard\MetricsGrid.tsx:34 - MetricsGrid (used in module)
+\dashboard\src\components\dashboard\MetricsGrid.tsx:75 - default
+\dashboard\src\components\dashboard\PerformanceCharts.tsx:28 - PerformanceCharts
+\dashboard\src\features\activity\RecentActivitySection.tsx:6 - default
+\dashboard\src\features\activity\useRecentActivity.ts:4 - ActivityItem (used in module)
+\dashboard\src\features\alerts\AlertsSection.tsx:6 - default
+\dashboard\src\features\alerts\useAlertsData.ts:4 - AlertItem (used in module)
+\dashboard\src\features\map\LiveMapSection.tsx:20 - default
+\dashboard\src\shared\auth\AuthContext.tsx:75 - AuthProvider
+\dashboard\src\shared\auth\AuthContext.tsx:201 - useAuth (used in module)
+\dashboard\src\shared\auth\AuthContext.tsx:210 - RequireAuth
+\dashboard\src\shared\auth\AuthContext.tsx:17 - User (used in module)
+\dashboard\src\shared\auth\AuthContext.tsx:35 - AuthContextValue (used in module)
+\dashboard\src\shared\flags\FlagsProvider.tsx:54 - FlagsProvider
+\dashboard\src\shared\flags\FlagsProvider.tsx:151 - useFlags
+\dashboard\src\shared\flags\FlagsProvider.tsx:16 - Flags (used in module)
+\dashboard\src\shared\flags\FlagsProvider.tsx:22 - FlagsContextValue (used in module)
+\dashboard\src\shared\hooks\useAlerts.ts:11 - useAlerts
+\dashboard\src\shared\hooks\useInsights.ts:9 - useInsights
+\dashboard\src\shared\hooks\useRealtimeTelemetry.ts:23 - useRealtimeTelemetry
+\dashboard\src\shared\hooks\useRealtimeTelemetry.ts:13 - RealtimeState (used in module)
+\dashboard\src\shared\hooks\useStats.ts:11 - useStats
+\dashboard\src\shared\hooks\useTrucks.ts:18 - useTrucks
+\dashboard\src\shared\hooks\useTrucks.ts:11 - TrucksQuery (used in module)
+\dashboard\src\shared\lib\apiBase.ts:13 - getApiBase (used in module)
+\dashboard\src\shared\lib\apiBase.ts:45 - apiUrl
+\dashboard\src\shared\lib\apiClient.ts:244 - apiFetch
+\dashboard\src\shared\lib\wsUrl.ts:11 - buildWsUrl
+\dashboard\src\shared\refresh\RefreshSettings.tsx:32 - RefreshSettingsProvider
+\dashboard\src\shared\refresh\RefreshSettings.tsx:89 - useRefreshSettings
+\dashboard\src\shared\refresh\RefreshSettings.tsx:11 - RefreshSpeedKey (used in module)
+\dashboard\src\shared\types\api.ts:4 - TruckDto
+\dashboard\src\shared\types\api.ts:11 - AlertDto (used in module)
+\dashboard\src\shared\types\api.ts:19 - StatsRange
+\dashboard\src\shared\types\api.ts:21 - StatsResponse
+\dashboard\src\shared\types\api.ts:43 - TelemetryPoint (used in module)
+\dashboard\src\shared\types\api.ts:52 - TelemetryMessage
+\dashboard\src\shared\types\api.ts:58 - RiskyTruckDto (used in module)
+\dashboard\src\shared\types\api.ts:65 - AlertTrend (used in module)
+\dashboard\src\shared\types\api.ts:67 - InsightsResponse
+\dashboard\src\shared\utils\stats.ts:1 - calculateStatistics
+\dashboard\src\shared\utils\stats.ts:14 - isStale
+\dashboard\src\types\api\index.ts:8 - GetApiV1Alerts200Item
+\dashboard\src\types\api\index.ts:8 - GetApiV1Health200
+\dashboard\src\types\api\index.ts:14 - GetApiV1Stats200
+\dashboard\src\types\api\index.ts:8 - GetApiV1Stats200AlertsSeriesItem
+\dashboard\src\types\api\index.ts:8 - GetApiV1Stats200FleetSeriesItem
+\dashboard\src\types\api\index.ts:8 - GetApiV1Stats200PerformanceRadarItem
+\dashboard\src\types\api\index.ts:8 - GetApiV1Stats200RevenueSeriesItem
+\dashboard\src\types\api\index.ts:8 - GetApiV1Stats200Summary
+\dashboard\src\types\api\index.ts:8 - GetApiV1Stats200TempBucketsItem
+\dashboard\src\types\api\index.ts:9 - GetApiV1StatsParams
+\dashboard\src\types\api\index.ts:8 - GetApiV1StatsRange
+\dashboard\src\types\api\index.ts:8 - GetApiV1Trucks200Item
+\dashboard\src\types\api\index.ts:8 - GetApiV1TrucksOrder
+\dashboard\src\types\api\index.ts:10 - GetApiV1TrucksParams
+\dashboard\src\types\api\index.ts:8 - GetApiV1TrucksSort
+\dashboard\src\ui\components\Button.tsx:6 - ButtonProps (used in module)
+\dashboard\src\ui\components\Card.tsx:6 - CardProps (used in module)
+\dashboard\src\ui\components\Card.tsx:87 - Card (used in module)
+\dashboard\src\ui\components\Card.tsx:87 - CardHeader (used in module)
+\dashboard\src\ui\components\Card.tsx:87 - CardTitle (used in module)
+\dashboard\src\ui\components\Card.tsx:87 - CardContent (used in module)
+\dashboard\src\ui\components\ConnectionStatus.tsx:14 - ConnectionStatus (used in module)
+\dashboard\src\ui\components\ConnectionStatus.tsx:139 - default
+\dashboard\src\ui\components\ErrorBoundary.tsx:18 - ErrorBoundary
+\dashboard\src\ui\components\GlobalFetchIndicator.tsx:5 - default
+\dashboard\src\ui\components\HeaderBar.tsx:15 - HeaderBar
+\dashboard\src\ui\components\HeaderBar.tsx:8 - HeaderBarProps (used in module)
+\dashboard\src\ui\components\Input.tsx:6 - InputProps (used in module)
+\dashboard\src\ui\components\Input.tsx:90 - Input (used in module)
+\dashboard\src\ui\components\KpiCard.tsx:15 - KpiCard
+\dashboard\src\ui\components\KpiCard.tsx:8 - KpiCardProps (used in module)
+\dashboard\src\ui\components\Modal.tsx:18 - Modal
+\dashboard\src\ui\components\PreferencesPanel.tsx:64 - PreferencesPanel
+\dashboard\src\ui\components\Sidebar.tsx:15 - Sidebar
+\dashboard\src\ui\components\Sidebar.tsx:8 - SidebarProps (used in module)
+\dashboard\src\ui\components\TabBarMobile.tsx:18 - TabBarMobile
+\dashboard\src\ui\components\TabBarMobile.tsx:6 - TabBarMobileProps (used in module)
+\dashboard\src\ui\components\Tooltip.tsx:36 - Tooltip (used in module)
+\dashboard\src\ui\components\Tooltip.tsx:15 - TooltipProps (used in module)
+\dashboard\src\ui\components\Tooltip.tsx:167 - default
+\dashboard\src\ui\hooks\useA11y.ts:57 - useAnnouncer
+\dashboard\src\ui\hooks\useA11y.ts:78 - useKeyboardNavigation
+\dashboard\src\ui\hooks\useAnalytics.ts:21 - useAnalytics
+\dashboard\src\ui\hooks\useAnalytics.ts:147 - useAnalyticsOptIn
+\dashboard\src\ui\hooks\usePerformance.ts:11 - usePerformanceMonitor
+\dashboard\src\ui\hooks\usePerformance.ts:66 - useWebVitals
+\dashboard\src\ui\tokens\theme.ts:2 - colors (used in module)
+\dashboard\src\ui\tokens\theme.ts:32 - motion (used in module)
+\dashboard\src\ui\tokens\theme.ts:47 - radii (used in module)
+\dashboard\src\ui\tokens\theme.ts:53 - shadows (used in module)
+\dashboard\src\ui\tokens\theme.ts:57 - ThemeTokens (used in module)
+\dashboard\src\ui\tokens\theme.ts:64 - theme
+\dashboard\src\ui\utils\index.ts:1 - cn
+\dashboard\src\ui\utils\index.ts:5 - formatDistance
+\dashboard\src\ui\utils\index.ts:12 - formatDuration
+\dashboard\src\ui\utils\index.ts:22 - debounce
+\dashboard\src\features\__generated__\default\default.ts:12 - getDefault
+\dashboard\src\app\api\session\clear\route.ts:4 - POST
+\dashboard\src\app\api\session\set\route.ts:4 - POST

@@ -27,5 +27,5 @@ export const getDefault = () => {
       data: postAuthLoginBody,
     });
   };
-  return {};
+  return { getHealth, postAuthLogin };
 };

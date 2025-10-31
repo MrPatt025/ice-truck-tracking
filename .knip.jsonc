@@ -1,0 +1,36 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  // Analyze all workspaces without loading or parsing config files that can error (ESLint/Tailwind/etc.)
+  "workspaces": true,
+  "entry": [
+    "backend/src/**/*.ts",
+    "dashboard/src/**/*.{ts,tsx}",
+    "mobile-app/src/**/*.{ts,tsx}",
+    "sdk/edge/src/**/*.ts",
+    "sdk/mobile/src/**/*.{ts,tsx}",
+  ],
+  "ignore": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/coverage/**",
+    "**/.next/**",
+    "**/build/**",
+    "**/*.d.ts",
+    // Tests & stories
+    "**/*.stories.{ts,tsx}",
+    "**/*.spec.{ts,tsx}",
+    "**/*.test.{ts,tsx}",
+    // Problematic config files (ESM/CJS loaders or non-TS)
+    "**/eslint.config.*",
+    "**/.eslintrc.*",
+    "**/tailwind.config.*",
+    "**/postcss.config.*",
+    "**/next.config.*",
+    "**/jest.config.*",
+    "**/playwright.config.*",
+    "**/vitest.config.*",
+    "**/stryker.conf.*",
+    "**/orval.config.*",
+    "**/prettier.config.*",
+  ],
+}

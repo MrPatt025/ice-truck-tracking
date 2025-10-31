@@ -1,58 +1,73 @@
-import { NextResponse, type NextRequest } from 'next/server';
+/**
+ * AUTH FLOW IS LOCKED/STABLE:
+ * - Login sets HttpOnly cookies via /api/v1/auth/login
+ * - Frontend forces full redirect to /dashboard (not client-side push)
+ * - middleware.ts checks /api/v1/auth/me using forwarded cookies
+ * - Backend exposes ONLY /api/v1/auth/* (no legacy /auth/* paths)
+ * Do not change this contract without updating README, RELEASE_NOTES.md, and smoke-login.mjs.
+ */
 
-// Public routes that don't require auth
-const PUBLIC_PATHS = [
-  '/login',
-  '/register',
-  '/api/auth', // allow any nested under /api/auth
-];
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
-function isPublic(req: NextRequest) {
-  const { pathname } = req.nextUrl;
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/static') ||
-    pathname.startsWith('/assets') ||
-    pathname === '/favicon.ico' ||
-    pathname === '/robots.txt' ||
-    pathname === '/sitemap.xml'
-  ) {
-    return true;
+async function isAuthenticated(req: NextRequest): Promise<boolean> {
+  try {
+    // Construct full API base URL with /api/v1 prefix
+    const API_BASE =
+      process.env.BACKEND_API_BASE_URL ??
+      process.env.NEXT_PUBLIC_API_BASE_URL ??
+      'http://localhost:5000/api/v1';
+
+    // Forward incoming cookies to backend auth check
+    const cookieHeader = req.headers.get('cookie') || '';
+
+    const res = await fetch(`${API_BASE.replace(/\/+$/, '')}/auth/me`, {
+      method: 'GET',
+      headers: {
+        cookie: cookieHeader,
+      },
+      credentials: 'include',
+      // Do not cache auth checks
+      cache: 'no-store',
+    });
+
+    return res.status === 200;
+  } catch {
+    return false;
   }
-  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
-    return true;
-  }
-  return false;
 }
 
-function hasTokenCookie(req: NextRequest) {
-  const c1 = req.cookies.get('authToken')?.value;
-  const c2 = req.cookies.get('auth_token')?.value;
-  return Boolean(c1 || c2);
-}
+export async function middleware(req: NextRequest) {
+  const { pathname, search } = req.nextUrl;
 
-export default function middleware(req: NextRequest) {
-  const url = req.nextUrl.clone();
-  const isAuth = hasTokenCookie(req);
-  const publicRoute = isPublic(req);
-
-  // If not authenticated and not on a public route, redirect to /login
-  if (!isAuth && !publicRoute) {
-    url.pathname = '/login';
-    url.search = '';
-    return NextResponse.redirect(url);
+  // Only guard private routes
+  if (pathname.startsWith('/dashboard')) {
+    const ok = await isAuthenticated(req);
+    if (!ok) {
+      const url = req.nextUrl.clone();
+      url.pathname = '/login';
+      const redirectTo = `${pathname}${search ?? ''}`;
+      url.searchParams.set('redirect', redirectTo);
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
   }
 
-  // If authenticated and hitting root or login/register, send to /dashboard
-  if (isAuth && (url.pathname === '/' || url.pathname === '/login' || url.pathname === '/register')) {
-    url.pathname = '/dashboard';
-    url.search = '';
-    return NextResponse.redirect(url);
+  // If hitting /login or /register and already authenticated -> bounce to dashboard
+  if (pathname === '/login' || pathname === '/register') {
+    const ok = await isAuthenticated(req);
+    if (ok) {
+      const url = req.nextUrl.clone();
+      const back = req.nextUrl.searchParams.get('redirect') || '/dashboard';
+      url.pathname = back;
+      url.search = '';
+      return NextResponse.redirect(url);
+    }
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!_next|static|assets|favicon.ico|robots.txt|sitemap.xml).*)'],
+  matcher: ['/dashboard/:path*', '/login', '/register'],
 };

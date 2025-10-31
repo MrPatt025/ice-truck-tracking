@@ -1,6 +1,7 @@
 // /dashboard/src/hooks/useMetrics.ts
 import { useMemo } from 'react';
 import useSWR from 'swr';
+import { api } from '@/shared/lib/apiClient';
 import {
   Truck as TruckIcon,
   ThermometerSun,
@@ -10,13 +11,11 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import type { UiTruck } from '../types/truck';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 const REFRESH_MS = Number(process.env.NEXT_PUBLIC_POLL_MS ?? 5000);
-
-const fetcher = async <T>(url: string): Promise<T> => {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return (await res.json()) as T;
+const fetcher = async <T>(key: string): Promise<T> => {
+  // key is semantic; call shared axios client with resource-only path
+  const res = await api.get(key);
+  return res.data as T;
 };
 
 type AlertData = { level?: string };
@@ -39,27 +38,19 @@ export const useMetrics = (): {
     data: trucks,
     error: trucksError,
     isLoading: trucksLoading,
-  } = useSWR<UiTruck[]>(
-    `${API_URL}/api/v1/trucks`,
-    (u) => fetcher<UiTruck[]>(u),
-    {
-      refreshInterval: REFRESH_MS,
-      dedupingInterval: REFRESH_MS,
-    },
-  );
+  } = useSWR<UiTruck[]>('trucks', (k) => fetcher<UiTruck[]>(k), {
+    refreshInterval: REFRESH_MS,
+    dedupingInterval: REFRESH_MS,
+  });
 
   const {
     data: alerts,
     error: alertsError,
     isLoading: alertsLoading,
-  } = useSWR<AlertData[]>(
-    `${API_URL}/api/v1/alerts`,
-    (u) => fetcher<AlertData[]>(u),
-    {
-      refreshInterval: REFRESH_MS,
-      dedupingInterval: REFRESH_MS,
-    },
-  );
+  } = useSWR<AlertData[]>('alerts', (k) => fetcher<AlertData[]>(k), {
+    refreshInterval: REFRESH_MS,
+    dedupingInterval: REFRESH_MS,
+  });
 
   const isLoading = Boolean(trucksLoading || alertsLoading);
   const error = trucksError || alertsError;
@@ -125,7 +116,7 @@ export const useMetrics = (): {
       {
         title: 'Active Trucks',
         value: String(activeTrucks),
-        change: '+1',
+        change: '+0',
         trend: 'up',
         icon: TruckIcon,
         'data-testid': 'active-trucks',
@@ -133,7 +124,7 @@ export const useMetrics = (): {
       {
         title: 'Avg Cargo Temp',
         value: `${avgTemp}°C`,
-        change: '-0.2°C',
+        change: '-0.0°C',
         trend: 'down',
         icon: ThermometerSun,
         'data-testid': 'avg-cargo-temp',
@@ -148,8 +139,8 @@ export const useMetrics = (): {
       },
       {
         title: 'On-time Rate',
-        value: '96.8%',
-        change: '+1.4%',
+        value: '0.0%',
+        change: '+0.0%',
         trend: 'up',
         icon: Activity,
         'data-testid': 'on-time-rate',

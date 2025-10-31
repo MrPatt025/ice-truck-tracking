@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { buildWsUrl } from '@/shared/lib/wsUrl';
+import { api } from '@/shared/lib/apiClient';
 
 type Truck = {
   id: string;
@@ -19,11 +21,7 @@ type Alert = {
   ts?: string;
 } & Record<string, any>;
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5000';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-
-const normalizeWsUrl = (u: string) =>
-  u.replace(/^http(s?):\/\//, (_m, s) => `ws${s ? 's' : ''}://`);
+const WS_URL = process.env.NEXT_PUBLIC_WS_URL || buildWsUrl();
 
 export function useRealTimeData() {
   const [trucks, setTrucks] = useState<Truck[]>([]);
@@ -48,7 +46,7 @@ export function useRealTimeData() {
     wsRef.current?.close();
 
     try {
-      const url = normalizeWsUrl(WS_URL);
+      const url = WS_URL;
       const ws = new WebSocket(url);
       wsRef.current = ws;
 
@@ -135,11 +133,11 @@ export function useRealTimeData() {
     const fetchOnce = async () => {
       try {
         const [tRes, aRes] = await Promise.all([
-          fetch(`${API_URL}/api/v1/trucks`).catch(() => null),
-          fetch(`${API_URL}/api/v1/alerts`).catch(() => null),
+          api.get('trucks').catch(() => null),
+          api.get('alerts').catch(() => null),
         ]);
-        if (tRes?.ok) setTrucks(await tRes.json());
-        if (aRes?.ok) setAlerts(await aRes.json());
+        if (tRes?.status === 200) setTrucks(tRes.data);
+        if (aRes?.status === 200) setAlerts(aRes.data);
       } catch {
         /* ignore */
       }

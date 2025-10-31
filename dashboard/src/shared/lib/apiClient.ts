@@ -1,4 +1,5 @@
 import axios, { type AxiosRequestConfig } from 'axios';
+import { getApiBase } from '@/shared/lib/apiBase';
 
 // Lazy, client-only Sentry breadcrumb helper to avoid server build warnings
 function addBreadcrumbSafe(breadcrumb: {
@@ -26,38 +27,83 @@ declare module 'axios' {
 }
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000',
+  // Single authoritative base that already includes /api/v1
+  baseURL: getApiBase(),
+  // Always send/receive cookies (HttpOnly) for auth
   withCredentials: true,
 });
 
 function getCookie(name: string): string | null {
   if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/\+^])/g, '\\$1') + '=([^;]*)'));
-  return match ? decodeURIComponent(match[1]) : null;
+  const pair = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith(name + '='));
+  if (!pair) return null;
+  const value = pair.split('=')[1] ?? '';
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 api.interceptors.request.use((cfg) => {
-  const token =
-    typeof window !== 'undefined'
-      ? (localStorage.getItem('authToken') ??
-        localStorage.getItem('auth_token'))
-      : null;
-  if (token) {
-    cfg.headers = cfg.headers ?? {};
-    (cfg.headers as Record<string, string>).Authorization = `Bearer ${token}`;
-  }
-  // Attach CSRF token when available (double-submit cookie pattern in dev)
+  // Normalize URL so leading slashes don't strip baseURL pathname (/api/v1)
   try {
-    const csrf = getCookie('csrfToken');
-    if (csrf) {
-      cfg.headers = cfg.headers ?? {};
-      (cfg.headers as Record<string, string>)['X-CSRF-Token'] = csrf;
+    if (typeof cfg.url === 'string' && cfg.url.startsWith('/')) {
+      // Remove leading slash to preserve base path joining behavior
+      cfg.url = cfg.url.slice(1); // "/auth/login" -> "auth/login"
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(
+          '[api] normalized leading "/" in request path to keep base path:',
+          cfg.url,
+        );
+      }
+    }
+    // Optional safety net: warn if baseURL seems unversioned while path isn't a known segment
+    if (process.env.NODE_ENV !== 'production') {
+      const base = String(cfg.baseURL ?? '');
+      const path = String(cfg.url ?? '').replace(/^\/+/, '');
+      const known =
+        /^(auth\/|trucks\b|alerts\b|stats\b|telemetry\b|docs\b)/i.test(path);
+      if (base && !base.includes('/api/v') && !known) {
+        console.warn(
+          '[api] baseURL does not include "/api/v*" and path is not a known auth/resource segment. Check configuration:',
+          { baseURL: base, path },
+        );
+      }
+    }
+  } catch {}
+
+  // Do NOT attach Authorization header; rely on HttpOnly cookies managed by backend
+  // Attach CSRF token only for mutating requests and skip auth endpoints
+  try {
+    const method = String(cfg.method ?? 'get').toLowerCase();
+    const urlStr = String(cfg.url ?? '').toLowerCase();
+    const isAuthPath = /^(auth\/(login|logout|refresh|me))\b/.test(urlStr);
+    if (isAuthPath) {
+      // Ensure any CSRF header is removed for auth endpoints
+      if (cfg.headers) {
+        delete (cfg.headers as Record<string, unknown>)['X-CSRF-Token'];
+        delete (cfg.headers as Record<string, unknown>)['x-csrf-token'];
+      }
+    } else if (
+      method === 'post' ||
+      method === 'put' ||
+      method === 'patch' ||
+      method === 'delete'
+    ) {
+      const csrf = getCookie('csrfToken');
+      if (csrf) {
+        cfg.headers = cfg.headers ?? {};
+        (cfg.headers as Record<string, string>)['X-CSRF-Token'] = csrf;
+      }
     }
   } catch {}
   // Add breadcrumb for outgoing request (PII-safe)
   try {
     const url = cfg.baseURL
-      ? `${String(cfg.baseURL).replace(/\/+$/, '')}${cfg.url ?? ''}`
+      ? `${String(cfg.baseURL).replace(/\/+$/, '')}${String(cfg.url ?? '').startsWith('/') ? '' : '/'}${cfg.url ?? ''}`
       : String(cfg.url ?? '');
     addBreadcrumbSafe({
       category: 'http',
@@ -72,14 +118,19 @@ api.interceptors.request.use((cfg) => {
   return cfg;
 });
 
-let refreshing: Promise<string | null> | null = null;
+let isRefreshing = false;
 
 api.interceptors.response.use(
   (r) => {
     try {
       const url = r.config?.baseURL
-        ? `${String(r.config.baseURL).replace(/\/+$/, '')}${r.config.url ?? ''}`
+        ? `${String(r.config.baseURL).replace(/\/+$/, '')}${String(r.config.url ?? '').startsWith('/') ? '' : '/'}${r.config.url ?? ''}`
         : String(r.config?.url ?? '');
+      // Extract request-id on success too for correlation in breadcrumbs
+      const hdrName = String(
+        process.env.NEXT_PUBLIC_REQUEST_ID_HEADER ?? 'x-request-id',
+      ).toLowerCase();
+      const reqId = (r.headers as any)?.[hdrName] ?? undefined;
       addBreadcrumbSafe({
         category: 'http',
         type: 'http',
@@ -88,8 +139,15 @@ api.interceptors.response.use(
           method: String(r.config?.method ?? 'get').toUpperCase(),
           url,
           status: r.status,
+          request_id: reqId,
         },
       });
+      try {
+        if (typeof window !== 'undefined' && reqId) {
+          // Store last seen request-id for quick UI surfacing in generic errors
+          (window as any).__lastRequestId = String(reqId);
+        }
+      } catch {}
     } catch {}
     return r;
   },
@@ -97,8 +155,25 @@ api.interceptors.response.use(
     try {
       const cfg = err?.config as AxiosRequestConfig | undefined;
       const url = cfg?.baseURL
-        ? `${String(cfg.baseURL).replace(/\/+$/, '')}${cfg.url ?? ''}`
+        ? `${String(cfg.baseURL).replace(/\/+$/, '')}${String(cfg.url ?? '').startsWith('/') ? '' : '/'}${cfg.url ?? ''}`
         : String(cfg?.url ?? '');
+      const hdrName = String(
+        process.env.NEXT_PUBLIC_REQUEST_ID_HEADER ?? 'x-request-id',
+      ).toLowerCase();
+      const reqId: string | undefined = (err?.response?.headers ?? {})[hdrName];
+      // Attach request-id onto the error for downstream handlers (UI/tooltips)
+      try {
+        Object.defineProperty(err, '__requestId', {
+          value: reqId,
+          enumerable: true,
+          configurable: true,
+        });
+      } catch {}
+      try {
+        if (typeof window !== 'undefined' && reqId) {
+          (window as any).__lastRequestId = String(reqId);
+        }
+      } catch {}
       addBreadcrumbSafe({
         category: 'http',
         type: 'http',
@@ -107,65 +182,87 @@ api.interceptors.response.use(
           method: String(cfg?.method ?? 'get').toUpperCase(),
           url,
           status: err?.response?.status,
+          request_id: reqId,
         },
       });
+      // Tag the current Sentry scope with request-id (prod only)
+      if (
+        typeof window !== 'undefined' &&
+        process.env.NODE_ENV === 'production' &&
+        reqId
+      ) {
+        try {
+          const Sentry = await import('@sentry/browser');
+          const configure =
+            (Sentry as any).default?.configureScope ??
+            (Sentry as any).configureScope;
+          configure?.((scope: any) => {
+            try {
+              scope.setTag?.('request_id', String(reqId));
+            } catch {}
+          });
+        } catch {}
+      }
     } catch {}
     const status = err?.response?.status;
     const config: AxiosRequestConfig | undefined = err?.config;
-    // Only handle refresh in the browser where sessionStorage and redirect exist
-    const isBrowser = typeof window !== 'undefined';
-    if (isBrowser && status === 401 && config && !config.__retried) {
-      config.__retried = true;
-      const base = (
-        process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000'
-      ).replace(/\/+$/, '');
-      const refreshUrl = `${base}/api/v1/auth/refresh`;
-      const bearer =
-        localStorage.getItem('authToken') ?? localStorage.getItem('auth_token');
-      const init: RequestInit = { method: 'POST', credentials: 'include' };
-      if (bearer) init.headers = { Authorization: `Bearer ${bearer}` };
-      refreshing ??= fetch(refreshUrl, init)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((j) => {
-          const token = j?.accessToken ?? j?.token ?? null;
-          if (token) {
-            try {
-              localStorage.setItem('authToken', token);
-            } catch {}
-            try {
-              localStorage.setItem('auth_token', token);
-            } catch {}
-          }
-          return token as string | null;
-        })
-        .finally(() => {
-          refreshing = null;
-        });
-
-      const token = await refreshing;
-      if (token) {
-        config.headers = config.headers ?? {};
-        (config.headers as Record<string, string>).Authorization =
-          `Bearer ${token}`;
-        return api.request(config);
+    // Handle refresh in the browser
+    if (
+      typeof window !== 'undefined' &&
+      status === 401 &&
+      config &&
+      !config.__retried
+    ) {
+      if (isRefreshing) {
+        // Another request is already handling refresh; do not storm
+        return Promise.reject(err);
       }
-
-      // refresh failed: force logout and redirect
+      config.__retried = true;
+      isRefreshing = true;
       try {
-        localStorage.removeItem('authToken');
-      } catch {}
-      try {
-        localStorage.removeItem('auth_token');
-      } catch {}
-      try {
-        // Best-effort logout call; ignore result
-        const logoutUrl = `${base}/api/v1/auth/logout`;
-        void fetch(logoutUrl, { method: 'POST', credentials: 'include' });
-      } catch {}
-      try {
-        window.location.assign('/login');
-      } catch {}
+        await api.post('auth/refresh'); // NO leading slash
+        isRefreshing = false;
+        return api.request(config);
+      } catch (refreshErr) {
+        isRefreshing = false;
+        try {
+          // best-effort logout
+          await api.post('auth/logout');
+        } catch {}
+        try {
+          window.location.href = '/login';
+        } catch {}
+        return Promise.reject(refreshErr);
+      }
     }
     return Promise.reject(err);
   },
 );
+
+// Minimal same-origin JSON fetch helper for simple use-cases
+// Keeps requests relative (proxied in dev) and includes cookies by default
+export async function apiFetch<T = unknown>(
+  path: string,
+  init: RequestInit = {},
+): Promise<T> {
+  const url = path.startsWith('/api')
+    ? path
+    : `/api${path.startsWith('/') ? '' : '/'}${path}`;
+  const res = await fetch(url, {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init.headers || {}),
+    } as Record<string, string>,
+    ...init,
+  });
+  if (!res.ok) {
+    throw new Error(String(res.status));
+  }
+  // Best-effort: attempt JSON; fall back to text
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('application/json')) {
+    return (await res.json()) as T;
+  }
+  return (await res.text()) as unknown as T;
+}

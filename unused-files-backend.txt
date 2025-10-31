@@ -1,0 +1,19 @@
+
+> @ice-truck/backend@2.0.2 deadcode C:\Users\PATTANAKORN\ice-truck-tracking\backend
+> knip --config .knip.jsonc
+
+[93m[4mUnused dependencies[24m[39m (3)
+@sentry/node    package.json:55:6
+fastify-plugin  package.json:59:6
+jsonwebtoken    package.json:61:6
+[93m[4mUnused devDependencies[24m[39m (4)
+@typescript-eslint/eslint-plugin  package.json:67:6
+@typescript-eslint/parser         package.json:68:6
+eslint-config-prettier            package.json:73:6
+lint-staged                       package.json:76:6
+[93m[4mDuplicate exports[24m[39m (1)
+prisma|default  src/lib/prisma.ts
+[33m[4mConfiguration hints[24m (1)[39m
+C:\Users\PATTANAKORN\ice-truck-tracking\backend:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë @ice-truck/backend@2.0.2 deadcode: `knip --config .knip.jsonc`
+Exit status 1

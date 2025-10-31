@@ -1,0 +1,29 @@
+
+> ice-truck-tracking-monorepo@2.0.0 unused:deps C:\Users\PATTANAKORN\ice-truck-tracking
+> depcheck
+
+Unused devDependencies
+* @axe-core/playwright
+* @biomejs/biome
+* @commitlint/config-conventional
+* @ianvs/prettier-plugin-sort-imports
+* @size-limit/preset-app
+* @t3-oss/env-nextjs
+* @testing-library/react
+* @testing-library/user-event
+* @vitest/coverage-v8
+* cross-env
+* cspell
+* cypress-axe
+* envalid
+* eslint-plugin-react
+* jest-axe
+* msw
+* prettier-plugin-tailwindcss
+* rimraf
+* vitest-mock-extended
+* zod
+Missing dependencies
+* k6: .\load-test.js
+* @prisma/internals: .\prisma.config.ts
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 4294967295.

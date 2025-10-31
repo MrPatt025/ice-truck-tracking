@@ -3,6 +3,11 @@
   "version": "2.0.0",
   "description": "Professional Ice Truck Tracking System — Enterprise Monorepo",
   "private": true,
+  "packageManager": "pnpm@10.20.0",
+  "engines": {
+    "node": ">=20 <21",
+    "pnpm": ">=9"
+  },
   "workspaces": [
     "backend",
     "dashboard",
@@ -70,46 +75,66 @@
     "gen:api": "pnpm run gen:types && pnpm run gen:client",
     "gen:api:watch": "orval --config orval.config.cjs --watch",
     "storybook": "pnpm -F dashboard storybook dev -p 6006",
-    "a11y": "turbo run a11y --continue"
+    "a11y": "turbo run a11y --continue",
+    "a11y:scan": "axe --chrome --disable-exit http://localhost:3000",
+    "unused:exports": "ts-prune",
+    "unused:files": "knip",
+    "unused:deps": "depcheck",
+    "analyze:bundle": "cross-env ANALYZE=true pnpm -F dashboard build",
+    "check:all": "pnpm format:check && pnpm lint:ci && pnpm type-check && pnpm build && pnpm test",
+    "smoke": "node ./scripts/smoke-login.mjs"
   },
   "devDependencies": {
+    "@axe-core/cli": "4.11.0",
     "@axe-core/playwright": "^4.11.0",
-    "@biomejs/biome": "^2.3.1",
+    "@biomejs/biome": "^2.3.2",
     "@changesets/cli": "^2.29.7",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.38.0",
+    "@ianvs/prettier-plugin-sort-imports": "4.7.0",
+    "@next/bundle-analyzer": "^15.5.6",
     "@playwright/test": "^1.56.1",
+    "@size-limit/preset-app": "^11.2.0",
+    "@t3-oss/env-nextjs": "0.13.8",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
+    "cross-env": "^10.1.0",
     "cspell": "^9.2.2",
     "cypress-axe": "^1.7.0",
+    "depcheck": "^1.4.7",
     "envalid": "^8.1.0",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-security": "^3.0.1",
+    "eslint-plugin-simple-import-sort": "12.1.1",
     "eslint-plugin-sonarjs": "^3.0.5",
-    "eslint-plugin-storybook": "9.1.13",
+    "eslint-plugin-storybook": "9.1.16",
+    "eslint-plugin-tailwindcss": "3.18.2",
     "eslint-plugin-unused-imports": "^4.3.0",
     "globals": "^16.4.0",
-    "happy-dom": "^20.0.8",
+    "happy-dom": "^20.0.10",
     "husky": "^9.1.7",
     "jest-axe": "^10.0.0",
+    "knip": "^5.66.4",
     "lint-staged": "^16.2.6",
     "msw": "^2.11.6",
     "openapi-typescript": "^7.10.1",
-    "orval": "^7.15.0",
-    "oxlint": "^1.24.0",
+    "orval": "6.25.0",
+    "oxlint": "^1.25.0",
     "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "0.7.1",
     "rimraf": "^6.0.1",
     "secretlint": "^11.2.5",
     "semantic-release": "^24.2.9",
-    "snyk": "^1.1300.1",
-    "taze": "^19.8.1",
+    "snyk": "^1.1300.2",
+    "taze": "^19.9.0",
+    "ts-prune": "^0.10.3",
     "turbo": "^2.5.8",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.2",
@@ -117,11 +142,6 @@
     "vitest-mock-extended": "^3.1.0",
     "zod": "^4.1.12"
   },
-  "engines": {
-    "node": ">=20 <21",
-    "pnpm": "10.19.0"
-  },
-  "packageManager": "pnpm@10.19.0",
   "keywords": [
     "monorepo",
     "ice-truck",
@@ -144,6 +164,7 @@
   "homepage": "https://github.com/MrPatt025/ice-truck-tracking#readme",
   "pnpm": {
     "overrides": {
+      "next": "15.5.6",
       "@fastify/cors": "^9.0.1",
       "@fastify/helmet": "^10.1.1",
       "@fastify/websocket": "^8.3.1",
@@ -320,7 +341,8 @@
       "prettier -w"
     ]
   },
-  "dependencies": {
-    "next": "^16.0.0"
+  "volta": {
+    "node": "20.19.4",
+    "pnpm": "10.20.0"
   }
 }

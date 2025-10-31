@@ -185,12 +185,11 @@ const TruckRow = memo(function TruckRow({
 }) {
   return (
     <li className="py-3">
-      <article
+      <button
+        type="button"
         data-testid="truck-item"
         data-truck-id={t.id}
-        className="flex items-center justify-between gap-3 hover:bg-white/5 rounded-lg px-2 py-2 transition"
-        tabIndex={0}
-        role="button"
+        className="w-full flex items-center justify-between gap-3 hover:bg-white/5 rounded-lg px-2 py-2 transition text-left"
         aria-label={`Truck ${t.id}${t.status ? ` ${t.status}` : ''}`}
         onClick={() => onSelect?.(t)}
         onKeyDown={(e) => {
@@ -248,7 +247,7 @@ const TruckRow = memo(function TruckRow({
             )}
           </div>
         </div>
-      </article>
+      </button>
     </li>
   );
 });

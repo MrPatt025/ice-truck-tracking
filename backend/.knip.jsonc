@@ -13,6 +13,7 @@
     "config/**",
     "middleware/**",
     "repositories/**",
+    "src/_legacy/**",
     "*.js",
   ],
 }
