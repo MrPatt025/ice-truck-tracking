@@ -21,7 +21,7 @@ export function usePerformanceMonitor(componentName: string) {
 
       // Log performance metrics
       if (process.env.NODE_ENV === 'development') {
-        console.log(
+        console.warn(
           `[Performance] ${componentName} lifetime: ${totalLifetime.toFixed(2)}ms`,
         );
       }
@@ -85,9 +85,11 @@ export function useWebVitals() {
           });
         }
 
-        console.log(
-          `[Web Vitals] ${metric.name}: ${metric.value.toFixed(2)}ms`,
-        );
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(
+            `[Web Vitals] ${metric.name}: ${metric.value.toFixed(2)}ms`,
+          );
+        }
       });
     });
 

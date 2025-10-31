@@ -37,7 +37,7 @@ export function useAnalytics() {
 
     // Development logging
     if (process.env.NODE_ENV === 'development') {
-      console.log('[Analytics]', event);
+      console.warn('[Analytics]', event);
     }
   }, []);
 

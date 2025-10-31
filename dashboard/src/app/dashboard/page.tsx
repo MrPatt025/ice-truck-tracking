@@ -1,4 +1,5 @@
 ﻿'use client';
+import { ui } from '@/lib/ui-contract';
 import {
   Truck,
   ThermometerSun,
@@ -490,14 +491,14 @@ type GlassCardProps = {
 export const GlassCard = memo(
   ({
     children,
-    accent = 'from-violet-500/30 via-purple-500/20 to-cyan-500/30',
+    accent = ui.accentGradient,
     className = '',
     onClick,
   }: GlassCardProps) => {
     const content = (
       <>
         <div
-          className={`relative rounded-card bg-slate-900/85 backdrop-blur-2xl ring-1 ring-white/10 min-w-0 min-h-0 overflow-hidden ${className}`}
+          className={`relative ${ui.radiusXL} ${ui.glassBase} min-w-0 min-h-0 overflow-hidden ${className}`}
         >
           {/* Inner Volumetric Glow */}
           <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-[radial-gradient(500px_400px_at_50%_0%,rgba(255,255,255,.2),transparent_70%)]" />
@@ -510,7 +511,7 @@ export const GlassCard = memo(
       </>
     );
 
-    const baseClasses = `group relative rounded-3xl p-[1.5px] bg-linear-to-br ${accent} transition-all duration-500 hover:scale-[1.015] hover:shadow-2xl hover:shadow-cyan-400/20 will-change-transform`;
+    const baseClasses = `group relative rounded-3xl p-[1.5px] bg-linear-to-br ${accent} ${ui.hoverLift} ${ui.hoverGlow} will-change-transform`;
 
     // Always render a non-button root to avoid nested <button> issues.
     // If clickable, expose role/button semantics and keyboard handlers.
@@ -533,7 +534,7 @@ export const GlassCard = memo(
     return (
       <div
         {...clickableProps}
-        className={`w-full ${isClickable ? 'cursor-pointer focus-ring-theme outline-none' : ''} ${baseClasses}`}
+        className={`w-full ${isClickable ? ui.clickable : ''} ${baseClasses}`}
       >
         {content}
       </div>
@@ -1998,11 +1999,11 @@ export default function Dashboard() {
                 <div className="mt-6 grid grid-cols-2 gap-3">
                   <div className="text-center p-3 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/30">
                     <p className="text-xs text-slate-400">Average Score</p>
-                    <p className="text-2xl font-bold text-emerald-400">90.2</p>
+                    <p className="text-2xl font-bold text-emerald-400">0</p>
                   </div>
                   <div className="text-center p-3 rounded-xl bg-cyan-500/10 ring-1 ring-cyan-500/30">
                     <p className="text-xs text-slate-400">Reliability Index</p>
-                    <p className="text-2xl font-bold text-cyan-400">A+</p>
+                    <p className="text-2xl font-bold text-cyan-400"></p>
                   </div>
                 </div>
               </div>

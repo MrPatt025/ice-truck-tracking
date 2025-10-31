@@ -96,7 +96,9 @@ class SocketService {
   ) {
     s.on('connect', () => {
       // ใช้ console.* ระวัง log noise ในโปรดักชัน
-      console.info('[socket] connected', s.id);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[socket] connected', s.id);
+      }
       this.reconnectAttempts = 0;
     });
 
@@ -107,7 +109,9 @@ class SocketService {
     // manager-level events
     s.io.on('reconnect_attempt', (attempt: number) => {
       this.reconnectAttempts = attempt;
-      console.info('[socket] reconnect attempt', attempt);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[socket] reconnect attempt', attempt);
+      }
     });
 
     s.io.on('reconnect_error', (error: unknown) => {

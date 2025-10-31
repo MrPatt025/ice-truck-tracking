@@ -93,7 +93,7 @@ function AlertsPanelBase(): JSX.Element {
         )}
       </div>
 
-      <ul className="space-y-2" role="list">
+      <ul className="space-y-2">
         {items.slice(0, 10).map((a) => (
           <li
             key={a.id}

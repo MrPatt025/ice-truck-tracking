@@ -40,10 +40,18 @@ const baseTsUi = {
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
 
-    // Accessibility - prevent nested interactive elements
+    // Accessibility - prevent nested interactive elements and enforce keyboard support
     'jsx-a11y/no-noninteractive-element-to-interactive-role': 'error',
     'jsx-a11y/interactive-supports-focus': 'error',
+    'jsx-a11y/no-static-element-interactions': 'warn', // Warn on clickable divs without role
+    'jsx-a11y/click-events-have-key-events': 'warn', // Require keyboard handlers for onClick
     'jsx-a11y/no-noninteractive-element-interactions': 'off', // Allow role="group" divs
+    'jsx-a11y/anchor-is-valid': 'warn', // Warn on invalid anchor usage
+    'jsx-a11y/alt-text': 'error', // Require alt text on images
+    'jsx-a11y/aria-props': 'error', // Validate ARIA props
+    'jsx-a11y/aria-role': 'error', // Validate ARIA roles
+    'jsx-a11y/role-has-required-aria-props': 'error', // Ensure required ARIA props
+    'jsx-a11y/no-redundant-roles': 'warn', // Avoid redundant roles
 
     // Keep UI ergonomic and fast to iterate
     '@typescript-eslint/no-explicit-any': 'off',
@@ -61,6 +69,7 @@ const baseTsUi = {
     ],
     'no-empty': ['warn', { allowEmptyCatch: true }],
     'prefer-const': 'warn',
+    'no-console': ['warn', { allow: ['warn', 'error'] }], // Discourage console.log in production
   },
 };
 
@@ -113,6 +122,7 @@ const tests = [
       '@typescript-eslint/no-namespace': 'off',
       '@typescript-eslint/no-require-imports': 'off',
       'no-empty': 'off',
+      'no-console': 'off', // Allow console in tests
     },
   },
 ];

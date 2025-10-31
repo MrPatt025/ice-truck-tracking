@@ -94,7 +94,6 @@ const AnalyticsDashboard = ({ stats, locale }: Props): JSX.Element => {
   return (
     <section
       id="analytics"
-      role="region"
       aria-labelledby="analytics-heading"
       data-testid="analytics-dashboard"
       className="grid grid-cols-1 gap-3 sm:grid-cols-3"

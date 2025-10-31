@@ -7,6 +7,42 @@
 */
 @import 'tailwindcss';
 
+/* Tailwind v4 @theme for reusable design tokens */
+@theme {
+  --brand-bg: #0b1220;
+  --brand-card: #0f1625;
+  --brand-accent: #6d28d9;
+  --brand-ring: color-mix(in oklab, var(--brand-accent), white 25%);
+  --radius-xl: 1rem;
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Reusable utilities for monorepo consistency */
+@utility focus-ring-theme {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-ring);
+}
+
+@utility card {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+  background: color-mix(in oklab, var(--brand-card), white 2%);
+}
+
+/* Helpers for dynamic inline styles (dots, indicators) */
+[style*='--dot-left'] {
+  left: var(--dot-left);
+}
+[style*='--dot-top'] {
+  top: var(--dot-top);
+}
+[style*='--dot-delay'] {
+  animation-delay: var(--dot-delay);
+}
+[style*='--indicator-color'] {
+  background-color: var(--indicator-color);
+}
+
 /* NOTE: We avoid the experimental @theme rule to keep linters quiet. */
 
 /* Third-party map styles */
