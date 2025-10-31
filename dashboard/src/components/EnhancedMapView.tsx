@@ -185,6 +185,11 @@ export function EnhancedMapView({
         className={`w-full h-full ${mapStyles[mapStyle]} relative overflow-hidden cursor-crosshair rounded-xl`}
         onClick={handleMapClick}
         onContextMenu={handleContextMenu}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            handleMapClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+          }
+        }}
         role="application"
         aria-label="Fleet map"
       >
@@ -208,9 +213,19 @@ export function EnhancedMapView({
                   isSelected ? 'z-20 ring-4 ring-blue-300 rounded-full' : 'z-10'
                 }`}
                 style={{ transform: `scale(${scale})` }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Select truck ${t.driver_name ?? t.id}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelectTruck(t.id);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onSelectTruck(t.id);
+                  }
                 }}
               >
                 <div
@@ -275,7 +290,6 @@ export function EnhancedMapView({
         <div
           className="fixed bg-white rounded-lg shadow-lg border py-2 z-50 min-w-40"
           style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={(e) => e.stopPropagation()}
         >
           {contextMenu.truck ? (
             <>
@@ -283,7 +297,7 @@ export function EnhancedMapView({
                 type="button"
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
                 onClick={() => setContextMenu(null)}
-                role="menuitem"
+                aria-label="Zoom to truck"
               >
                 🔍 Zoom to Truck
               </button>
@@ -291,7 +305,7 @@ export function EnhancedMapView({
                 type="button"
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
                 onClick={() => setContextMenu(null)}
-                role="menuitem"
+                aria-label="View history"
               >
                 📊 View History
               </button>
@@ -299,7 +313,7 @@ export function EnhancedMapView({
                 type="button"
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
                 onClick={() => setContextMenu(null)}
-                role="menuitem"
+                aria-label="Create alert"
               >
                 🚨 Create Alert
               </button>
@@ -310,7 +324,7 @@ export function EnhancedMapView({
                 type="button"
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
                 onClick={() => setContextMenu(null)}
-                role="menuitem"
+                aria-label="Add geofence"
               >
                 📍 Add Geofence
               </button>
@@ -318,7 +332,7 @@ export function EnhancedMapView({
                 type="button"
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
                 onClick={() => setContextMenu(null)}
-                role="menuitem"
+                aria-label="Center map"
               >
                 🎯 Center Map
               </button>

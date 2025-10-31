@@ -46,25 +46,25 @@ export function Sidebar({ isOpen = true, className, children }: SidebarProps) {
           <nav className="flex flex-col gap-2 text-sm">
             <a
               className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme"
-              href="#"
+              href="/dashboard"
             >
               Overview
             </a>
             <a
               className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme"
-              href="#"
+              href="/dashboard/fleet"
             >
               Fleet
             </a>
             <a
               className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme"
-              href="#"
+              href="/dashboard/alerts"
             >
               Alerts
             </a>
             <a
               className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme"
-              href="#"
+              href="/dashboard/reports"
             >
               Reports
             </a>

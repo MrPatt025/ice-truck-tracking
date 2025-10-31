@@ -567,6 +567,7 @@ const Tilt = memo(({ children }: { children: React.ReactNode }) => {
       ref={ref}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
+      role="group"
       className="transition-transform duration-500 ease-out will-change-transform"
     >
       {children}

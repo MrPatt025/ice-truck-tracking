@@ -129,7 +129,7 @@ export function Tooltip({
     <span
       ref={wrapperRef}
       className="relative inline-flex items-center"
-      tabIndex={disabled ? -1 : 0}
+      role="group"
       aria-describedby={open && !disabled ? id : undefined}
       onMouseEnter={scheduleOpen}
       onMouseLeave={scheduleClose}

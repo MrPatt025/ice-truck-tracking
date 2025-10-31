@@ -77,7 +77,8 @@ export function Modal({
           sizes[size],
           className,
         )}
-        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        role="document"
       >
         {title && (
           <div className="flex items-center justify-between p-6 border-b">
