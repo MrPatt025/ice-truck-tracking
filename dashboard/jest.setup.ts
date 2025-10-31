@@ -1,5 +1,9 @@
 import '@testing-library/jest-dom';
+import { toHaveNoViolations } from 'jest-axe';
 import { jest } from '@jest/globals';
+
+// Extend Jest matchers with jest-axe
+expect.extend(toHaveNoViolations);
 
 // Provide a minimal mock for Next.js App Router to avoid the invariant during unit tests
 jest.mock('next/navigation', () => {

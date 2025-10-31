@@ -62,7 +62,11 @@ CardHeader.displayName = 'CardHeader';
 
 type CardTitleProps = ComponentPropsWithoutRef<'h3'>;
 const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
-  function CardTitle({ className, ...props }, ref) {
+  function CardTitle({ className, children, ...props }, ref) {
+    // Ensure heading always has content for accessibility
+    if (!children) {
+      return null;
+    }
     return (
       <h3
         ref={ref}
@@ -71,7 +75,9 @@ const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
           className,
         )}
         {...props}
-      />
+      >
+        {children}
+      </h3>
     );
   },
 );

@@ -746,7 +746,6 @@ function LoginPageContent() {
               onKeyDown={handleKeyDown}
               placeholder={isDev ? 'admin' : 'your username'}
               disabled={isFormDisabled}
-              autoFocus
             />
             {validationError?.field === 'username' && (
               <p

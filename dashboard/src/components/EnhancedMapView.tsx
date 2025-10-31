@@ -186,12 +186,14 @@ export function EnhancedMapView({
         onClick={handleMapClick}
         onContextMenu={handleContextMenu}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            handleMapClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+          // Allow keyboard interaction with the map application
+          if (e.key === 'Escape') {
+            setContextMenu(null);
           }
         }}
         role="application"
         aria-label="Fleet map"
+        tabIndex={0}
       >
         {/* Trucks */}
         {plotted.map(({ t, x, y }) => {
@@ -215,7 +217,6 @@ export function EnhancedMapView({
                 style={{ transform: `scale(${scale})` }}
                 role="button"
                 tabIndex={0}
-                aria-label={`Select truck ${t.driver_name ?? t.id}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelectTruck(t.id);
@@ -290,6 +291,9 @@ export function EnhancedMapView({
         <div
           className="fixed bg-white rounded-lg shadow-lg border py-2 z-50 min-w-40"
           style={{ left: contextMenu.x, top: contextMenu.y }}
+          role="menu"
+          aria-label="Map context menu"
+          onMouseDown={(e) => e.stopPropagation()}
         >
           {contextMenu.truck ? (
             <>
@@ -297,7 +301,7 @@ export function EnhancedMapView({
                 type="button"
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
                 onClick={() => setContextMenu(null)}
-                aria-label="Zoom to truck"
+                role="menuitem"
               >
                 🔍 Zoom to Truck
               </button>
@@ -305,7 +309,7 @@ export function EnhancedMapView({
                 type="button"
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
                 onClick={() => setContextMenu(null)}
-                aria-label="View history"
+                role="menuitem"
               >
                 📊 View History
               </button>
@@ -313,7 +317,7 @@ export function EnhancedMapView({
                 type="button"
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
                 onClick={() => setContextMenu(null)}
-                aria-label="Create alert"
+                role="menuitem"
               >
                 🚨 Create Alert
               </button>
@@ -324,7 +328,7 @@ export function EnhancedMapView({
                 type="button"
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
                 onClick={() => setContextMenu(null)}
-                aria-label="Add geofence"
+                role="menuitem"
               >
                 📍 Add Geofence
               </button>
@@ -332,7 +336,7 @@ export function EnhancedMapView({
                 type="button"
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
                 onClick={() => setContextMenu(null)}
-                aria-label="Center map"
+                role="menuitem"
               >
                 🎯 Center Map
               </button>

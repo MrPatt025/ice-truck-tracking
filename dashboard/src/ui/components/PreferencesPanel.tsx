@@ -342,7 +342,7 @@ export function PreferencesPanel({
             <h3 className="mb-3 text-lg font-medium">Dashboard</h3>
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-sm font-medium">Layout</label>
+                <span className="mb-1 block text-sm font-medium">Layout</span>
                 <div className="flex gap-4">
                   <label className="flex items-center">
                     <input
@@ -387,10 +387,11 @@ export function PreferencesPanel({
 
               {preferences.dashboard.autoRefresh && (
                 <div>
-                  <label className="mb-1 block text-sm font-medium">
+                  <label htmlFor="refresh-interval" className="mb-1 block text-sm font-medium">
                     Refresh interval (seconds)
                   </label>
                   <input
+                    id="refresh-interval"
                     type="number"
                     min={10}
                     max={300}

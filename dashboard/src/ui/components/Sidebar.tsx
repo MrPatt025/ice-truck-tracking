@@ -44,30 +44,30 @@ export function Sidebar({ isOpen = true, className, children }: SidebarProps) {
       <div className="flex h-full flex-col gap-4">
         {children ?? (
           <nav className="flex flex-col gap-2 text-sm">
-            <a
-              className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme"
-              href="/dashboard"
+            <button
+              type="button"
+              className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme text-left"
             >
               Overview
-            </a>
-            <a
-              className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme"
-              href="/dashboard/fleet"
+            </button>
+            <button
+              type="button"
+              className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme text-left"
             >
               Fleet
-            </a>
-            <a
-              className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme"
-              href="/dashboard/alerts"
+            </button>
+            <button
+              type="button"
+              className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme text-left"
             >
               Alerts
-            </a>
-            <a
-              className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme"
-              href="/dashboard/reports"
+            </button>
+            <button
+              type="button"
+              className="rounded-md px-3 py-2 hover:bg-white/5 focus-ring-theme text-left"
             >
               Reports
-            </a>
+            </button>
           </nav>
         )}
       </div>

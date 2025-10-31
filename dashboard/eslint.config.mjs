@@ -40,18 +40,32 @@ const baseTsUi = {
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
 
-    // Accessibility - prevent nested interactive elements and enforce keyboard support
+    // Accessibility - strict enforcement per jsx-a11y/recommended + custom rules
+    ...jsxA11y.configs.recommended.rules,
     'jsx-a11y/no-noninteractive-element-to-interactive-role': 'error',
     'jsx-a11y/interactive-supports-focus': 'error',
-    'jsx-a11y/no-static-element-interactions': 'warn', // Warn on clickable divs without role
-    'jsx-a11y/click-events-have-key-events': 'warn', // Require keyboard handlers for onClick
+    'jsx-a11y/no-static-element-interactions': 'error', // Upgraded to error
+    'jsx-a11y/click-events-have-key-events': 'error', // Upgraded to error
     'jsx-a11y/no-noninteractive-element-interactions': 'off', // Allow role="group" divs
-    'jsx-a11y/anchor-is-valid': 'warn', // Warn on invalid anchor usage
-    'jsx-a11y/alt-text': 'error', // Require alt text on images
-    'jsx-a11y/aria-props': 'error', // Validate ARIA props
-    'jsx-a11y/aria-role': 'error', // Validate ARIA roles
-    'jsx-a11y/role-has-required-aria-props': 'error', // Ensure required ARIA props
-    'jsx-a11y/no-redundant-roles': 'warn', // Avoid redundant roles
+    'jsx-a11y/anchor-is-valid': 'error',
+    'jsx-a11y/alt-text': 'error',
+    'jsx-a11y/aria-props': 'error',
+    'jsx-a11y/aria-proptypes': 'error',
+    'jsx-a11y/aria-unsupported-elements': 'error',
+    'jsx-a11y/aria-role': 'error',
+    'jsx-a11y/role-has-required-aria-props': 'error',
+    'jsx-a11y/role-supports-aria-props': 'error',
+    'jsx-a11y/no-redundant-roles': 'warn',
+    'jsx-a11y/label-has-associated-control': 'error',
+    'jsx-a11y/heading-has-content': 'error',
+    'jsx-a11y/html-has-lang': 'error',
+    'jsx-a11y/iframe-has-title': 'error',
+    'jsx-a11y/img-redundant-alt': 'error',
+    'jsx-a11y/mouse-events-have-key-events': 'error',
+    'jsx-a11y/no-access-key': 'error',
+    'jsx-a11y/no-autofocus': 'warn',
+    'jsx-a11y/no-distracting-elements': 'error',
+    'jsx-a11y/tabindex-no-positive': 'error',
 
     // Keep UI ergonomic and fast to iterate
     '@typescript-eslint/no-explicit-any': 'off',

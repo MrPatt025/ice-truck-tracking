@@ -150,7 +150,7 @@ export function FeatureFlags({ isAdmin = false }: FeatureFlagsProps) {
 
               {isAdmin && flag.enabled && (
                 <div className="flex items-center space-x-2">
-                  <label className="text-gray-500">Rollout:</label>
+                  <span className="text-gray-500">Rollout:</span>
                   <div className="flex items-center space-x-2">
                     <label htmlFor={`rollout-${flag.key}`} className="sr-only">
                       Rollout percentage
