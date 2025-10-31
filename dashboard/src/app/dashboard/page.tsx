@@ -487,7 +487,7 @@ type GlassCardProps = {
   onClick?: () => void;
 };
 
-const GlassCard = memo(
+export const GlassCard = memo(
   ({
     children,
     accent = 'from-violet-500/30 via-purple-500/20 to-cyan-500/30',
