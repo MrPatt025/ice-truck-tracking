@@ -1,0 +1,57 @@
+# Code Owners
+# This file defines who should review specific parts of the codebase
+# Syntax: path/to/file @github-username @github-team
+
+# Global fallback - requires at least one review from any maintainer
+* @MrPatt025
+
+# CI/CD and GitHub workflows - DevOps/Infrastructure team
+/.github/ @MrPatt025
+/infra/ @MrPatt025
+/scripts/ @MrPatt025
+/.github/workflows/ @MrPatt025
+
+# Dashboard (Frontend)
+/dashboard/ @MrPatt025
+/dashboard/src/app/ @MrPatt025
+/dashboard/src/components/ @MrPatt025
+/dashboard/src/ui/ @MrPatt025
+
+# Accessibility - requires a11y champion review
+/dashboard/e2e/a11y/ @MrPatt025
+/dashboard/**/*a11y* @MrPatt025
+/dashboard/**/accessibility* @MrPatt025
+
+# Backend API
+/backend/ @MrPatt025
+/backend/src/ @MrPatt025
+/backend/prisma/ @MrPatt025
+
+# Mobile app
+/mobile-app/ @MrPatt025
+
+# SDK
+/sdk/ @MrPatt025
+
+# Documentation - any maintainer can review
+/docs/ @MrPatt025
+*.md @MrPatt025
+
+# Configuration files - infrastructure team
+*.config.* @MrPatt025
+*.json @MrPatt025
+.eslintrc* @MrPatt025
+.prettierrc* @MrPatt025
+tsconfig*.json @MrPatt025
+package.json @MrPatt025
+pnpm-lock.yaml @MrPatt025
+
+# Security-sensitive - requires security review
+**/.env* @MrPatt025
+**/secrets* @MrPatt025
+**/auth* @MrPatt025
+**/security* @MrPatt025
+
+# Database migrations - requires backend + DBA review
+/backend/prisma/migrations/ @MrPatt025
+**/migrations/ @MrPatt025
