@@ -24,6 +24,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "pnpm build && playwright test",
+    "test:e2e:a11y": "playwright test e2e/a11y/axe-smoke.spec.ts",
     "test:e2e:ui": "playwright test --ui",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",

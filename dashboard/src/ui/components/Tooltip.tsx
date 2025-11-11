@@ -153,7 +153,7 @@ export function Tooltip({
             posClass(side),
             className,
           )}
-          aria-hidden={!open}
+          aria-hidden={!open ? 'true' : 'false'}
         >
           {content}
           {/* Arrow */}

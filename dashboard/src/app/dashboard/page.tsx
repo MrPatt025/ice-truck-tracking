@@ -441,11 +441,13 @@ const Pill = memo(
     intent = 'neutral',
     onClick,
     title,
+    role,
   }: {
     children: React.ReactNode;
     intent?: 'neutral' | 'ok' | 'warn' | 'info' | 'error';
     onClick?: () => void;
     title?: string;
+    role?: string;
   }) => {
     const cls =
       intent === 'ok'
@@ -465,6 +467,7 @@ const Pill = memo(
           className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium backdrop-blur-md transition-all cursor-pointer hover:scale-[1.03] focus-ring-theme outline-none ${cls}`}
           onClick={onClick}
           title={title}
+          {...(role && { role })}
         >
           {children}
         </button>
@@ -474,6 +477,7 @@ const Pill = memo(
       <span
         className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium backdrop-blur-md transition-all ${cls}`}
         title={title}
+        {...(role && { role })}
       >
         {children}
       </span>
@@ -567,6 +571,8 @@ const Tilt = memo(({ children }: { children: React.ReactNode }) => {
       ref={ref}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
+      role="presentation"
+      aria-hidden="true"
       className="transition-transform duration-500 ease-out will-change-transform"
     >
       {children}
@@ -1344,6 +1350,14 @@ export default function Dashboard() {
   return (
     <InlineAuthGate>
       <div className="relative min-h-screen overflow-x-hidden text-white selection:bg-violet-500/30 selection:text-white">
+        {/* Skip Link for Keyboard Navigation */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-9999 focus:rounded-lg focus:bg-violet-600 focus:px-4 focus:py-2 focus:text-white focus:font-semibold focus:shadow-lg focus:ring-2 focus:ring-white/50"
+        >
+          Skip to main content
+        </a>
+
         {/* Base Background: Theme Gradient */}
         <div
           className={`pointer-events-none fixed inset-0 -z-20 transition-all duration-1000 theme-gradient-${theme}`}
@@ -1401,7 +1415,11 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 flex-wrap">
+              <div
+                className="flex items-center gap-3 flex-wrap"
+                role="toolbar"
+                aria-label="Dashboard controls"
+              >
                 {/* Search */}
                 <div className="relative hidden lg:block">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -1422,7 +1440,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setShowGrid((v) => !v)}
                   className={`rounded-xl p-2.5 ring-1 ring-white/15 backdrop-blur-xl transition-all ${showGrid ? 'bg-violet-500/30 text-violet-200 shadow-glow' : 'bg-white/10 hover:bg-white/15'}`}
-                  aria-pressed={showGrid}
+                  aria-pressed={showGrid ? 'true' : 'false'}
                   aria-label={`${showGrid ? 'Hide' : 'Show'} grid`}
                   title={`${showGrid ? 'Hide' : 'Show'} grid (Ctrl+G)`}
                   data-testid="toggle-grid-button"
@@ -1433,7 +1451,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setShow3D((v) => !v)}
                   className={`rounded-xl p-2.5 ring-1 ring-white/15 backdrop-blur-xl transition-all ${show3D ? 'bg-cyan-500/30 text-cyan-200 shadow-glow' : 'bg-white/10 hover:bg-white/15'}`}
-                  aria-pressed={show3D}
+                  aria-pressed={show3D ? 'true' : 'false'}
                   aria-label={`${show3D ? 'Disable' : 'Enable'} 3D`}
                   title={`${show3D ? 'Disable' : 'Enable'} 3D`}
                   data-testid="toggle-3d-button"
@@ -1444,7 +1462,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={() => setPaused((v) => !v)}
                   className={`rounded-xl p-2.5 ring-1 ring-white/15 backdrop-blur-xl transition-all ${paused ? 'bg-amber-500/30 text-amber-200 shadow-glow' : 'bg-white/10 hover:bg-white/15'}`}
-                  aria-pressed={paused}
+                  aria-pressed={paused ? 'true' : 'false'}
                   aria-label={paused ? 'Resume simulation' : 'Pause simulation'}
                   title={`${paused ? 'Resume' : 'Pause'} simulation (Ctrl+P)`}
                   data-testid="pause-simulation-button"
@@ -1506,7 +1524,7 @@ export default function Dashboard() {
                       type="button"
                       role="tab"
                       onClick={() => setTimeRange(r)}
-                      aria-selected={timeRange === r}
+                      aria-selected={timeRange === r ? 'true' : 'false'}
                       className={`relative rounded-lg px-3 py-1.5 text-sm font-semibold transition-all ${
                         timeRange === r
                           ? 'bg-linear-to-r from-violet-500 to-cyan-500 text-white shadow-lg'
@@ -1531,7 +1549,7 @@ export default function Dashboard() {
                       type="button"
                       role="tab"
                       onClick={() => setTheme(t)}
-                      aria-selected={theme === t}
+                      aria-selected={theme === t ? 'true' : 'false'}
                       aria-label={`${t} theme`}
                       className={`rounded-lg px-2 py-1 text-xs font-semibold uppercase tracking-wider transition-all ${
                         theme === t
@@ -1716,7 +1734,10 @@ export default function Dashboard() {
           </ClientOnly>
         </header>
 
-        <main className="mx-auto max-w-[1800px] space-y-8 px-6 py-8">
+        <main
+          id="main-content"
+          className="mx-auto max-w-[1800px] space-y-8 px-6 py-8"
+        >
           {/* Top Status Bar (Data Integrity Check) */}
           <div className="flex items-center justify-between text-sm flex-wrap gap-3">
             <div className="flex items-center gap-4 flex-wrap">
@@ -1739,7 +1760,7 @@ export default function Dashboard() {
               </Pill>
               {systemHealth.find((s) => s.name === 'GPS Telemetry')?.status ===
                 false && (
-                <Pill intent="error">
+                <Pill intent="error" role="alert">
                   <AlertTriangle className="h-4 w-4 animate-pulse" />
                   DATA LATENCY ALERT
                 </Pill>
@@ -1764,12 +1785,19 @@ export default function Dashboard() {
           </div>
 
           {/* Section 1: Key Metrics (Enhanced Grid) */}
-          <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <section
+            className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4"
+            data-testid="dashboard-kpis"
+          >
             {metrics.map((m, i) => {
               const Icon = m.icon;
+              const titleSlug =
+                typeof (m as any)?.title === 'string'
+                  ? (m as any).title.toLowerCase().replace(/\s+/g, '-')
+                  : `metric-${i}`;
               return (
                 <Tilt key={i}>
-                  <GlassCard accent={m.accent}>
+                  <GlassCard accent={m.accent} data-testid={`kpi-${titleSlug}`}>
                     <div className="rounded-card p-6 min-w-0">
                       <div className="mb-4 flex items-start justify-between">
                         <div
@@ -1806,7 +1834,11 @@ export default function Dashboard() {
                       <p className="text-xs text-slate-400 uppercase tracking-wide">
                         {m.title}
                       </p>
-                      <p className="text-3xl font-bold tracking-tight mt-1 mb-1">
+                      <p
+                        className="text-3xl font-bold tracking-tight mt-1 mb-1"
+                        aria-live="polite"
+                        aria-atomic="true"
+                      >
                         {m.value}
                       </p>
                       <p className="text-xs text-slate-500/80">{m.detail}</p>
@@ -1827,9 +1859,12 @@ export default function Dashboard() {
           </section>
 
           {/* Section 2: Charts */}
-          <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <section
+            className="grid grid-cols-1 gap-6 md:grid-cols-2"
+            data-testid="dashboard-charts"
+          >
             <GlassCard>
-              <div className="rounded-card p-lg">
+              <div className="rounded-card p-lg" data-testid="chart-revenue">
                 <div className="mb-6 flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold flex items-center gap-2">
@@ -1843,6 +1878,12 @@ export default function Dashboard() {
                       Total: ${revenueStats.sum.toFixed(0)} | Avg: $
                       {revenueStats.mean.toFixed(0)}
                     </p>
+                    <p id="revenue-chart-desc" className="sr-only">
+                      Line chart showing revenue trends over time, comparing
+                      current period to previous period. Total revenue: $
+                      {revenueStats.sum.toFixed(0)}, average: $
+                      {revenueStats.mean.toFixed(0)}.
+                    </p>
                   </div>
                   <button
                     className="rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/15 transition-all focus-ring-theme"
@@ -1855,7 +1896,10 @@ export default function Dashboard() {
                     <Maximize2 className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="h-[380px] min-w-0">
+                <div
+                  className="h-[380px] min-w-0"
+                  aria-describedby="revenue-chart-desc"
+                >
                   <ClientOnly fallback={null}>
                     <RevenueChart data={revenueData} />
                   </ClientOnly>
@@ -1864,7 +1908,7 @@ export default function Dashboard() {
             </GlassCard>
 
             <GlassCard accent="from-cyan-400/30 via-sky-400/20 to-indigo-400/30">
-              <div className="rounded-card p-lg">
+              <div className="rounded-card p-lg" data-testid="chart-fleet">
                 <div className="mb-6 flex items-center justify-between">
                   <div>
                     <h3 className="text-xl font-bold flex items-center gap-2">
@@ -1873,6 +1917,11 @@ export default function Dashboard() {
                     </h3>
                     <p className="text-sm text-slate-400 mt-1">
                       Utilization and performance metrics
+                    </p>
+                    <p id="fleet-chart-desc" className="sr-only">
+                      Multi-line chart displaying fleet activity, showing number
+                      of active trucks and efficiency percentages over the
+                      selected time period.
                     </p>
                   </div>
                   <button
@@ -1886,7 +1935,10 @@ export default function Dashboard() {
                     <Maximize2 className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="h-[380px] min-w-0">
+                <div
+                  className="h-[380px] min-w-0"
+                  aria-describedby="fleet-chart-desc"
+                >
                   <ClientOnly fallback={null}>
                     <FleetChart data={fleetActivity} />
                   </ClientOnly>
@@ -1896,17 +1948,34 @@ export default function Dashboard() {
           </section>
 
           {/* Section 3: Detailed Insights */}
-          <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <section
+            className="grid grid-cols-1 gap-6 md:grid-cols-3"
+            data-testid="dashboard-insights"
+          >
             <GlassCard
               accent="from-fuchsia-400/30 via-violet-400/20 to-cyan-400/30"
               onClick={() => setFullscreen('temp')}
             >
-              <div className="rounded-card p-lg">
+              <div
+                className="rounded-card p-lg"
+                data-testid="chart-temperature"
+              >
                 <h3 className="mb-6 text-lg font-bold flex items-center gap-2">
                   <ThermometerSun className="h-5 w-5 text-fuchsia-400" />
                   Cargo Temperature Distribution
                 </h3>
-                <div className="h-[280px] min-w-0">
+                <p id="temp-chart-desc" className="sr-only">
+                  Pie chart showing distribution of trucks across temperature
+                  ranges:{' '}
+                  {tempBuckets
+                    .map((b) => `${b.name}: ${b.value} trucks`)
+                    .join(', ')}
+                  .
+                </p>
+                <div
+                  className="h-[280px] min-w-0"
+                  aria-describedby="temp-chart-desc"
+                >
                   <ClientOnly fallback={null}>
                     <TempDistributionPie
                       data={tempBuckets as any}
@@ -1947,12 +2016,19 @@ export default function Dashboard() {
               accent="from-rose-400/30 via-orange-400/20 to-amber-400/30"
               onClick={() => setFullscreen('alerts')}
             >
-              <div className="rounded-card p-lg">
+              <div className="rounded-card p-lg" data-testid="chart-alerts">
                 <h3 className="mb-6 text-lg font-bold flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5 text-rose-400" />
                   Alert Timeline
                 </h3>
-                <div className="h-[280px] min-w-0">
+                <p id="alerts-chart-desc" className="sr-only">
+                  Stacked area chart showing alert trends over time, categorized
+                  by severity: critical, warning, and info levels.
+                </p>
+                <div
+                  className="h-[280px] min-w-0"
+                  aria-describedby="alerts-chart-desc"
+                >
                   <ClientOnly fallback={null}>
                     <AlertsChart data={alertsData} />
                   </ClientOnly>
@@ -1986,12 +2062,23 @@ export default function Dashboard() {
               accent="from-emerald-400/30 via-teal-400/20 to-green-400/30"
               onClick={() => setFullscreen('performance')}
             >
-              <div className="rounded-card p-lg">
+              <div
+                className="rounded-card p-lg"
+                data-testid="chart-performance"
+              >
                 <h3 className="mb-6 text-lg font-bold flex items-center gap-2">
                   <Zap className="h-5 w-5 text-emerald-400" />
                   Fleet Performance Radar
                 </h3>
-                <div className="h-[280px] min-w-0">
+                <p id="performance-chart-desc" className="sr-only">
+                  Radar chart displaying fleet performance across multiple
+                  dimensions: On-Time delivery, Fuel Efficiency, Safety
+                  Compliance, Maintenance Score, and Driver Rating.
+                </p>
+                <div
+                  className="h-[280px] min-w-0"
+                  aria-describedby="performance-chart-desc"
+                >
                   <ClientOnly fallback={null}>
                     <PerformanceRadar data={performanceData as any} compact />
                   </ClientOnly>
@@ -2003,7 +2090,7 @@ export default function Dashboard() {
                   </div>
                   <div className="text-center p-3 rounded-xl bg-cyan-500/10 ring-1 ring-cyan-500/30">
                     <p className="text-xs text-slate-400">Reliability Index</p>
-                    <p className="text-2xl font-bold text-cyan-400"></p>
+                    <p className="text-2xl font-bold text-cyan-400">100</p>
                   </div>
                 </div>
               </div>

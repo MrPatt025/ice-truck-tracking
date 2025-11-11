@@ -129,14 +129,14 @@ export default function Sidebar(props: SidebarProps) {
               'font-bold text-lg tracking-tight select-none transition-opacity duration-200 motion-reduce:transition-none',
               expanded ? 'opacity-100' : 'opacity-0',
             )}
-            aria-hidden={!expanded}
+            aria-hidden={!expanded ? 'true' : 'false'}
           >
             ICE-TRUCK
           </span>
           <button
             type="button"
             aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
-            aria-expanded={expanded}
+            aria-expanded={expanded ? 'true' : 'false'}
             onClick={toggle}
             onKeyDown={onToggleKeyDown}
             className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500"
@@ -163,14 +163,14 @@ export default function Sidebar(props: SidebarProps) {
         <div className="border-t border-slate-800 p-3 flex items-center gap-3">
           <div
             className="w-10 h-10 rounded-md bg-gradient-to-br from-violet-500 to-cyan-500"
-            aria-hidden
+            aria-hidden="true"
           />
           <div
             className={cn(
               'overflow-hidden transition-all duration-200 motion-reduce:transition-none',
               expanded ? 'w-48' : 'w-0',
             )}
-            aria-hidden={!expanded}
+            aria-hidden={!expanded ? 'true' : 'false'}
           >
             <div className="flex items-center justify-between gap-2">
               <div className="leading-4">
@@ -233,13 +233,13 @@ const NavItem = React.memo(function NavItem({
         data-testid={testId}
         title={expanded ? undefined : label}
       >
-        <Icon size={20} aria-hidden />
+        <Icon size={20} aria-hidden="true" />
         <span
           className={cn(
             'whitespace-nowrap transition-opacity duration-200 motion-reduce:transition-none',
             expanded ? 'opacity-100' : 'opacity-0',
           )}
-          aria-hidden={!expanded}
+          aria-hidden={!expanded ? 'true' : 'false'}
         >
           {label}
         </span>

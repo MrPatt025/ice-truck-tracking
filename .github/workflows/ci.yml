@@ -21,6 +21,14 @@ jobs:
         run: pnpm -w exec prettier -c .
       - name: ESLint (no warnings)
         run: pnpm -w exec eslint . --max-warnings=0
+      - name: Markdownlint (dashboard)
+        run: pnpm -F dashboard md:lint
+      - name: Dashboard a11y unit tests (jest-axe)
+        run: pnpm -F dashboard test:a11y
+      - name: Install Playwright browsers
+        run: pnpm -w exec playwright install --with-deps
+      - name: Dashboard a11y e2e (Playwright + Axe)
+        run: pnpm -F dashboard test:e2e:a11y
       - name: Backend type-check
         run: pnpm -F backend typecheck || pnpm -F backend type-check || true
       - name: Backend unit tests

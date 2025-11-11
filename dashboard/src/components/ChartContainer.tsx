@@ -124,7 +124,7 @@ function ChartContainer({
       ref={ref}
       data-chart-container="1"
       data-ready={ready ? '1' : '0'}
-      aria-busy={!ready}
+      aria-busy={!ready ? 'true' : 'false'}
       className={twMerge(
         // สำคัญ: ให้คอนเทนเนอร์ยืดเต็ม, ไม่โดนบีบใน flex/grid
         'relative w-full h-auto min-w-0 overflow-hidden',

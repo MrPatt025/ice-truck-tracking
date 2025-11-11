@@ -137,7 +137,7 @@ export default function Fleet3DCanvas(): JSX.Element | null {
   if (!supported) {
     return (
       <div
-        className="relative h-64 w-full rounded-2xl overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 ring-1 ring-white/10"
+        className="relative h-64 w-full rounded-2xl overflow-hidden bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 ring-1 ring-white/10"
         role="status"
         aria-live="polite"
       >

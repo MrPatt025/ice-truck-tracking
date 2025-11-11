@@ -171,6 +171,7 @@
     background-color: var(--bg-root, #0d121c);
     text-rendering: optimizeLegibility;
     -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
@@ -421,14 +422,16 @@
   }
 
   /* Container Query Support */
-  .dashboard-widget {
-    container-type: inline-size;
-    container-name: widget;
-  }
+  @supports (container-type: inline-size) {
+    .dashboard-widget {
+      container-type: inline-size;
+      container-name: widget;
+    }
 
-  @container widget (min-width: 400px) {
-    .widget-responsive {
-      padding: var(--space-lg, 24px);
+    @container widget (min-width: 400px) {
+      .widget-responsive {
+        padding: var(--space-lg, 24px);
+      }
     }
   }
 }
@@ -800,5 +803,37 @@
     background: none;
     box-shadow: none;
     filter: none;
+  }
+}
+
+/* -----------------------------------------------------------
+   Position/transform utilities from CSS variables
+----------------------------------------------------------- */
+@layer utilities {
+  /* Use left/top values from custom properties (percent or px) */
+  .pos-from-vars {
+    left: var(--left);
+    top: var(--top);
+  }
+
+  /* Context menu absolute positioning from page coordinates */
+  .pos-menu {
+    left: var(--menu-x);
+    top: var(--menu-y);
+  }
+
+  /* Transform scale from a CSS variable */
+  .scale-var {
+    transform: scale(var(--scale, 1));
+  }
+
+  /* Heatmap overlay background gradient */
+  .heatmap-layer {
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgba(239, 68, 68, 0.2),
+      rgba(234, 179, 8, 0.1),
+      transparent 60%
+    );
   }
 }

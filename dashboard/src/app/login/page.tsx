@@ -832,7 +832,7 @@ function LoginPageContent() {
               role="alert"
             >
               <svg
-                className="w-4 h-4 flex-shrink-0 mt-0.5"
+                className="w-4 h-4 shrink-0 mt-0.5"
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 aria-hidden="true"
@@ -856,7 +856,7 @@ function LoginPageContent() {
             type="submit"
             disabled={isFormDisabled}
             className="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 disabled:from-slate-600 disabled:to-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold rounded-md py-2.5 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-[#0f1b2f] shadow-lg shadow-cyan-500/20 hover:shadow-cyan-400/30"
-            aria-busy={isFormDisabled}
+            aria-busy={isFormDisabled ? 'true' : 'false'}
           >
             {isSubmitting || authLoading ? (
               <span className="flex items-center justify-center gap-2">
@@ -936,7 +936,7 @@ function ErrorAlert({ message, onDismiss }: ErrorAlertProps) {
       data-request-id={requestId}
     >
       <svg
-        className="w-4 h-4 flex-shrink-0 mt-0.5"
+        className="w-4 h-4 shrink-0 mt-0.5"
         fill="currentColor"
         viewBox="0 0 20 20"
         aria-hidden="true"
@@ -951,7 +951,7 @@ function ErrorAlert({ message, onDismiss }: ErrorAlertProps) {
       <button
         type="button"
         onClick={onDismiss}
-        className="ml-auto text-rose-200/80 hover:text-rose-50 focus:outline-none focus:ring-1 focus:ring-rose-300 rounded px-1 transition-colors flex-shrink-0"
+        className="ml-auto text-rose-200/80 hover:text-rose-50 focus:outline-none focus:ring-1 focus:ring-rose-300 rounded px-1 transition-colors shrink-0"
         aria-label="Dismiss error message"
       >
         ✕

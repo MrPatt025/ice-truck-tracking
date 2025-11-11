@@ -198,18 +198,103 @@ const dts = {
 };
 
 /* ------------------------------- UI side --------------------------- */
-const uiRelaxed = {
-  files: [
-    'dashboard/**/*.{ts,tsx}',
-    'mobile-app/**/*.{ts,tsx}',
-    'frontend/**/*.{ts,tsx}',
-  ],
+const uiDashboard = {
+  files: ['dashboard/**/*.{ts,tsx}'],
   languageOptions: {
     globals: { ...globals.browser, ...globals.es2022 },
     parserOptions: {
-      ecmaFeatures: {
-        jsx: true,
+      ecmaFeatures: { jsx: true },
+    },
+  },
+  plugins: {
+    '@typescript-eslint': tsPlugin,
+    'react-hooks': reactHooks,
+    'unused-imports': unusedImports,
+    sonarjs,
+    'jsx-a11y': jsxA11y,
+    'simple-import-sort': simpleImportSort,
+  },
+  rules: {
+    // React Hooks
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+
+    // Accessibility (jsx-a11y)
+    'jsx-a11y/alt-text': 'error',
+    'jsx-a11y/anchor-has-content': 'error',
+    'jsx-a11y/anchor-is-valid': 'error',
+    'jsx-a11y/aria-activedescendant-has-tabindex': 'error',
+    'jsx-a11y/aria-props': 'error',
+    'jsx-a11y/aria-proptypes': 'error',
+    'jsx-a11y/aria-role': 'error',
+    'jsx-a11y/aria-unsupported-elements': 'error',
+    'jsx-a11y/click-events-have-key-events': 'error',
+    'jsx-a11y/heading-has-content': 'error',
+    'jsx-a11y/html-has-lang': 'error',
+    'jsx-a11y/iframe-has-title': 'error',
+    'jsx-a11y/img-redundant-alt': 'error',
+    'jsx-a11y/interactive-supports-focus': 'error',
+    'jsx-a11y/label-has-associated-control': 'error',
+    'jsx-a11y/media-has-caption': 'warn',
+    'jsx-a11y/mouse-events-have-key-events': 'error',
+    'jsx-a11y/no-access-key': 'error',
+    'jsx-a11y/no-autofocus': 'warn',
+    'jsx-a11y/no-distracting-elements': 'error',
+    'jsx-a11y/no-interactive-element-to-noninteractive-role': 'error',
+    'jsx-a11y/no-noninteractive-element-interactions': 'error',
+    'jsx-a11y/no-noninteractive-element-to-interactive-role': 'error',
+    'jsx-a11y/no-noninteractive-tabindex': 'error',
+    'jsx-a11y/no-redundant-roles': 'error',
+    'jsx-a11y/no-static-element-interactions': 'error',
+    'jsx-a11y/role-has-required-aria-props': 'error',
+    'jsx-a11y/role-supports-aria-props': 'error',
+    'jsx-a11y/scope': 'error',
+    'jsx-a11y/tabindex-no-positive': 'error',
+
+    // Import sorting
+    'simple-import-sort/imports': 'warn',
+    'simple-import-sort/exports': 'warn',
+
+    // UI ergonomics
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-unused-vars': [
+      'warn',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
       },
+    ],
+    '@typescript-eslint/no-unused-expressions': [
+      'warn',
+      { allowShortCircuit: true, allowTernary: true },
+    ],
+    'no-empty': ['warn', { allowEmptyCatch: true }],
+    'prefer-const': 'warn',
+
+    // ลดขยะ import
+    'unused-imports/no-unused-imports': 'error',
+    'unused-imports/no-unused-vars': [
+      'warn',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      },
+    ],
+
+    // Code smell (เบากว่า backend)
+    'sonarjs/no-duplicate-string': 'off',
+    'sonarjs/cognitive-complexity': ['warn', 20],
+  },
+};
+
+const uiOtherUi = {
+  files: ['mobile-app/**/*.{ts,tsx}', 'frontend/**/*.{ts,tsx}'],
+  languageOptions: {
+    globals: { ...globals.browser, ...globals.es2022 },
+    parserOptions: {
+      ecmaFeatures: { jsx: true },
     },
   },
   plugins: {
@@ -409,7 +494,8 @@ export default [
   cjs,
   ...typedBackend,
   dts,
-  uiRelaxed,
+  uiDashboard,
+  uiOtherUi,
   // Temporary override: allow @ts-nocheck in a few heavy UI files while refactoring types
   {
     files: [

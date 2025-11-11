@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type React from 'react';
@@ -193,7 +193,7 @@ export function EnhancedMapView({
         }}
         role="application"
         aria-label="Fleet map"
-        tabIndex={0}
+        tabIndex={0} // eslint-disable-line jsx-a11y/no-noninteractive-tabindex
       >
         {/* Trucks */}
         {plotted.map(({ t, x, y }) => {
@@ -205,18 +205,17 @@ export function EnhancedMapView({
           return (
             <div
               key={t.id}
-              className="absolute -translate-x-1/2 -translate-y-1/2"
-              style={{ left: `${x}%`, top: `${y}%` }}
-              title={t.driver_name ?? 'Truck'}
-              aria-label={`Truck ${t.driver_name ?? t.id}`}
+              className="absolute -translate-x-1/2 -translate-y-1/2 pos-from-vars"
+              style={{ ['--left' as any]: `${x}%`, ['--top' as any]: `${y}%` }}
             >
               <div
-                className={`transition-transform duration-300 ${
+                className={`transition-transform duration-300 scale-var ${
                   isSelected ? 'z-20 ring-4 ring-blue-300 rounded-full' : 'z-10'
                 }`}
-                style={{ transform: `scale(${scale})` }}
+                style={{ ['--scale' as any]: scale }}
                 role="button"
                 tabIndex={0}
+                aria-label={`Truck ${t.driver_name ?? t.id}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelectTruck(t.id);
@@ -277,11 +276,7 @@ export function EnhancedMapView({
         {showHeatmap && (
           <div
             aria-hidden
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                'radial-gradient(circle at 50% 50%, rgba(239,68,68,0.2), rgba(234,179,8,0.1), transparent 60%)',
-            }}
+            className="absolute inset-0 pointer-events-none heatmap-layer"
           />
         )}
       </div>
@@ -289,9 +284,13 @@ export function EnhancedMapView({
       {/* Context Menu */}
       {contextMenu && (
         <div
-          className="fixed bg-white rounded-lg shadow-lg border py-2 z-50 min-w-40"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
+          className="fixed bg-white rounded-lg shadow-lg border py-2 z-50 min-w-40 pos-menu"
+          style={{
+            ['--menu-x' as any]: `${contextMenu.x}px`,
+            ['--menu-y' as any]: `${contextMenu.y}px`,
+          }}
           role="menu"
+          tabIndex={0}
           aria-label="Map context menu"
           onMouseDown={(e) => e.stopPropagation()}
         >

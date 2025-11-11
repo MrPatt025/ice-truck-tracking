@@ -270,6 +270,7 @@ Previous exceptions (now fixed):
    - Consider `aria-live="polite"` for non-critical updates
 
 4. **Before Committing:**
+
    ```bash
    pnpm lint --max-warnings=0  # Must pass
    pnpm type-check              # Must pass
