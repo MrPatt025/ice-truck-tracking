@@ -14,9 +14,10 @@ spec:
       labels:
         app: ice-truck-api
     spec:
+      automountServiceAccountToken: false
       containers:
         - name: api
-          image: ice-truck-api:latest
+          image: ice-truck-api:2.0.0
           ports:
             - containerPort: 5000
           env:
@@ -24,15 +25,29 @@ spec:
               value: 'production'
             - name: PORT
               value: '5000'
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: ice-truck-secrets
+                  key: jwt-secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 100Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+              ephemeral-storage: 500Mi
           livenessProbe:
             httpGet:
-              path: /api/v1/health/livez
+              path: /api/v1/health
               port: 5000
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /api/v1/health/readyz
+              path: /api/v1/health
               port: 5000
             initialDelaySeconds: 5
             periodSeconds: 5

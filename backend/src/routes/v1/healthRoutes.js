@@ -3,7 +3,7 @@ const {
   healthCheck,
   readinessCheck,
   livenessCheck,
-} = require('../../controllers/healthController');
+} = require('../../controllers/health');
 
 const router = express.Router();
 

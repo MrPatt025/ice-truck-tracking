@@ -2,22 +2,24 @@ const db = require('../config/database');
 
 class UserRepository {
   async getByUsername(username) {
-    const result = await db.query('SELECT * FROM users WHERE username = ?', [username]);
-    return result[0] || null;
+    return db.get('SELECT * FROM users WHERE username = $1', [username]);
   }
 
   async getById(id) {
-    const result = await db.query('SELECT * FROM users WHERE id = ?', [id]);
-    return result[0] || null;
+    return db.get('SELECT * FROM users WHERE id = $1', [id]);
   }
 
   async create({ username, password, role }) {
-    const result = await db.query('INSERT INTO users (username, password, role) VALUES (?, ?, ?)', [
-      username,
-      password,
-      role,
-    ]);
-    return this.getById(result.lastID);
+    const rows = await db.query(
+      `INSERT INTO users (username, password, role)
+       VALUES ($1, $2, $3) RETURNING *`,
+      [username, password, role],
+    );
+    return rows[0];
+  }
+
+  async updateLastLogin(id) {
+    await db.query('UPDATE users SET last_login = NOW() WHERE id = $1', [id]);
   }
 }
 

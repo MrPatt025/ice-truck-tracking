@@ -1,47 +1,39 @@
-const db = require('./config/db');
-
+const db = require('./src/config/database');
 async function cleanupOrphanedData() {
   try {
-    console.log('🔍 กำลังตรวจสอบข้อมูล route_details ที่ไม่มี routes...');
-    
-    // ตรวจสอบข้อมูล route_details ที่ไม่มี routes อยู่แล้ว
-    const [orphanedData] = await db.query(`
-      SELECT rd.*, r.id as route_exists
+    console.log('Checking orphaned route_details...');
+    const orphanedData = await db.query(
+      SELECT rd.*
       FROM route_details rd
       LEFT JOIN routes r ON rd.route_id = r.id
       WHERE r.id IS NULL
-    `);
-    
-    console.log('📊 พบข้อมูล route_details ที่ไม่มี routes:', orphanedData.length, 'รายการ');
-    
+    );
+    console.log('Found orphaned route_details:', orphanedData.length);
     if (orphanedData.length > 0) {
-      console.log('🗑️ กำลังลบข้อมูล route_details ที่ไม่มี routes...');
-      
-      // ลบข้อมูล route_details ที่ไม่มี routes อยู่แล้ว
-      const [result] = await db.query(`
-        DELETE rd FROM route_details rd
-        LEFT JOIN routes r ON rd.route_id = r.id
-        WHERE r.id IS NULL
-      `);
-      
-      console.log('✅ ลบข้อมูล route_details สำเร็จ:', result.affectedRows, 'รายการ');
+      console.log('Deleting orphaned route_details...');
+      const result = await db.query(
+        DELETE FROM route_details
+        USING (
+          SELECT rd.id
+          FROM route_details rd
+          LEFT JOIN routes r ON rd.route_id = r.id
+          WHERE r.id IS NULL
+        ) orphaned
+        WHERE route_details.id = orphaned.id
+      );
+      console.log('Deleted:', result.length, 'rows');
     } else {
-      console.log('✅ ไม่พบข้อมูล route_details ที่ต้องลบ');
+      console.log('No orphaned route_details found');
     }
-    
-    // ตรวจสอบผลลัพธ์
-    const [routeDetailsCount] = await db.query('SELECT COUNT(*) as count FROM route_details');
-    const [routesCount] = await db.query('SELECT COUNT(*) as count FROM routes');
-    
-    console.log('📊 จำนวน route_details ที่เหลือ:', routeDetailsCount[0].count);
-    console.log('📊 จำนวน routes ที่เหลือ:', routesCount[0].count);
-    
+    const [rdCount] = await db.query('SELECT COUNT(*) as count FROM route_details');
+    const [rCount] = await db.query('SELECT COUNT(*) as count FROM routes');
+    console.log('Remaining route_details:', rdCount?.count ?? 0);
+    console.log('Remaining routes:', rCount?.count ?? 0);
   } catch (error) {
-    console.error('❌ เกิดข้อผิดพลาด:', error);
+    console.error('Error:', error);
   } finally {
+    await db.close();
     process.exit(0);
   }
 }
-
 cleanupOrphanedData();
-

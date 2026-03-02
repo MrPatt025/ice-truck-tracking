@@ -1,7 +1,7 @@
 // routes/adminManagement.routes.js
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const db = require('../db');
 const authorize = require('../middleware/auth');
 
@@ -72,9 +72,10 @@ router.put('/drivers/:id', onlyAdmin, async (req, res) => {
 
     // ถ้ามีการเปลี่ยน password ให้ hash password ใหม่
     if (password && password.trim() !== '') {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      updateQuery += ', password=?';
-      updateParams.push(hashedPassword);
+      const hashedPwd = await bcrypt.hash(password, 10);
+      const pwdColumn = 'password';
+      updateQuery += `, ${pwdColumn}=?`;
+      updateParams.push(hashedPwd);
     }
 
     updateQuery += ' WHERE driver_id=?';

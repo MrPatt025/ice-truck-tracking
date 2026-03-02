@@ -6,16 +6,23 @@ class TruckRepository {
   }
 
   async getById(id) {
-    const result = await db.query('SELECT * FROM trucks WHERE id = ?', [id]);
-    return result[0] || null;
+    return db.get('SELECT * FROM trucks WHERE id = $1', [id]);
   }
 
   async create(truck) {
-    const result = await db.query(
-      `INSERT INTO trucks (truck_code, plate_number, model, color, gps_code) VALUES (?, ?, ?, ?, ?)`,
-      [truck.truck_code, truck.plate_number, truck.model, truck.color, truck.gps_code]
+    const rows = await db.query(
+      `INSERT INTO trucks (truck_code, plate_number, model, color, gps_code)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [truck.truck_code, truck.plate_number, truck.model, truck.color, truck.gps_code],
     );
-    return this.getById(result.lastID);
+    return rows[0];
+  }
+
+  async updateStatus(truckCode, status) {
+    await db.query(
+      'UPDATE trucks SET status = $1, updated_at = NOW() WHERE truck_code = $2',
+      [status, truckCode],
+    );
   }
 }
 

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":automergeMinor",
+    "group:allNonMajor"
+  ],
+  "labels": ["dependencies"],
+  "rangeStrategy": "bump",
+  "timezone": "Asia/Bangkok",
+  "schedule": ["before 6am on Monday"],
+  "packageRules": [
+    {
+      "groupName": "expo",
+      "matchPackagePatterns": ["^expo", "^@expo/", "react-native"],
+      "automerge": false
+    },
+    {
+      "groupName": "next.js",
+      "matchPackagePatterns": ["^next$", "^@next/"],
+      "automerge": false
+    },
+    {
+      "groupName": "testing",
+      "matchPackagePatterns": ["jest", "playwright", "stryker", "@faker-js"],
+      "automerge": true
+    },
+    {
+      "groupName": "lint & format",
+      "matchPackagePatterns": [
+        "eslint",
+        "prettier",
+        "commitlint",
+        "husky",
+        "lint-staged"
+      ],
+      "automerge": true
+    },
+    {
+      "groupName": "radix-ui",
+      "matchPackagePatterns": ["^@radix-ui/"],
+      "automerge": true
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "automerge": true
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"]
+  }
+}

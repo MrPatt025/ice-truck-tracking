@@ -1,6 +1,5 @@
 {
     "compilerOptions": {
-        "ignoreDeprecations": "6.0",
         "target": "ES2022",
         "lib": [
             "dom",
@@ -23,10 +22,9 @@
                 "name": "next"
             }
         ],
-        "baseUrl": ".",
         "paths": {
             "@/*": [
-                "src/*"
+                "./src/*"
             ],
             "@/components/*": [
                 "./src/components/*"
@@ -45,7 +43,6 @@
             "node",
             "react",
             "react-dom",
-            "cypress",
             "jest"
         ]
     },
@@ -60,6 +57,7 @@
         "node_modules",
         "src/cypress",
         "cypress",
+        "cypress.config.ts",
         "**/*.cy.ts",
         "**/*.cy.tsx"
     ]

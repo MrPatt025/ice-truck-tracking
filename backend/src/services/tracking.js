@@ -1,46 +1,30 @@
-const db = require('../config/db');
+const trackingRepository = require('../repositories/trackingRepository');
 
 class TrackingService {
   static async createTracking(data) {
-    const { shop_code, latitude, longitude, truck_code, driver_code, gps_code } = data;
-    const [result] = await db.query(
-      'INSERT INTO tracking (shop_code, latitude, longitude, truck_code, driver_code, gps_code, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [shop_code, latitude, longitude, truck_code, driver_code, gps_code, new Date()]
-    );
-    return result;
+    const { truck_id, latitude, longitude, speed, heading } = data;
+    return trackingRepository.create({ truck_id, latitude, longitude, speed, heading });
   }
 
   static async getTrackingHistory(filters = {}) {
-    let query = 'SELECT * FROM tracking';
-    const params = [];
-    const conditions = [];
-
-    if (filters.truck_code) {
-      conditions.push('truck_code = ?');
-      params.push(filters.truck_code);
+    if (filters.truck_id) {
+      return trackingRepository.findByTruckId(filters.truck_id, {
+        limit: filters.limit ? Number.parseInt(filters.limit) : 100,
+      });
     }
-
-    if (conditions.length > 0) {
-      query += ' WHERE ' + conditions.join(' AND ');
-    }
-
-    query += ' ORDER BY timestamp DESC';
-
-    if (filters.limit) {
-      query += ' LIMIT ?';
-      params.push(parseInt(filters.limit));
-    }
-
-    const [rows] = await db.query(query, params);
-    return rows;
+    return trackingRepository.findLatestAll();
   }
 
-  static async getLatestPosition(truck_code) {
-    const [rows] = await db.query(
-      'SELECT * FROM tracking WHERE truck_code = ? ORDER BY timestamp DESC LIMIT 1',
-      [truck_code]
-    );
-    return rows[0] || null;
+  static async getLatestPosition(truckId) {
+    return trackingRepository.findLatestByTruckId(truckId);
+  }
+
+  static async getTrackInTimeRange(truckId, startTime, endTime) {
+    return trackingRepository.findInTimeRange(truckId, startTime, endTime);
+  }
+
+  static async getAggregated(truckId, intervalMinutes = 5) {
+    return trackingRepository.getAggregated(truckId, intervalMinutes);
   }
 }
 

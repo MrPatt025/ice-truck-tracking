@@ -4,6 +4,7 @@ const config = require('../config/env');
 
 const healthCheck = async (req, res) => {
   const healthcheck = {
+    status: 'healthy',
     uptime: process.uptime(),
     message: 'OK',
     timestamp: new Date().toISOString(),

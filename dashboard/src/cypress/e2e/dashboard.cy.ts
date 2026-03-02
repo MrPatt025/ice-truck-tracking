@@ -120,7 +120,7 @@
     cy.window()
       .its('performance')
       .then(performance => {
-        const navigation = performance.getEntriesByType('navigation')[0]
+        const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
         expect(
           navigation.loadEventEnd - navigation.loadEventStart
         ).to.be.lessThan(3000)

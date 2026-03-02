@@ -1,55 +1,44 @@
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 require('dotenv').config();
-
 async function cleanupOrphanedData() {
-  const connection = await mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'ice_trackings'
+  const pool = new Pool({
+    connectionString:
+      process.env.DATABASE_URL ||
+      'postgresql://postgres:postgres@localhost:5432/ice_tracking',
   });
-
   try {
-    console.log('🔍 กำลังตรวจสอบข้อมูล route_details ที่ไม่มี routes...');
-    
-    // ตรวจสอบข้อมูล route_details ที่ไม่มี routes อยู่แล้ว
-    const [orphanedData] = await connection.execute(`
-      SELECT rd.*, r.id as route_exists
+    console.log('Checking orphaned route_details...');
+    const { rows: orphanedData } = await pool.query(
+      SELECT rd.*
       FROM route_details rd
       LEFT JOIN routes r ON rd.route_id = r.id
       WHERE r.id IS NULL
-    `);
-    
-    console.log('📊 พบข้อมูล route_details ที่ไม่มี routes:', orphanedData.length, 'รายการ');
-    
+    );
+    console.log('Found orphaned route_details:', orphanedData.length);
     if (orphanedData.length > 0) {
-      console.log('🗑️ กำลังลบข้อมูล route_details ที่ไม่มี routes...');
-      
-      // ลบข้อมูล route_details ที่ไม่มี routes อยู่แล้ว
-      const [result] = await connection.execute(`
-        DELETE rd FROM route_details rd
-        LEFT JOIN routes r ON rd.route_id = r.id
-        WHERE r.id IS NULL
-      `);
-      
-      console.log('✅ ลบข้อมูล route_details สำเร็จ:', result.affectedRows, 'รายการ');
+      console.log('Deleting orphaned route_details...');
+      const result = await pool.query(
+        DELETE FROM route_details
+        USING (
+          SELECT rd.id
+          FROM route_details rd
+          LEFT JOIN routes r ON rd.route_id = r.id
+          WHERE r.id IS NULL
+        ) orphaned
+        WHERE route_details.id = orphaned.id
+      );
+      console.log('Deleted:', result.rowCount, 'rows');
     } else {
-      console.log('✅ ไม่พบข้อมูล route_details ที่ต้องลบ');
+      console.log('No orphaned route_details found');
     }
-    
-    // ตรวจสอบผลลัพธ์
-    const [routeDetailsCount] = await connection.execute('SELECT COUNT(*) as count FROM route_details');
-    const [routesCount] = await connection.execute('SELECT COUNT(*) as count FROM routes');
-    
-    console.log('📊 จำนวน route_details ที่เหลือ:', routeDetailsCount[0].count);
-    console.log('📊 จำนวน routes ที่เหลือ:', routesCount[0].count);
-    
+    const { rows: [rdCount] } = await pool.query('SELECT COUNT(*) as count FROM route_details');
+    const { rows: [rCount] } = await pool.query('SELECT COUNT(*) as count FROM routes');
+    console.log('Remaining route_details:', rdCount.count);
+    console.log('Remaining routes:', rCount.count);
   } catch (error) {
-    console.error('❌ เกิดข้อผิดพลาด:', error);
+    console.error('Error:', error);
   } finally {
-    await connection.end();
+    await pool.end();
   }
 }
-
 cleanupOrphanedData();
-

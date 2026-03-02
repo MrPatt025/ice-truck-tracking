@@ -2,8 +2,8 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Ice Truck Tracking API",
-    "version": "1.0.0",
-    "description": "Professional Ice Truck Tracking System API"
+    "version": "2.0.0",
+    "description": "Professional Ice Truck Tracking System API — PostgreSQL + TimescaleDB, Redis, MQTT"
   },
   "servers": [
     {
@@ -18,39 +18,512 @@
         "scheme": "bearer",
         "bearerFormat": "JWT"
       }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "error" },
+          "message": { "type": "string" }
+        }
+      },
+      "Driver": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "phone": { "type": "string" },
+          "license_number": { "type": "string" },
+          "status": { "type": "string", "enum": ["active", "inactive"] },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Truck": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "plate_number": { "type": "string" },
+          "model": { "type": "string" },
+          "capacity": { "type": "number" },
+          "status": { "type": "string", "enum": ["active", "inactive", "maintenance"] },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Shop": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "address": { "type": "string" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Alert": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "type": { "type": "string" },
+          "message": { "type": "string" },
+          "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+          "truck_id": { "type": "integer" },
+          "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TrackingRecord": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "truck_id": { "type": "integer" },
+          "latitude": { "type": "number" },
+          "longitude": { "type": "number" },
+          "speed": { "type": "number" },
+          "heading": { "type": "number" },
+          "recorded_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "FeatureFlag": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "enabled": { "type": "boolean" },
+          "environment": { "type": "array", "items": { "type": "string" } },
+          "rolloutPercentage": { "type": "number" }
+        }
+      }
     }
   },
-  "security": [
-    {
-      "bearerAuth": []
-    }
-  ],
+  "security": [{ "bearerAuth": [] }],
   "paths": {
     "/health": {
       "get": {
+        "tags": ["Health"],
         "summary": "Health check",
+        "security": [],
         "responses": {
-          "200": {
-            "description": "Service is healthy"
-          }
+          "200": { "description": "Service is healthy" }
+        }
+      }
+    },
+    "/health/healthz": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check (alias)",
+        "security": [],
+        "responses": {
+          "200": { "description": "Service is healthy" }
+        }
+      }
+    },
+    "/health/readyz": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Readiness probe",
+        "security": [],
+        "responses": {
+          "200": { "description": "Service is ready" },
+          "503": { "description": "Service is not ready" }
+        }
+      }
+    },
+    "/health/livez": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Liveness probe",
+        "security": [],
+        "responses": {
+          "200": { "description": "Service is alive" }
         }
       }
     },
     "/auth/login": {
       "post": {
+        "tags": ["Auth"],
         "summary": "User login",
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["username", "password"],
                 "properties": {
-                  "username": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string"
+                  "username": { "type": "string", "minLength": 3 },
+                  "password": { "type": "string", "minLength": 6 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful, returns JWT token" },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "User registration",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": { "type": "string", "minLength": 3 },
+                  "password": { "type": "string", "minLength": 6 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Registration successful" },
+          "400": { "description": "Validation error" }
+        }
+      }
+    },
+    "/drivers": {
+      "get": {
+        "tags": ["Drivers"],
+        "summary": "Get all drivers",
+        "responses": {
+          "200": {
+            "description": "List of drivers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "results": { "type": "integer" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Driver" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Drivers"],
+        "summary": "Create a driver (requires drivers:create)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Driver" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Driver created" },
+          "403": { "description": "Insufficient permissions" }
+        }
+      }
+    },
+    "/drivers/{id}": {
+      "get": {
+        "tags": ["Drivers"],
+        "summary": "Get driver by ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Driver details" },
+          "404": { "description": "Driver not found" }
+        }
+      }
+    },
+    "/trucks": {
+      "get": {
+        "tags": ["Trucks"],
+        "summary": "Get all trucks",
+        "responses": {
+          "200": {
+            "description": "List of trucks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "results": { "type": "integer" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Truck" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Trucks"],
+        "summary": "Create a truck (requires trucks:create)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Truck" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Truck created" },
+          "403": { "description": "Insufficient permissions" }
+        }
+      }
+    },
+    "/trucks/{id}": {
+      "get": {
+        "tags": ["Trucks"],
+        "summary": "Get truck by ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Truck details" },
+          "404": { "description": "Truck not found" }
+        }
+      }
+    },
+    "/shops": {
+      "get": {
+        "tags": ["Shops"],
+        "summary": "Get all shops",
+        "responses": {
+          "200": {
+            "description": "List of shops",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "results": { "type": "integer" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Shop" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Shops"],
+        "summary": "Create a shop (requires shops:create)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Shop" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Shop created" },
+          "403": { "description": "Insufficient permissions" }
+        }
+      }
+    },
+    "/shops/{id}": {
+      "get": {
+        "tags": ["Shops"],
+        "summary": "Get shop by ID",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Shop details" },
+          "404": { "description": "Shop not found" }
+        }
+      }
+    },
+    "/alerts": {
+      "get": {
+        "tags": ["Alerts"],
+        "summary": "Get all alerts",
+        "responses": {
+          "200": {
+            "description": "List of alerts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string" },
+                    "results": { "type": "integer" },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Alert" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Alerts"],
+        "summary": "Create an alert (requires alerts:create)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Alert" }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Alert created" },
+          "403": { "description": "Insufficient permissions" }
+        }
+      }
+    },
+    "/tracking/trucks": {
+      "get": {
+        "tags": ["Tracking"],
+        "summary": "Get latest position for all trucks (requires tracking:read)",
+        "responses": {
+          "200": {
+            "description": "Latest truck positions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TrackingRecord" }
+                    },
+                    "count": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tracking/trucks/{id}": {
+      "get": {
+        "tags": ["Tracking"],
+        "summary": "Get latest position for a truck (requires tracking:read)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Truck latest position" },
+          "404": { "description": "Truck position not found" }
+        }
+      }
+    },
+    "/tracking/history/{truckId}": {
+      "get": {
+        "tags": ["Tracking"],
+        "summary": "Get tracking history for a truck (requires tracking:read)",
+        "parameters": [
+          { "name": "truckId", "in": "path", "required": true, "schema": { "type": "integer" } },
+          {
+            "name": "start",
+            "in": "query",
+            "schema": { "type": "string", "format": "date-time" },
+            "description": "Start of time range"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "schema": { "type": "string", "format": "date-time" },
+            "description": "End of time range"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer" },
+            "description": "Max records to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tracking history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TrackingRecord" }
+                    },
+                    "count": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tracking/location": {
+      "post": {
+        "tags": ["Tracking"],
+        "summary": "Submit a location update (requires tracking:create)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["truckId", "latitude", "longitude"],
+                "properties": {
+                  "truckId": { "type": "integer" },
+                  "latitude": { "type": "number" },
+                  "longitude": { "type": "number" },
+                  "speed": { "type": "number" },
+                  "heading": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Location recorded" },
+          "403": { "description": "Insufficient permissions" }
+        }
+      }
+    },
+    "/tracking/bulk": {
+      "post": {
+        "tags": ["Tracking"],
+        "summary": "Bulk location update (requires tracking:create)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["data"],
+                "properties": {
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "truckId": { "type": "integer" },
+                        "latitude": { "type": "number" },
+                        "longitude": { "type": "number" },
+                        "speed": { "type": "number" },
+                        "heading": { "type": "number" }
+                      }
+                    }
                   }
                 }
               }
@@ -58,9 +531,214 @@
           }
         },
         "responses": {
+          "201": { "description": "Locations recorded" },
+          "400": { "description": "data must be an array of locations" }
+        }
+      }
+    },
+    "/feature-flags": {
+      "get": {
+        "tags": ["Feature Flags"],
+        "summary": "Get all feature flags",
+        "responses": {
           "200": {
-            "description": "Login successful"
+            "description": "List of feature flags",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "flags": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/FeatureFlag" }
+                    }
+                  }
+                }
+              }
+            }
           }
+        }
+      }
+    },
+    "/feature-flags/{key}/check": {
+      "get": {
+        "tags": ["Feature Flags"],
+        "summary": "Check if a feature flag is enabled",
+        "parameters": [
+          { "name": "key", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Feature flag status" },
+          "404": { "description": "Feature flag not found" }
+        }
+      }
+    },
+    "/feature-flags/{key}": {
+      "patch": {
+        "tags": ["Feature Flags"],
+        "summary": "Update feature flag (requires settings:update)",
+        "parameters": [
+          { "name": "key", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "enabled": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Feature flag updated" },
+          "404": { "description": "Feature flag not found" }
+        }
+      }
+    },
+    "/feature-flags/{key}/rollout": {
+      "patch": {
+        "tags": ["Feature Flags"],
+        "summary": "Update rollout percentage (requires settings:update)",
+        "parameters": [
+          { "name": "key", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rolloutPercentage": { "type": "number", "minimum": 0, "maximum": 100 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Rollout percentage updated" },
+          "404": { "description": "Feature flag not found" }
+        }
+      }
+    },
+    "/mobile/register": {
+      "post": {
+        "tags": ["Mobile"],
+        "summary": "Register a mobile device",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["deviceId"],
+                "properties": {
+                  "deviceId": { "type": "string" },
+                  "deviceInfo": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Device registered" }
+        }
+      }
+    },
+    "/mobile/device/{deviceId}": {
+      "get": {
+        "tags": ["Mobile"],
+        "summary": "Get device status",
+        "parameters": [
+          { "name": "deviceId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Device status" },
+          "404": { "description": "Device not found" }
+        }
+      }
+    },
+    "/mobile/location": {
+      "post": {
+        "tags": ["Mobile"],
+        "summary": "Update device location",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["deviceId", "latitude", "longitude"],
+                "properties": {
+                  "deviceId": { "type": "string" },
+                  "latitude": { "type": "number" },
+                  "longitude": { "type": "number" },
+                  "accuracy": { "type": "number" },
+                  "timestamp": { "type": "string", "format": "date-time" },
+                  "truckId": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Location updated" }
+        }
+      }
+    },
+    "/mobile/devices": {
+      "get": {
+        "tags": ["Mobile"],
+        "summary": "Get all active devices",
+        "responses": {
+          "200": { "description": "List of active devices" }
+        }
+      }
+    },
+    "/mobile/ping": {
+      "get": {
+        "tags": ["Mobile"],
+        "summary": "Test mobile API connectivity",
+        "responses": {
+          "200": { "description": "API is working" }
+        }
+      }
+    },
+    "/mobile/sync": {
+      "post": {
+        "tags": ["Mobile"],
+        "summary": "Simulate offline sync (batch locations)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["deviceId", "locations"],
+                "properties": {
+                  "deviceId": { "type": "string" },
+                  "locations": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "latitude": { "type": "number" },
+                        "longitude": { "type": "number" },
+                        "timestamp": { "type": "string", "format": "date-time" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Locations synced" },
+          "400": { "description": "Locations must be an array" }
         }
       }
     }

@@ -6,16 +6,16 @@ class ShopRepository {
   }
 
   async getById(id) {
-    const result = await db.query('SELECT * FROM shops WHERE id = ?', [id]);
-    return result[0] || null;
+    return db.get('SELECT * FROM shops WHERE id = $1', [id]);
   }
 
   async create(shop) {
-    const result = await db.query(
-      `INSERT INTO shops (shop_code, shop_name, phone, address, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?)`,
-      [shop.shop_code, shop.shop_name, shop.phone, shop.address, shop.latitude, shop.longitude]
+    const rows = await db.query(
+      `INSERT INTO shops (shop_code, shop_name, phone, address, latitude, longitude)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [shop.shop_code, shop.shop_name, shop.phone, shop.address, shop.latitude, shop.longitude],
     );
-    return this.getById(result.lastID);
+    return rows[0];
   }
 }
 

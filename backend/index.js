@@ -1,7 +1,7 @@
 ﻿const express = require('express');
 const cors = require('cors');
-const http = require('http');
-const path = require('path');
+const http = require('node:http');
+const path = require('node:path');
 
 // Import configurations
 const config = require('./src/config/env');
@@ -15,6 +15,22 @@ const { metricsMiddleware, metricsHandler } = require('./src/middleware/metrics'
 
 // Import services
 const websocketService = require('./src/services/websocketService');
+
+// Import IoT / caching services (lazy — only when real DB is used)
+let mqttService, telemetryIngestion, redisClient;
+if (process.env.USE_FAKE_DB !== 'true') {
+  try {
+    mqttService = require('./src/services/mqttService');
+    telemetryIngestion = require('./src/services/telemetryIngestion');
+    redisClient = require('./src/config/redis');
+  } catch (err) {
+    // Services are optional during tests or when infra is unavailable
+    logger.warn('Optional services not loaded: ' + err.message);
+  }
+}
+
+// Import API routes
+const apiV1Routes = require('./src/routes/v1');
 
 // Create Express app
 const app = express();
@@ -51,7 +67,7 @@ const corsOptions = {
       'https://ice-truck-tracking.com',
     ];
 
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -84,22 +100,14 @@ app.use((req, res, next) => {
 // Metrics endpoint
 app.get('/metrics', metricsHandler);
 
-// Health check
-app.get('/api/v1/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    version: '1.0.0',
-    websocket_clients: websocketService.getConnectedClientsCount(),
-  });
-});
+// Mount API v1 routes (after mock data block so mock routes take precedence in dev)
+// SEE BELOW: mock data block is registered first when USE_FAKE_DB=true
 
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    message: 'ðŸššâ„ï¸ Ice Truck Tracking API',
-    version: '1.0.0',
+    message: 'Ice Truck Tracking API',
+    version: '2.0.0',
     status: 'healthy',
     endpoints: {
       health: '/api/v1/health',
@@ -146,9 +154,9 @@ if (process.env.USE_FAKE_DB === 'true') {
 
     // ถ้ามี WebSocket service อยู่แล้วก็ส่ง event แบบหลวม ๆ
     try {
-      if (global.wss?.clients) {
+      if (globalThis.wss?.clients) {
         const pkt = { type: 'trucks', trucks: mem.trucks, alerts: mem.alerts };
-        for (const c of global.wss.clients) c.send(JSON.stringify(pkt));
+        for (const c of globalThis.wss.clients) c.send(JSON.stringify(pkt));
       }
     } catch { }
   }, 2000).unref?.();
@@ -166,8 +174,8 @@ if (process.env.USE_FAKE_DB === 'true') {
     mem.alerts.unshift(a);
     mem.alerts = mem.alerts.slice(0, 50);
     try {
-      if (global.wss?.clients) {
-        for (const c of global.wss.clients) c.send(JSON.stringify({ type: 'alert', payload: a }));
+      if (globalThis.wss?.clients) {
+        for (const c of globalThis.wss.clients) c.send(JSON.stringify({ type: 'alert', payload: a }));
       }
     } catch { }
     res.json(a);
@@ -177,8 +185,8 @@ if (process.env.USE_FAKE_DB === 'true') {
   app.post('/api/v1/alerts/clear', (req, res) => {
     mem.alerts = [];
     try {
-      if (global.wss?.clients) {
-        for (const c of global.wss.clients) c.send(JSON.stringify({ type: 'alerts', payload: mem.alerts }));
+      if (globalThis.wss?.clients) {
+        for (const c of globalThis.wss.clients) c.send(JSON.stringify({ type: 'alerts', payload: mem.alerts }));
       }
     } catch { }
     res.json({ ok: true });
@@ -197,14 +205,17 @@ if (process.env.USE_FAKE_DB === 'true') {
       updatedAt: new Date().toISOString(),
     }));
     try {
-      if (global.wss?.clients) {
-        for (const c of global.wss.clients) c.send(JSON.stringify({ type: 'trucks', payload: mem.trucks }));
+      if (globalThis.wss?.clients) {
+        for (const c of globalThis.wss.clients) c.send(JSON.stringify({ type: 'trucks', payload: mem.trucks }));
       }
     } catch { }
     res.json(mem.trucks);
   });
 }
 // ---- /DEV mock data ----
+
+// Mount API v1 routes (after mock data so mock endpoints take precedence in dev)
+app.use('/api/v1', apiV1Routes);
 
 // If running in development, allow a very permissive CORS temporarily so frontend dev isn't blocked.
 if (process.env.NODE_ENV === 'development') {
@@ -225,28 +236,60 @@ app.all('*', (req, res, next) => {
 app.use(errorHandler);
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received. Shutting down gracefully...');
+async function shutdown(signal) {
+  logger.info(`${signal} received. Shutting down gracefully...`);
+  try {
+    if (mqttService) await mqttService.close();
+    if (redisClient) await redisClient.close();
+  } catch (err) {
+    logger.error('Cleanup error: ' + err.message);
+  }
   process.exit(0);
-});
+}
 
-process.on('SIGINT', () => {
-  logger.info('SIGINT received. Shutting down gracefully...');
-  process.exit(0);
-});
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
 
 // Start server
 const server = http.createServer(app);
 
 // Initialize WebSocket
 websocketService.initialize(server);
-websocketService.startSimulation();
 
-server.listen(PORT, () => {
-  logger.info(`ðŸš€ Server running on port ${PORT} in ${NODE_ENV} mode`);
-  logger.info(`ðŸ¥ Health Check: http://localhost:${PORT}/api/v1/health`);
-  logger.info(`ðŸ“Š Metrics: http://localhost:${PORT}/metrics`);
-  logger.info(`ðŸ”Œ WebSocket enabled for real-time updates`);
+// Only start simulation in development/test modes
+if (NODE_ENV !== 'production') {
+  websocketService.startSimulation();
+}
+
+server.listen(PORT, async () => {
+  logger.info(`Server running on port ${PORT} in ${NODE_ENV} mode`);
+  logger.info(`Health Check: http://localhost:${PORT}/api/v1/health`);
+  logger.info(`Metrics: http://localhost:${PORT}/metrics`);
+  logger.info(`WebSocket enabled for real-time updates`);
+
+  // Connect MQTT and register telemetry handlers
+  if (mqttService && telemetryIngestion) {
+    try {
+      await mqttService.connect();
+      telemetryIngestion.registerHandlers(mqttService);
+      logger.info('MQTT connected — telemetry ingestion active');
+    } catch (err) {
+      logger.error('MQTT connection failed: ' + err.message);
+    }
+  }
+
+  // Verify Redis connectivity
+  if (redisClient) {
+    try {
+      const client = redisClient.getClient();
+      if (client) {
+        await client.ping();
+        logger.info('Redis connected');
+      }
+    } catch (err) {
+      logger.warn('Redis not available — caching disabled: ' + err.message);
+    }
+  }
 });
 
 module.exports = { app, server };

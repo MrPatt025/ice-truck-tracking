@@ -6,25 +6,20 @@ class DriverRepository {
   }
 
   async getById(id) {
-    const result = await db.query('SELECT * FROM drivers WHERE id = ?', [id]);
-    return result[0] || null;
+    return db.get('SELECT * FROM drivers WHERE id = $1', [id]);
   }
 
   async create(driver) {
-    const result = await db.query(
-      `INSERT INTO drivers (driver_code, full_name, national_id, license_number, username, address, phone, start_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    const rows = await db.query(
+      `INSERT INTO drivers (driver_code, full_name, national_id, license_number, username, address, phone, start_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
       [
-        driver.driver_code,
-        driver.full_name,
-        driver.national_id,
-        driver.license_number,
-        driver.username,
-        driver.address,
-        driver.phone,
-        driver.start_date,
-      ]
+        driver.driver_code, driver.full_name, driver.national_id,
+        driver.license_number, driver.username, driver.address,
+        driver.phone, driver.start_date,
+      ],
     );
-    return this.getById(result.lastID);
+    return rows[0];
   }
 }
 

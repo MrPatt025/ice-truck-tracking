@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const db = require('../config/db'); // ✅ ใช้ config/db.js
 
 const SECRET_KEY = process.env.JWT_SECRET || '123456';
@@ -76,7 +76,10 @@ const authenticateToken = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (err) {
-    return res.status(403).json({ message: 'token ไม่ถูกต้อง' });
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(403).json({ message: 'token ไม่ถูกต้อง', error: err.message });
+    }
+    throw err;
   }
 };
 

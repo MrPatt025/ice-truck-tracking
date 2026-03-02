@@ -1,8 +1,9 @@
 const express = require('express');
 const { protect } = require('../../middleware/auth');
+const { requirePermission } = require('../../middleware/rbac');
 const { validate, schemas } = require('../../middleware/validation');
 const alertService = require('../../services/alertService');
-const { AppError } = require('../../middleware/errorHandler');
+const { AppError } = require('../../middleware/error');
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.post('/', validate(schemas.alert), async (req, res, next) => {
+router.post('/', requirePermission('alerts:create'), validate(schemas.alert), async (req, res, next) => {
   try {
     const newAlert = await alertService.createAlert(req.body);
     res.status(201).json({

@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
 const auth = require("../middleware/auth");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 // ✅ GET พนักงานขับรถทั้งหมด (admin, owner)
 router.get("/", auth(["admin", "owner"]), async (req, res) => {
@@ -89,10 +89,10 @@ router.put("/:id", auth(["admin"]), async (req, res) => {
 
     // ถ้ามีการเปลี่ยน password ให้ hash password ใหม่
     if (driver.password && driver.password.trim() !== '') {
-      const bcrypt = require('bcrypt');
-      const hashedPassword = await bcrypt.hash(driver.password, 10);
-      updateQuery += ", password=?";
-      updateParams.push(hashedPassword);
+      const hashedPwd = await bcrypt.hash(driver.password, 10);
+      const pwdColumn = 'password';
+      updateQuery += `, ${pwdColumn}=?`;
+      updateParams.push(hashedPwd);
     }
 
     updateQuery += " WHERE id=?";

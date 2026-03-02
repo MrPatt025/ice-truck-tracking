@@ -2,10 +2,11 @@
   "expo": {
     "name": "Ice Truck Mobile",
     "slug": "ice-truck-mobile",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -29,13 +30,23 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     },
     "scheme": "ice-truck",
-    "plugins": ["expo-location", "expo-notifications"],
+    "plugins": [
+      "expo-location",
+      "expo-notifications",
+      "expo-router",
+      "expo-secure-store",
+      "expo-font"
+    ],
     "extra": {
       "eas": {
         "projectId": "ice-truck-mobile-project"
+      },
+      "router": {
+        "origin": false
       }
     }
   }

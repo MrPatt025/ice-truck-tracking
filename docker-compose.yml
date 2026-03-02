@@ -1,7 +1,61 @@
 # Docker Compose file for Ice Truck Tracking System
 
 services:
-  # Backend API
+  # ── PostgreSQL + TimescaleDB ────────────────────────────
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-ice_tracking}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./backend/database/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
+    networks:
+      - ice-truck-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ───────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    networks:
+      - ice-truck-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Eclipse Mosquitto (MQTT) ────────────────────────────
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - '1883:1883'
+      - '9001:9001'
+    volumes:
+      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    networks:
+      - ice-truck-network
+    healthcheck:
+      test: ['CMD-SHELL', 'mosquitto_sub -t "$$SYS/#" -C 1 -W 3 || exit 0']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Backend API ─────────────────────────────────────────
   backend:
     build:
       context: ./backend
@@ -9,14 +63,22 @@ services:
     ports:
       - '5000:5000'
     environment:
-      - NODE_ENV=production
-      - PORT=5000
-      - JWT_SECRET=ice-truck-tracking-super-secret-jwt-key-2025
-      - SALT_ROUNDS=12
-      - CLIENT_URL=http://localhost:3000
-      - DB_URL=./database.sqlite
-    volumes:
-      - ./backend/database.sqlite:/app/database.sqlite
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-ice_tracking}
+      DB_POOL_MAX: 20
+      REDIS_URL: redis://redis:6379
+      MQTT_BROKER_URL: mqtt://mosquitto:1883
+      JWT_SECRET: ${JWT_SECRET:-changeme-in-production}
+      SALT_ROUNDS: 12
+      CLIENT_URL: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
     networks:
       - ice-truck-network
     healthcheck:
@@ -25,7 +87,7 @@ services:
       timeout: 10s
       retries: 3
 
-  # Frontend Dashboard
+  # ── Frontend Dashboard ──────────────────────────────────
   dashboard:
     build:
       context: ./dashboard
@@ -33,27 +95,14 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:5000
-      - NEXT_PUBLIC_WS_URL=ws://backend:5000
+      NEXT_PUBLIC_API_URL: http://backend:5000
+      NEXT_PUBLIC_WS_URL: ws://backend:5000
     depends_on:
       - backend
     networks:
       - ice-truck-network
 
-  # Notification Service
-  notification:
-    build:
-      context: ./sdk/edge
-      dockerfile: Dockerfile
-    ports:
-      - '3002:3002'
-    environment:
-      - NODE_ENV=production
-      - PORT=3002
-    networks:
-      - ice-truck-network
-
-  # Prometheus
+  # ── Prometheus ──────────────────────────────────────────
   prometheus:
     image: prom/prometheus:latest
     ports:
@@ -71,14 +120,14 @@ services:
     networks:
       - ice-truck-network
 
-  # Grafana
+  # ── Grafana ─────────────────────────────────────────────
   grafana:
     image: grafana/grafana:latest
     ports:
       - '3001:3000'
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
-      - GF_USERS_ALLOW_SIGN_UP=false
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
     volumes:
       - grafana-storage:/var/lib/grafana
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
@@ -87,56 +136,7 @@ services:
     networks:
       - ice-truck-network
 
-  # Node Exporter
-  node-exporter:
-    image: prom/node-exporter:latest
-    ports:
-      - '9100:9100'
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.rootfs=/rootfs'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    networks:
-      - ice-truck-network
-
-  # cAdvisor
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    ports:
-      - '8080:8080'
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    privileged: true
-    devices:
-      - /dev/kmsg
-    networks:
-      - ice-truck-network
-
-  # Redis for caching
-  redis:
-    image: redis:7-alpine
-    ports:
-      - '6379:6379'
-    volumes:
-      - redis-data:/data
-    networks:
-      - ice-truck-network
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Nginx Load Balancer
+  # ── Nginx Load Balancer ─────────────────────────────────
   nginx:
     image: nginx:alpine
     ports:
@@ -152,8 +152,11 @@ services:
       - ice-truck-network
 
 volumes:
-  grafana-storage:
+  pg-data:
   redis-data:
+  mosquitto-data:
+  mosquitto-log:
+  grafana-storage:
 
 networks:
   ice-truck-network:

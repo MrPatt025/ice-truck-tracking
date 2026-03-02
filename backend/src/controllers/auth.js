@@ -1,6 +1,6 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { createSendToken } = require('../middleware/auth');
-const { AppError } = require('../middleware/errorHandler');
+const { AppError } = require('../middleware/error');
 const userService = require('../services/userService');
 const logger = require('../config/logger');
 const config = require('../config/env');

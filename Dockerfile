@@ -1,30 +1,31 @@
 # Multi-stage Dockerfile for Monorepo
 FROM node:18-alpine AS deps
+RUN corepack enable && corepack prepare pnpm@10.18.2 --activate
 WORKDIR /app
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY turbo.json ./
-COPY backend/package*.json ./backend/
-COPY dashboard/package*.json ./dashboard/
-COPY mobile-app/package*.json ./mobile-app/
-COPY sdk/edge/package*.json ./sdk/edge/
-COPY sdk/mobile/package*.json ./sdk/mobile/
-RUN npm ci --only=production
+COPY backend/package.json ./backend/
+COPY dashboard/package.json ./dashboard/
+COPY mobile-app/package.json ./mobile-app/
+COPY sdk/edge/package.json ./sdk/edge/
+COPY sdk/mobile/package.json ./sdk/mobile/
+RUN pnpm install --frozen-lockfile --prod
 
 FROM node:18-alpine AS builder
+RUN corepack enable && corepack prepare pnpm@10.18.2 --activate
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN pnpm run build
 
 FROM node:18-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV production
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/backend/dist ./backend/dist
+COPY --from=builder /app/backend ./backend
 COPY --from=builder /app/dashboard/.next ./dashboard/.next
-COPY --from=builder /app/mobile-app/dist ./mobile-app/dist
 COPY --from=builder /app/sdk/edge/dist ./sdk/edge/dist
 COPY --from=builder /app/sdk/mobile/dist ./sdk/mobile/dist
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 EXPOSE 3000 5000
-CMD ["npm", "run", "start"]
+CMD ["node", "backend/index.js"]

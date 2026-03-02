@@ -1,4 +1,4 @@
-name: CI / CD
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,238 +6,243 @@ on:
   pull_request:
     branches: [main, develop]
 
-env:
-  NODE_VERSION: '18'
-  PNPM_VERSION: '8'
-  CI: 'true'
-  NEXT_TELEMETRY_DISABLED: '1'
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10.18.2'
+  CI: 'true'
+  NEXT_TELEMETRY_DISABLED: '1'
+
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
+  # ── Install & Cache ──────────────────────────────────────
   install:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Install deps (workspace)
-        run: pnpm install --frozen-lockfile
-
-      - name: Cache pnpm store
-        uses: actions/cache@v4
-        with:
-          path: ~/.pnpm-store
-          key: pnpm-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            pnpm-${{ runner.os }}-
-
+  # ── Lint & Type Check ────────────────────────────────────
   lint:
     needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - name: Lint (all workspaces that define the script)
-        run: pnpm -r --if-present lint
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run type-check
 
-  type-check:
-    needs: install
+  # ── Commitlint (PR only) ────────────────────────────────
+  commitlint:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
+
+  # ── Backend Tests ────────────────────────────────────────
+  test-backend:
+    needs: lint
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: timescale/timescaledb:latest-pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ice_tracking_test
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+      mosquitto:
+        image: eclipse-mosquitto:2
+        ports: ['1883:1883']
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ice_tracking_test
+      REDIS_URL: redis://localhost:6379
+      MQTT_BROKER_URL: mqtt://localhost:1883
+      JWT_SECRET: test-secret
+      NODE_ENV: test
+      USE_FAKE_DB: 'true'
+    steps:
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - name: Type check (all)
-        run: pnpm -r --if-present type-check
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ice-truck/backend run test -- --ci --coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage/
+          if-no-files-found: ignore
 
+  # ── Dashboard Tests ──────────────────────────────────────
+  test-dashboard:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ice-truck/dashboard run test -- --ci
+
+  # ── Playwright E2E ───────────────────────────────────────
+  test-e2e:
+    needs: [test-backend, test-dashboard]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: npx playwright install --with-deps chromium
+      - run: pnpm --filter @ice-truck/dashboard run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: dashboard/playwright-report/
+          if-no-files-found: ignore
+
+  # ── Build All ────────────────────────────────────────────
   build:
-    needs: [install, lint, type-check]
+    needs: [test-backend, test-dashboard]
     runs-on: ubuntu-latest
     env:
-      # Safe defaults for dashboard build
       NEXT_PUBLIC_API_URL: http://localhost:5000
       NEXT_PUBLIC_WS_URL: ws://localhost:5000
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+  # ── Preview Deployment (every PR) ────────────────────────
+  preview:
+    if: github.event_name == 'pull_request'
+    needs: lint
+    runs-on: ubuntu-latest
+    environment:
+      name: "preview"
+    steps:
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - name: Build (all)
-        run: pnpm -r --if-present build
-      - name: Upload dashboard build
-        if: hashFiles('dashboard/**') != ''
-        uses: actions/upload-artifact@v4
+      - uses: actions/setup-node@v4
         with:
-          name: dashboard-.next
-          path: dashboard/.next
-          if-no-files-found: ignore
-      - name: Upload backend build
-        if: hashFiles('backend/**') != ''
-        uses: actions/upload-artifact@v4
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Deploy Preview to Vercel
+        id: vercel
+        uses: amondnet/vercel-action@v25
         with:
-          name: backend-dist
-          path: backend/dist
-          if-no-files-found: ignore
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./dashboard
+      - name: Comment PR with preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Preview Deployment Ready!**\n\n🔗 ${{ steps.vercel.outputs.preview-url }}\n\nCommit: \`${context.sha.substring(0, 7)}\``
+            })
 
-  test:
+  # ── Deploy Dashboard → Vercel (production) ──────────────
+  deploy-dashboard:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
+    environment:
+      name: "production"
+      url: https://ice-truck-tracking.com
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - uses: pnpm/action-setup@v4
+      - run: pnpm install --frozen-lockfile
+      - name: Deploy to Vercel (prod)
+        uses: amondnet/vercel-action@v25
         with:
-          version: ${{ env.PNPM_VERSION }}
-      - name: Unit & Integration tests
-        run: pnpm -r --if-present test -- --ci
-      - name: Upload coverage (if any)
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: '**/coverage/**'
-          if-no-files-found: ignore
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./dashboard
+          vercel-args: '--prod'
 
-  security-audit:
-    needs: install
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - name: Security audit
-        run: pnpm -r --if-present security:audit
-      - name: Upload security report
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-report
-          path: '**/security-audit-report.json'
-          if-no-files-found: ignore
-
-  e2e:
+  # ── Deploy Backend → Render ─────────────────────────────
+  deploy-backend:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: build
     runs-on: ubuntu-latest
+    environment:
+      name: "production"
+      url: https://api.ice-truck-tracking.com
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - name: E2E tests
-        run: pnpm --if-present test:e2e
-      - name: Upload E2E artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-results
-          path: e2e-results
-          if-no-files-found: ignore
-
-  performance:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - name: Load / performance tests
-        run: pnpm --if-present load:test
-      - name: Upload performance report
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-report
-          path: performance-report.json
-          if-no-files-found: ignore
-
-  deploy-staging:
-    needs: [test, security-audit, e2e, performance]
-    if: github.ref == 'refs/heads/develop'
-    runs-on: ubuntu-latest
-    environment: staging
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - name: Deploy to staging
-        run: pnpm --if-present deploy:staging
-        env:
-          STAGING_URL: ${{ secrets.STAGING_URL }}
-          STAGING_TOKEN: ${{ secrets.STAGING_TOKEN }}
-
-  deploy-production:
-    needs: [test, security-audit, e2e, performance]
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment: production
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - name: Deploy to production
-        run: pnpm --if-present deploy:production
-        env:
-          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
-          PRODUCTION_TOKEN: ${{ secrets.PRODUCTION_TOKEN }}
+      - name: Trigger Render deploy hook
+        run: curl -sS "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"

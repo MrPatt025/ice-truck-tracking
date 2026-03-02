@@ -1,4 +1,6 @@
 const express = require('express');
+const { protect } = require('../../middleware/auth');
+const { requirePermission } = require('../../middleware/rbac');
 const router = express.Router();
 
 // Mock feature flags
@@ -37,16 +39,16 @@ const featureFlags = [
   },
 ];
 
-// Get all feature flags
-router.get('/', (req, res) => {
+// Get all feature flags (any authenticated user)
+router.get('/', protect, (req, res) => {
   res.json({
     success: true,
     flags: featureFlags,
   });
 });
 
-// Check specific feature flag
-router.get('/:key/check', (req, res) => {
+// Check specific feature flag (any authenticated user)
+router.get('/:key/check', protect, (req, res) => {
   const flag = featureFlags.find(f => f.key === req.params.key);
   if (!flag) {
     return res.status(404).json({
@@ -67,8 +69,8 @@ router.get('/:key/check', (req, res) => {
   });
 });
 
-// Update feature flag
-router.patch('/:key', (req, res) => {
+// Update feature flag (admin only)
+router.patch('/:key', protect, requirePermission('settings:update'), (req, res) => {
   const flag = featureFlags.find(f => f.key === req.params.key);
   if (!flag) {
     return res.status(404).json({
@@ -87,8 +89,8 @@ router.patch('/:key', (req, res) => {
   });
 });
 
-// Update rollout percentage
-router.patch('/:key/rollout', (req, res) => {
+// Update rollout percentage (admin only)
+router.patch('/:key/rollout', protect, requirePermission('settings:update'), (req, res) => {
   const flag = featureFlags.find(f => f.key === req.params.key);
   if (!flag) {
     return res.status(404).json({

@@ -1,4 +1,4 @@
-const { AppError } = require('./errorHandler');
+const { AppError } = require('./error');
 
 // Simple validation without Joi
 const validate = schema => {

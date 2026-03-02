@@ -1,16 +1,20 @@
-jest.mock("sqlite3", () => ({
-  verbose: () => ({
-    Database: jest.fn(() => ({
-      run(sql,_p,cb){ cb?.(null); return this },
-      all(_s,_p,cb){ cb?.(null,[]) },
-      get(_s,_p,cb){ cb?.(null,null) },
-      close(cb){ cb?.() },
-      serialize(fn){ fn?.() },
-      on(){}, exec(_s,cb){ cb?.(null) },
-    })),
-  }),
-}));
-jest.mock("bcrypt", () => ({
+jest.mock("pg", () => {
+  const mockClient = {
+    query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+    release: jest.fn(),
+  };
+  const mockPool = {
+    query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+    connect: jest.fn().mockResolvedValue(mockClient),
+    end: jest.fn().mockResolvedValue(undefined),
+    on: jest.fn(),
+  };
+  return { Pool: jest.fn(() => mockPool) };
+});
+jest.mock("bcryptjs", () => ({
   hashSync: () => "hashed",
   compareSync: () => true,
+  hash: () => Promise.resolve("hashed"),
+  compare: () => Promise.resolve(true),
+  genSalt: () => Promise.resolve("salt"),
 }));

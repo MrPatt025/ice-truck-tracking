@@ -1,100 +1,116 @@
 const express = require('express');
+const { protect } = require('../../middleware/auth');
+const { requirePermission } = require('../../middleware/rbac');
+const TrackingService = require('../../services/tracking');
+const { AppError } = require('../../middleware/error');
+
 const router = express.Router();
 
-// Mock data for demo
-const mockTrucks = [
-  {
-    id: '1',
-    plate_number: 'ABC-123',
-    latitude: 13.7563,
-    longitude: 100.5018,
-    status: 'active',
-    driver_name: 'John Doe',
-    temperature: -2.5,
-    speed: 45,
-    last_update: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    plate_number: 'XYZ-789',
-    latitude: 13.76,
-    longitude: 100.51,
-    status: 'inactive',
-    driver_name: 'Jane Smith',
-    temperature: -1.8,
-    speed: 0,
-    last_update: new Date().toISOString(),
-  },
-];
+// All tracking routes require authentication
+router.use(protect);
 
-// Get all trucks
-router.get('/trucks', (req, res) => {
-  res.json({
-    success: true,
-    data: mockTrucks,
-    count: mockTrucks.length,
-  });
-});
-
-// Track location
-router.post('/location', (req, res) => {
-  const { truckId, latitude, longitude, temperature, speed } = req.body;
-
-  // Update mock data
-  const truck = mockTrucks.find(t => t.id === truckId);
-  if (truck) {
-    truck.latitude = latitude;
-    truck.longitude = longitude;
-    truck.temperature = temperature || truck.temperature;
-    truck.speed = speed || truck.speed;
-    truck.last_update = new Date().toISOString();
-    truck.status = 'active';
-  }
-
-  res.json({
-    success: true,
-    message: 'Location updated successfully',
-    data: { truckId, latitude, longitude, timestamp: new Date().toISOString() },
-  });
-});
-
-// Bulk location update
-router.post('/bulk', (req, res) => {
-  const { data: locations } = req.body;
-
-  locations.forEach(location => {
-    const truck = mockTrucks.find(t => t.id === location.truckId);
-    if (truck) {
-      truck.latitude = location.latitude;
-      truck.longitude = location.longitude;
-      truck.temperature = location.temperature || truck.temperature;
-      truck.speed = location.speed || truck.speed;
-      truck.last_update = new Date().toISOString();
-      truck.status = 'active';
-    }
-  });
-
-  res.json({
-    success: true,
-    message: `Updated ${locations.length} locations`,
-    processed: locations.length,
-  });
-});
-
-// Get truck by ID
-router.get('/trucks/:id', (req, res) => {
-  const truck = mockTrucks.find(t => t.id === req.params.id);
-  if (!truck) {
-    return res.status(404).json({
-      success: false,
-      message: 'Truck not found',
+// GET /api/v1/tracking/trucks — latest position for all trucks
+router.get('/trucks', requirePermission('tracking:read'), async (req, res, next) => {
+  try {
+    const trucks = await TrackingService.getTrackingHistory();
+    res.json({
+      success: true,
+      data: trucks,
+      count: trucks.length,
     });
+  } catch (error) {
+    next(error);
   }
+});
 
-  res.json({
-    success: true,
-    data: truck,
-  });
+// GET /api/v1/tracking/trucks/:id — latest position for one truck
+router.get('/trucks/:id', requirePermission('tracking:read'), async (req, res, next) => {
+  try {
+    const position = await TrackingService.getLatestPosition(req.params.id);
+    if (!position) {
+      return next(new AppError('Truck position not found', 404));
+    }
+    res.json({
+      success: true,
+      data: position,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/v1/tracking/history/:truckId — tracking history
+router.get('/history/:truckId', requirePermission('tracking:read'), async (req, res, next) => {
+  try {
+    const { start, end } = req.query;
+    let data;
+
+    if (start && end) {
+      data = await TrackingService.getTrackInTimeRange(req.params.truckId, start, end);
+    } else {
+      data = await TrackingService.getTrackingHistory({
+        truck_id: req.params.truckId,
+        limit: req.query.limit,
+      });
+    }
+
+    res.json({
+      success: true,
+      data,
+      count: data.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/tracking/location — submit a location update
+router.post('/location', requirePermission('tracking:create'), async (req, res, next) => {
+  try {
+    const { truckId, latitude, longitude, speed, heading } = req.body;
+    const record = await TrackingService.createTracking({
+      truck_id: truckId,
+      latitude,
+      longitude,
+      speed,
+      heading,
+    });
+    res.status(201).json({
+      success: true,
+      message: 'Location updated successfully',
+      data: record,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/v1/tracking/bulk — bulk location update
+router.post('/bulk', requirePermission('tracking:create'), async (req, res, next) => {
+  try {
+    const { data: locations } = req.body;
+    if (!Array.isArray(locations)) {
+      return next(new AppError('data must be an array of locations', 400));
+    }
+    const results = await Promise.all(
+      locations.map((loc) =>
+        TrackingService.createTracking({
+          truck_id: loc.truckId,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          speed: loc.speed,
+          heading: loc.heading,
+        })
+      )
+    );
+    res.status(201).json({
+      success: true,
+      message: `Updated ${results.length} locations`,
+      processed: results.length,
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = router;

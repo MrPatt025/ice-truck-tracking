@@ -1,10 +1,10 @@
-module.exports = function (config) {
+module.exports = function strykerConfig(config) {
   config.set({
     mutate: [
-      'apps/backend/src/**/*.js',
-      'apps/backend/src/**/*.ts',
-      'apps/dashboard/src/**/*.ts',
-      'apps/dashboard/src/**/*.tsx',
+      'backend/src/**/*.js',
+      'backend/src/**/*.ts',
+      'dashboard/src/**/*.ts',
+      'dashboard/src/**/*.tsx',
     ],
     testRunner: 'jest',
     reporters: ['html', 'clear-text', 'progress'],

@@ -1,35 +1,34 @@
 # Multi-stage build for production
-FROM node:18-alpine AS base
+FROM node:22-alpine AS base
 
-# Install security updates
-RUN apk update && apk upgrade && apk add --no-cache dumb-init
+# Install security updates, pnpm, and dumb-init
+RUN apk update && apk upgrade && apk add --no-cache dumb-init curl \
+    && corepack enable && corepack prepare pnpm@10.18.2 --activate
 
 # Create app directory
 WORKDIR /usr/src/app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml* ./
 
 # Development stage
 FROM base AS development
-RUN npm ci --only=development
+RUN pnpm install --frozen-lockfile
 COPY . .
 EXPOSE 5000
 USER node
-CMD ["dumb-init", "npm", "run", "dev"]
+CMD ["dumb-init", "pnpm", "run", "dev"]
 
 # Production dependencies stage
 FROM base AS dependencies
-RUN npm install --only=production && npm cache clean --force
+RUN pnpm install --prod --frozen-lockfile
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:22-alpine AS production
 
-# Install security updates and dumb-init
-RUN apk update && apk upgrade && apk add --no-cache dumb-init
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+# Install security updates and dumb-init, create non-root user
+RUN apk update && apk upgrade && apk add --no-cache dumb-init curl \
+  && addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
 # Set working directory
 WORKDIR /usr/src/app
@@ -39,9 +38,6 @@ COPY --from=dependencies --chown=nodejs:nodejs /usr/src/app/node_modules ./node_
 
 # Copy application code
 COPY --chown=nodejs:nodejs . .
-
-# Create database directory
-RUN mkdir -p /usr/src/app/data && chown nodejs:nodejs /usr/src/app/data
 
 # Set environment variables
 ENV NODE_ENV=production

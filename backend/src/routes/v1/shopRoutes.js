@@ -1,8 +1,9 @@
 const express = require('express');
-const { protect, restrictTo } = require('../../middleware/auth');
+const { protect } = require('../../middleware/auth');
+const { requirePermission } = require('../../middleware/rbac');
 const { validate, schemas } = require('../../middleware/validation');
 const shopService = require('../../services/shopService');
-const { AppError } = require('../../middleware/errorHandler');
+const { AppError } = require('../../middleware/error');
 
 const router = express.Router();
 
@@ -36,7 +37,7 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-router.post('/', restrictTo('admin'), validate(schemas.shop), async (req, res, next) => {
+router.post('/', requirePermission('shops:create'), validate(schemas.shop), async (req, res, next) => {
   try {
     const newShop = await shopService.createShop(req.body);
     res.status(201).json({

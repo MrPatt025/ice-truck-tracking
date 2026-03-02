@@ -85,8 +85,7 @@
   "globalDependencies": [
     "package.json",
     "turbo.json",
-    ".eslintrc.js",
-    ".prettierrc",
+    "eslint.config.mjs",
     "tsconfig.json",
     "commitlint.config.js",
     "lint-staged.config.js"

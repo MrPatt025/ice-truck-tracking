@@ -1,8 +1,9 @@
 const express = require('express');
-const { protect, restrictTo } = require('../../middleware/auth');
+const { protect } = require('../../middleware/auth');
+const { requirePermission } = require('../../middleware/rbac');
 const { validate, schemas } = require('../../middleware/validation');
 const driverService = require('../../services/driverService');
-const { AppError } = require('../../middleware/errorHandler');
+const { AppError } = require('../../middleware/error');
 
 const router = express.Router();
 
@@ -39,8 +40,8 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// POST /api/v1/drivers (admin only)
-router.post('/', restrictTo('admin'), validate(schemas.driver), async (req, res, next) => {
+// POST /api/v1/drivers (requires drivers:create permission)
+router.post('/', requirePermission('drivers:create'), validate(schemas.driver), async (req, res, next) => {
   try {
     const newDriver = await driverService.createDriver(req.body);
     res.status(201).json({

@@ -1,5 +1,9 @@
 const express = require('express');
+const { protect } = require('../../middleware/auth');
 const router = express.Router();
+
+// All mobile routes require authentication
+router.use(protect);
 
 // Mock mobile devices
 const mobileDevices = new Map();
