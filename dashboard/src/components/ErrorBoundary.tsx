@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('[ErrorBoundary]', error, errorInfo)
-    // TODO: Send to Sentry / error tracking service
+    // Integration point: forward to Sentry / error tracking service
   }
 
   handleRetry = () => {

@@ -18,7 +18,7 @@ interface SkeletonProps {
 }
 
 /** Base skeleton pulse */
-export function Skeleton({ className, width, height }: SkeletonProps) {
+export const Skeleton = ({ className, width, height }: SkeletonProps) => {
   return (
     <div
       role='status'
@@ -30,7 +30,7 @@ export function Skeleton({ className, width, height }: SkeletonProps) {
 }
 
 /** Skeleton card for dashboard panels */
-export function SkeletonCard() {
+export const SkeletonCard = () => {
   return (
     <div
       className='rounded-xl border bg-card p-6 shadow-sm'
@@ -50,7 +50,7 @@ export function SkeletonCard() {
 }
 
 /** Skeleton row for table/list views */
-export function SkeletonRow() {
+export const SkeletonRow = () => {
   return (
     <div
       className='flex items-center gap-4 py-3'
@@ -68,7 +68,7 @@ export function SkeletonRow() {
 }
 
 /** Skeleton for the map component */
-export function SkeletonMap() {
+export const SkeletonMap = () => {
   return (
     <div
       className='relative h-[500px] w-full rounded-xl bg-muted'
@@ -86,7 +86,7 @@ export function SkeletonMap() {
 }
 
 /** Skeleton for the full dashboard page */
-export function DashboardSkeleton() {
+export const DashboardSkeleton = () => {
   return (
     <div className='space-y-6 p-6' role='status' aria-label='Loading dashboard'>
       {/* Stats row */}

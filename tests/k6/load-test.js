@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import http from 'k6/http';
 import { check, sleep, group } from 'k6';
 import { Rate, Trend, Counter } from 'k6/metrics';
@@ -41,8 +42,6 @@ export const options = {
 };
 
 /* ─── Authentication ─── */
-let authToken = '';
-
 export function setup() {
     const loginRes = http.post(`${BASE_URL}/api/v1/auth/login`, JSON.stringify({
         email: __ENV.TEST_EMAIL || 'admin@icetruck.com',
@@ -71,12 +70,13 @@ export default function (data) {
         const res = http.get(`${BASE_URL}/api/v1/health`, {
             tags: { name: 'health' },
         });
-        check(res, {
+        const healthCheck = check(res, {
             'health status 200': (r) => r.status === 200,
             'health body OK': (r) => {
                 try { return JSON.parse(r.body).status === 'ok'; } catch { return false; }
             },
-        }) || errorRate.add(1);
+        });
+        if (!healthCheck) errorRate.add(1);
         reqCount.add(1);
         latencyP95.add(res.timings.duration);
     });
@@ -88,12 +88,13 @@ export default function (data) {
             headers,
             tags: { name: 'trucks' },
         });
-        check(res, {
+        const trucksCheck = check(res, {
             'trucks status 200': (r) => r.status === 200,
             'trucks is array': (r) => {
                 try { return Array.isArray(JSON.parse(r.body)); } catch { return false; }
             },
-        }) || errorRate.add(1);
+        });
+        if (!trucksCheck) errorRate.add(1);
         reqCount.add(1);
         latencyP95.add(res.timings.duration);
     });
@@ -105,9 +106,10 @@ export default function (data) {
             headers,
             tags: { name: 'alerts' },
         });
-        check(res, {
+        const alertsCheck = check(res, {
             'alerts status 2xx': (r) => r.status >= 200 && r.status < 300,
-        }) || errorRate.add(1);
+        });
+        if (!alertsCheck) errorRate.add(1);
         reqCount.add(1);
         latencyP95.add(res.timings.duration);
     });
@@ -129,9 +131,10 @@ export default function (data) {
             headers,
             tags: { name: 'telemetry' },
         });
-        check(res, {
+        const telemetryCheck = check(res, {
             'telemetry status 2xx': (r) => r.status >= 200 && r.status < 300,
-        }) || errorRate.add(1);
+        });
+        if (!telemetryCheck) errorRate.add(1);
         reqCount.add(1);
         latencyP95.add(res.timings.duration);
     });
@@ -146,7 +149,7 @@ export function handleSummary(data) {
     };
 }
 
-function textSummary(data, opts) {
+function textSummary(data) {
     // k6 built-in textSummary
     return JSON.stringify(data.metrics, null, 2);
 }

@@ -1,4 +1,4 @@
-import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
+import * as Network from 'expo-network';
 import { secureStorage } from './secureStorage';
 
 /**
@@ -19,11 +19,12 @@ interface QueuedRequest {
 const QUEUE_KEY = 'offline_queue';
 const MAX_RETRIES = 5;
 const MAX_QUEUE_SIZE = 100;
+const POLL_INTERVAL = 10_000; // 10 seconds
 
 class OfflineQueue {
   private queue: QueuedRequest[] = [];
   private isProcessing = false;
-  private unsubscribe: (() => void) | null = null;
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   async init(): Promise<void> {
     // Load persisted queue
@@ -36,12 +37,13 @@ class OfflineQueue {
       }
     }
 
-    // Listen for connectivity changes
-    this.unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
-      if (state.isConnected && this.queue.length > 0) {
-        this.processQueue();
+    // Poll for connectivity changes and process queue
+    this.pollTimer = setInterval(async () => {
+      const networkState = await Network.getNetworkStateAsync();
+      if (networkState.isConnected && this.queue.length > 0) {
+        await this.processQueue();
       }
-    });
+    }, POLL_INTERVAL);
   }
 
   async enqueue(request: Omit<QueuedRequest, 'id' | 'timestamp' | 'retryCount'>): Promise<void> {
@@ -106,7 +108,10 @@ class OfflineQueue {
   }
 
   destroy(): void {
-    this.unsubscribe?.();
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
   }
 
   private async persist(): Promise<void> {

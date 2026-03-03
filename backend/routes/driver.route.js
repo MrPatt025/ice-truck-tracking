@@ -90,8 +90,7 @@ router.put("/:id", auth(["admin"]), async (req, res) => {
     // ถ้ามีการเปลี่ยน password ให้ hash password ใหม่
     if (driver.password && driver.password.trim() !== '') {
       const hashedPwd = await bcrypt.hash(driver.password, 10);
-      const pwdColumn = 'password';
-      updateQuery += `, ${pwdColumn}=?`;
+      updateQuery += `, password=?`;
       updateParams.push(hashedPwd);
     }
 

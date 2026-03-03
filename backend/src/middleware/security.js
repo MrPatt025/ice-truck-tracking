@@ -46,7 +46,7 @@ function csrfProtection(req, res, next) {
 
     // Skip for Bearer-token authenticated API requests (stateless)
     const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) return next();
+    if (authHeader?.startsWith('Bearer ')) return next();
 
     // For cookie-based sessions, verify CSRF token
     const csrfCookie = req.cookies?.['csrf-token'];

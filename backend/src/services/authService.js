@@ -79,7 +79,7 @@ class AuthService {
         await this.db.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]);
 
         // Generate token pair
-        const { accessToken, refreshToken, family } = await this._createTokenPair(user);
+        const { accessToken, refreshToken } = await this._createTokenPair(user);
 
         return {
             access_token: accessToken,
@@ -143,7 +143,7 @@ class AuthService {
             [stored.user_id]
         );
         const user = userResult.rows[0];
-        if (!user || !user.is_active) {
+        if (!user?.is_active) {
             throw Object.assign(new Error('User not found or deactivated'), { statusCode: 401 });
         }
 

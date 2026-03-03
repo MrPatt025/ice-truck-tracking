@@ -34,7 +34,7 @@ async function logAudit({ userId, action, resource, resourceId, ip, userAgent, o
          VALUES ($1, $2, $3, $4, $5::inet, $6, $7::jsonb, $8::jsonb)`,
                 [entry.user_id, entry.action, entry.resource, entry.resource_id, entry.ip_address, entry.user_agent, entry.old_value, entry.new_value]
             );
-        } catch (err) {
+        } catch (/** @type {*} */ err) {
             logger.error({ err }, 'Failed to persist audit log');
         }
     }

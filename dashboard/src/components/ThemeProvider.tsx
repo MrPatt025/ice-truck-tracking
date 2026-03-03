@@ -21,7 +21,7 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
   undefined
 )
 
-function getSystemTheme(): 'light' | 'dark' {
+const getSystemTheme = (): 'light' | 'dark' => {
   if (typeof window === 'undefined') return 'light'
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
@@ -32,7 +32,7 @@ export function ThemeProvider({
   storageKey = 'ice-truck-theme',
   ...props
 }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>(defaultTheme)
+  const [theme, setThemeState] = useState(defaultTheme)
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
   // Hydrate from localStorage
@@ -58,15 +58,18 @@ export function ThemeProvider({
   useEffect(() => {
     if (theme !== 'system') return
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = () => setResolvedTheme(getSystemTheme())
+    const handler = () => { setResolvedTheme(getSystemTheme()) }
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
   }, [theme])
 
-  const setTheme = useCallback((t: Theme) => {
-    setThemeState(t)
-    localStorage.setItem(storageKey, t)
-  }, [storageKey])
+  const setTheme = useCallback(
+    (t: Theme) => {
+      setThemeState(t)
+      localStorage.setItem(storageKey, t)
+    },
+    [storageKey],
+  )
 
   const toggleTheme = useCallback(() => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
@@ -90,7 +93,7 @@ export const useTheme = () => {
  * Dark Mode Toggle — sun/moon icon with 300ms transition.
  * WCAG 2.1 AA: aria-label, focus-visible ring.
  */
-export function DarkModeToggle({ className = '' }: { className?: string }) {
+export const DarkModeToggle = ({ className = '' }: { className?: string }) => {
   const { resolvedTheme, toggleTheme } = useTheme()
   const isDark = resolvedTheme === 'dark'
 

@@ -33,7 +33,7 @@ const ToastContext = createContext<ToastContextValue | undefined>(undefined)
 let counter = 0
 
 /* ─────────────────── Provider ─────────────────── */
-export function ToastProvider({ children }: { children: ReactNode }) {
+export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const [toasts, setToasts] = useState<Toast[]>([])
 
   const dismiss = useCallback((id: string) => {
@@ -60,7 +60,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function useToast() {
+export const useToast = () => {
   const ctx = useContext(ToastContext)
   if (!ctx) throw new Error('useToast must be used within <ToastProvider>')
   return ctx
@@ -78,13 +78,13 @@ const variantStyles: Record<ToastVariant, string> = {
   info: 'border-blue-500/50 bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100',
 }
 
-function ToastViewport({
+const ToastViewport = ({
   toasts,
   dismiss,
 }: {
   toasts: Toast[]
   dismiss: (id: string) => void
-}) {
+}) => {
   return (
     <div
       role='region'
@@ -99,13 +99,13 @@ function ToastViewport({
   )
 }
 
-function ToastItem({
+const ToastItem = ({
   toast: t,
   dismiss,
 }: {
   toast: Toast
   dismiss: (id: string) => void
-}) {
+}) => {
   useEffect(() => {
     if (t.duration <= 0) return
     const timer = setTimeout(() => dismiss(t.id), t.duration)

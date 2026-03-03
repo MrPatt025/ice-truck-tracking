@@ -11,7 +11,7 @@ const PREFIX = 'ice_truck_';
  * (iOS Keychain / Android EncryptedSharedPreferences).
  */
 class SecureStorage {
-  private memoryStore = new Map<string, string>();
+  private readonly memoryStore = new Map<string, string>();
 
   private get isNative(): boolean {
     return Platform.OS === 'ios' || Platform.OS === 'android';
