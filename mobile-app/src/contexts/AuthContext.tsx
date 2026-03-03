@@ -50,13 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const login = async (email: string, password: string) => {
-    try {
-      const response = await authService.login(email, password)
-      await SecureStore.setItemAsync('auth_token', response.token)
-      setUser(response.user)
-    } catch (error) {
-      throw error
-    }
+    const response = await authService.login(email, password)
+    await SecureStore.setItemAsync('auth_token', response.token)
+    setUser(response.user)
   }
 
   const logout = async () => {

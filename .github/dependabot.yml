@@ -5,56 +5,56 @@
 version: 2
 updates:
   # ── GitHub Actions ──────────────────────────────────────
-  - package-ecosystem: github-actions
-    directory: /
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
-      interval: weekly
-      day: monday
-      timezone: Asia/Bangkok
+      interval: "weekly"
+      day: "monday"
+      timezone: "Asia/Bangkok"
     labels:
-      - dependencies
-      - ci
+      - "dependencies"
+      - "ci"
     commit-message:
-      prefix: 'ci'
-      include: scope
+      prefix: "ci"
+      include: "scope"
     open-pull-requests-limit: 5
 
   # ── Docker base images ──────────────────────────────────
-  - package-ecosystem: docker
-    directory: /
+  - package-ecosystem: "docker"
+    directory: "/"
     schedule:
-      interval: weekly
-      day: monday
-      timezone: Asia/Bangkok
+      interval: "weekly"
+      day: "monday"
+      timezone: "Asia/Bangkok"
     labels:
-      - dependencies
-      - docker
+      - "dependencies"
+      - "docker"
     commit-message:
-      prefix: 'build'
-      include: scope
+      prefix: "build"
+      include: "scope"
 
-  - package-ecosystem: docker
-    directory: /backend
+  - package-ecosystem: "docker"
+    directory: "/backend"
     schedule:
-      interval: weekly
-      day: monday
-      timezone: Asia/Bangkok
+      interval: "weekly"
+      day: "monday"
+      timezone: "Asia/Bangkok"
     labels:
-      - dependencies
-      - docker
+      - "dependencies"
+      - "docker"
     commit-message:
-      prefix: 'build'
-      include: scope
+      prefix: "build"
+      include: "scope"
 
-  - package-ecosystem: docker
-    directory: /dashboard
+  - package-ecosystem: "docker"
+    directory: "/dashboard"
     schedule:
-      interval: weekly
-      day: monday
-      timezone: Asia/Bangkok
+      interval: "weekly"
+      day: "monday"
+      timezone: "Asia/Bangkok"
     labels:
-      - dependencies
-      - docker
+      - "dependencies"
+      - "docker"
     commit-message:
-      prefix: 'build'
-      include: scope
+      prefix: "build"
+      include: "scope"
