@@ -1,0 +1,88 @@
+# ============================================================================
+# Kong API Gateway — Declarative Configuration
+# Routes, rate limiting, authentication, CORS
+# ============================================================================
+_format_version: "3.0"
+
+services:
+  # ── Backend API Service ──────────────────────────────────
+  - name: ice-truck-api
+    url: http://backend:5000
+    retries: 3
+    connect_timeout: 5000
+    read_timeout: 30000
+    write_timeout: 30000
+    routes:
+      - name: api-route
+        paths: ["/api"]
+        strip_path: false
+        protocols: [http, https]
+      - name: health-route
+        paths: ["/api/v1/health"]
+        strip_path: false
+        methods: [GET]
+      - name: metrics-route
+        paths: ["/metrics"]
+        strip_path: false
+        methods: [GET]
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: redis
+          redis_host: redis
+          redis_port: 6379
+      - name: cors
+        config:
+          origins: ["https://dashboard.ice-truck.example.com"]
+          methods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
+          headers: [Content-Type, Authorization, X-Request-Id, X-CSRF-Token]
+          credentials: true
+          max_age: 3600
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 10
+      - name: response-transformer
+        config:
+          remove:
+            headers: [X-Powered-By, Server]
+          add:
+            headers:
+              - "X-Content-Type-Options: nosniff"
+              - "X-Frame-Options: DENY"
+
+  # ── Dashboard Service ────────────────────────────────────
+  - name: ice-truck-dashboard
+    url: http://dashboard:3000
+    routes:
+      - name: dashboard-route
+        paths: ["/"]
+        strip_path: false
+        protocols: [http, https]
+
+  # ── WebSocket Upgrade ────────────────────────────────────
+  - name: ice-truck-websocket
+    url: http://backend:5000
+    routes:
+      - name: ws-route
+        paths: ["/socket.io"]
+        strip_path: false
+        protocols: [http, https]
+    plugins:
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "Connection: Upgrade"
+              - "Upgrade: websocket"
+
+plugins:
+  # Global plugins
+  - name: correlation-id
+    config:
+      header_name: X-Request-Id
+      generator: uuid
+  - name: file-log
+    config:
+      path: /tmp/kong-access.log
+      reopen: true

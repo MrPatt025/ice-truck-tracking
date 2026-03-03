@@ -1,0 +1,25 @@
+# ============================================================================
+# Mosquitto Topic ACL — Per-device access control
+# ============================================================================
+
+# Backend service (full access)
+user ice-truck-backend
+topic readwrite trucks/#
+topic readwrite system/#
+topic read $SYS/#
+
+# Truck devices (write own telemetry, read own commands)
+pattern readwrite trucks/%u/telemetry
+pattern readwrite trucks/%u/status
+pattern read trucks/%u/commands
+pattern write trucks/%u/alerts
+
+# Dashboard (read-only for all truck data)
+user dashboard
+topic read trucks/#
+topic read system/broadcast
+topic read $SYS/broker/clients/connected
+
+# Admin (full access)
+user admin
+topic readwrite #

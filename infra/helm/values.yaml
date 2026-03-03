@@ -1,0 +1,165 @@
+# ============================================================================
+# Ice Truck Tracking — Helm Values (Production Defaults)
+# ============================================================================
+
+replicaCount: 3
+
+image:
+  repository: ghcr.io/pattanakorn025/ice-truck-api
+  tag: latest
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: "ice-truck-api"
+
+serviceAccount:
+  create: true
+  annotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: [ALL]
+
+service:
+  type: ClusterIP
+  port: 5000
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+  hosts:
+    - host: api.ice-truck.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: ice-truck-api-tls
+      hosts:
+        - api.ice-truck.example.com
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 15
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 10
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+
+livenessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: 5000
+  initialDelaySeconds: 15
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /api/v1/health
+    port: 5000
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+env:
+  NODE_ENV: production
+  PORT: "5000"
+  LOG_LEVEL: info
+  LOG_FORMAT: json
+
+envFrom:
+  - secretRef:
+      name: ice-truck-secrets
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values: [ice-truck-api]
+          topologyKey: topology.kubernetes.io/zone
+
+# ── Pod Disruption Budget ──────────────────────────────────
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# ── Network Policy ─────────────────────────────────────────
+networkPolicy:
+  enabled: true
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - port: 5000
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - port: 5432  # PostgreSQL
+        - port: 6432  # PgBouncer
+        - port: 6379  # Redis
+        - port: 1883  # MQTT
+        - port: 9092  # Kafka
+
+# ── Subchart toggles ──────────────────────────────────────
+postgresql:
+  enabled: false  # Use external TimescaleDB
+
+redis:
+  enabled: false  # Use external Redis cluster
+
+# ── Rolling Update Strategy ───────────────────────────────
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1

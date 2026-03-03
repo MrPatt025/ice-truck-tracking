@@ -1,0 +1,24 @@
+apiVersion: v2
+name: ice-truck-tracking
+description: Cloud-Native IoT Platform for Cold-Chain Logistics
+type: application
+version: 2.1.0
+appVersion: "2.1.0"
+keywords:
+  - iot
+  - cold-chain
+  - logistics
+  - timescaledb
+  - kubernetes
+maintainers:
+  - name: Ice Truck Team
+    email: team@ice-truck.local
+dependencies:
+  - name: postgresql
+    version: "~15.0"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+  - name: redis
+    version: "~19.0"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled

@@ -1,5 +1,6 @@
 ﻿const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const http = require('node:http');
 const path = require('node:path');
 
@@ -12,6 +13,15 @@ const { PORT, NODE_ENV, CLIENT_URL } = config;
 const errorHandler = require('./src/middleware/errorHandler');
 const { generalLimiter } = require('./src/middleware/rateLimiter');
 const { metricsMiddleware, metricsHandler } = require('./src/middleware/metrics');
+
+// Enterprise middleware
+const {
+  helmetMiddleware,
+  requestId: requestIdMiddleware,
+  securityHeaders,
+} = require('./src/middleware/security');
+const { auditMiddleware } = require('./src/middleware/audit');
+const { sanitize } = require('./src/middleware/zodValidation');
 
 // Import services
 const websocketService = require('./src/services/websocketService');
@@ -38,20 +48,10 @@ const app = express();
 // Trust proxy
 app.set('trust proxy', 1);
 
-// Enhanced security headers
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' ws: wss:;"
-  );
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-  next();
-});
+// ─── Security middleware stack ───
+app.use(requestIdMiddleware);   // X-Request-Id on every response
+app.use(helmetMiddleware);      // CSP, HSTS, X-Frame-Options, etc.
+app.use(securityHeaders);       // Permissions-Policy, Referrer-Policy
 
 // CORS configuration
 const corsOptions = {
@@ -81,6 +81,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Cookie parser (required for CSRF tokens)
+app.use(cookieParser());
+
 // Rate limiting
 app.use(generalLimiter);
 
@@ -88,8 +91,14 @@ app.use(generalLimiter);
 app.use(metricsMiddleware);
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Input sanitization — strip HTML tags from all string fields
+app.use(sanitize);
+
+// Audit trail — attaches req.audit() helper
+app.use(auditMiddleware);
 
 // Request logging middleware
 app.use((req, res, next) => {
