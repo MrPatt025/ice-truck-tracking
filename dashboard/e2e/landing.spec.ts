@@ -10,12 +10,15 @@ test.describe('Landing Page', () => {
     });
 
     test('should have navigation links', async ({ page }) => {
-        const dashboardLink = page.getByRole('link', { name: /dashboard/i });
+        // Multiple links contain "dashboard" (Open Dashboard, Live Dashboard, Launch Dashboard)
+        // Use .first() to avoid Playwright strict-mode violation
+        const dashboardLink = page.getByRole('link', { name: /dashboard/i }).first();
         await expect(dashboardLink).toBeVisible();
     });
 
     test('should display feature cards', async ({ page }) => {
-        const featureSection = page.locator('section').filter({ hasText: /features/i });
+        // The features section is identified by id="features", not by visible text
+        const featureSection = page.locator('#features');
         await expect(featureSection).toBeVisible();
     });
 
