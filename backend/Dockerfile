@@ -1,5 +1,5 @@
 # Multi-stage build for production
-FROM node:22-alpine AS base
+FROM node:25-alpine AS base
 
 # Install security updates, pnpm, and dumb-init
 RUN apk update && apk upgrade && apk add --no-cache dumb-init curl \
@@ -24,7 +24,7 @@ FROM base AS dependencies
 RUN pnpm install --prod --frozen-lockfile
 
 # Production stage
-FROM node:22-alpine AS production
+FROM node:25-alpine AS production
 
 # Install security updates and dumb-init, create non-root user
 RUN apk update && apk upgrade && apk add --no-cache dumb-init curl \
