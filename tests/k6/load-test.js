@@ -60,7 +60,7 @@ export function setup() {
 }
 
 /* ─── Scenarios ─── */
-export default function (data) {
+export default function vuFunction(data) { // NOSONAR — k6 VU function receives setup() data
     const headers = {
         'Content-Type': 'application/json',
         ...(data.token ? { Authorization: `Bearer ${data.token}` } : {}),
@@ -142,14 +142,14 @@ export default function (data) {
     sleep(1);
 }
 
-export function handleSummary(data) {
+export function handleSummary(data) { // NOSONAR — k6 lifecycle function
     return {
         'stdout': textSummary(data, { indent: '  ', enableColors: true }),
         'reports/k6-summary.json': JSON.stringify(data, null, 2),
     };
 }
 
-function textSummary(data) {
-    // k6 built-in textSummary
+function textSummary(data, _opts) { // NOSONAR
+    // Minimal summary fallback (k6 provides built-in textSummary)
     return JSON.stringify(data.metrics, null, 2);
 }

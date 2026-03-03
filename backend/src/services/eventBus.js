@@ -4,6 +4,7 @@
  */
 'use strict';
 
+const { EventEmitter } = require('node:events');
 const logger = require('../config/logger');
 
 // Topic definitions
@@ -23,13 +24,13 @@ const TOPICS = {
  * Falls back to in-process EventEmitter when Kafka is unavailable.
  */
 class EventBus {
-    constructor() {
-        this.kafka = null;
-        this.producer = null;
-        this.consumers = new Map();
-        this.connected = false;
-        this._fallback = new (require('node:events').EventEmitter)();
-    }
+    kafka = null;
+    producer = null;
+    consumers = new Map();
+    connected = false;
+    _fallback = new EventEmitter();
+
+    constructor() { } // eslint-disable-line no-useless-constructor
 
     async connect() {
         const brokers = (process.env.KAFKA_BROKERS || '').split(',').filter(Boolean);

@@ -20,7 +20,7 @@ export const options = {
     },
 };
 
-export default function () {
+export default function vuFunction() { // NOSONAR — k6 VU function
     const res = http.get(`${BASE_URL}/api/v1/health`);
     check(res, { 'soak health 200': (r) => r.status === 200 });
     sleep(2);

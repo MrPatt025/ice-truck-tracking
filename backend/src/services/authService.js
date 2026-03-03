@@ -18,7 +18,7 @@ const SALT_ROUNDS = config.SALT_ROUNDS || 12;
  * Parse human-readable duration to milliseconds.
  */
 const parseDuration = (str) => {
-    const match = str.match(/^(\d+)\s*(s|m|h|d)$/);
+    const match = str.match(/^(\d+)\s*([smhd])$/);
     if (!match) return 3600000; // fallback 1h
     const n = Number(match[1]);
     switch (match[2]) {
@@ -28,7 +28,7 @@ const parseDuration = (str) => {
         case 'd': return n * 86400 * 1000;
         default: return 3600000;
     }
-}
+};
 
 class AuthService {
     constructor(db) {

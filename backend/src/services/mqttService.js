@@ -119,12 +119,13 @@ class MqttService {
      * @param {object} payload
      * @param {object} [opts]
      */
-    publishMessage(topic, payload, opts = { qos: 1 }) {
+    publishMessage(topic, payload, opts) {
+        const publishOpts = { qos: 1, ...opts };
         if (!this.client?.connected) {
             logger.warn('MQTT client not connected — message dropped');
             return;
         }
-        this.client.publish(topic, JSON.stringify(payload), opts);
+        this.client.publish(topic, JSON.stringify(payload), publishOpts);
     }
 
     /** Graceful shutdown */

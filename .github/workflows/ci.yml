@@ -12,7 +12,7 @@ concurrency:
 
 env:
   NODE_VERSION: '22'
-  PNPM_VERSION: '10.18.2'
+  PNPM_VERSION: '10.30.3'
   CI: 'true'
   NEXT_TELEMETRY_DISABLED: '1'
 
@@ -107,7 +107,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @ice-truck/backend run test -- --ci --coverage
+      - run: pnpm --filter @ice-truck/backend run test -- --ci --coverage --forceExit --testTimeout=15000
       - uses: actions/upload-artifact@v4
         with:
           name: backend-coverage

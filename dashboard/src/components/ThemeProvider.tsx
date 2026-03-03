@@ -1,6 +1,14 @@
 ﻿'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from 'react'
 
 type Theme = 'dark' | 'light' | 'system'
 
@@ -21,20 +29,19 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
   undefined
 )
 
-const getSystemTheme = () =>
-  typeof window === 'undefined'
-    ? ('light' as const)
-    : window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? ('dark' as const)
-      : ('light' as const)
+const getSystemTheme = (): 'light' | 'dark' => {
+  if (typeof globalThis.window === 'undefined') return 'light'
+  if (globalThis.window.matchMedia('(prefers-color-scheme: dark)').matches)
+    return 'dark'
+  return 'light'
+}
 
-export const ThemeProvider = ({
+export function ThemeProvider({
   children,
   defaultTheme = 'system',
   storageKey = 'ice-truck-theme',
-  ...props
-}: ThemeProviderProps) => {
-  const [theme, setThemeState] = useState(defaultTheme)
+}: ThemeProviderProps) {
+  const [theme, setThemeState] = useState<Theme>(defaultTheme)
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
   // Hydrate from localStorage
@@ -59,8 +66,10 @@ export const ThemeProvider = ({
   // Listen for system theme changes
   useEffect(() => {
     if (theme !== 'system') return
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const handler = () => { setResolvedTheme(getSystemTheme()) }
+    const mq = globalThis.window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = () => {
+      setResolvedTheme(getSystemTheme())
+    }
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
   }, [theme])
@@ -70,15 +79,20 @@ export const ThemeProvider = ({
       setThemeState(t)
       localStorage.setItem(storageKey, t)
     },
-    [storageKey],
+    [storageKey]
   )
 
   const toggleTheme = useCallback(() => {
     setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
   }, [resolvedTheme, setTheme])
 
+  const contextValue = useMemo(
+    () => ({ theme, resolvedTheme, setTheme, toggleTheme }),
+    [theme, resolvedTheme, setTheme, toggleTheme]
+  )
+
   return (
-    <ThemeProviderContext.Provider {...props} value={{ theme, resolvedTheme, setTheme, toggleTheme }}>
+    <ThemeProviderContext.Provider value={contextValue}>
       {children}
     </ThemeProviderContext.Provider>
   )

@@ -23,7 +23,8 @@ async function logAudit({ userId, action, resource, resourceId, ip, userAgent, o
     };
 
     // Always log to structured logger
-    logger.info({ audit: entry }, `AUDIT: ${action} ${resource}${resourceId ? `:${resourceId}` : ''}`);
+    const resourceLabel = resourceId ? ':' + resourceId : '';
+    logger.info({ audit: entry }, `AUDIT: ${action} ${resource}${resourceLabel}`);
 
     // Persist to DB when available
     if (process.env.USE_FAKE_DB !== 'true') {

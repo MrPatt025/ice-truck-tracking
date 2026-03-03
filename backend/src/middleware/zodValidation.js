@@ -41,8 +41,8 @@ const registerSchema = z.object({
     password: z.string().min(8).max(128)
         .regex(/[A-Z]/, 'Must contain uppercase')
         .regex(/[a-z]/, 'Must contain lowercase')
-        .regex(/[0-9]/, 'Must contain digit')
-        .regex(/[^A-Za-z0-9]/, 'Must contain special character'),
+        .regex(/\d/, 'Must contain digit')
+        .regex(/[\W_]/, 'Must contain special character'),
     full_name: z.string().min(1).max(100).trim(),
     phone: z.string().max(20).optional(),
     role: z.enum(['admin', 'manager', 'dispatcher', 'driver', 'viewer']).default('viewer'),
@@ -149,9 +149,9 @@ function validate(schema, source = 'body') {
 /**
  * Sanitize string fields — strip HTML tags and trim whitespace.
  */
-function sanitize(req, _res, next) { // eslint-disable-line no-unused-vars
+function sanitize(req, _res, next) { // eslint-disable-line no-unused-vars -- Express middleware requires (req, res, next) // NOSONAR
     const stripHtml = (str) =>
-        typeof str === 'string' ? str.replace(/<[^>]*>/g, '').trim() : str;
+        typeof str === 'string' ? str.replaceAll(/<[^>]*>/g, '').trim() : str;
 
     const deepSanitize = (obj) => {
         if (typeof obj !== 'object' || obj === null) return obj;

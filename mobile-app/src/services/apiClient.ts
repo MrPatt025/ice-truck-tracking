@@ -72,9 +72,9 @@ class ApiClient {
   }
 
   /** Refresh access token using stored refresh token */
-  private refreshToken(): Promise<boolean> {
+  private async refreshToken(): Promise<boolean> {
     // Deduplicate concurrent refresh attempts
-    if (this.refreshPromise) return this.refreshPromise;
+    if (this.refreshPromise !== null) return this.refreshPromise;
 
     this.refreshPromise = (async () => {
       try {

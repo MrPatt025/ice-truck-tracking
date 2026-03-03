@@ -3,7 +3,7 @@ FROM node:22-alpine AS base
 
 # Install security updates, pnpm, and dumb-init
 RUN apk update && apk upgrade && apk add --no-cache dumb-init curl \
-    && corepack enable && corepack prepare pnpm@10.18.2 --activate
+  && corepack enable && corepack prepare pnpm@10.30.3 --activate
 
 # Create app directory
 WORKDIR /usr/src/app

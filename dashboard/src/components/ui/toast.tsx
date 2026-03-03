@@ -4,6 +4,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useMemo,
   useState,
   useEffect,
   type ReactNode,
@@ -33,7 +34,7 @@ const ToastContext = createContext<ToastContextValue | undefined>(undefined)
 let counter = 0
 
 /* ─────────────────── Provider ─────────────────── */
-export const ToastProvider = ({ children }: { children: ReactNode }) => {
+export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
   const dismiss = useCallback((id: string) => {
@@ -45,15 +46,23 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   const toast = useCallback(
     (opts: Omit<Toast, 'id' | 'createdAt'> & { id?: string }) => {
       const id = opts.id ?? `toast-${++counter}`
-      const t: Toast = { ...opts, id, createdAt: Date.now() }
-      setToasts(prev => [...prev.slice(-4), t]) // keep max 5
+      const newToast: Toast = { ...opts, id, createdAt: Date.now() }
+      setToasts(prev => {
+        const recent = prev.slice(-4)
+        return [...recent, newToast]
+      }) // keep max 5
       return id
     },
     []
   )
 
+  const contextValue = useMemo(
+    () => ({ toasts, toast, dismiss, dismissAll }),
+    [toasts, toast, dismiss, dismissAll]
+  )
+
   return (
-    <ToastContext.Provider value={{ toasts, toast, dismiss, dismissAll }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <ToastViewport toasts={toasts} dismiss={dismiss} />
     </ToastContext.Provider>
@@ -78,16 +87,15 @@ const variantStyles: Record<ToastVariant, string> = {
   info: 'border-blue-500/50 bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-100',
 }
 
-const ToastViewport = ({
+function ToastViewport({
   toasts,
   dismiss,
 }: {
   toasts: Toast[]
   dismiss: (id: string) => void
-}) => {
+}) {
   return (
-    <div
-      role='region'
+    <section
       aria-label='Notifications'
       aria-live='polite'
       className='pointer-events-none fixed bottom-4 right-4 z-[100] flex max-w-md flex-col gap-2'
@@ -95,17 +103,17 @@ const ToastViewport = ({
       {toasts.map(t => (
         <ToastItem key={t.id} toast={t} dismiss={dismiss} />
       ))}
-    </div>
+    </section>
   )
 }
 
-const ToastItem = ({
+function ToastItem({
   toast: t,
   dismiss,
 }: {
   toast: Toast
   dismiss: (id: string) => void
-}) => {
+}) {
   useEffect(() => {
     if (t.duration <= 0) return
     const timer = setTimeout(() => dismiss(t.id), t.duration)
@@ -113,8 +121,7 @@ const ToastItem = ({
   }, [t.id, t.duration, dismiss])
 
   return (
-    <div
-      role='status'
+    <output
       className={`pointer-events-auto animate-in slide-in-from-right-full fade-in-0 rounded-lg border p-4 shadow-lg transition-all duration-300 ${variantStyles[t.variant]}`}
     >
       <div className='flex items-start gap-3'>
@@ -144,6 +151,6 @@ const ToastItem = ({
           </svg>
         </button>
       </div>
-    </div>
+    </output>
   )
 }
