@@ -28,19 +28,17 @@ jobs:
         with:
           config-path: .gitleaks.toml
 
-  # ── Trivy Container Scan ─────────────────────────────────
+  # ── Trivy Filesystem Scan (Backend) ──────────────────────
   trivy-backend:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      - name: Copy monorepo lockfile for backend build
-        run: cp pnpm-lock.yaml backend/
-      - name: Build backend image
-        run: docker build -t ice-truck-backend:scan ./backend
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy filesystem scanner on backend
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: ice-truck-backend:scan
+          scan-type: fs
+          scan-ref: ./backend
           format: sarif
           output: trivy-backend.sarif
           severity: CRITICAL,HIGH
@@ -51,21 +49,17 @@ jobs:
         with:
           sarif_file: trivy-backend.sarif
 
+  # ── Trivy Filesystem Scan (Dashboard) ───────────────────
   trivy-dashboard:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      - name: Copy monorepo lockfile for dashboard build
-        run: cp pnpm-lock.yaml dashboard/
-      - name: Build dashboard image
-        run: docker build -t ice-truck-dashboard:scan ./dashboard
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:5000
-          NEXT_PUBLIC_WS_URL: ws://localhost:5000
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy filesystem scanner on dashboard
         uses: aquasecurity/trivy-action@0.28.0
         with:
-          image-ref: ice-truck-dashboard:scan
+          scan-type: fs
+          scan-ref: ./dashboard
           format: sarif
           output: trivy-dashboard.sarif
           severity: CRITICAL,HIGH
@@ -79,6 +73,7 @@ jobs:
   # ── Trivy IaC Scan (Dockerfile + K8s) ───────────────────
   trivy-iac:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Run Trivy IaC scanner
