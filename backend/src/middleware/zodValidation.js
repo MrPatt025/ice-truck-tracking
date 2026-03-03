@@ -149,7 +149,7 @@ function validate(schema, source = 'body') {
 /**
  * Sanitize string fields — strip HTML tags and trim whitespace.
  */
-function sanitize(req, _res, next) {
+function sanitize(req, _res, next) { // eslint-disable-line no-unused-vars
     const stripHtml = (str) =>
         typeof str === 'string' ? str.replace(/<[^>]*>/g, '').trim() : str;
 

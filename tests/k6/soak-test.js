@@ -1,4 +1,5 @@
-/* eslint-disable no-undef */\nimport http from 'k6/http';
+/* eslint-disable no-undef */
+import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 /**

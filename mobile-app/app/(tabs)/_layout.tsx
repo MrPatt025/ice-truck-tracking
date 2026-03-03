@@ -1,21 +1,21 @@
 import { Tabs } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 
-function MapIcon({ color, size }: { color: string; size: number }) {
-  return <Ionicons name='map-outline' size={size} color={color} />
-}
+const MapIcon = ({ color, size }: { color: string; size: number }) => (
+  <Ionicons name='map-outline' size={size} color={color} />
+)
 
-function HistoryIcon({ color, size }: { color: string; size: number }) {
-  return <Ionicons name='time-outline' size={size} color={color} />
-}
+const HistoryIcon = ({ color, size }: { color: string; size: number }) => (
+  <Ionicons name='time-outline' size={size} color={color} />
+)
 
-function AlertsIcon({ color, size }: { color: string; size: number }) {
-  return <Ionicons name='notifications-outline' size={size} color={color} />
-}
+const AlertsIcon = ({ color, size }: { color: string; size: number }) => (
+  <Ionicons name='notifications-outline' size={size} color={color} />
+)
 
-function SettingsIcon({ color, size }: { color: string; size: number }) {
-  return <Ionicons name='settings-outline' size={size} color={color} />
-}
+const SettingsIcon = ({ color, size }: { color: string; size: number }) => (
+  <Ionicons name='settings-outline' size={size} color={color} />
+)
 
 export default function TabsLayout() {
   return (

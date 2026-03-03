@@ -21,25 +21,27 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
   undefined
 )
 
-const getSystemTheme = (): 'light' | 'dark' => {
-  if (typeof window === 'undefined') return 'light'
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-}
+const getSystemTheme = () =>
+  typeof window === 'undefined'
+    ? ('light' as const)
+    : window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? ('dark' as const)
+      : ('light' as const)
 
-export function ThemeProvider({
+export const ThemeProvider = ({
   children,
   defaultTheme = 'system',
   storageKey = 'ice-truck-theme',
   ...props
-}: ThemeProviderProps) {
+}: ThemeProviderProps) => {
   const [theme, setThemeState] = useState(defaultTheme)
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
   // Hydrate from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(storageKey) as Theme | null
+    const stored = localStorage.getItem(storageKey)
     if (stored && ['light', 'dark', 'system'].includes(stored)) {
-      setThemeState(stored)
+      setThemeState(stored as Theme)
     }
   }, [storageKey])
 

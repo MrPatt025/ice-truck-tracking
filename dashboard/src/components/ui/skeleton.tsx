@@ -7,9 +7,8 @@ import React from 'react'
  * Provides visual feedback during async data loading.
  */
 
-function cn(...classes: (string | undefined | false)[]) {
-  return classes.filter(Boolean).join(' ')
-}
+const cn = (...classes: (string | undefined | false)[]) =>
+  classes.filter(Boolean).join(' ')
 
 interface SkeletonProps {
   className?: string

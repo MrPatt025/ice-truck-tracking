@@ -38,8 +38,9 @@ export function middleware(request: NextRequest) {
     }
 
     // ── Rate Limiting Header (advisory) ─────────────────────
-    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+    const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     response.headers.set('X-RateLimit-Policy', '100;w=900');
+    response.headers.set('X-Forwarded-For', clientIp);
 
     // ── Request ID ──────────────────────────────────────────
     const requestId = request.headers.get('x-request-id') || crypto.randomUUID();
