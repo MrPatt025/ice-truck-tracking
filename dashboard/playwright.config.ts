@@ -6,7 +6,7 @@ export default defineConfig({
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 1,
-    workers: process.env.CI ? 1 : undefined,
+    workers: process.env.CI ? 1 : 2,
     timeout: 60_000,
     expect: { timeout: 15_000 },
     reporter: [
@@ -14,7 +14,7 @@ export default defineConfig({
         ['list'],
     ],
     use: {
-        baseURL: process.env.BASE_URL ?? 'http://localhost:3001',
+        baseURL: process.env.BASE_URL ?? 'http://localhost:5000',
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',
@@ -32,8 +32,8 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'pnpm run dev -- --port 3001',
-        url: 'http://localhost:3001',
+        command: 'pnpm run dev',
+        url: 'http://localhost:5000',
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
     },

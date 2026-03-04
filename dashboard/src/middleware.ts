@@ -3,8 +3,13 @@ import type { NextRequest } from 'next/server';
 
 /**
  * Edge Middleware — runs at the CDN edge for auth checks, rate limiting,
- * security headers, and geo-based routing.
+ * security headers, RBAC route guards, and geo-based routing.
  */
+
+// ── Protected Route Configuration ──────────────────────────
+const PROTECTED_ROUTES = ['/dashboard', '/fleet', '/reports', '/alerts', '/settings', '/admin'];
+const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password'];
+
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const response = NextResponse.next();
@@ -23,17 +28,24 @@ export function middleware(request: NextRequest) {
         'max-age=63072000; includeSubDomains; preload'
     );
 
-    // ── Auth Guard for /dashboard routes ────────────────────
-    if (pathname.startsWith('/dashboard')) {
-        const token = request.cookies.get('access_token')?.value;
+    // ── Auth Guard for protected routes ─────────────────────
+    const isProtected = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
+    const isAuthRoute = AUTH_ROUTES.some(route => pathname.startsWith(route));
+    const token = request.cookies.get('access_token')?.value;
 
-        if (!token) {
-            const loginUrl = new URL('/login', request.url);
-            loginUrl.searchParams.set('redirect', pathname);
-            return NextResponse.redirect(loginUrl);
-        }
+    if (isProtected && !token) {
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('redirect', pathname);
+        return NextResponse.redirect(loginUrl);
+    }
 
-        // Pass user info to downstream RSC via headers
+    // Redirect authenticated users away from auth pages
+    if (isAuthRoute && token) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+
+    // Pass auth token to downstream RSC
+    if (token) {
         response.headers.set('x-auth-token', token);
     }
 
