@@ -1,16 +1,21 @@
 /* ================================================================
- *  Ice-Truck IoT Dashboard — World-Class IoT Frontend
- *  ──────────────────────────────────────────────────
- *  Architecture (10-pillar IoT frontend):
- *    1. No React state for telemetry (zero useState for real-time data)
- *    2. Zustand transient store with mutable Map (zero-render)
- *    3. Frame-based update (rAF 60FPS lock)
- *    4. Web Worker offload for telemetry parsing/aggregation
- *    5. Imperative Map (Mapbox GL) + 3D (Three.js) — no React tree
- *    6. GPU-first visualization (instanced rendering, batch draw calls)
- *    7. Chart optimization (ring buffer, downsample, Canvas 2D)
- *    8. Performance guardrails (FPS overlay, memory, Web Vitals)
- *    9. Complete pipeline: WS → Worker → Zustand → rAF → GPU
+ *  Ice-Truck IoT Dashboard — Masterpiece GPU-First Frontend v4.0
+ *  ──────────────────────────────────────────────────────────────
+ *  5-Layer Engine Architecture:
+ *    1. GPU Rendering Engine (GLSL shaders, demand-based frameloop)
+ *    2. Motion Physics Engine (spring dynamics, magnetic buttons)
+ *    3. Data Visualization Engine (R-Tree, object pool, heatmap)
+ *    4. Perception Engine (contextual tint, noise, typography)
+ *    5. Adaptive Performance Intelligence (auto-scaling, FPS guard)
+ *
+ *  Zero-Render Architecture:
+ *    • No React state for telemetry (zero useState for real-time data)
+ *    • Zustand transient store with mutable Map
+ *    • Frame-based update (rAF 60FPS lock)
+ *    • Web Worker offload for telemetry parsing/aggregation
+ *    • Imperative Map (Mapbox GL) + 3D (Three.js) — no React tree
+ *    • GPU-first visualization (instanced rendering, batch draw calls)
+ *    • Adaptive DPR + frustum culling + LOD
  *
  *  React ONLY renders: Shell, Panels, Controls, Forms, Metric Cards
  *  React NEVER renders: Telemetry loop, marker updates, chart draws
@@ -46,6 +51,7 @@ import {
   mountChart,
   unmountChart,
   getPerfOverlay,
+  getAdaptiveController,
 } from "@/engine";
 
 // ─── Types ─────────────────────────────────────────────────────
@@ -522,7 +528,7 @@ export default function Dashboard() {
                   Ultra-Modern Console
                 </h1>
                 <p className="text-[11px] sm:text-xs text-slate-400 font-medium tracking-wide">
-                  Professional Fleet Management • IoT Engine v3.0
+                  Professional Fleet Management • IoT Engine v4.0 Masterpiece
                 </p>
               </div>
             </div>
@@ -674,7 +680,7 @@ export default function Dashboard() {
           {!paused && (
             <Pill intent="ok">
               <Zap className="h-3 w-3" />
-              All systems operational
+              {getAdaptiveController()?.getDeviceTier() ? `GPU: ${getAdaptiveController()!.getDeviceTier()}` : 'All systems operational'}
             </Pill>
           )}
         </div>
@@ -908,14 +914,14 @@ export default function Dashboard() {
           <div className="flex items-center justify-center gap-4 flex-wrap text-xs text-slate-500">
             <span>Environment: <span className="font-mono text-slate-400">Production</span></span>
             <span>•</span>
-            <span>Version: <span className="font-mono text-slate-400">v3.0.0</span></span>
+            <span>Version: <span className="font-mono text-slate-400">v4.0.0</span></span>
             <span>•</span>
             <span>Build: <span className="font-mono text-slate-400">#4523</span></span>
             <span>•</span>
             <span>Uptime: <span className="font-mono text-emerald-400">99.98%</span></span>
           </div>
           <p className="text-xs text-slate-600">
-            © 2024 Fleet Management Pro • Powered by IoT Engine v3.0 • All Rights Reserved
+            © 2024 Fleet Management Pro • Powered by IoT Engine v4.0 Masterpiece • All Rights Reserved
           </p>
           <p className="text-[10px] text-slate-700">
             Keyboard Shortcuts: Ctrl+G (Grid) • Ctrl+P (Pause) • Ctrl+R (Refresh) • ESC (Close Modal)

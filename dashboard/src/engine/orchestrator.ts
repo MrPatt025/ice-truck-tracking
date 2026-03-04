@@ -1,24 +1,29 @@
 /* ================================================================
- *  Ice-Truck IoT Engine — Orchestrator
- *  ─────────────────────────────────────
- *  Wires together:
- *    Worker → Store → Frame Scheduler → Map / 3D / Charts / Perf
+ *  Ice-Truck IoT Engine — Orchestrator v2 (Masterpiece Architecture)
+ *  ─────────────────────────────────────────────────────────────────
+ *  Wires together all 5 engine layers:
  *
- *  Architecture:
- *    Kafka / WebSocket
- *          ↓
- *    Worker Layer (off-thread)
- *          ↓
- *    Zustand Transient Store (mutable Map)
- *          ↓
- *    Frame Scheduler (requestAnimationFrame)
- *          ↓
- *    Imperative Map / 3D / Chart / Perf Overlay
+ *  ┌─ Worker Layer (off-thread, WebSocket) ─────────────────────┐
+ *  │  telemetry.worker.ts ─► Binary / JSON batches              │
+ *  └────────────┬───────────────────────────────────────────────┘
+ *               ↓
+ *  ┌─ Zustand Transient Store (mutable Map) ────────────────────┐
+ *  │  store.ts → upsertTruckBatch → spatial index update        │
+ *  └────────────┬───────────────────────────────────────────────┘
+ *               ↓
+ *  ┌─ Frame Scheduler (requestAnimationFrame) ──────────────────┐
+ *  │  1. Adaptive perf monitor  (adaptive/index.ts)             │
+ *  │  2. GPU 3D Layer           (threeLayer.ts + gpu/*)         │
+ *  │  3. Map Layer              (mapLayer.ts)                   │
+ *  │  4. Chart Engines          (chartEngine.ts)                │
+ *  │  5. Perception Engine      (perception/index.ts)           │
+ *  │  6. Perf Overlay           (perfOverlay.ts)                │
+ *  └────────────────────────────────────────────────────────────┘
  *
  *  React only renders: Shell, Panels, Controls, Forms.
  * ================================================================ */
 
-import type { WorkerOutbound, WorkerConfig } from './types';
+import type { WorkerOutbound, WorkerConfig, AlertLevel } from './types';
 import {
     useIoTStore,
     upsertTruck,
@@ -31,6 +36,10 @@ import { ImperativeThreeLayer } from './threeLayer';
 import { ImperativeMapLayer } from './mapLayer';
 import { ImperativeChart } from './chartEngine';
 import { PerformanceOverlay } from './perfOverlay';
+import { AdaptiveController } from './adaptive';
+import { PerceptionEngine } from './perception';
+import { SpatialIndex, EntityMap } from './dataViz/spatialIndex';
+import type { SpatialEntity } from './types';
 
 // ─── Singleton instances ───────────────────────────────────────
 let worker: Worker | null = null;
@@ -38,7 +47,16 @@ let threeLayer: ImperativeThreeLayer | null = null;
 let mapLayer: ImperativeMapLayer | null = null;
 let perfOverlay: PerformanceOverlay | null = null;
 const charts = new Map<string, ImperativeChart>();
+
+// ─── Masterpiece engine layers ─────────────────────────────────
+let adaptiveCtrl: AdaptiveController | null = null;
+let perceptionEngine: PerceptionEngine | null = null;
+let spatialIndex: SpatialIndex | null = null;
+let entityMap: EntityMap<SpatialEntity> | null = null;
 let _booted = false;
+
+// ─── Perf-aware alert level tracking ──────────────────────────
+let _currentAlertLevel: AlertLevel | null = null;
 
 // ─── Public API ────────────────────────────────────────────────
 
@@ -56,7 +74,22 @@ export function bootEngine(config?: Partial<WorkerConfig>): void {
         ...config,
     };
 
-    // 1) Spawn Web Worker
+    // 1) Adaptive Performance Intelligence Layer
+    adaptiveCtrl = new AdaptiveController();
+    adaptiveCtrl.onScale((decision) => {
+        // Apply scaling to 3D layer
+        threeLayer?.applyScaling(decision);
+        console.debug('[Adaptive] Scaling applied:', decision.reason);
+    });
+
+    // 2) Spatial index for fast range queries
+    spatialIndex = new SpatialIndex();
+    entityMap = new EntityMap<SpatialEntity>();
+
+    // 3) Perception Engine (mounted lazily with DOM containers)
+    perceptionEngine = new PerceptionEngine();
+
+    // 4) Spawn Web Worker
     try {
         worker = new Worker(
             new URL('./telemetry.worker.ts', import.meta.url),
@@ -75,17 +108,28 @@ export function bootEngine(config?: Partial<WorkerConfig>): void {
         worker.postMessage({ type: 'config', payload: fullConfig });
     } catch (err) {
         console.warn('[IoT Engine] Worker init failed, running in-thread fallback:', err);
-        // Simulation will be driven by the worker's own internal fallback
     }
 
-    // 2) Start frame scheduler
+    // 5) Start frame scheduler
     frameScheduler.start();
 
-    // 3) Performance overlay
+    // 6) Performance overlay
     perfOverlay = new PerformanceOverlay();
     frameScheduler.register('perf', (dt) => perfOverlay?.update(dt));
 
-    console.log('[IoT Engine] Booted ✓');
+    // 7) Adaptive monitor tick (runs before other layers)
+    frameScheduler.register('adaptive', () => {
+        adaptiveCtrl?.tick();
+    });
+
+    // 8) Perception engine tick (runs after rendering)
+    frameScheduler.register('perception', (dt) => {
+        // Perception updates are event-driven via updateContext
+        // Tick drives spring animations for tint/typography/depth
+        perceptionEngine?.tick(dt);
+    });
+
+    console.log('[IoT Engine] Booted with Masterpiece Architecture ✓');
 }
 
 /** Shutdown the engine. Call on unmount. */
@@ -108,6 +152,15 @@ export function shutdownEngine(): void {
     perfOverlay?.destroy();
     perfOverlay = null;
 
+    // Cleanup masterpiece layers
+    adaptiveCtrl = null;
+
+    perceptionEngine?.destroy();
+    perceptionEngine = null;
+
+    spatialIndex = null;
+    entityMap = null;
+
     console.log('[IoT Engine] Shutdown ✓');
 }
 
@@ -120,10 +173,14 @@ export function mount3D(container: HTMLElement): void {
     threeLayer = new ImperativeThreeLayer();
     threeLayer.init(container, theme);
     frameScheduler.register('three', (dt) => threeLayer?.update(dt));
+
+    // Mount perception overlays (tint + noise to document.body)
+    perceptionEngine?.mount();
 }
 
 export function unmount3D(): void {
     frameScheduler.unregister('three');
+    perceptionEngine?.destroy();
     threeLayer?.destroy();
     threeLayer = null;
 }
@@ -186,6 +243,22 @@ export function getFrameScheduler() {
     return frameScheduler;
 }
 
+export function getAdaptiveController(): AdaptiveController | null {
+    return adaptiveCtrl;
+}
+
+export function getPerceptionEngine(): PerceptionEngine | null {
+    return perceptionEngine;
+}
+
+export function getSpatialIndex(): SpatialIndex | null {
+    return spatialIndex;
+}
+
+export function getEntityMap(): EntityMap<SpatialEntity> | null {
+    return entityMap;
+}
+
 // ─── Worker message handler ────────────────────────────────────
 function handleWorkerMessage(msg: WorkerOutbound): void {
     const store = useIoTStore;
@@ -196,31 +269,75 @@ function handleWorkerMessage(msg: WorkerOutbound): void {
     switch (msg.type) {
         case 'truck-update':
             upsertTruck(msg.payload);
+            // Update spatial index
+            if (entityMap && spatialIndex) {
+                const t = msg.payload;
+                entityMap.set(t.id, {
+                    id: t.id,
+                    x: t.lng,
+                    y: t.lat,
+                    data: t,
+                });
+            }
             break;
 
-        case 'truck-batch':
+        case 'truck-batch': {
             upsertTruckBatch(msg.payload);
+            // Batch update spatial index
+            if (entityMap && spatialIndex) {
+                const entities: SpatialEntity[] = msg.payload.map((t) => ({
+                    id: t.id,
+                    x: t.lng,
+                    y: t.lat,
+                    data: t,
+                }));
+                entityMap.setBatch(entities);
+                // Rebuild spatial index periodically when dirty
+                if (entityMap.getDirtyIds().size > 0) {
+                    const all = Array.from(entityMap.values());
+                    spatialIndex.bulkLoad(all);
+                    entityMap.flushDirty();
+                }
+            }
             break;
+        }
 
-        case 'alert':
+        case 'alert': {
             pushAlert(msg.payload);
             store.getState().incrementUnacknowledgedAlerts();
+            // Update perception engine with alert context
+            const alertLevel = msg.payload.level as AlertLevel;
+            _currentAlertLevel = alertLevel;
+            perceptionEngine?.updateContext({
+                alertLevel,
+                focusedTruckId: msg.payload.truckId || null,
+                systemLoad: 0,
+            });
             break;
+        }
 
         case 'metrics':
             // This IS a React state update — triggers subscribed panels to re-render
             store.getState().setMetrics(msg.payload);
+            // Update perception with system load context
+            if (perceptionEngine) {
+                const m = msg.payload;
+                const load = m.criticalAlerts > 0 ? 0.9 : m.warningAlerts > 0 ? 0.5 : 0.2;
+                perceptionEngine.updateContext({
+                    alertLevel: _currentAlertLevel,
+                    focusedTruckId: null,
+                    systemLoad: load,
+                });
+            }
             break;
 
         case 'geofence-event':
-            // Could dispatch to a geofence store — for now, log
             console.debug('[Geofence]', msg.payload);
             break;
 
         case 'chart-delta': {
             const { series, point } = msg.payload;
             pushChartPoint(series, point);
-            // Also push to any mounted chart that has this series
             charts.forEach((chart) => {
                 chart.push(series, point);
             });
@@ -234,12 +351,13 @@ function handleWorkerMessage(msg: WorkerOutbound): void {
 }
 
 // ─── Store subscriptions for imperative layers ─────────────────
-// When theme changes, update 3D and map
+// When theme changes, update 3D, map, and perception
 useIoTStore.subscribe(
     (s) => s.theme,
     (theme) => {
         threeLayer?.setTheme(theme);
         mapLayer?.setStyle(theme);
+        // Perception engine reacts to theme implicitly through alert context
     },
 );
 
