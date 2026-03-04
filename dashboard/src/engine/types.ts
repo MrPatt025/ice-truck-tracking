@@ -368,3 +368,66 @@ export interface PerfViolation {
     message: string;
     timestamp: number;
 }
+
+// ═════════════════════════════════════════════════════════════════
+//  LAYER 6 — Perceptual Craft Layer Types
+// ═════════════════════════════════════════════════════════════════
+
+/** Light narrative per theme (craft/lightSystem.ts) */
+export interface CraftLightNarrative {
+    key: { intensity: number; angle: number; color: string };
+    ambient: { intensity: number; color: string };
+    accent: { intensity: number; color: string };
+    shadow: { opacity: number; blur: number };
+}
+
+/** Unified scene node (craft/sceneGraph.ts) */
+export type CraftSceneWorld = 'dom' | 'webgl' | 'map' | 'overlay';
+
+/** Camera state shared across DOM + WebGL + Map (craft/sceneGraph.ts) */
+export interface CraftCameraState {
+    x: number;
+    y: number;
+    zoom: number;
+    fov: number;
+    bearing: number;
+    pitch: number;
+}
+
+/** OKLCH color tuple (craft/colorIntelligence.ts) */
+export interface CraftOKLCH {
+    l: number;  // lightness 0-1
+    c: number;  // chroma 0-0.4
+    h: number;  // hue 0-360
+    a: number;  // alpha 0-1
+}
+
+// ═════════════════════════════════════════════════════════════════
+//  LAYER 7 — Emotional Narrative Layer Types
+// ═════════════════════════════════════════════════════════════════
+
+/** Emotional tone (craft/emotionalTiming.ts) */
+export type CraftEmotionalTone = 'confident' | 'gentle' | 'urgent' | 'playful' | 'dramatic' | 'clinical';
+
+/** Emotional animation phase */
+export type CraftEmotionalPhase = 'anticipation' | 'action' | 'settling';
+
+/** Time segment for temporal behaviour (craft/temporalBehavior.ts) */
+export type CraftTimeSegment = 'dawn' | 'morning' | 'afternoon' | 'evening' | 'night' | 'lateNight';
+
+/** Density mode (craft/layoutDensity.ts) */
+export type CraftDensityMode = 'compact' | 'focus' | 'cinematic' | 'analyst';
+
+/** Visual silence level (craft/visualSilence.ts) */
+export type CraftSilenceLevel = 'minimal' | 'balanced' | 'maximal';
+
+/** Animation budget action (craft/animationBudget.ts) */
+export type CraftBudgetAction =
+    | 'reduce-particles'
+    | 'disable-shadows'
+    | 'drop-lod'
+    | 'lower-dpr'
+    | 'disable-blur'
+    | 'reduce-animations'
+    | 'disable-glow'
+    | 'simplify-gradients';

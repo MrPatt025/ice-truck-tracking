@@ -41,6 +41,22 @@ import { PerceptionEngine } from './perception';
 import { SpatialIndex, EntityMap } from './dataViz/spatialIndex';
 import type { SpatialEntity } from './types';
 
+// ─── Craft Layer Imports ───────────────────────────────────────
+import { LightDirector } from './craft/lightSystem';
+import { TextureCompositor } from './craft/textureSystem';
+import { CursorPhysicsEngine } from './craft/cursorPhysics';
+import { CinematicScrollEngine } from './craft/cinematicScroll';
+import { MicroInteractionController } from './craft/microInteractions';
+import { TemporalUIEngine } from './craft/temporalBehavior';
+import { PredictiveRenderer } from './craft/predictiveRenderer';
+import { ParticleMicroSystem } from './craft/particleMicroSystem';
+import { SceneGraphController } from './craft/sceneGraph';
+import { MapVisualController } from './craft/mapVisualMode';
+import { VisualSilenceController } from './craft/visualSilence';
+import { AnimationBudgetGovernor } from './craft/animationBudget';
+import { ColorIntelligenceEngine } from './craft/colorIntelligence';
+import { LayoutDensityController } from './craft/layoutDensity';
+
 // ─── Singleton instances ───────────────────────────────────────
 let worker: Worker | null = null;
 let threeLayer: ImperativeThreeLayer | null = null;
@@ -54,6 +70,22 @@ let perceptionEngine: PerceptionEngine | null = null;
 let spatialIndex: SpatialIndex | null = null;
 let entityMap: EntityMap<SpatialEntity> | null = null;
 let _booted = false;
+
+// ─── Craft Layer singletons ────────────────────────────────────
+let lightDirector: LightDirector | null = null;
+let textureCompositor: TextureCompositor | null = null;
+let cursorPhysics: CursorPhysicsEngine | null = null;
+let cinematicScroll: CinematicScrollEngine | null = null;
+let microInteractions: MicroInteractionController | null = null;
+let temporalUI: TemporalUIEngine | null = null;
+let predictiveRenderer: PredictiveRenderer | null = null;
+let particleSystem: ParticleMicroSystem | null = null;
+let sceneGraph: SceneGraphController | null = null;
+let mapVisuals: MapVisualController | null = null;
+let visualSilence: VisualSilenceController | null = null;
+let budgetGovernor: AnimationBudgetGovernor | null = null;
+let colorIntelligence: ColorIntelligenceEngine | null = null;
+let layoutDensity: LayoutDensityController | null = null;
 
 // ─── Perf-aware alert level tracking ──────────────────────────
 let _currentAlertLevel: AlertLevel | null = null;
@@ -130,6 +162,56 @@ export function bootEngine(config?: Partial<WorkerConfig>): void {
     });
 
     console.log('[IoT Engine] Booted with Masterpiece Architecture ✓');
+
+    // ── CRAFT LAYER BOOT ──────────────────────────────────────────
+    // Scene graph (central nervous system)
+    sceneGraph = new SceneGraphController();
+    sceneGraph.mount();
+
+    // Animation budget governor (must boot early — regulates everything)
+    budgetGovernor = new AnimationBudgetGovernor();
+    budgetGovernor.mount();
+
+    // Light system
+    lightDirector = new LightDirector();
+    lightDirector.setTheme(useIoTStore.getState().theme);
+
+    // Texture compositor
+    textureCompositor = new TextureCompositor();
+
+    // Color intelligence
+    colorIntelligence = new ColorIntelligenceEngine();
+
+    // Temporal UI
+    temporalUI = new TemporalUIEngine();
+    temporalUI.mount();
+
+    // Layout density
+    layoutDensity = new LayoutDensityController();
+    layoutDensity.mount();
+
+    // Visual silence
+    visualSilence = new VisualSilenceController();
+    visualSilence.mount();
+
+    // Micro-interactions
+    microInteractions = new MicroInteractionController();
+    microInteractions.mount();
+
+    // Predictive renderer
+    predictiveRenderer = new PredictiveRenderer();
+    predictiveRenderer.mount();
+
+    // Map visuals
+    mapVisuals = new MapVisualController();
+    mapVisuals.mount();
+
+    // Register craft tick (particle + budget monitoring)
+    frameScheduler.register('craft-budget', () => {
+        budgetGovernor?.reportFPS(perfOverlay ? 60 : 60);
+    });
+
+    console.log('[IoT Engine] Craft Layer v5.0 mounted ✓');
 }
 
 /** Shutdown the engine. Call on unmount. */
@@ -161,6 +243,36 @@ export function shutdownEngine(): void {
     spatialIndex = null;
     entityMap = null;
 
+    // Cleanup craft layers
+    lightDirector?.destroy();
+    lightDirector = null;
+    textureCompositor?.destroy();
+    textureCompositor = null;
+    cursorPhysics?.destroy();
+    cursorPhysics = null;
+    cinematicScroll?.destroy();
+    cinematicScroll = null;
+    microInteractions?.destroy();
+    microInteractions = null;
+    temporalUI?.destroy();
+    temporalUI = null;
+    predictiveRenderer?.destroy();
+    predictiveRenderer = null;
+    particleSystem?.destroy();
+    particleSystem = null;
+    sceneGraph?.destroy();
+    sceneGraph = null;
+    mapVisuals?.destroy();
+    mapVisuals = null;
+    visualSilence?.destroy();
+    visualSilence = null;
+    budgetGovernor?.destroy();
+    budgetGovernor = null;
+    colorIntelligence = null;
+    layoutDensity?.destroy();
+    layoutDensity = null;
+    frameScheduler.unregister('craft-budget');
+
     console.log('[IoT Engine] Shutdown ✓');
 }
 
@@ -176,6 +288,25 @@ export function mount3D(container: HTMLElement): void {
 
     // Mount perception overlays (tint + noise to document.body)
     perceptionEngine?.mount();
+
+    // Mount craft visual layers into DOM
+    lightDirector?.mount(container);
+    textureCompositor?.mount(container);
+
+    // Cursor physics (opt-in — mount globally)
+    cursorPhysics = new CursorPhysicsEngine();
+    cursorPhysics.mount();
+
+    // Cinematic scroll
+    cinematicScroll = new CinematicScrollEngine();
+    cinematicScroll.mount();
+
+    // Particle system (ambient atmosphere)
+    particleSystem = new ParticleMicroSystem();
+    particleSystem.mount(container);
+
+    // Register craft tick for light/particle animation
+    frameScheduler.register('craft-light', (dt) => lightDirector?.tick(dt));
 }
 
 export function unmount3D(): void {
@@ -258,6 +389,22 @@ export function getSpatialIndex(): SpatialIndex | null {
 export function getEntityMap(): EntityMap<SpatialEntity> | null {
     return entityMap;
 }
+
+// ─── Craft Layer Accessors ─────────────────────────────────────
+export function getLightDirector(): LightDirector | null { return lightDirector; }
+export function getTextureCompositor(): TextureCompositor | null { return textureCompositor; }
+export function getCursorPhysics(): CursorPhysicsEngine | null { return cursorPhysics; }
+export function getCinematicScroll(): CinematicScrollEngine | null { return cinematicScroll; }
+export function getMicroInteractions(): MicroInteractionController | null { return microInteractions; }
+export function getTemporalUI(): TemporalUIEngine | null { return temporalUI; }
+export function getPredictiveRenderer(): PredictiveRenderer | null { return predictiveRenderer; }
+export function getParticleSystem(): ParticleMicroSystem | null { return particleSystem; }
+export function getSceneGraph(): SceneGraphController | null { return sceneGraph; }
+export function getMapVisuals(): MapVisualController | null { return mapVisuals; }
+export function getVisualSilence(): VisualSilenceController | null { return visualSilence; }
+export function getBudgetGovernor(): AnimationBudgetGovernor | null { return budgetGovernor; }
+export function getColorIntelligence(): ColorIntelligenceEngine | null { return colorIntelligence; }
+export function getLayoutDensity(): LayoutDensityController | null { return layoutDensity; }
 
 // ─── Worker message handler ────────────────────────────────────
 function handleWorkerMessage(msg: WorkerOutbound): void {
@@ -358,6 +505,12 @@ useIoTStore.subscribe(
         threeLayer?.setTheme(theme);
         mapLayer?.setStyle(theme);
         // Perception engine reacts to theme implicitly through alert context
+        // Craft layer theme sync
+        lightDirector?.setTheme(theme);
+        textureCompositor?.setTheme(theme);
+        colorIntelligence?.setTheme(theme);
+        mapVisuals?.setTheme(theme);
+        sceneGraph?.setTheme(theme);
     },
 );
 

@@ -160,4 +160,38 @@ export {
     getPerceptionEngine,
     getSpatialIndex,
     getEntityMap,
+    // Craft Layer Accessors
+    getLightDirector,
+    getTextureCompositor,
+    getCursorPhysics,
+    getCinematicScroll,
+    getMicroInteractions,
+    getTemporalUI,
+    getPredictiveRenderer,
+    getParticleSystem,
+    getSceneGraph,
+    getMapVisuals,
+    getVisualSilence,
+    getBudgetGovernor,
+    getColorIntelligence,
+    getLayoutDensity,
 } from './orchestrator';
+
+// ═════════════════════════════════════════════════════════════════
+//  LAYER 6+7 — Craft Layer (Perceptual + Emotional Narrative)
+// ═════════════════════════════════════════════════════════════════
+export * from './craft';
+
+// Craft-specific types
+export type {
+    CraftLightNarrative,
+    CraftSceneWorld,
+    CraftCameraState,
+    CraftOKLCH,
+    CraftEmotionalTone,
+    CraftEmotionalPhase,
+    CraftTimeSegment,
+    CraftDensityMode,
+    CraftSilenceLevel,
+    CraftBudgetAction,
+} from './types';
