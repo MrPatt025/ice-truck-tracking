@@ -223,12 +223,12 @@ export class CursorPhysicsEngine {
       if (typeof document !== 'undefined') {
         document.documentElement.style.cursor = '';
       }
-      this._el && (this._el.style.opacity = '0');
+      if (this._el) { this._el.style.opacity = '0'; }
     } else {
       if (typeof document !== 'undefined') {
         document.documentElement.style.cursor = 'none';
       }
-      this._el && (this._el.style.opacity = '1');
+      if (this._el) { this._el.style.opacity = '1'; }
     }
   }
 
@@ -247,7 +247,7 @@ export class CursorPhysicsEngine {
     this._raf = requestAnimationFrame(this._loop);
   };
 
-  private _updatePhysics(dt: number): void {
+  private _updatePhysics(_dt: number): void {
     const s = this._state;
 
     // Magnetic force

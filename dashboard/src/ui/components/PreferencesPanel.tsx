@@ -69,15 +69,15 @@ export function PreferencesPanel({
     }
   }, [])
 
-  const updatePreference = (path: string, value: any) => {
+  const updatePreference = (path: string, value: string | number | boolean) => {
     setPreferences(prev => {
       const keys = path.split('.')
       const updated = { ...prev }
-      let current: any = updated
+      let current: Record<string, unknown> = updated
 
       for (let i = 0; i < keys.length - 1; i++) {
-        current[keys[i]] = { ...current[keys[i]] }
-        current = current[keys[i]]
+        current[keys[i]] = { ...(current[keys[i]] as Record<string, unknown>) }
+        current = current[keys[i]] as Record<string, unknown>
       }
 
       current[keys[keys.length - 1]] = value
@@ -94,10 +94,10 @@ export function PreferencesPanel({
     // Track preference changes
     if (
       typeof window !== 'undefined' &&
-      (window as any).gtag &&
+      window.gtag &&
       preferences.privacy.analytics
     ) {
-      ;(window as any).gtag('event', 'preferences_updated', {
+      window.gtag('event', 'preferences_updated', {
         map_style: preferences.mapStyle,
         language: preferences.language,
         layout: preferences.dashboard.layout,

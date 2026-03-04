@@ -1,8 +1,24 @@
 ﻿'use client'
 
+interface TruckData {
+  id: string
+  status: string
+  plate_number?: string
+  driver_name?: string
+  [key: string]: unknown
+}
+
+interface AlertData {
+  id: string
+  level?: string
+  message?: string
+  timestamp?: string
+  [key: string]: unknown
+}
+
 interface SidebarProps {
-  trucks: any[]
-  alerts: any[]
+  trucks: TruckData[]
+  alerts: AlertData[]
   selectedTruck: string | null
   onSelectTruck: (truckId: string) => void
   isConnected: boolean

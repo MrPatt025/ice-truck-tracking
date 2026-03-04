@@ -1,13 +1,13 @@
 ﻿'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
 
 interface AnalyticsEvent {
   action: string
   category: string
   label?: string
   value?: number
-  custom_parameters?: Record<string, any>
+  custom_parameters?: Record<string, string | number | boolean | undefined>
 }
 
 interface UserProperties {
@@ -26,8 +26,8 @@ export function useAnalytics() {
     if (!analyticsEnabled) return
 
     // Google Analytics 4
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      ;(window as any).gtag('event', event.action, {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', event.action, {
         event_category: event.category,
         event_label: event.label,
         value: event.value,
@@ -47,8 +47,8 @@ export function useAnalytics() {
         localStorage.getItem('analytics-enabled') === 'true'
       if (!analyticsEnabled) return
 
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        ;(window as any).gtag('config', process.env.NEXT_PUBLIC_GA_ID, {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('config', process.env.NEXT_PUBLIC_GA_ID ?? '', {
           page_path,
           page_title,
         })
@@ -63,8 +63,8 @@ export function useAnalytics() {
         localStorage.getItem('analytics-enabled') === 'true'
       if (!analyticsEnabled) return
 
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        ;(window as any).gtag('config', process.env.NEXT_PUBLIC_GA_ID, {
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('config', process.env.NEXT_PUBLIC_GA_ID ?? '', {
           custom_map: properties,
         })
       }
@@ -73,7 +73,7 @@ export function useAnalytics() {
   )
 
   const trackMapInteraction = useCallback(
-    (interaction: string, details?: Record<string, any>) => {
+    (interaction: string, details?: Record<string, string | number | boolean | undefined>) => {
       track({
         action: 'map_interaction',
         category: 'engagement',
@@ -103,7 +103,7 @@ export function useAnalytics() {
   )
 
   const trackPreferenceChange = useCallback(
-    (preference: string, value: any) => {
+    (preference: string, value: string | number | boolean) => {
       track({
         action: 'preference_changed',
         category: 'customization',
@@ -154,8 +154,8 @@ export function useAnalyticsOptIn() {
     localStorage.setItem('analytics-enabled', 'true')
 
     // Initialize analytics
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      ;(window as any).gtag('consent', 'update', {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('consent', 'update', {
         analytics_storage: 'granted',
       })
     }
@@ -165,8 +165,8 @@ export function useAnalyticsOptIn() {
     localStorage.setItem('analytics-enabled', 'false')
 
     // Disable analytics
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      ;(window as any).gtag('consent', 'update', {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('consent', 'update', {
         analytics_storage: 'denied',
       })
     }

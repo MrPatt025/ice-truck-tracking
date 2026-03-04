@@ -66,7 +66,7 @@ class SocketService {
     this.socket?.on('truck:status', callback)
   }
 
-  emit(event: string, data: any) {
+  emit(event: string, data: unknown) {
     this.socket?.emit(event, data)
   }
 

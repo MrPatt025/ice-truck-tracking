@@ -2,7 +2,7 @@
 
 // cypress-plugin-tab
 declare namespace Cypress {
-    interface Chainable<Subject = any> {
+    interface Chainable<Subject = unknown> {
         /**
          * Tab to the next focusable element
          * @see https://github.com/kuceb/cypress-plugin-tab
@@ -27,7 +27,7 @@ declare namespace Cypress {
         checkA11y(
             context?: string | Node | object | null,
             options?: object,
-            violationCallback?: (violations: any[]) => void,
+            violationCallback?: (violations: unknown[]) => void,
             skipFailures?: boolean
         ): void
 

@@ -12,8 +12,6 @@
  *  Combines with Light System and Color Intelligence.
  * ================================================================ */
 
-import type { Theme } from '../types';
-
 // ─── Types ─────────────────────────────────────────────────────
 
 export type TimeSegment = 'dawn' | 'morning' | 'afternoon' | 'evening' | 'night' | 'lateNight';

@@ -75,9 +75,9 @@ export function useAnnouncer() {
   return { announce }
 }
 
-export function useKeyboardNavigation(
-  items: any[],
-  onSelect: (item: any) => void,
+export function useKeyboardNavigation<T>(
+  items: T[],
+  onSelect: (item: T) => void,
   isActive: boolean = true
 ) {
   const currentIndex = useRef(0)

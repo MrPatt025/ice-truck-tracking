@@ -42,8 +42,8 @@ export function usePerformanceMonitor(componentName: string) {
     }
 
     // Send to analytics in production
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      ;(window as any).gtag('event', 'component_render', {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'component_render', {
         component_name: componentName,
         render_time: renderTime,
         custom_parameter: 'performance_monitoring',
@@ -77,8 +77,8 @@ export function useWebVitals() {
         }
 
         // Send to analytics
-        if ((window as any).gtag) {
-          ;(window as any).gtag('event', 'web_vital', {
+        if (window.gtag) {
+          window.gtag('event', 'web_vital', {
             metric_name: metric.name,
             metric_value: metric.value,
             page_path: window.location.pathname,

@@ -1,8 +1,27 @@
 ﻿'use client'
 
+interface TruckData {
+  id: string
+  status: string
+  plate_number?: string
+  driver_name?: string
+  latitude?: number
+  longitude?: number
+  last_update?: string
+  [key: string]: unknown
+}
+
+interface AlertData {
+  id: string
+  type?: string
+  message?: string
+  timestamp?: string
+  [key: string]: unknown
+}
+
 interface DashboardProps {
-  trucks: any[]
-  alerts: any[]
+  trucks: TruckData[]
+  alerts: AlertData[]
   selectedTruck: string | null
 }
 

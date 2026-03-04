@@ -1,7 +1,6 @@
 ﻿'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Button } from '../ui/components/Button'
 
 interface Truck {
   id: string
@@ -17,7 +16,7 @@ interface MapViewProps {
   trucks: Truck[]
   selectedTruck: string | null
   onSelectTruck: (truckId: string | null) => void
-  geofences: any[]
+  geofences: unknown[]
 }
 
 type MapStyle = 'streets' | 'satellite' | 'terrain' | 'dark'
@@ -26,7 +25,7 @@ export function EnhancedMapView({
   trucks,
   selectedTruck,
   onSelectTruck,
-  geofences,
+  geofences: _geofences,
 }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [mapStyle, setMapStyle] = useState<MapStyle>('streets')

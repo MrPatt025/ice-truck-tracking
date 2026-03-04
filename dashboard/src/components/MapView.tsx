@@ -21,7 +21,7 @@ interface MapViewProps {
   trucks: Truck[]
   selectedTruck: string | null
   onSelectTruck: (truckId: string | null) => void
-  geofences?: any[]
+  geofences?: unknown[]
   className?: string
 }
 
@@ -39,7 +39,7 @@ export function MapView({
   trucks,
   selectedTruck,
   onSelectTruck,
-  geofences = [],
+  geofences: _geofences = [],
   className,
 }: MapViewProps) {
   const { startRender, endRender } = usePerformanceMonitor('MapView')
@@ -47,7 +47,7 @@ export function MapView({
   const [mapStyle, setMapStyle] = useState<MapStyle>('streets')
   const [showClusters, setShowClusters] = useState(true)
   const [showHeatmap, setShowHeatmap] = useState(false)
-  const [zoomLevel, setZoomLevel] = useState(10)
+  const [, setZoomLevel] = useState(10)
   const [contextMenu, setContextMenu] = useState<{
     x: number
     y: number
@@ -65,7 +65,7 @@ export function MapView({
   const clusters = useMemo(() => {
     if (!showClusters || trucks.length === 0) return []
 
-    const CLUSTER_RADIUS = 50 // pixels
+    // Clustering uses 1km radius for geographic grouping
     const clustered: TruckCluster[] = []
     const processed = new Set<string>()
 

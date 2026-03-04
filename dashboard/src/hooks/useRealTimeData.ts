@@ -8,7 +8,7 @@ type Truck = {
   temp?: number;
   updatedAt?: string;
 };
-type Alert = { id?: string; level?: string; message?: string; ts?: string } & Record<string, any>;
+type Alert = { id?: string; level?: string; message?: string; ts?: string } & Record<string, unknown>;
 const WS_URL  = process.env.NEXT_PUBLIC_WS_URL  || "ws://localhost:5000";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 export function useRealTimeData() {
@@ -41,7 +41,7 @@ export function useRealTimeData() {
             if (data?.type === "alert" && data?.payload) {
               setAlerts((prev) => [data.payload, ...prev].slice(0, 100));
             }
-          } catch (_) { /* ignore parse errors */ }
+          } catch { /* ignore parse errors */ }
         };
         ws.onclose = () => {
           setIsConnected(false);
@@ -71,7 +71,7 @@ useEffect(() => {
       ]);
       if (tRes?.ok) setTrucks(await tRes.json());
       if (aRes?.ok) setAlerts(await aRes.json());
-    } catch {}
+    } catch { /* polling error */ }
     // ???????????? WS ?????????
     if (!isConnected) tm = window.setTimeout(poll, 10000);
   };

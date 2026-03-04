@@ -33,8 +33,8 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     // Log to analytics
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      ;(window as any).gtag('event', 'exception', {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'exception', {
         description: error.toString(),
         fatal: false,
       })
