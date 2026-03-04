@@ -3,6 +3,8 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useCallback,
+  useMemo,
   ReactNode,
 } from 'react'
 import * as SecureStore from 'expo-secure-store'
@@ -26,7 +28,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -49,22 +51,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     const response = await authService.login(email, password)
     await SecureStore.setItemAsync('auth_token', response.token)
     setUser(response.user)
-  }
+  }, [])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await SecureStore.deleteItemAsync('auth_token')
       setUser(null)
     } catch (error) {
       console.error('Logout error:', error)
     }
-  }
+  }, [])
 
-  const refreshToken = async () => {
+  const refreshToken = useCallback(async () => {
     try {
       const token = await SecureStore.getItemAsync('auth_token')
       if (token) {
@@ -76,16 +78,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error('Token refresh failed:', error)
       await logout()
     }
-  }
+  }, [logout])
 
-  const value: AuthContextType = {
+  const value = useMemo<AuthContextType>(() => ({
     user,
     isAuthenticated: !!user,
     isLoading,
     login,
     logout,
     refreshToken,
-  }
+  }), [user, isLoading, login, logout, refreshToken])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

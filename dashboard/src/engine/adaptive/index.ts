@@ -73,9 +73,12 @@ export class EnvMonitor {
 
     constructor() {
         this.deviceTier = detectDeviceTier();
-        // Battery & connection watches are fire-and-forget
-        void this.initBatteryWatch();
         this.initConnectionWatch();
+    }
+
+    /** Call after construction to start async monitors */
+    init(): void {
+        void this.initBatteryWatch();
     }
 
     /** Sample current frame (call every rAF) */
@@ -508,6 +511,7 @@ export class AdaptiveController {
 
     constructor() {
         this.monitor = new EnvMonitor();
+        this.monitor.init();
         const tier = this.monitor.getDeviceTier();
         this.strategy = new ScalingStrategy(tier);
     }

@@ -132,8 +132,9 @@ export default function SettingsPage() {
                 {/* Form */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Full name</label>
+                    <label htmlFor="settings-name" className="text-sm font-medium">Full name</label>
                     <input
+                      id="settings-name"
                       type="text"
                       value={profile.name}
                       onChange={(e) => setProfile(p => ({ ...p, name: e.target.value }))}
@@ -141,8 +142,9 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Email</label>
+                    <label htmlFor="settings-email" className="text-sm font-medium">Email</label>
                     <input
+                      id="settings-email"
                       type="email"
                       value={profile.email}
                       onChange={(e) => setProfile(p => ({ ...p, email: e.target.value }))}
@@ -150,8 +152,9 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Phone</label>
+                    <label htmlFor="settings-phone" className="text-sm font-medium">Phone</label>
                     <input
+                      id="settings-phone"
                       type="tel"
                       value={profile.phone}
                       onChange={(e) => setProfile(p => ({ ...p, phone: e.target.value }))}
@@ -160,8 +163,9 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Company</label>
+                    <label htmlFor="settings-company" className="text-sm font-medium">Company</label>
                     <input
+                      id="settings-company"
                       type="text"
                       value={profile.company}
                       onChange={(e) => setProfile(p => ({ ...p, company: e.target.value }))}

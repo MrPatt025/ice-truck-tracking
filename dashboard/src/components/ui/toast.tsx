@@ -34,7 +34,7 @@ const ToastContext = createContext<ToastContextValue | undefined>(undefined)
 let counter = 0
 
 /* ─────────────────── Provider ─────────────────── */
-export function ToastProvider({ children }: { children: ReactNode }) {
+export function ToastProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
   const dismiss = useCallback((id: string) => {
@@ -90,10 +90,10 @@ const variantStyles: Record<ToastVariant, string> = {
 function ToastViewport({
   toasts,
   dismiss,
-}: {
+}: Readonly<{
   toasts: Toast[]
   dismiss: (id: string) => void
-}) {
+}>) {
   return (
     <section
       aria-label='Notifications'
@@ -110,10 +110,10 @@ function ToastViewport({
 function ToastItem({
   toast: t,
   dismiss,
-}: {
+}: Readonly<{
   toast: Toast
   dismiss: (id: string) => void
-}) {
+}>) {
   useEffect(() => {
     if (t.duration <= 0) return
     const timer = setTimeout(() => dismiss(t.id), t.duration)

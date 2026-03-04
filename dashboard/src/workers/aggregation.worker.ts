@@ -169,6 +169,28 @@ function handleFleetStats(msg: ComputeFleetStatsMsg) {
 }
 
 // ── Alert Evaluation ───────────────────────────────────────
+
+function isRuleViolated(rule: AlertRule, value: number): boolean {
+  switch (rule.condition) {
+    case 'gt':  return value > rule.threshold;
+    case 'lt':  return value < rule.threshold;
+    case 'eq':  return value === rule.threshold;
+    case 'gte': return value >= rule.threshold;
+    case 'lte': return value <= rule.threshold;
+    case 'between': return value >= rule.threshold && value <= (rule.thresholdMax ?? rule.threshold);
+  }
+}
+
+function groupByTruck(telemetry: TelemetryPoint[]): Map<string, TelemetryPoint[]> {
+  const byTruck = new Map<string, TelemetryPoint[]>();
+  for (const point of telemetry) {
+    const existing = byTruck.get(point.truckId) || [];
+    existing.push(point);
+    byTruck.set(point.truckId, existing);
+  }
+  return byTruck;
+}
+
 function handleAlertEvaluation(msg: EvaluateAlertsMsg) {
   const { telemetry, rules } = msg;
   const triggered: Array<{
@@ -181,15 +203,8 @@ function handleAlertEvaluation(msg: EvaluateAlertsMsg) {
     timestamp: number;
   }> = [];
 
-  // Group telemetry by truck
-  const byTruck = new Map<string, TelemetryPoint[]>();
-  for (const point of telemetry) {
-    const existing = byTruck.get(point.truckId) || [];
-    existing.push(point);
-    byTruck.set(point.truckId, existing);
-  }
+  const byTruck = groupByTruck(telemetry);
 
-  // Evaluate each rule against each truck's latest data
   for (const rule of rules) {
     for (const [truckId, points] of byTruck) {
       const latest = points.at(-1);
@@ -197,17 +212,7 @@ function handleAlertEvaluation(msg: EvaluateAlertsMsg) {
       const value = (latest as unknown as Record<string, number>)[rule.metric];
       if (typeof value !== 'number') continue;
 
-      let violated = false;
-      switch (rule.condition) {
-        case 'gt': violated = value > rule.threshold; break;
-        case 'lt': violated = value < rule.threshold; break;
-        case 'eq': violated = value === rule.threshold; break;
-        case 'gte': violated = value >= rule.threshold; break;
-        case 'lte': violated = value <= rule.threshold; break;
-        case 'between': violated = value >= rule.threshold && value <= (rule.thresholdMax ?? rule.threshold); break;
-      }
-
-      if (violated) {
+      if (isRuleViolated(rule, value)) {
         triggered.push({
           ruleId: rule.id,
           truckId,
@@ -225,19 +230,23 @@ function handleAlertEvaluation(msg: EvaluateAlertsMsg) {
 }
 
 // ── Export Preparation ─────────────────────────────────────
+function formatCsvCell(val: unknown): string {
+  if (val == null) return '';
+  if (typeof val === 'object') return JSON.stringify(val);
+  const str = String(val);
+  if (str.includes(',') || str.includes('"')) {
+    return `"${str.replaceAll('"', '""')}"`;
+  }
+  return str;
+}
+
 function handleExport(msg: PrepareExportMsg) {
   const { data, format, columns } = msg;
 
   if (format === 'csv') {
     const header = columns.join(',');
     const rows = data.map(row =>
-      columns.map(col => {
-        const val = row[col];
-        if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) {
-          return `"${val.replaceAll('"', '""')}"`;
-        }
-        return val == null ? '' : typeof val === 'object' ? JSON.stringify(val) : String(val);
-      }).join(',')
+      columns.map(col => formatCsvCell(row[col])).join(',')
     );
     const csv = [header, ...rows].join('\n');
     globalThis.postMessage({ type: 'prepare-export-result', data: csv, format: 'csv' });

@@ -175,7 +175,7 @@ export function createParticleGlowMaterial(): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
         uniforms: {
             uTime: { value: 0 },
-            uPixelRatio: { value: Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2) },
+            uPixelRatio: { value: Math.min(typeof globalThis.window !== 'undefined' ? globalThis.window.devicePixelRatio : 1, 2) },
         },
         vertexShader: particleGlowVertex,
         fragmentShader: particleGlowFragment,
@@ -228,7 +228,7 @@ const dataGlowFragment = /* glsl */ `
 `;
 
 /** Create a data-driven glow material */
-export function createDataGlowMaterial(pulseSpeed = 2.0): THREE.ShaderMaterial {
+export function createDataGlowMaterial(pulseSpeed = 2): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
         uniforms: {
             uTime: { value: 0 },
@@ -309,34 +309,34 @@ export const SHADER_THEME_COLORS: Record<Theme, MeshGradientColors> = {
     dark: {
         color1: [0.03, 0.03, 0.08],
         color2: [0.05, 0.02, 0.12],
-        color3: [0.02, 0.06, 0.10],
+        color3: [0.02, 0.06, 0.1],
         color4: [0.04, 0.03, 0.06],
     },
     neon: {
-        color1: [0.05, 0.0, 0.15],
-        color2: [0.0, 0.10, 0.20],
-        color3: [0.15, 0.0, 0.10],
-        color4: [0.0, 0.05, 0.15],
+        color1: [0.05, 0, 0.15],
+        color2: [0, 0.1, 0.2],
+        color3: [0.15, 0, 0.1],
+        color4: [0, 0.05, 0.15],
     },
     ocean: {
-        color1: [0.0, 0.05, 0.15],
-        color2: [0.0, 0.08, 0.20],
-        color3: [0.0, 0.03, 0.10],
+        color1: [0, 0.05, 0.15],
+        color2: [0, 0.08, 0.2],
+        color3: [0, 0.03, 0.1],
         color4: [0.02, 0.06, 0.18],
     },
     forest: {
         color1: [0.02, 0.08, 0.03],
         color2: [0.01, 0.06, 0.04],
-        color3: [0.03, 0.10, 0.02],
+        color3: [0.03, 0.1, 0.02],
         color4: [0.02, 0.05, 0.03],
     },
 };
 
 /** Particle base colors per theme */
 export const PARTICLE_THEME_COLORS: Record<Theme, THREE.Color> = {
-    dark: new THREE.Color(0.3, 0.5, 1.0),
-    neon: new THREE.Color(0.0, 1.0, 0.8),
-    ocean: new THREE.Color(0.2, 0.6, 1.0),
+    dark: new THREE.Color(0.3, 0.5, 1),
+    neon: new THREE.Color(0, 1, 0.8),
+    ocean: new THREE.Color(0.2, 0.6, 1),
     forest: new THREE.Color(0.3, 0.9, 0.4),
 };
 
@@ -361,8 +361,7 @@ export function updateShaderUniforms(
     materials: THREE.ShaderMaterial[],
     elapsed: number,
 ): void {
-    for (let i = 0; i < materials.length; i++) {
-        const m = materials[i];
+    for (const m of materials) {
         if (m.uniforms.uTime) {
             m.uniforms.uTime.value = elapsed;
         }

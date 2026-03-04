@@ -33,17 +33,17 @@ export interface ChartConfig {
 }
 
 export class ImperativeChart {
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
-    private series: ChartSeries[] = [];
-    private gridColor: string;
-    private bgColor: string;
-    private labelColor: string;
-    private title: string;
-    private showLegend: boolean;
-    private yMin?: number;
-    private yMax?: number;
-    private unit: string;
+    private readonly canvas: HTMLCanvasElement;
+    private readonly ctx: CanvasRenderingContext2D;
+    private readonly series: ChartSeries[] = [];
+    private readonly gridColor: string;
+    private readonly bgColor: string;
+    private readonly labelColor: string;
+    private readonly title: string;
+    private readonly showLegend: boolean;
+    private readonly yMin?: number;
+    private readonly yMax?: number;
+    private readonly unit: string;
     private _dirty = true;
     private _destroyed = false;
 
@@ -104,11 +104,10 @@ export class ImperativeChart {
 
         // Layout
         const paddingTop = this.title ? 30 : 10;
-        const paddingBottom = 30;
         const paddingLeft = 50;
         const paddingRight = 15;
         const chartW = w - paddingLeft - paddingRight;
-        const chartH = h - paddingTop - paddingBottom;
+        const chartH = h - paddingTop - 30;
 
         // Title
         if (this.title) {
@@ -118,101 +117,137 @@ export class ImperativeChart {
             ctx.fillText(this.title, paddingLeft, 18);
         }
 
-        // Gather all points for y-axis range
+        // Gather data and compute Y range
+        const dataSets = this.collectDataSets();
+        const { yMin, yMax, yPad, yRange } = this.computeYRange(dataSets);
+
+        // Grid lines
+        this.drawGrid(ctx, paddingTop, paddingLeft, chartW, chartH, yMin, yMax, yPad, yRange);
+
+        // Series
+        for (const ds of dataSets) {
+            this.drawSeries(ctx, ds, paddingTop, paddingLeft, chartW, chartH, yMin, yPad, yRange);
+        }
+
+        // Legend
+        this.drawLegend(ctx, dataSets, paddingTop, paddingLeft, chartW, chartH);
+    }
+
+    private collectDataSets(): Array<{ data: TimeSeriesPoint[]; color: string; label: string }> {
+        return this.series.map(s => ({
+            data: s.buffer.toArray(),
+            color: s.color,
+            label: s.label,
+        }));
+    }
+
+    private computeYRange(dataSets: Array<{ data: TimeSeriesPoint[] }>): {
+        yMin: number; yMax: number; yPad: number; yRange: number;
+    } {
         let allMin = this.yMin ?? Infinity;
         let allMax = this.yMax ?? -Infinity;
-        const dataSets: Array<{ data: TimeSeriesPoint[]; color: string; label: string }> = [];
 
-        for (const s of this.series) {
-            const data = s.buffer.toArray();
-            dataSets.push({ data, color: s.color, label: s.label });
-            for (const pt of data) {
+        for (const ds of dataSets) {
+            for (const pt of ds.data) {
                 if (pt.value < allMin) allMin = pt.value;
                 if (pt.value > allMax) allMax = pt.value;
             }
         }
 
-        if (!isFinite(allMin)) allMin = 0;
-        if (!isFinite(allMax)) allMax = 100;
+        if (!Number.isFinite(allMin)) allMin = 0;
+        if (!Number.isFinite(allMax)) allMax = 100;
         if (allMin === allMax) { allMin -= 1; allMax += 1; }
 
         const yRange = allMax - allMin;
-        const yPad = yRange * 0.1;
+        return { yMin: allMin, yMax: allMax, yPad: yRange * 0.1, yRange };
+    }
 
-        // Grid lines (horizontal)
+    private drawGrid(
+        ctx: CanvasRenderingContext2D,
+        pTop: number, pLeft: number, cW: number, cH: number,
+        yMin: number, yMax: number, yPad: number, yRange: number,
+    ): void {
         ctx.strokeStyle = this.gridColor;
         ctx.lineWidth = 1;
         const gridLines = 5;
+        const totalRange = yRange + 2 * yPad;
         for (let i = 0; i <= gridLines; i++) {
-            const y = paddingTop + (chartH / gridLines) * i;
+            const y = pTop + (cH / gridLines) * i;
             ctx.beginPath();
-            ctx.moveTo(paddingLeft, y);
-            ctx.lineTo(paddingLeft + chartW, y);
+            ctx.moveTo(pLeft, y);
+            ctx.lineTo(pLeft + cW, y);
             ctx.stroke();
 
-            // Y labels
-            const val = allMax + yPad - ((allMax + yPad - (allMin - yPad)) / gridLines) * i;
+            const val = yMax + yPad - (totalRange / gridLines) * i;
             ctx.fillStyle = this.labelColor;
             ctx.font = '11px Inter, system-ui, sans-serif';
             ctx.textAlign = 'right';
-            ctx.fillText(`${val.toFixed(1)}${this.unit}`, paddingLeft - 5, y + 4);
+            ctx.fillText(`${val.toFixed(1)}${this.unit}`, pLeft - 5, y + 4);
         }
+    }
 
-        // Draw each series
+    private drawSeries(
+        ctx: CanvasRenderingContext2D,
+        ds: { data: TimeSeriesPoint[]; color: string },
+        pTop: number, pLeft: number, cW: number, cH: number,
+        yMin: number, yPad: number, yRange: number,
+    ): void {
+        const { data, color } = ds;
+        if (data.length < 2) return;
+
+        const n = data.length;
+        const xStep = cW / (n - 1);
+        const totalRange = yRange + 2 * yPad;
+        const toY = (v: number) => pTop + cH - ((v - (yMin - yPad)) / totalRange) * cH;
+
+        // Area fill
+        ctx.save();
+        ctx.beginPath();
+        const gradient = ctx.createLinearGradient(0, pTop, 0, pTop + cH);
+        gradient.addColorStop(0, color + '40');
+        gradient.addColorStop(1, color + '00');
+        ctx.moveTo(pLeft, pTop + cH);
+        for (let i = 0; i < n; i++) {
+            ctx.lineTo(pLeft + i * xStep, toY(data[i].value));
+        }
+        ctx.lineTo(pLeft + (n - 1) * xStep, pTop + cH);
+        ctx.closePath();
+        ctx.fillStyle = gradient;
+        ctx.fill();
+        ctx.restore();
+
+        // Line
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        for (let i = 0; i < n; i++) {
+            const x = pLeft + i * xStep;
+            const y = toY(data[i].value);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    private drawLegend(
+        ctx: CanvasRenderingContext2D,
+        dataSets: Array<{ color: string; label: string }>,
+        pTop: number, pLeft: number, cW: number, cH: number,
+    ): void {
+        if (!this.showLegend || dataSets.length <= 1) return;
+
+        let lx = pLeft + cW - dataSets.length * 90;
+        ctx.font = '11px Inter, system-ui, sans-serif';
+        ctx.textAlign = 'left';
         for (const ds of dataSets) {
-            const { data, color } = ds;
-            if (data.length < 2) continue;
-
-            const n = data.length;
-            const xStep = chartW / (n - 1);
-
-            // Area fill (gradient)
-            ctx.save();
-            ctx.beginPath();
-            const gradient = ctx.createLinearGradient(0, paddingTop, 0, paddingTop + chartH);
-            gradient.addColorStop(0, color + '40');
-            gradient.addColorStop(1, color + '00');
-
-            ctx.moveTo(paddingLeft, paddingTop + chartH);
-            for (let i = 0; i < n; i++) {
-                const x = paddingLeft + i * xStep;
-                const y = paddingTop + chartH - ((data[i].value - (allMin - yPad)) / (yRange + 2 * yPad)) * chartH;
-                ctx.lineTo(x, y);
-            }
-            ctx.lineTo(paddingLeft + (n - 1) * xStep, paddingTop + chartH);
-            ctx.closePath();
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            ctx.restore();
-
-            // Line
-            ctx.save();
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.lineJoin = 'round';
-            ctx.beginPath();
-            for (let i = 0; i < n; i++) {
-                const x = paddingLeft + i * xStep;
-                const y = paddingTop + chartH - ((data[i].value - (allMin - yPad)) / (yRange + 2 * yPad)) * chartH;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        // Legend
-        if (this.showLegend && dataSets.length > 1) {
-            let lx = paddingLeft + chartW - dataSets.length * 90;
-            ctx.font = '11px Inter, system-ui, sans-serif';
-            ctx.textAlign = 'left';
-            for (const ds of dataSets) {
-                ctx.fillStyle = ds.color;
-                ctx.fillRect(lx, paddingTop + chartH + 12, 12, 4);
-                ctx.fillStyle = this.labelColor;
-                ctx.fillText(ds.label, lx + 16, paddingTop + chartH + 18);
-                lx += 90;
-            }
+            ctx.fillStyle = ds.color;
+            ctx.fillRect(lx, pTop + cH + 12, 12, 4);
+            ctx.fillStyle = this.labelColor;
+            ctx.fillText(ds.label, lx + 16, pTop + cH + 18);
+            lx += 90;
         }
     }
 

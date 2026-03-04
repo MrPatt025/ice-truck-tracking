@@ -215,9 +215,9 @@ export class ImperativeMapLayer {
             });
         });
 
-        const src = this.map.getSource(this.sourceId) as mapboxgl.GeoJSONSource | undefined;
+        const src = this.map.getSource(this.sourceId);
         if (src) {
-            src.setData({ type: 'FeatureCollection', features });
+            (src as mapboxgl.GeoJSONSource).setData({ type: 'FeatureCollection', features });
         }
     }
 
