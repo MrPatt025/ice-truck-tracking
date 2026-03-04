@@ -26,8 +26,8 @@ import type { TruckTelemetry, HeatmapConfig, Theme } from '../types';
  */
 export class ObjectPool<T> {
     private pool: T[] = [];
-    private factory: () => T;
-    private reset: ((obj: T) => void) | null;
+    private readonly factory: () => T;
+    private readonly reset: ((obj: T) => void) | null;
     private _totalCreated = 0;
     private _totalRecycled = 0;
 
@@ -48,9 +48,10 @@ export class ObjectPool<T> {
 
     /** Acquire an object (from pool or new) */
     acquire(): T {
-        if (this.pool.length > 0) {
+        const pooled = this.pool.pop();
+        if (pooled !== undefined) {
             this._totalRecycled++;
-            return this.pool.pop()!;
+            return pooled;
         }
         this._totalCreated++;
         return this.factory();
@@ -121,12 +122,12 @@ const DEFAULT_HEATMAP_CONFIG: HeatmapConfig = {
     radius: 25,
     intensity: 0.8,
     gradient: {
-        0.0: 'rgba(0, 0, 255, 0)',
+        0: 'rgba(0, 0, 255, 0)',
         0.2: 'rgba(0, 0, 255, 0.3)',
         0.4: 'rgba(0, 255, 255, 0.5)',
         0.6: 'rgba(0, 255, 0, 0.6)',
         0.8: 'rgba(255, 255, 0, 0.8)',
-        1.0: 'rgba(255, 0, 0, 1.0)',
+        1: 'rgba(255, 0, 0, 1.0)',
     },
     opacity: 0.7,
     maxZoom: 18,
@@ -139,17 +140,19 @@ const DEFAULT_HEATMAP_CONFIG: HeatmapConfig = {
  * Uses pre-computed gradient + radial falloff stamp.
  */
 export class HeatmapRenderer {
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
-    private config: HeatmapConfig;
-    private stamp: HTMLCanvasElement;
-    private gradientData: Uint8ClampedArray;
+    private readonly canvas: HTMLCanvasElement;
+    private readonly ctx: CanvasRenderingContext2D;
+    private readonly config: HeatmapConfig;
+    private readonly stamp: HTMLCanvasElement;
+    private readonly gradientData: Uint8ClampedArray;
     private dirty = true;
 
     constructor(config: Partial<HeatmapConfig> = {}) {
         this.config = { ...DEFAULT_HEATMAP_CONFIG, ...config };
         this.canvas = document.createElement('canvas');
-        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true })!;
+        const ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+        if (!ctx) throw new Error('Canvas 2D context not supported');
+        this.ctx = ctx;
 
         // Pre-compute radial stamp
         this.stamp = this.createStamp();
@@ -242,7 +245,8 @@ export class HeatmapRenderer {
         const stamp = document.createElement('canvas');
         stamp.width = d;
         stamp.height = d;
-        const ctx = stamp.getContext('2d')!;
+        const ctx = stamp.getContext('2d');
+        if (!ctx) return stamp;
 
         const gradient = ctx.createRadialGradient(r, r, 0, r, r, r);
         gradient.addColorStop(0, 'rgba(0,0,0,1)');
@@ -257,7 +261,8 @@ export class HeatmapRenderer {
         const canvas = document.createElement('canvas');
         canvas.width = 256;
         canvas.height = 1;
-        const ctx = canvas.getContext('2d')!;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return new Uint8ClampedArray(1024);
 
         const gradient = ctx.createLinearGradient(0, 0, 256, 0);
         for (const [stop, color] of Object.entries(this.config.gradient)) {
@@ -294,15 +299,17 @@ const THEME_ROUTE_COLORS: Record<Theme, string> = {
  * Shows truck paths with a marching dashed-line effect.
  */
 export class RouteRenderer {
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
-    private routes: Map<string, RouteSegment> = new Map();
+    private readonly canvas: HTMLCanvasElement;
+    private readonly ctx: CanvasRenderingContext2D;
+    private readonly routes: Map<string, RouteSegment> = new Map();
     private dashOffset = 0;
     private theme: Theme = 'dark';
 
     constructor() {
         this.canvas = document.createElement('canvas');
-        this.ctx = this.canvas.getContext('2d')!;
+        const ctx = this.canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas 2D context not supported');
+        this.ctx = ctx;
     }
 
     mount(container: HTMLElement): void {

@@ -27,10 +27,10 @@ const MAP_STYLES: Record<string, string> = {
 export class ImperativeMapLayer {
     private map: mapboxgl.Map | null = null;
     private container: HTMLElement | null = null;
-    private sourceId = 'trucks-source';
-    private layerId = 'trucks-layer';
-    private clusterLayerId = 'trucks-cluster';
-    private clusterCountId = 'trucks-cluster-count';
+    private readonly sourceId = 'trucks-source';
+    private readonly layerId = 'trucks-layer';
+    private readonly clusterLayerId = 'trucks-cluster';
+    private readonly clusterCountId = 'trucks-cluster-count';
     private popup: mapboxgl.Popup | null = null;
     private _ready = false;
     private _destroyed = false;
@@ -75,6 +75,7 @@ export class ImperativeMapLayer {
             const props = f.properties;
 
             this.popup?.remove();
+            if (!this.map) return;
             this.popup = new mapboxgl.Popup({ closeOnClick: true, maxWidth: '300px' })
                 .setLngLat(coords)
                 .setHTML(
@@ -86,7 +87,7 @@ export class ImperativeMapLayer {
             Status: <span class="font-semibold">${props?.status}</span>
           </div>`,
                 )
-                .addTo(this.map!);
+                .addTo(this.map);
         });
 
         // Cluster click → zoom in
@@ -97,8 +98,9 @@ export class ImperativeMapLayer {
             });
             if (!features.length) return;
             const clusterId = features[0].properties?.cluster_id;
-            const src = this.map.getSource(this.sourceId) as mapboxgl.GeoJSONSource;
-            src.getClusterExpansionZoom(clusterId, (err, zoom) => {
+            const src = this.map.getSource(this.sourceId) as mapboxgl.GeoJSONSource | undefined;
+            if (!src) return;
+            src.getClusterExpansionZoom(clusterId, (err: unknown, zoom: number | null | undefined) => {
                 if (err || !this.map) return;
                 this.map.easeTo({
                     center: (features[0].geometry as GeoJSON.Point).coordinates as [number, number],
@@ -213,7 +215,7 @@ export class ImperativeMapLayer {
             });
         });
 
-        const src = this.map.getSource(this.sourceId) as mapboxgl.GeoJSONSource;
+        const src = this.map.getSource(this.sourceId) as mapboxgl.GeoJSONSource | undefined;
         if (src) {
             src.setData({ type: 'FeatureCollection', features });
         }

@@ -23,7 +23,7 @@
  *  React only renders: Shell, Panels, Controls, Forms.
  * ================================================================ */
 
-import type { WorkerOutbound, WorkerConfig, AlertLevel } from './types';
+import type { WorkerOutbound, WorkerConfig, AlertLevel, SpatialEntity } from './types';
 import {
     useIoTStore,
     upsertTruck,
@@ -39,7 +39,6 @@ import { PerformanceOverlay } from './perfOverlay';
 import { AdaptiveController } from './adaptive';
 import { PerceptionEngine } from './perception';
 import { SpatialIndex, EntityMap } from './dataViz/spatialIndex';
-import type { SpatialEntity } from './types';
 
 // ─── Craft Layer Imports ───────────────────────────────────────
 import { LightDirector } from './craft/lightSystem';
@@ -208,7 +207,7 @@ export function bootEngine(config?: Partial<WorkerConfig>): void {
 
     // Register craft tick (particle + budget monitoring)
     frameScheduler.register('craft-budget', () => {
-        budgetGovernor?.reportFPS(perfOverlay ? 60 : 60);
+        budgetGovernor?.reportFPS(60);
     });
 
     console.log('[IoT Engine] Craft Layer v5.0 mounted ✓');
@@ -406,6 +405,35 @@ export function getBudgetGovernor(): AnimationBudgetGovernor | null { return bud
 export function getColorIntelligence(): ColorIntelligenceEngine | null { return colorIntelligence; }
 export function getLayoutDensity(): LayoutDensityController | null { return layoutDensity; }
 
+// ─── Worker message handler helpers ────────────────────────────
+function handleTruckUpdate(payload: WorkerOutbound & { type: 'truck-update' }): void {
+    upsertTruck(payload.payload);
+    if (entityMap && spatialIndex) {
+        const t = payload.payload;
+        entityMap.set(t.id, { id: t.id, x: t.lng, y: t.lat, data: t });
+    }
+}
+
+function handleTruckBatch(payload: WorkerOutbound & { type: 'truck-batch' }): void {
+    upsertTruckBatch(payload.payload);
+    if (entityMap && spatialIndex) {
+        const entities: SpatialEntity[] = payload.payload.map((t) => ({
+            id: t.id, x: t.lng, y: t.lat, data: t,
+        }));
+        entityMap.setBatch(entities);
+        if (entityMap.getDirtyIds().size > 0) {
+            spatialIndex.bulkLoad(Array.from(entityMap.values()));
+            entityMap.flushDirty();
+        }
+    }
+}
+
+function computeSystemLoad(m: { criticalAlerts: number; warningAlerts: number }): number {
+    if (m.criticalAlerts > 0) return 0.9;
+    if (m.warningAlerts > 0) return 0.5;
+    return 0.2;
+}
+
 // ─── Worker message handler ────────────────────────────────────
 function handleWorkerMessage(msg: WorkerOutbound): void {
     const store = useIoTStore;
@@ -415,48 +443,19 @@ function handleWorkerMessage(msg: WorkerOutbound): void {
 
     switch (msg.type) {
         case 'truck-update':
-            upsertTruck(msg.payload);
-            // Update spatial index
-            if (entityMap && spatialIndex) {
-                const t = msg.payload;
-                entityMap.set(t.id, {
-                    id: t.id,
-                    x: t.lng,
-                    y: t.lat,
-                    data: t,
-                });
-            }
+            handleTruckUpdate(msg as WorkerOutbound & { type: 'truck-update' });
             break;
 
-        case 'truck-batch': {
-            upsertTruckBatch(msg.payload);
-            // Batch update spatial index
-            if (entityMap && spatialIndex) {
-                const entities: SpatialEntity[] = msg.payload.map((t) => ({
-                    id: t.id,
-                    x: t.lng,
-                    y: t.lat,
-                    data: t,
-                }));
-                entityMap.setBatch(entities);
-                // Rebuild spatial index periodically when dirty
-                if (entityMap.getDirtyIds().size > 0) {
-                    const all = Array.from(entityMap.values());
-                    spatialIndex.bulkLoad(all);
-                    entityMap.flushDirty();
-                }
-            }
+        case 'truck-batch':
+            handleTruckBatch(msg as WorkerOutbound & { type: 'truck-batch' });
             break;
-        }
 
         case 'alert': {
             pushAlert(msg.payload);
             store.getState().incrementUnacknowledgedAlerts();
-            // Update perception engine with alert context
-            const alertLevel = msg.payload.level as AlertLevel;
-            _currentAlertLevel = alertLevel;
+            _currentAlertLevel = msg.payload.level;
             perceptionEngine?.updateContext({
-                alertLevel,
+                alertLevel: _currentAlertLevel,
                 focusedTruckId: msg.payload.truckId || null,
                 systemLoad: 0,
             });
@@ -464,16 +463,12 @@ function handleWorkerMessage(msg: WorkerOutbound): void {
         }
 
         case 'metrics':
-            // This IS a React state update — triggers subscribed panels to re-render
             store.getState().setMetrics(msg.payload);
-            // Update perception with system load context
             if (perceptionEngine) {
-                const m = msg.payload;
-                const load = m.criticalAlerts > 0 ? 0.9 : m.warningAlerts > 0 ? 0.5 : 0.2;
                 perceptionEngine.updateContext({
                     alertLevel: _currentAlertLevel,
                     focusedTruckId: null,
-                    systemLoad: load,
+                    systemLoad: computeSystemLoad(msg.payload),
                 });
             }
             break;

@@ -119,11 +119,12 @@ function startSimulation(): void {
         if (Math.random() < 0.05) {
             const truckIds = Array.from(trucks.keys());
             const truckId = truckIds[Math.floor(Math.random() * truckIds.length)];
-            const truck = trucks.get(truckId)!;
+            const truck = trucks.get(truckId);
+            if (!truck) return;
             const alert: TelemetryAlert = {
                 id: `A${++alertSeq}`,
                 truckId,
-                level: Math.random() < 0.1 ? 'critical' : Math.random() < 0.3 ? 'warning' : 'info',
+                level: randomAlertLevel(),
                 message: Math.random() < 0.5
                     ? `Temperature deviation: ${truck.temperature.toFixed(1)}°C`
                     : `Speed alert: ${truck.speed.toFixed(0)} km/h`,
@@ -330,11 +331,19 @@ function flushBatch(): void {
 
 // ─── postMessage helper ────────────────────────────────────────
 function post(msg: WorkerOutbound): void {
-    (self as unknown as Worker).postMessage(msg);
+    (globalThis as unknown as Worker).postMessage(msg);
+}
+
+// ─── Alert level helper ────────────────────────────────────────
+function randomAlertLevel(): 'critical' | 'warning' | 'info' {
+    const r = Math.random();
+    if (r < 0.1) return 'critical';
+    if (r < 0.3) return 'warning';
+    return 'info';
 }
 
 // ─── Incoming messages from main thread ────────────────────────
-self.onmessage = (ev: MessageEvent<WorkerInbound>) => {
+globalThis.onmessage = (ev: MessageEvent<WorkerInbound>) => {
     const msg = ev.data;
 
     switch (msg.type) {

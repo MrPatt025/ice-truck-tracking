@@ -8,7 +8,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 // ── Request Helpers ────────────────────────────────────────
 async function getAuthToken(): Promise<string | null> {
   if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(/access_token=([^;]+)/);
+  const match = /access_token=([^;]+)/.exec(document.cookie);
   return match ? match[1] : null;
 }
 
@@ -19,7 +19,7 @@ async function apiRequest<T>(
   const token = await getAuthToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...((options.headers as Record<string, string>) || {}),
+    ...(options.headers as Record<string, string>),
   };
 
   if (token) {
@@ -48,6 +48,11 @@ export class ApiError extends Error {
   }
 }
 
+/** Build endpoint with optional query string */
+function withQuery(path: string, qs: string): string {
+  return qs ? `${path}?${qs}` : path;
+}
+
 // ── Fleet API ──────────────────────────────────────────────
 export const fleetApi = {
   getTrucks: (params?: { status?: string; search?: string; page?: number; limit?: number }) => {
@@ -57,7 +62,7 @@ export const fleetApi = {
     if (params?.page) searchParams.set('page', String(params.page));
     if (params?.limit) searchParams.set('limit', String(params.limit));
     const qs = searchParams.toString();
-    return apiRequest<{ trucks: TruckResponse[]; total: number; page: number }>(`/trucks${qs ? `?${qs}` : ''}`);
+    return apiRequest<{ trucks: TruckResponse[]; total: number; page: number }>(withQuery('/trucks', qs));
   },
 
   getTruck: (id: string) =>
@@ -75,7 +80,7 @@ export const fleetApi = {
     if (params?.to) searchParams.set('to', params.to);
     if (params?.interval) searchParams.set('interval', params.interval);
     const qs = searchParams.toString();
-    return apiRequest<{ data: TelemetryResponse[] }>(`/trucks/${id}/telemetry${qs ? `?${qs}` : ''}`);
+    return apiRequest<{ data: TelemetryResponse[] }>(withQuery(`/trucks/${id}/telemetry`, qs));
   },
 };
 
@@ -88,7 +93,7 @@ export const alertsApi = {
     if (params?.page) searchParams.set('page', String(params.page));
     if (params?.limit) searchParams.set('limit', String(params.limit));
     const qs = searchParams.toString();
-    return apiRequest<{ alerts: AlertResponse[]; total: number }>(`/alerts${qs ? `?${qs}` : ''}`);
+    return apiRequest<{ alerts: AlertResponse[]; total: number }>(withQuery('/alerts', qs));
   },
 
   acknowledgeAlert: (id: string) =>
@@ -121,7 +126,7 @@ export const reportsApi = {
     if (params?.from) searchParams.set('from', params.from);
     if (params?.to) searchParams.set('to', params.to);
     const qs = searchParams.toString();
-    return apiRequest<FleetSummaryResponse>(`/reports/fleet-summary${qs ? `?${qs}` : ''}`);
+    return apiRequest<FleetSummaryResponse>(withQuery('/reports/fleet-summary', qs));
   },
 
   getTemperatureReport: (params?: { from?: string; to?: string; truckId?: string }) => {
@@ -130,7 +135,7 @@ export const reportsApi = {
     if (params?.to) searchParams.set('to', params.to);
     if (params?.truckId) searchParams.set('truckId', params.truckId);
     const qs = searchParams.toString();
-    return apiRequest<{ data: TemperatureReportRow[] }>(`/reports/temperature${qs ? `?${qs}` : ''}`);
+    return apiRequest<{ data: TemperatureReportRow[] }>(withQuery('/reports/temperature', qs));
   },
 
   getDeliveryReport: (params?: { from?: string; to?: string }) => {
@@ -138,7 +143,7 @@ export const reportsApi = {
     if (params?.from) searchParams.set('from', params.from);
     if (params?.to) searchParams.set('to', params.to);
     const qs = searchParams.toString();
-    return apiRequest<{ data: DeliveryReportRow[] }>(`/reports/deliveries${qs ? `?${qs}` : ''}`);
+    return apiRequest<{ data: DeliveryReportRow[] }>(withQuery('/reports/deliveries', qs));
   },
 };
 
@@ -167,11 +172,16 @@ export const settingsApi = {
 };
 
 // ── Response Types ─────────────────────────────────────────
+export type SeverityLevel = 'critical' | 'warning' | 'info';
+export type AlertStatus = 'active' | 'acknowledged' | 'resolved';
+export type RuleCondition = 'gt' | 'lt' | 'eq' | 'gte' | 'lte' | 'between';
+export type TruckStatus = 'active' | 'idle' | 'maintenance' | 'offline' | 'alert';
+
 export interface TruckResponse {
   id: string;
   name: string;
   plateNumber: string;
-  status: 'active' | 'idle' | 'maintenance' | 'offline' | 'alert';
+  status: TruckStatus;
   driver: string;
   temperature: number;
   humidity: number;
@@ -203,9 +213,9 @@ export interface AlertResponse {
   truckId: string;
   truckName: string;
   type: string;
-  severity: 'critical' | 'warning' | 'info';
+  severity: SeverityLevel;
   message: string;
-  status: 'active' | 'acknowledged' | 'resolved';
+  status: AlertStatus;
   createdAt: string;
   acknowledgedAt?: string;
   resolvedAt?: string;
@@ -215,10 +225,10 @@ export interface AlertRuleResponse {
   id: string;
   name: string;
   metric: string;
-  condition: 'gt' | 'lt' | 'eq' | 'gte' | 'lte' | 'between';
+  condition: RuleCondition;
   threshold: number;
   thresholdMax?: number;
-  severity: 'critical' | 'warning' | 'info';
+  severity: SeverityLevel;
   enabled: boolean;
   notifyEmail: boolean;
   notifySms: boolean;
@@ -228,10 +238,10 @@ export interface AlertRuleResponse {
 export interface CreateAlertRuleRequest {
   name: string;
   metric: string;
-  condition: 'gt' | 'lt' | 'eq' | 'gte' | 'lte' | 'between';
+  condition: RuleCondition;
   threshold: number;
   thresholdMax?: number;
-  severity: 'critical' | 'warning' | 'info';
+  severity: SeverityLevel;
   notifyEmail?: boolean;
   notifySms?: boolean;
 }

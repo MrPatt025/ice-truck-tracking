@@ -111,8 +111,99 @@ const CHART_CONFIGS = {
   },
 };
 
+/* ============== UI Helpers (ternary extractors) ============ */
+const INTENT_CLS: Record<string, string> = {
+  ok: "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/50 shadow-[0_0_24px_-6px_rgba(16,185,129,.7)]",
+  warn: "bg-amber-500/20 text-amber-200 ring-1 ring-amber-400/50 shadow-[0_0_24px_-6px_rgba(245,158,11,.7)]",
+  error: "bg-rose-500/20 text-rose-200 ring-1 ring-rose-400/50 shadow-[0_0_24px_-6px_rgba(244,63,94,.7)]",
+  info: "bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-400/50 shadow-[0_0_24px_-6px_rgba(6,182,212,.7)]",
+  neutral: "bg-white/10 text-slate-200 ring-1 ring-white/20",
+};
+
+function resolveApiHealthIntent(apiHealthy: boolean | null): "ok" | "error" | "neutral" {
+  if (apiHealthy === true) return "ok";
+  if (apiHealthy === false) return "error";
+  return "neutral";
+}
+
+function resolveApiHealthIcon(apiHealthy: boolean | null) {
+  if (apiHealthy === true) return <Wifi className="h-3 w-3" />;
+  if (apiHealthy === false) return <WifiOff className="h-3 w-3" />;
+  return <Server className="h-3 w-3 animate-pulse" />;
+}
+
+function resolveApiHealthLabel(apiHealthy: boolean | null): string {
+  if (apiHealthy === true) return "API Online";
+  if (apiHealthy === false) return "API Offline";
+  return "API Checking";
+}
+
+function resolveConnectionIntent(status: string): "ok" | "warn" | "info" {
+  if (status === "connected") return "ok";
+  if (status === "reconnecting") return "warn";
+  return "info";
+}
+
+function resolveConnectionDot(status: string): string {
+  if (status === "connected") return "bg-emerald-400 animate-pulse";
+  if (status === "reconnecting") return "bg-amber-400 animate-pulse";
+  return "bg-slate-400";
+}
+
+function resolveConnectionLabel(status: string): string {
+  if (status === "connected") return "Live Data";
+  if (status === "reconnecting") return "Reconnecting...";
+  return "Simulation Mode";
+}
+
+function resolveStatusText(paused: boolean, lastUpdate: Date | null): string {
+  if (paused) return "Simulation paused";
+  if (lastUpdate) return `Last updated ${lastUpdate.toLocaleTimeString()}`;
+  return "All systems operational";
+}
+
+function resolveTrendColor(trend: Trend): string {
+  if (trend === "up") return "text-emerald-400";
+  if (trend === "down") return "text-rose-400";
+  return "text-slate-400";
+}
+
+function resolveTrendIcon(trend: Trend) {
+  if (trend === "up") return <ArrowUpRight className="h-4 w-4" />;
+  if (trend === "down") return <ArrowDownRight className="h-4 w-4" />;
+  return <TrendingUp className="h-4 w-4" />;
+}
+
+function resolveAlertBg(level: string): string {
+  if (level === "critical") return "bg-red-500/10 ring-red-500/30";
+  if (level === "warning") return "bg-amber-500/10 ring-amber-500/30";
+  return "bg-cyan-500/10 ring-cyan-500/30";
+}
+
+function resolveAlertIconColor(level: string): string {
+  if (level === "critical") return "text-red-400";
+  if (level === "warning") return "text-amber-400";
+  return "text-cyan-400";
+}
+
+const FULLSCREEN_CONFIGS: Record<string, typeof CHART_CONFIGS[keyof typeof CHART_CONFIGS]> = {
+  revenue: CHART_CONFIGS.revenue,
+  fleet: CHART_CONFIGS.fleet,
+  temp: CHART_CONFIGS.temperature,
+  alerts: CHART_CONFIGS.alerts,
+  performance: CHART_CONFIGS.fuel,
+};
+
+const FULLSCREEN_TITLES: Record<string, string> = {
+  revenue: "Revenue Trend Analysis",
+  fleet: "Fleet Activity & Efficiency",
+  temp: "Cargo Temperature Distribution",
+  alerts: "Alert Timeline & History",
+  performance: "Performance Metrics",
+};
+
 /* ============== UI Components (React — lightweight) ============ */
-function PingLayer({ count = 12 }: { count?: number }) {
+function PingLayer({ count = 12 }: Readonly<{ count?: number }>) {
   const [dots, setDots] = React.useState<{ left: string; top: string; delay: number }[]>([]);
   React.useEffect(() => {
     setDots(Array.from({ length: count }, (_, i) => ({
@@ -124,8 +215,8 @@ function PingLayer({ count = 12 }: { count?: number }) {
   if (!dots.length) return null;
   return (
     <div className="absolute inset-0 opacity-60">
-      {dots.map((d, i) => (
-        <div key={i} className="absolute animate-ping"
+      {dots.map((d) => (
+        <div key={`${d.left}-${d.top}`} className="absolute animate-ping"
           style={{ left: d.left, top: d.top, animationDelay: `${d.delay}s`, animationDuration: "3s" }}
         />
       ))}
@@ -133,67 +224,67 @@ function PingLayer({ count = 12 }: { count?: number }) {
   );
 }
 
-const Pill = memo(({ children, intent = "neutral", onClick }: {
+const Pill = memo(({ children, intent = "neutral", onClick }: Readonly<{
   children: React.ReactNode;
   intent?: "neutral" | "ok" | "warn" | "info" | "error";
   onClick?: () => void;
-}) => {
-  const cls = intent === "ok"
-    ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/50 shadow-[0_0_24px_-6px_rgba(16,185,129,.7)]"
-    : intent === "warn"
-    ? "bg-amber-500/20 text-amber-200 ring-1 ring-amber-400/50 shadow-[0_0_24px_-6px_rgba(245,158,11,.7)]"
-    : intent === "error"
-    ? "bg-rose-500/20 text-rose-200 ring-1 ring-rose-400/50 shadow-[0_0_24px_-6px_rgba(244,63,94,.7)]"
-    : intent === "info"
-    ? "bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-400/50 shadow-[0_0_24px_-6px_rgba(6,182,212,.7)]"
-    : "bg-white/10 text-slate-200 ring-1 ring-white/20";
-  return (
-    <span
-      className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium backdrop-blur-xl transition-all ${cls} ${onClick ? "cursor-pointer hover:scale-105" : ""}`}
-      onClick={onClick}
-    >
-      {children}
-    </span>
-  );
+}>) => {
+  const cls = INTENT_CLS[intent] ?? INTENT_CLS.neutral;
+  const base = `inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium backdrop-blur-xl transition-all ${cls}`;
+  if (onClick) {
+    return (
+      <button type="button" className={`${base} cursor-pointer hover:scale-105 border-0 bg-transparent`} onClick={onClick}>
+        {children}
+      </button>
+    );
+  }
+  return <span className={base}>{children}</span>;
 });
 
-const GlassCard = memo(({ children, accent = "from-violet-400/30 via-purple-400/20 to-cyan-400/30", className = "", onClick }: {
+const GlassCard = memo(({ children, accent = "from-violet-400/30 via-purple-400/20 to-cyan-400/30", className = "", onClick }: Readonly<{
   children: React.ReactNode;
   accent?: string;
   className?: string;
   onClick?: () => void;
-}) => (
-  <div
-    className={`group relative rounded-3xl p-[1.5px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02] ${onClick ? "cursor-pointer" : ""}`}
-    onClick={onClick}
-  >
-    <div className={`relative rounded-3xl bg-slate-900/70 backdrop-blur-2xl ring-1 ring-white/10 ${className}`}>
-      <div className="pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.2),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.18),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]" />
-      <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.1),transparent)] bg-[length:200%_100%] animate-shimmer" />
-      <div className="relative">{children}</div>
+}>) => {
+  const inner = (
+    <div className={`group relative rounded-3xl p-[1.5px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02]`}>
+      <div className={`relative rounded-3xl bg-slate-900/70 backdrop-blur-2xl ring-1 ring-white/10 ${className}`}>
+        <div className="pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.2),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.18),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]" />
+        <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.1),transparent)] bg-[length:200%_100%] animate-shimmer" />
+        <div className="relative">{children}</div>
+      </div>
     </div>
-  </div>
-));
+  );
+  if (onClick) {
+    return <button type="button" className="cursor-pointer text-left w-full border-0 bg-transparent p-0" onClick={onClick}>{inner}</button>;
+  }
+  return inner;
+});
 
-const Tilt = memo(({ children }: { children: React.ReactNode }) => {
+const Tilt = memo(({ children }: Readonly<{ children: React.ReactNode }>) => {
   const ref = useRef<HTMLDivElement>(null);
-  const handleMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    el.style.transform = `perspective(1200px) rotateX(${(0.5 - y) * 8}deg) rotateY(${(x - 0.5) * 8}deg) translateZ(10px)`;
-  }, []);
-  const handleLeave = useCallback(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.style.transform = `perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px)`;
+    const onMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      el.style.transform = `perspective(1200px) rotateX(${(0.5 - y) * 8}deg) rotateY(${(x - 0.5) * 8}deg) translateZ(10px)`;
+    };
+    const onLeave = () => {
+      el.style.transform = `perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px)`;
+    };
+    el.addEventListener('mousemove', onMove);
+    el.addEventListener('mouseleave', onLeave);
+    return () => {
+      el.removeEventListener('mousemove', onMove);
+      el.removeEventListener('mouseleave', onLeave);
+    };
   }, []);
   return (
-    <div ref={ref} onMouseMove={handleMove} onMouseLeave={handleLeave}
-      className="transition-transform duration-300 ease-out will-change-transform"
-    >
+    <div ref={ref} className="transition-transform duration-300 ease-out will-change-transform">
       {children}
     </div>
   );
@@ -412,8 +503,8 @@ export default function Dashboard() {
       const onKey = (e: KeyboardEvent) => {
         if (e.key === "Escape") setFullscreen(null);
       };
-      window.addEventListener("keydown", onKey);
-      return () => window.removeEventListener("keydown", onKey);
+      globalThis.addEventListener("keydown", onKey);
+      return () => globalThis.removeEventListener("keydown", onKey);
     }
   }, [fullscreen]);
 
@@ -427,8 +518,8 @@ export default function Dashboard() {
         }
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    globalThis.addEventListener("keydown", onKey);
+    return () => globalThis.removeEventListener("keydown", onKey);
   }, [toggleGrid, togglePause]);
 
   // ── Periodic lastUpdate bump ─────────────────────────────────
@@ -599,10 +690,10 @@ export default function Dashboard() {
               </div>
 
               {/* API Status */}
-              <Pill intent={apiHealthy === true ? "ok" : apiHealthy === false ? "error" : "neutral"}>
-                {apiHealthy === true ? <Wifi className="h-3 w-3" /> : apiHealthy === false ? <WifiOff className="h-3 w-3" /> : <Server className="h-3 w-3 animate-pulse" />}
+              <Pill intent={resolveApiHealthIntent(apiHealthy)}>
+                {resolveApiHealthIcon(apiHealthy)}
                 <span className="hidden sm:inline">
-                  {apiHealthy === true ? "API Online" : apiHealthy === false ? "API Offline" : "API Checking"}
+                  {resolveApiHealthLabel(apiHealthy)}
                 </span>
               </Pill>
             </div>
@@ -667,14 +758,14 @@ export default function Dashboard() {
       <main className="mx-auto max-w-[120rem] space-y-6 px-4 py-6 sm:px-6">
         {/* Status pills */}
         <div className="flex flex-wrap items-center gap-3">
-          <Pill intent={connectionStatus === "connected" ? "ok" : connectionStatus === "reconnecting" ? "warn" : "info"}>
-            <span className={`h-2 w-2 rounded-full ${connectionStatus === "connected" ? "bg-emerald-400 animate-pulse" : connectionStatus === "reconnecting" ? "bg-amber-400 animate-pulse" : "bg-slate-400"}`} />
-            {connectionStatus === "connected" ? "Live Data" : connectionStatus === "reconnecting" ? "Reconnecting..." : "Simulation Mode"}
+          <Pill intent={resolveConnectionIntent(connectionStatus)}>
+            <span className={`h-2 w-2 rounded-full ${resolveConnectionDot(connectionStatus)}`} />
+            {resolveConnectionLabel(connectionStatus)}
           </Pill>
           <Pill intent="neutral">
             <Clock className="h-3 w-3" />
             <ClientOnlyText>
-              {paused ? "Simulation paused" : lastUpdate ? `Last updated ${lastUpdate.toLocaleTimeString()}` : "All systems operational"}
+              {resolveStatusText(paused, lastUpdate)}
             </ClientOnlyText>
           </Pill>
           {!paused && (
@@ -699,10 +790,8 @@ export default function Dashboard() {
                   </div>
                   <p className="text-3xl font-black tracking-tight">{m.value}</p>
                   <div className="mt-2 flex items-center gap-2">
-                    <span className={`flex items-center gap-1 text-sm font-semibold ${
-                      m.trend === "up" ? "text-emerald-400" : m.trend === "down" ? "text-rose-400" : "text-slate-400"
-                    }`}>
-                      {m.trend === "up" ? <ArrowUpRight className="h-4 w-4" /> : m.trend === "down" ? <ArrowDownRight className="h-4 w-4" /> : <TrendingUp className="h-4 w-4" />}
+                    <span className={`flex items-center gap-1 text-sm font-semibold ${resolveTrendColor(m.trend)}`}>
+                      {resolveTrendIcon(m.trend)}
                       {m.change}
                     </span>
                     <span className="text-xs text-slate-500">{m.detail}</span>
@@ -827,9 +916,9 @@ export default function Dashboard() {
                   { name: "Cache Layer", status: true, latency: "3ms", uptime: "99.95%" },
                   { name: "GPS Tracking", status: true, latency: "156ms", uptime: "98.76%" },
                   { name: "Temperature Sensors", status: true, latency: "45ms", uptime: "99.87%" },
-                ].map((service, i) => (
+                ].map((service) => (
                   <div
-                    key={i}
+                    key={service.name}
                     className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all group"
                   >
                     <div className="flex items-center gap-3">
@@ -963,25 +1052,13 @@ export default function Dashboard() {
               (alertList as TelemetryAlert[]).map((alert) => (
                 <div
                   key={alert.id}
-                  className={`p-4 rounded-xl ring-1 transition-all ${
-                    alert.level === "critical"
-                      ? "bg-red-500/10 ring-red-500/30"
-                      : alert.level === "warning"
-                        ? "bg-amber-500/10 ring-amber-500/30"
-                        : "bg-cyan-500/10 ring-cyan-500/30"
-                  } ${alert.acknowledged ? "opacity-50" : ""}`}
+                  className={`p-4 rounded-xl ring-1 transition-all ${resolveAlertBg(alert.level)} ${alert.acknowledged ? "opacity-50" : ""}`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <AlertTriangle
-                          className={`h-4 w-4 ${
-                            alert.level === "critical"
-                              ? "text-red-400"
-                              : alert.level === "warning"
-                                ? "text-amber-400"
-                                : "text-cyan-400"
-                          }`}
+                          className={`h-4 w-4 ${resolveAlertIconColor(alert.level)}`}
                         />
                         <span className="text-xs uppercase tracking-wider font-semibold">
                           {alert.level}
@@ -1019,11 +1096,7 @@ export default function Dashboard() {
           <div className="absolute inset-4 lg:inset-10 rounded-3xl ring-1 ring-white/20 bg-slate-900/80 backdrop-blur-xl p-4 lg:p-8 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl lg:text-2xl font-bold">
-                {fullscreen === "revenue" && "Revenue Trend Analysis"}
-                {fullscreen === "fleet" && "Fleet Activity & Efficiency"}
-                {fullscreen === "temp" && "Cargo Temperature Distribution"}
-                {fullscreen === "alerts" && "Alert Timeline & History"}
-                {fullscreen === "performance" && "Performance Metrics"}
+                {FULLSCREEN_TITLES[fullscreen]}
               </h3>
               <div className="flex items-center gap-3">
                 <button
@@ -1046,13 +1119,7 @@ export default function Dashboard() {
               {/* Fullscreen charts rendered imperatively */}
               <CanvasChart
                 id={`fullscreen-${fullscreen}`}
-                config={
-                  fullscreen === "revenue" ? CHART_CONFIGS.revenue
-                  : fullscreen === "fleet" ? CHART_CONFIGS.fleet
-                  : fullscreen === "temp" ? CHART_CONFIGS.temperature
-                  : fullscreen === "alerts" ? CHART_CONFIGS.alerts
-                  : CHART_CONFIGS.fuel
-                }
+                config={FULLSCREEN_CONFIGS[fullscreen] ?? CHART_CONFIGS.fuel}
                 className="h-full"
               />
             </div>

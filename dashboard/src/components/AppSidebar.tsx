@@ -29,27 +29,31 @@ const navItems: NavItem[] = [
   { label: 'Admin', href: '/admin', icon: Shield, permission: 'users:view' },
 ];
 
-export default function AppSidebar({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const pathname = usePathname();
-  const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
+export default function AppSidebar({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const pathname = usePathname()
+  const user = useAuthStore(s => s.user)
+  const logout = useAuthStore(s => s.logout)
 
-  const filteredNav = navItems.filter(item => hasPermission(user?.role, item.permission));
+  const filteredNav = navItems.filter(item =>
+    hasPermission(user?.role, item.permission)
+  )
 
   const isActive = (href: string) => {
-    if (href === '/dashboard') return pathname === '/dashboard';
-    return pathname.startsWith(href);
-  };
+    if (href === '/dashboard') return pathname === '/dashboard'
+    return pathname.startsWith(href)
+  }
 
   const handleLogout = () => {
-    logout();
-    window.location.href = '/login';
-  };
+    logout()
+    globalThis.location.href = '/login'
+  }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className='flex h-screen bg-background overflow-hidden'>
       {/* Mobile overlay */}
       <AnimatePresence>
         {mobileOpen && (
@@ -57,7 +61,7 @@ export default function AppSidebar({ children }: { children: React.ReactNode }) 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            className='fixed inset-0 bg-black/50 z-40 lg:hidden'
             onClick={() => setMobileOpen(false)}
           />
         )}
@@ -72,15 +76,15 @@ export default function AppSidebar({ children }: { children: React.ReactNode }) 
         )}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-4 h-16 border-b border-border shrink-0">
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10">
-            <Snowflake className="w-5 h-5 text-primary" />
+        <div className='flex items-center gap-3 px-4 h-16 border-b border-border shrink-0'>
+          <div className='flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10'>
+            <Snowflake className='w-5 h-5 text-primary' />
           </div>
           {!collapsed && (
             <motion.span
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              className="font-bold text-lg whitespace-nowrap"
+              className='font-bold text-lg whitespace-nowrap'
             >
               Ice Truck
             </motion.span>
@@ -88,9 +92,9 @@ export default function AppSidebar({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-          {filteredNav.map((item) => {
-            const active = isActive(item.href);
+        <nav className='flex-1 overflow-y-auto py-4 px-2 space-y-1'>
+          {filteredNav.map(item => {
+            const active = isActive(item.href)
             return (
               <Link
                 key={item.href}
@@ -106,53 +110,60 @@ export default function AppSidebar({ children }: { children: React.ReactNode }) 
               >
                 {active && (
                   <motion.div
-                    layoutId="sidebar-active"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"
+                    layoutId='sidebar-active'
+                    className='absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full'
                     transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   />
                 )}
-                <item.icon className="w-5 h-5 shrink-0" />
+                <item.icon className='w-5 h-5 shrink-0' />
                 {!collapsed && <span>{item.label}</span>}
-                {!collapsed && item.badge && item.badge > 0 && (
-                  <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-bold px-2 py-0.5 rounded-full">
+                {!collapsed && !!item.badge && item.badge > 0 && (
+                  <span className='ml-auto bg-destructive text-destructive-foreground text-xs font-bold px-2 py-0.5 rounded-full'>
                     {item.badge}
                   </span>
                 )}
               </Link>
-            );
+            )
           })}
         </nav>
 
         {/* User section */}
-        <div className="border-t border-border p-3 shrink-0">
+        <div className='border-t border-border p-3 shrink-0'>
           {user && (
-            <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold shrink-0">
+            <div
+              className={cn(
+                'flex items-center gap-3',
+                collapsed && 'justify-center'
+              )}
+            >
+              <div className='w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold shrink-0'>
                 {user.name.charAt(0).toUpperCase()}
               </div>
               {!collapsed && (
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{user.name}</p>
-                  <p className="text-xs text-muted-foreground truncate capitalize">{user.role}</p>
+                <div className='flex-1 min-w-0'>
+                  <p className='text-sm font-medium truncate'>{user.name}</p>
+                  <p className='text-xs text-muted-foreground truncate capitalize'>
+                    {user.role}
+                  </p>
                 </div>
               )}
               {!collapsed && (
                 <button
                   onClick={handleLogout}
-                  className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                  title="Sign out"
+                  className='p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors'
+                  title='Sign out'
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className='w-4 h-4' />
                 </button>
               )}
             </div>
           )}
           {!user && !collapsed && (
             <Link
-              href="/login"
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              href='/login'
+              className='flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground'
             >
-              <User className="w-4 h-4" />
+              <User className='w-4 h-4' />
               <span>Sign In</span>
             </Link>
           )}
@@ -161,33 +172,39 @@ export default function AppSidebar({ children }: { children: React.ReactNode }) 
         {/* Collapse toggle (desktop) */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="hidden lg:flex absolute -right-3 top-20 w-6 h-6 rounded-full border border-border bg-background items-center justify-center text-muted-foreground hover:text-foreground shadow-sm transition-colors"
+          className='hidden lg:flex absolute -right-3 top-20 w-6 h-6 rounded-full border border-border bg-background items-center justify-center text-muted-foreground hover:text-foreground shadow-sm transition-colors'
         >
-          {collapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+          {collapsed ? (
+            <ChevronRight className='w-3 h-3' />
+          ) : (
+            <ChevronLeft className='w-3 h-3' />
+          )}
         </button>
       </aside>
 
       {/* Main content area */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <main className='flex-1 flex flex-col min-w-0 overflow-hidden'>
         {/* Top bar (mobile) */}
-        <div className="lg:hidden flex items-center gap-2 h-14 px-4 border-b border-border bg-card shrink-0">
+        <div className='lg:hidden flex items-center gap-2 h-14 px-4 border-b border-border bg-card shrink-0'>
           <button
             onClick={() => setMobileOpen(true)}
-            className="p-2 rounded-md hover:bg-muted"
+            className='p-2 rounded-md hover:bg-muted'
           >
-            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileOpen ? (
+              <X className='w-5 h-5' />
+            ) : (
+              <Menu className='w-5 h-5' />
+            )}
           </button>
-          <div className="flex items-center gap-2">
-            <Snowflake className="w-5 h-5 text-primary" />
-            <span className="font-bold">Ice Truck</span>
+          <div className='flex items-center gap-2'>
+            <Snowflake className='w-5 h-5 text-primary' />
+            <span className='font-bold'>Ice Truck</span>
           </div>
         </div>
 
         {/* Page content */}
-        <div className="flex-1 overflow-y-auto">
-          {children}
-        </div>
+        <div className='flex-1 overflow-y-auto'>{children}</div>
       </main>
     </div>
-  );
+  )
 }

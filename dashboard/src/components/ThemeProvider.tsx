@@ -30,7 +30,7 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
 )
 
 const getSystemTheme = (): 'light' | 'dark' => {
-  if (typeof globalThis.window === 'undefined') return 'light'
+  if (globalThis.window === undefined) return 'light'
   if (globalThis.window.matchMedia('(prefers-color-scheme: dark)').matches)
     return 'dark'
   return 'light'
@@ -40,15 +40,15 @@ export function ThemeProvider({
   children,
   defaultTheme = 'system',
   storageKey = 'ice-truck-theme',
-}: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>(defaultTheme)
+}: Readonly<ThemeProviderProps>) {
+  const [theme, setTheme] = useState<Theme>(defaultTheme)
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light')
 
   // Hydrate from localStorage
   useEffect(() => {
     const stored = localStorage.getItem(storageKey)
     if (stored && ['light', 'dark', 'system'].includes(stored)) {
-      setThemeState(stored as Theme)
+      setTheme(stored as Theme)
     }
   }, [storageKey])
 
@@ -74,21 +74,21 @@ export function ThemeProvider({
     return () => mq.removeEventListener('change', handler)
   }, [theme])
 
-  const setTheme = useCallback(
+  const persistTheme = useCallback(
     (t: Theme) => {
-      setThemeState(t)
+      setTheme(t)
       localStorage.setItem(storageKey, t)
     },
-    [storageKey]
+    [storageKey, setTheme]
   )
 
   const toggleTheme = useCallback(() => {
-    setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
-  }, [resolvedTheme, setTheme])
+    persistTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
+  }, [resolvedTheme, persistTheme])
 
   const contextValue = useMemo(
-    () => ({ theme, resolvedTheme, setTheme, toggleTheme }),
-    [theme, resolvedTheme, setTheme, toggleTheme]
+    () => ({ theme, resolvedTheme, setTheme: persistTheme, toggleTheme }),
+    [theme, resolvedTheme, persistTheme, toggleTheme]
   )
 
   return (

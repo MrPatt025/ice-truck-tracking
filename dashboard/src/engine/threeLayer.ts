@@ -47,7 +47,7 @@ const MAX_INSTANCES = 2000;
 export class ImperativeThreeLayer {
     // ─── GPU Engine Integration ────────────────────────────────
     private sceneCtrl: SceneController | null = null;
-    private adaptiveDPR: AdaptiveDPR;
+    private readonly adaptiveDPR: AdaptiveDPR;
 
     // ─── Core Three.js (delegated to sceneCtrl when available) ─
     private renderer: THREE.WebGLRenderer | null = null;
@@ -59,7 +59,7 @@ export class ImperativeThreeLayer {
 
     // ─── Instanced mesh for truck markers ──────────────────────
     private truckMesh: THREE.InstancedMesh | null = null;
-    private dummy = new THREE.Object3D();
+    private readonly dummy = new THREE.Object3D();
     private colorAttr: THREE.InstancedBufferAttribute | null = null;
     private truckPositions = new Float32Array(MAX_INSTANCES * 3);
 
@@ -70,8 +70,8 @@ export class ImperativeThreeLayer {
     private elapsed = 0;
 
     // ─── Ambient geometry ──────────────────────────────────────
-    private ambientMeshes: THREE.Mesh[] = [];
-    private lights: THREE.PointLight[] = [];
+    private readonly ambientMeshes: THREE.Mesh[] = [];
+    private readonly lights: THREE.PointLight[] = [];
 
     // ─── Particle system ───────────────────────────────────────
     private particles: THREE.Points | null = null;
@@ -89,7 +89,7 @@ export class ImperativeThreeLayer {
     private theme: Theme = 'dark';
     private lastGPUTime = 0;
     private fps = 60;
-    private _dataVersion = 0;
+    private readonly _dataVersion = 0;
 
     constructor() {
         this.adaptiveDPR = new AdaptiveDPR();
@@ -178,11 +178,11 @@ export class ImperativeThreeLayer {
 
         // ── Mouse parallax ──
         this.onMouseMove = (e: MouseEvent) => {
-            this.mx = (e.clientX / window.innerWidth) * 2 - 1;
-            this.my = -(e.clientY / window.innerHeight) * 2 + 1;
+            this.mx = (e.clientX / globalThis.innerWidth) * 2 - 1;
+            this.my = -(e.clientY / globalThis.innerHeight) * 2 + 1;
             this.sceneCtrl?.markDirty('camera');
         };
-        window.addEventListener('mousemove', this.onMouseMove, { passive: true });
+        globalThis.addEventListener('mousemove', this.onMouseMove, { passive: true });
 
         // ── Resize handler ──
         this.onResize = () => {
@@ -194,7 +194,7 @@ export class ImperativeThreeLayer {
             this.renderer.setSize(w, h);
             this.sceneCtrl?.markDirty('resize');
         };
-        window.addEventListener('resize', this.onResize);
+        globalThis.addEventListener('resize', this.onResize);
 
         // Register animations with scene controller
         this.sceneCtrl.registerAnimation('ambient', () => {
@@ -331,11 +331,17 @@ export class ImperativeThreeLayer {
     update(dt: number): void {
         if (!this._ready || this._destroyed || !this.scene || !this.camera || !this.renderer) return;
 
+        const scene = this.scene;
+        const camera = this.camera;
+        const renderer = this.renderer;
+        const truckMesh = this.truckMesh;
+        const colorAttr = this.colorAttr;
+        if (!truckMesh || !colorAttr) return;
+
         const gpuStart = performance.now();
         const t = performance.now() * 0.001;
         this.elapsed += dt * 0.001;
 
-        // ── Update shader uniforms ──
         updateShaderUniforms(this.shaderMaterials, this.elapsed);
 
         // ── Update instanced truck mesh with frustum culling ──
@@ -348,69 +354,91 @@ export class ImperativeThreeLayer {
         trucks.forEach((truck) => {
             if (idx >= MAX_INSTANCES) return;
 
-            // Map lat/lng to 3D space
             const x = (truck.lng - 100.5) * 80;
             const y = (truck.lat - 13.75) * 80;
             const z = Math.sin(t + idx * 0.1) * 0.5;
 
-            // Store position for frustum culling
             this.truckPositions[idx * 3] = x;
             this.truckPositions[idx * 3 + 1] = y;
             this.truckPositions[idx * 3 + 2] = z;
 
-            // Frustum culling — skip if outside camera view
             if (this.sceneCtrl) {
                 tmpVec.set(x, y, z);
                 if (!this.sceneCtrl.isInFrustum(tmpVec)) {
-                    // Still count but place off-screen (avoid index gaps)
                     this.dummy.position.set(x, y, z);
                     this.dummy.scale.setScalar(0);
                     this.dummy.updateMatrix();
-                    this.truckMesh!.setMatrixAt(idx, this.dummy.matrix);
+                    truckMesh.setMatrixAt(idx, this.dummy.matrix);
                     idx++;
                     return;
                 }
             }
 
-            // LOD-based detail scaling
-            let lodScale = 1;
-            if (this.sceneCtrl) {
-                const dist = tmpVec.distanceTo(this.camera!.position);
-                const lod = this.sceneCtrl.computeLOD(dist);
-                if (lod >= 3) lodScale = 0.5;
-                else if (lod >= 2) lodScale = 0.7;
-                else if (lod >= 1) lodScale = 0.85;
-            }
+            const lodScale = this.computeLodScale(tmpVec, camera);
 
             this.dummy.position.set(x, y, z);
             this.dummy.scale.setScalar((0.8 + (truck.speed / 120) * 0.4) * lodScale);
             this.dummy.updateMatrix();
-            this.truckMesh!.setMatrixAt(idx, this.dummy.matrix);
+            truckMesh.setMatrixAt(idx, this.dummy.matrix);
 
-            // Per-instance color based on status
             const statusColor = STATUS_COLORS[truck.status] ?? 0x06b6d4;
             tempColor.setHex(statusColor);
-            this.colorAttr!.setXYZ(idx, tempColor.r, tempColor.g, tempColor.b);
+            colorAttr.setXYZ(idx, tempColor.r, tempColor.g, tempColor.b);
 
             dataChanged = true;
             idx++;
         });
 
         if (dataChanged) {
-            this.truckMesh!.count = idx;
-            this.truckMesh!.instanceMatrix.needsUpdate = true;
-            if (this.colorAttr) this.colorAttr.needsUpdate = true;
+            truckMesh.count = idx;
+            truckMesh.instanceMatrix.needsUpdate = true;
+            colorAttr.needsUpdate = true;
             this.sceneCtrl?.markDirty('data');
         }
 
-        // ── Animate ambient meshes ──
+        this.animateEnvironment(t, dt);
+
+        // ── Camera parallax with smooth interpolation ──
+        camera.position.x += (this.mx * 6 - camera.position.x) * 0.05;
+        camera.position.y += (this.my * 6 - camera.position.y) * 0.05;
+        camera.lookAt(scene.position);
+
+        // ── Demand-based render via SceneController ──
+        this.sceneCtrl?.markDirty('animation');
+        if (this.sceneCtrl) {
+            this.lastGPUTime = this.sceneCtrl.tick(dt);
+        } else {
+            renderer.render(scene, camera);
+            this.lastGPUTime = performance.now() - gpuStart;
+        }
+
+        // ── Adaptive DPR ──
+        this.fps = dt > 0 ? 1000 / dt : 60;
+        if (this.adaptiveDPR.sample(this.lastGPUTime, this.fps)) {
+            const newDPR = this.adaptiveDPR.getCurrentDPR();
+            renderer.setPixelRatio(newDPR);
+        }
+    }
+
+    /** Compute LOD-based scale for a truck position */
+    private computeLodScale(tmpVec: THREE.Vector3, camera: THREE.PerspectiveCamera): number {
+        if (!this.sceneCtrl) return 1;
+        const dist = tmpVec.distanceTo(camera.position);
+        const lod = this.sceneCtrl.computeLOD(dist);
+        if (lod >= 3) return 0.5;
+        if (lod >= 2) return 0.7;
+        if (lod >= 1) return 0.85;
+        return 1;
+    }
+
+    /** Animate ambient meshes, lights, and particles */
+    private animateEnvironment(t: number, dt: number): void {
         for (const mesh of this.ambientMeshes) {
             mesh.rotateOnAxis(mesh.userData.axis, mesh.userData.speed);
             mesh.position.y += Math.sin(t + mesh.id * 0.5) * 0.005;
             mesh.position.x += Math.cos(t + mesh.id * 0.3) * 0.003;
         }
 
-        // ── Animate lights ──
         for (let i = 0; i < this.lights.length; i++) {
             const angle = (i / this.lights.length) * Math.PI * 2 + t * 0.3;
             this.lights[i].position.x = Math.cos(angle) * 20;
@@ -418,7 +446,6 @@ export class ImperativeThreeLayer {
             this.lights[i].position.y = Math.sin(t * 0.5 + i) * 10;
         }
 
-        // ── Animate particles ──
         if (this.particlePositions && this.particleSpeeds && this.particles) {
             for (let i = 0; i < this.particleSpeeds.length; i++) {
                 this.particlePositions[i * 3 + 1] += this.particleSpeeds[i] * dt * 10;
@@ -427,27 +454,6 @@ export class ImperativeThreeLayer {
                 }
             }
             (this.particles.geometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
-        }
-
-        // ── Camera parallax with smooth interpolation ──
-        this.camera.position.x += (this.mx * 6 - this.camera.position.x) * 0.05;
-        this.camera.position.y += (this.my * 6 - this.camera.position.y) * 0.05;
-        this.camera.lookAt(this.scene.position);
-
-        // ── Demand-based render via SceneController ──
-        this.sceneCtrl?.markDirty('animation');
-        if (this.sceneCtrl) {
-            this.lastGPUTime = this.sceneCtrl.tick(dt);
-        } else {
-            this.renderer.render(this.scene, this.camera);
-            this.lastGPUTime = performance.now() - gpuStart;
-        }
-
-        // ── Adaptive DPR ──
-        this.fps = dt > 0 ? 1000 / dt : 60;
-        if (this.adaptiveDPR.sample(this.lastGPUTime, this.fps)) {
-            const newDPR = this.adaptiveDPR.getCurrentDPR();
-            this.renderer.setPixelRatio(newDPR);
         }
     }
 
@@ -524,8 +530,8 @@ export class ImperativeThreeLayer {
         this._destroyed = true;
         this._ready = false;
 
-        if (this.onMouseMove) window.removeEventListener('mousemove', this.onMouseMove);
-        if (this.onResize) window.removeEventListener('resize', this.onResize);
+        if (this.onMouseMove) globalThis.removeEventListener('mousemove', this.onMouseMove);
+        if (this.onResize) globalThis.removeEventListener('resize', this.onResize);
 
         // Dispose shader materials
         this.shaderMaterials.forEach((m) => m.dispose());

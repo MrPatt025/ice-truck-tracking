@@ -68,11 +68,11 @@ const NEUTRAL_TINT: TintState = {
  * Spring-driven transitions for smooth perceptual changes.
  */
 export class ContextualTint {
-    private overlay: HTMLDivElement;
-    private hueSpring: SpringValue;
-    private satSpring: SpringValue;
-    private opacitySpring: SpringValue;
-    private currentState: TintState = { ...NEUTRAL_TINT };
+    private readonly overlay: HTMLDivElement;
+    private readonly hueSpring: SpringValue;
+    private readonly satSpring: SpringValue;
+    private readonly opacitySpring: SpringValue;
+    private readonly currentState: TintState = { ...NEUTRAL_TINT };
 
     constructor() {
         this.overlay = document.createElement('div');
@@ -106,13 +106,14 @@ export class ContextualTint {
     }
 
     /** Set tint for focused truck (soft halo effect) */
-    setFocusTint(active: boolean): void {
-        if (active) {
-            this.opacitySpring.setTarget(0.04);
-            this.hueSpring.setTarget(200);  // soft blue
-        } else {
-            this.opacitySpring.setTarget(0);
-        }
+    activateFocusTint(): void {
+        this.opacitySpring.setTarget(0.04);
+        this.hueSpring.setTarget(200);  // soft blue
+    }
+
+    /** Deactivate focus tint */
+    deactivateFocusTint(): void {
+        this.opacitySpring.setTarget(0);
     }
 
     /** Tick — update overlay color (call from frame scheduler) */
@@ -157,9 +158,9 @@ const DEFAULT_NOISE_CONFIG: NoiseConfig = {
  * Cost: ~0ms (composited by browser, not rasterized per frame).
  */
 export class NoiseOverlay {
-    private svg: SVGSVGElement;
+    private readonly svg: SVGSVGElement;
     private turbulence: SVGFETurbulenceElement | null = null;
-    private config: NoiseConfig;
+    private readonly config: NoiseConfig;
     private animFrame = 0;
     private seed = 0;
 
@@ -266,8 +267,8 @@ const DEFAULT_TYPOGRAPHY_CONFIG: TypographyConfig = {
  * Uses spring physics for smooth weight interpolation.
  */
 export class TypographyEngine {
-    private config: TypographyConfig;
-    private managedElements: Map<string, {
+    private readonly config: TypographyConfig;
+    private readonly managedElements: Map<string, {
         element: HTMLElement;
         spring: SpringValue;
         currentWeight: number;
@@ -348,7 +349,7 @@ export class TypographyEngine {
  * Focused elements are sharp, background softens.
  */
 export class DepthLayering {
-    private blurSpring: SpringValue;
+    private readonly blurSpring: SpringValue;
     private container: HTMLElement | null = null;
     private backgroundElements: HTMLElement[] = [];
 
@@ -409,7 +410,7 @@ export class PerceptionEngine {
     readonly typography: TypographyEngine;
     readonly depth: DepthLayering;
 
-    private context: PerceptionContext = {
+    private readonly context: PerceptionContext = {
         alertLevel: null,
         focusedTruckId: null,
         systemLoad: 0,
@@ -441,10 +442,11 @@ export class PerceptionEngine {
 
         // React to focus
         if (updates.focusedTruckId !== undefined) {
-            this.tint.setFocusTint(!!this.context.focusedTruckId);
             if (this.context.focusedTruckId) {
+                this.tint.activateFocusTint();
                 this.depth.enterFocus();
             } else {
+                this.tint.deactivateFocusTint();
                 this.depth.exitFocus();
             }
         }

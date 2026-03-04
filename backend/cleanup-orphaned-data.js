@@ -36,4 +36,4 @@ async function cleanupOrphanedData() {
     process.exit(0);
   }
 }
-cleanupOrphanedData();
+void cleanupOrphanedData();

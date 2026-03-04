@@ -27,7 +27,7 @@ export interface AdaptiveDPRConfig {
 
 const DEFAULT_CONFIG: AdaptiveDPRConfig = {
     minDPR: 0.75,
-    maxDPR: Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 2, 2),
+    maxDPR: Math.min(globalThis.window?.devicePixelRatio ?? 2, 2),
     stepDown: 0.1,
     stepUp: 0.05,
     gpuBudgetMs: 6,
@@ -48,7 +48,7 @@ const DEFAULT_CONFIG: AdaptiveDPRConfig = {
  *   renderer.setPixelRatio(newDPR);
  */
 export class AdaptiveDPR {
-    private config: AdaptiveDPRConfig;
+    private readonly config: AdaptiveDPRConfig;
     private currentDPR: number;
     private emaGPU = 0;        // exponential moving average of GPU time
     private emaFPS = 60;       // exponential moving average of FPS
@@ -300,7 +300,7 @@ export function detectDeviceTier(): DeviceTier {
                 const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
                 const rendererStr = (renderer as string).toLowerCase();
                 // High-end discrete GPUs
-                if (/nvidia|radeon|rx\s[5-9]|rtx|gtx\s1[0-9]|geforce/i.test(rendererStr)) {
+                if (/nvidia|radeon|rx\s[5-9]|rtx|gtx\s1\d|geforce/i.test(rendererStr)) {
                     gpuScore = 3;
                 }
                 // Integrated but decent

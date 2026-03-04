@@ -406,13 +406,14 @@ test.describe('Navigation Flow', () => {
             .getByRole('link', { name: 'Open Dashboard' });
 
         // On mobile the nav link is hidden — use hero CTA instead
-        if (!(await navLink.isVisible())) {
+        const navVisible = await navLink.isVisible();
+        if (navVisible) {
+            await navLink.click();
+        } else {
             const heroLink = page
                 .getByRole('link', { name: /Live Dashboard/ })
                 .first();
             await heroLink.click();
-        } else {
-            await navLink.click();
         }
 
         await expect(page).toHaveURL(/\/dashboard/);
@@ -427,13 +428,14 @@ test.describe('Navigation Flow', () => {
             .locator('nav')
             .getByRole('link', { name: 'Open Dashboard' });
 
-        if (!(await navLink.isVisible())) {
+        const navVisible3 = await navLink.isVisible();
+        if (navVisible3) {
+            await navLink.click();
+        } else {
             const heroLink = page
                 .getByRole('link', { name: /Live Dashboard/ })
                 .first();
             await heroLink.click();
-        } else {
-            await navLink.click();
         }
 
         // Should be redirected to /login by the auth middleware

@@ -11,13 +11,17 @@ const cn = (...classes: (string | undefined | false)[]) =>
   classes.filter(Boolean).join(' ')
 
 interface SkeletonProps {
-  className?: string
-  width?: string | number
-  height?: string | number
+  readonly className?: string
+  readonly width?: string | number
+  readonly height?: string | number
 }
 
 /** Base skeleton pulse */
-export function Skeleton({ className, width, height }: SkeletonProps) {
+export function Skeleton({
+  className,
+  width,
+  height,
+}: Readonly<SkeletonProps>) {
   return (
     <output aria-label='Loading'>
       <div

@@ -48,8 +48,8 @@ export function upsertTruck(t: TruckTelemetry): void {
 }
 
 export function upsertTruckBatch(batch: TruckTelemetry[]): void {
-    for (let i = 0; i < batch.length; i++) {
-        _trucks.set(batch[i].id, batch[i]);
+    for (const item of batch) {
+        _trucks.set(item.id, item);
     }
 }
 

@@ -19,10 +19,16 @@ import { RingBuffer } from './ringBuffer';
 
 const HISTORY_SIZE = 120; // 2 seconds of history at 60fps
 
+function fpsColor(fps: number): string {
+    if (fps >= 55) return '#10b981';
+    if (fps >= 30) return '#f59e0b';
+    return '#ef4444';
+}
+
 export class PerformanceOverlay {
-    private canvas: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
-    private history = new RingBuffer<PerfSnapshot>(HISTORY_SIZE);
+    private readonly canvas: HTMLCanvasElement;
+    private readonly ctx: CanvasRenderingContext2D;
+    private readonly history = new RingBuffer<PerfSnapshot>(HISTORY_SIZE);
     private _destroyed = false;
     private _visible = true;
 
@@ -141,12 +147,7 @@ export class PerformanceOverlay {
             const barW = Math.max(graphW / HISTORY_SIZE, 1);
 
             // Color based on FPS
-            ctx.fillStyle =
-                fps >= 55
-                    ? '#10b981'
-                    : fps >= 30
-                        ? '#f59e0b'
-                        : '#ef4444';
+            ctx.fillStyle = fpsColor(fps);
 
             ctx.fillRect(x, graphY + graphH - barH, barW, barH);
         }
@@ -162,11 +163,10 @@ export class PerformanceOverlay {
         }
 
         // Text info
-        const fpsColor =
-            snap.fps >= 55 ? '#10b981' : snap.fps >= 30 ? '#f59e0b' : '#ef4444';
+        const fpsFill = fpsColor(snap.fps);
 
         ctx.font = 'bold 13px "SF Mono", Menlo, monospace';
-        ctx.fillStyle = fpsColor;
+        ctx.fillStyle = fpsFill;
         ctx.textAlign = 'left';
         ctx.fillText(`${snap.fps} FPS`, graphX, graphY + graphH + 16);
 
@@ -207,8 +207,6 @@ export class PerformanceOverlay {
 
     destroy(): void {
         this._destroyed = true;
-        if (this.canvas.parentElement) {
-            this.canvas.parentElement.removeChild(this.canvas);
-        }
+        this.canvas.remove();
     }
 }

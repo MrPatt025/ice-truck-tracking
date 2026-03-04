@@ -37,7 +37,7 @@ export default function RegisterPage() {
     let score = 0;
     if (p.length >= 8) score++;
     if (/[A-Z]/.test(p)) score++;
-    if (/[0-9]/.test(p)) score++;
+    if (/\d/.test(p)) score++
     if (/[^A-Za-z0-9]/.test(p)) score++;
     return score;
   })();

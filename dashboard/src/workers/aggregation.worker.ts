@@ -72,7 +72,7 @@ interface AlertRule {
 }
 
 // ── Worker Handler ─────────────────────────────────────────
-self.onmessage = (e: MessageEvent<WorkerInbound>) => {
+globalThis.onmessage = (e: MessageEvent<WorkerInbound>) => {
   const msg = e.data;
 
   switch (msg.type) {
@@ -124,7 +124,7 @@ function handleTimeSeries(msg: AggregateTimeSeriesMsg) {
     })
     .sort((a, b) => (a.timestamp as number) - (b.timestamp as number));
 
-  self.postMessage({ type: 'aggregate-timeseries-result', data: result });
+  globalThis.postMessage({ type: 'aggregate-timeseries-result', data: result });
 }
 
 // ── Fleet Statistics ───────────────────────────────────────
@@ -192,7 +192,8 @@ function handleAlertEvaluation(msg: EvaluateAlertsMsg) {
   // Evaluate each rule against each truck's latest data
   for (const rule of rules) {
     for (const [truckId, points] of byTruck) {
-      const latest = points[points.length - 1];
+      const latest = points.at(-1);
+      if (!latest) continue;
       const value = (latest as unknown as Record<string, number>)[rule.metric];
       if (typeof value !== 'number') continue;
 
@@ -220,7 +221,7 @@ function handleAlertEvaluation(msg: EvaluateAlertsMsg) {
     }
   }
 
-  self.postMessage({ type: 'evaluate-alerts-result', data: triggered });
+  globalThis.postMessage({ type: 'evaluate-alerts-result', data: triggered });
 }
 
 // ── Export Preparation ─────────────────────────────────────
@@ -233,16 +234,16 @@ function handleExport(msg: PrepareExportMsg) {
       columns.map(col => {
         const val = row[col];
         if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) {
-          return `"${val.replace(/"/g, '""')}"`;
+          return `"${val.replaceAll('"', '""')}"`;
         }
-        return String(val ?? '');
+        return val == null ? '' : typeof val === 'object' ? JSON.stringify(val) : String(val);
       }).join(',')
     );
     const csv = [header, ...rows].join('\n');
-    self.postMessage({ type: 'prepare-export-result', data: csv, format: 'csv' });
+    globalThis.postMessage({ type: 'prepare-export-result', data: csv, format: 'csv' });
   } else {
     const json = JSON.stringify(data, null, 2);
-    self.postMessage({ type: 'prepare-export-result', data: json, format: 'json' });
+    globalThis.postMessage({ type: 'prepare-export-result', data: json, format: 'json' });
   }
 }
 
@@ -256,5 +257,3 @@ function intervalToMs(interval: string): number {
     default: return 3_600_000;
   }
 }
-
-export {};

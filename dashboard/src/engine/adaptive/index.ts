@@ -40,6 +40,16 @@ export const FRAME_BUDGET: FrameBudget = {
 };
 
 // ═════════════════════════════════════════════════════════════════
+//  HELPERS
+// ═════════════════════════════════════════════════════════════════
+
+function resolveGpuTier(tier: DeviceTier): 'high' | 'medium' | 'low' {
+    if (tier === 'high-end') return 'high';
+    if (tier === 'potato') return 'low';
+    return 'medium';
+}
+
+// ═════════════════════════════════════════════════════════════════
 //  1. ENVIRONMENT MONITOR
 //     Collects raw performance metrics every frame.
 // ═════════════════════════════════════════════════════════════════
@@ -51,11 +61,11 @@ export const FRAME_BUDGET: FrameBudget = {
  * Provides a snapshot for the scaling strategy.
  */
 export class EnvMonitor {
-    private fpsHistory: number[] = [];
-    private frameTimeHistory: number[] = [];
+    private readonly fpsHistory: number[] = [];
+    private readonly frameTimeHistory: number[] = [];
     private lastFrameTime = 0;
     private lastTimestamp = performance.now();
-    private deviceTier: DeviceTier;
+    private readonly deviceTier: DeviceTier;
     private batteryLevel = 1;
     private isCharging = true;
     private connectionType = 'unknown';
@@ -63,7 +73,8 @@ export class EnvMonitor {
 
     constructor() {
         this.deviceTier = detectDeviceTier();
-        this.initBatteryWatch();
+        // Battery & connection watches are fire-and-forget
+        void this.initBatteryWatch();
         this.initConnectionWatch();
     }
 
@@ -123,14 +134,13 @@ export class EnvMonitor {
             heapUsedMB,
             heapLimitMB,
             memoryPressure,
-            devicePixelRatio: typeof window !== 'undefined' ? window.devicePixelRatio : 1,
+            devicePixelRatio: globalThis.window?.devicePixelRatio ?? 1,
             batteryLevel: this.batteryLevel,
             isCharging: this.isCharging,
             thermalState,
             connectionType: this.connectionType,
             deviceTier: this.deviceTier,
-            gpuTier: this.deviceTier === 'high-end' ? 'high'
-                : this.deviceTier === 'potato' ? 'low' : 'medium',
+            gpuTier: resolveGpuTier(this.deviceTier),
             coreCount: navigator.hardwareConcurrency || 2,
             timestamp: Date.now(),
         };
@@ -266,7 +276,7 @@ const TIER_DEFAULTS: Record<DeviceTier, Partial<ScalingDecision>> = {
  */
 export class ScalingStrategy {
     private lastDecision: ScalingDecision;
-    private cooldownMs = 2000;  // don't change more than every 2s
+    private readonly cooldownMs = 2000;  // don't change more than every 2s
     private lastDecisionTime = 0;
     private violations: PerfViolation[] = [];
 
@@ -300,34 +310,8 @@ export class ScalingStrategy {
         let changed = false;
         const reasons: string[] = [];
 
-        // ─── Rule 1: Emergency FPS ─────────────────────────────
-        if (env.fps < 30) {
-            decision.lodLevel = 'minimal';
-            decision.particleCount = 0;
-            decision.shadowsEnabled = false;
-            decision.postProcessing = false;
-            decision.pixelRatio = 0.75;
-            decision.motionReduced = true;
-            reasons.push(`emergency: fps=${env.fps.toFixed(0)}`);
-            changed = true;
-            this.addViolation('FPS < 30', 'critical', env.fps, 30);
-        }
-        // ─── Rule 2: Aggressive ────────────────────────────────
-        else if (env.fps < 45) {
-            decision.lodLevel = this.stepLOD(decision.lodLevel, 2);
-            decision.particleCount = Math.floor(decision.particleCount * 0.5);
-            decision.shadowsEnabled = false;
-            decision.postProcessing = false;
-            reasons.push(`aggressive: fps=${env.fps.toFixed(0)}`);
-            changed = true;
-            this.addViolation('FPS < 45', 'warn', env.fps, 45);
-        }
-        // ─── Rule 3: Gentle ────────────────────────────────────
-        else if (env.fps < 55) {
-            decision.lodLevel = this.stepLOD(decision.lodLevel, 1);
-            reasons.push(`gentle: fps=${env.fps.toFixed(0)}`);
-            changed = true;
-        }
+        // FPS-based rules
+        changed = this.applyFpsRules(env, decision, reasons) || changed;
 
         // ─── Rule 4: Memory pressure ──────────────────────────
         if (env.memoryPressure > 0.8) {
@@ -347,48 +331,11 @@ export class ScalingStrategy {
             changed = true;
         }
 
-        // ─── Rule 6: Thermal ──────────────────────────────────
-        if (env.thermalState === 'critical') {
-            decision.lodLevel = 'minimal';
-            decision.particleCount = 0;
-            decision.motionReduced = true;
-            reasons.push('thermal: critical');
-            changed = true;
-            this.addViolation('Thermal critical', 'critical', 1, 0);
-        } else if (env.thermalState === 'serious') {
-            decision.lodLevel = this.stepLOD(decision.lodLevel, 1);
-            decision.particleCount = Math.floor(decision.particleCount * 0.5);
-            reasons.push('thermal: serious');
-            changed = true;
-        }
+        // Thermal rules
+        changed = this.applyThermalRules(env, decision, reasons) || changed;
 
         // ─── Rule 7: Can increase quality ─────────────────────
-        if (
-            env.fps > 58 &&
-            env.memoryPressure < 0.5 &&
-            env.thermalState === 'nominal' &&
-            (env.isCharging || env.batteryLevel > 0.5)
-        ) {
-            const tierDefaults = TIER_DEFAULTS[env.deviceTier];
-            const maxLOD = tierDefaults.lodLevel ?? 'high';
-            const maxLODIdx = LOD_ORDER.indexOf(maxLOD);
-            const currentIdx = LOD_ORDER.indexOf(decision.lodLevel);
-
-            if (currentIdx > maxLODIdx) {
-                decision.lodLevel = LOD_ORDER[Math.max(0, currentIdx - 1)];
-                reasons.push('quality-up: headroom available');
-                changed = true;
-            }
-
-            // Restore particles
-            if (decision.particleCount < (tierDefaults.particleCount ?? 2000)) {
-                decision.particleCount = Math.min(
-                    (tierDefaults.particleCount ?? 2000),
-                    decision.particleCount + 200,
-                );
-                changed = true;
-            }
-        }
+        changed = this.tryQualityIncrease(env, decision, reasons) || changed;
 
         if (!changed) return null;
 
@@ -398,6 +345,97 @@ export class ScalingStrategy {
         this.lastDecisionTime = now;
 
         return decision;
+    }
+
+    /** Apply FPS-based scaling rules 1-3 */
+    private applyFpsRules(
+        env: EnvSnapshot,
+        decision: ScalingDecision,
+        reasons: string[],
+    ): boolean {
+        if (env.fps < 30) {
+            decision.lodLevel = 'minimal';
+            decision.particleCount = 0;
+            decision.shadowsEnabled = false;
+            decision.postProcessing = false;
+            decision.pixelRatio = 0.75;
+            decision.motionReduced = true;
+            reasons.push(`emergency: fps=${env.fps.toFixed(0)}`);
+            this.addViolation('FPS < 30', 'critical', env.fps, 30);
+            return true;
+        }
+        if (env.fps < 45) {
+            decision.lodLevel = this.stepLOD(decision.lodLevel, 2);
+            decision.particleCount = Math.floor(decision.particleCount * 0.5);
+            decision.shadowsEnabled = false;
+            decision.postProcessing = false;
+            reasons.push(`aggressive: fps=${env.fps.toFixed(0)}`);
+            this.addViolation('FPS < 45', 'warn', env.fps, 45);
+            return true;
+        }
+        if (env.fps < 55) {
+            decision.lodLevel = this.stepLOD(decision.lodLevel, 1);
+            reasons.push(`gentle: fps=${env.fps.toFixed(0)}`);
+            return true;
+        }
+        return false;
+    }
+
+    /** Apply thermal scaling rules */
+    private applyThermalRules(
+        env: EnvSnapshot,
+        decision: ScalingDecision,
+        reasons: string[],
+    ): boolean {
+        if (env.thermalState === 'critical') {
+            decision.lodLevel = 'minimal';
+            decision.particleCount = 0;
+            decision.motionReduced = true;
+            reasons.push('thermal: critical');
+            this.addViolation('Thermal critical', 'critical', 1, 0);
+            return true;
+        }
+        if (env.thermalState === 'serious') {
+            decision.lodLevel = this.stepLOD(decision.lodLevel, 1);
+            decision.particleCount = Math.floor(decision.particleCount * 0.5);
+            reasons.push('thermal: serious');
+            return true;
+        }
+        return false;
+    }
+
+    /** Try increasing quality when conditions are favorable (Rule 7) */
+    private tryQualityIncrease(
+        env: EnvSnapshot,
+        decision: ScalingDecision,
+        reasons: string[],
+    ): boolean {
+        if (env.fps <= 58) return false;
+        if (env.memoryPressure >= 0.5) return false;
+        if (env.thermalState !== 'nominal') return false;
+        if (!env.isCharging && env.batteryLevel <= 0.5) return false;
+
+        let increased = false;
+        const tierDefaults = TIER_DEFAULTS[env.deviceTier];
+        const maxLOD = tierDefaults.lodLevel ?? 'high';
+        const maxLODIdx = LOD_ORDER.indexOf(maxLOD);
+        const currentIdx = LOD_ORDER.indexOf(decision.lodLevel);
+
+        if (currentIdx > maxLODIdx) {
+            decision.lodLevel = LOD_ORDER[Math.max(0, currentIdx - 1)];
+            reasons.push('quality-up: headroom available');
+            increased = true;
+        }
+
+        if (decision.particleCount < (tierDefaults.particleCount ?? 2000)) {
+            decision.particleCount = Math.min(
+                (tierDefaults.particleCount ?? 2000),
+                decision.particleCount + 200,
+            );
+            increased = true;
+        }
+
+        return increased;
     }
 
     /** Get last decision */

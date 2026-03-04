@@ -19,7 +19,7 @@ import type {
 
 // SSR-safe devicePixelRatio helper
 const getDevicePixelRatio = () =>
-    typeof window !== 'undefined' ? window.devicePixelRatio : 1;
+    globalThis.window?.devicePixelRatio ?? 1;
 
 // ─── Default GPU Config per Device Tier ────────────────────────
 const TIER_CONFIGS: Record<DeviceTier, GPUSceneConfig> = {
@@ -91,9 +91,9 @@ const LOD_DISTANCES: Record<LODLevel, { near: number; mid: number; far: number }
 export class SceneController {
     // ─── Three.js core ─────────────────────────────────────────
     private renderer: THREE.WebGLRenderer | null = null;
-    private scene: THREE.Scene;
-    private camera: THREE.PerspectiveCamera;
-    private clock: THREE.Clock;
+    private readonly scene: THREE.Scene;
+    private readonly camera: THREE.PerspectiveCamera;
+    private lastDeltaMs = 0;
 
     // ─── Dirty flag system ─────────────────────────────────────
     private dirty: SceneDirtyFlags = {
@@ -105,12 +105,12 @@ export class SceneController {
     };
 
     // ─── Frustum culling ───────────────────────────────────────
-    private frustum: THREE.Frustum;
-    private frustumMatrix: THREE.Matrix4;
+    private readonly frustum: THREE.Frustum;
+    private readonly frustumMatrix: THREE.Matrix4;
     private lastCullResult: CullResult = { visibleCount: 0, totalCount: 0, culledCount: 0 };
 
     // ─── Configuration ─────────────────────────────────────────
-    private config: GPUSceneConfig;
+    private readonly config: GPUSceneConfig;
     private lodLevel: LODLevel;
     private container: HTMLElement | null = null;
 
@@ -121,7 +121,7 @@ export class SceneController {
 
     // ─── Animation tracking ────────────────────────────────────
     private activeAnimations = 0;
-    private animationCallbacks: Map<string, (dt: number) => void> = new Map();
+    private readonly animationCallbacks: Map<string, (dt: number) => void> = new Map();
 
     // ─── Resize observer ───────────────────────────────────────
     private resizeObserver: ResizeObserver | null = null;
@@ -133,7 +133,6 @@ export class SceneController {
         this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
         this.camera.position.set(0, 30, 50);
         this.camera.lookAt(0, 0, 0);
-        this.clock = new THREE.Clock(false);
         this.frustum = new THREE.Frustum();
         this.frustumMatrix = new THREE.Matrix4();
     }
@@ -173,13 +172,12 @@ export class SceneController {
         this.resizeObserver = new ResizeObserver(this.handleResize);
         this.resizeObserver.observe(container);
 
-        this.clock.start();
+        this.lastDeltaMs = performance.now();
         this.markDirty('resize');
     }
 
     /** Unmount — full cleanup */
     destroy(): void {
-        this.clock.stop();
         this.resizeObserver?.disconnect();
         this.resizeObserver = null;
 
@@ -422,7 +420,7 @@ export class SceneController {
 
     // ─── Private: Resize ───────────────────────────────────────
 
-    private handleResize = (entries: ResizeObserverEntry[]): void => {
+    private readonly handleResize = (entries: ResizeObserverEntry[]): void => {
         const entry = entries[0];
         if (!entry || !this.renderer) return;
         const { width, height } = entry.contentRect;

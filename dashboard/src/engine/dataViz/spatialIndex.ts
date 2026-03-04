@@ -226,8 +226,8 @@ export class SpatialIndex {
  * Tracks dirty IDs for delta updates.
  */
 export class EntityMap<T extends { id: string }> {
-    private map = new Map<string, T>();
-    private dirtyIds = new Set<string>();
+    private readonly map = new Map<string, T>();
+    private readonly dirtyIds = new Set<string>();
     private _version = 0;
 
     /** Upsert an entity (tracked as dirty) */

@@ -18,7 +18,7 @@
 import type { FrameCallback } from './types';
 
 class FrameScheduler {
-    private callbacks = new Map<string, FrameCallback>();
+    private readonly callbacks = new Map<string, FrameCallback>();
     private rafId: number | null = null;
     private lastTime = 0;
     private running = false;
@@ -70,7 +70,7 @@ class FrameScheduler {
         return this.running;
     }
 
-    private tick = (now: number): void => {
+    private readonly tick = (now: number): void => {
         if (!this.running) return;
         this.rafId = requestAnimationFrame(this.tick);
 

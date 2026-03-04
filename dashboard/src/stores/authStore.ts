@@ -243,7 +243,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'ice-truck-auth',
       storage: createJSONStorage(() => {
-        if (typeof window !== 'undefined') return localStorage;
+        if (globalThis.window !== undefined) return localStorage;
         // SSR fallback: noop storage
         return {
           getItem: () => null,

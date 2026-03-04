@@ -65,8 +65,8 @@ export const MOTION_TIER_PRESETS: Record<MotionTier, SpringConfig> = {
  * Semi-implicit Euler integration (stable for stiff springs).
  */
 export class SpringValue {
-    private state: SpringState;
-    private config: SpringConfig;
+    private readonly state: SpringState;
+    private readonly config: SpringConfig;
     private onUpdate: ((value: number) => void) | null = null;
     private onRest: (() => void) | null = null;
 
@@ -284,7 +284,7 @@ export class VelocityTracker {
             vy /= totalWeight;
         }
 
-        const magnitude = Math.sqrt(vx * vx + vy * vy);
+        const magnitude = Math.hypot(vx, vy);
         const angle = Math.atan2(vy, vx);
 
         return { x: vx, y: vy, magnitude, angle, timestamp: now };
@@ -306,9 +306,9 @@ export class VelocityTracker {
  * Provides gesture state and release velocity for inertia.
  */
 export class GestureEngine {
-    private tracker: VelocityTracker;
-    private spring: Spring2D;
-    private state: GestureState;
+    private readonly tracker: VelocityTracker;
+    private readonly spring: Spring2D;
+    private readonly state: GestureState;
     private onGestureUpdate: ((state: GestureState) => void) | null = null;
 
     constructor(config: Partial<SpringConfig> = SPRING_PRESETS.gentle) {
@@ -408,7 +408,7 @@ interface ManagedSpring {
  * Higher-tier (macro) springs get priority; nano springs skipped if over budget.
  */
 export class SpringGroup {
-    private springs: Map<string, ManagedSpring> = new Map();
+    private readonly springs: Map<string, ManagedSpring> = new Map();
     private sorted: ManagedSpring[] = [];
     private needsSort = false;
 

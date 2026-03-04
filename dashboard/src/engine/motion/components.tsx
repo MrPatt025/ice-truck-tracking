@@ -50,49 +50,52 @@ export interface UseSpringOptions {
  * Use onUpdate callback to apply to DOM imperatively.
  */
 export function useSpring(
-    initial: number,
-    options: UseSpringOptions = {},
-): [React.MutableRefObject<number>, (target: number) => void, (value: number) => void] {
-    const springRef = useRef<SpringValue | null>(null);
-    const valueRef = useRef(initial);
-    const idRef = useRef(`spring-${Math.random().toString(36).slice(2, 8)}`);
+  initial: number,
+  options: UseSpringOptions = {}
+): [
+  React.MutableRefObject<number>,
+  (target: number) => void,
+  (value: number) => void,
+] {
+  const springRef = useRef<SpringValue | null>(null)
+  const valueRef = useRef(initial)
+  const idRef = useRef(`spring-${Math.random().toString(36).slice(2, 8)}`)
 
-    // Initialize spring once
-    if (!springRef.current) {
-        springRef.current = new SpringValue(initial, options.config);
+  // Initialize spring once
+  springRef.current ??= new SpringValue(initial, options.config)
+
+  useEffect(() => {
+    const spring = springRef.current
+    if (!spring) return
+    const id = idRef.current
+
+    spring.onChange(v => {
+      valueRef.current = v
+      options.onUpdate?.(v)
+    })
+    spring.onComplete(() => options.onRest?.())
+
+    // Register with frame scheduler
+    frameScheduler.register(id, dt => {
+      spring.tick(dt / 1000) // convert ms → sec
+    })
+
+    return () => {
+      frameScheduler.unregister(id)
     }
-
-    useEffect(() => {
-        const spring = springRef.current!;
-        const id = idRef.current;
-
-        spring.onChange((v) => {
-            valueRef.current = v;
-            options.onUpdate?.(v);
-        });
-        spring.onComplete(() => options.onRest?.());
-
-        // Register with frame scheduler
-        frameScheduler.register(id, (dt) => {
-            spring.tick(dt / 1000); // convert ms → sec
-        });
-
-        return () => {
-            frameScheduler.unregister(id);
-        };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  }, [])
 
-    const setTarget = useCallback((target: number) => {
-        springRef.current?.setTarget(target);
-    }, []);
+  const setTarget = useCallback((target: number) => {
+    springRef.current?.setTarget(target)
+  }, [])
 
-    const snapTo = useCallback((value: number) => {
-        springRef.current?.snapTo(value);
-        valueRef.current = value;
-    }, []);
+  const snapTo = useCallback((value: number) => {
+    springRef.current?.snapTo(value)
+    valueRef.current = value
+  }, [])
 
-    return [valueRef, setTarget, snapTo];
+  return [valueRef, setTarget, snapTo]
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -100,43 +103,45 @@ export function useSpring(
 // ═════════════════════════════════════════════════════════════════
 
 export function useSpring2D(
-    initialX: number,
-    initialY: number,
-    config: Partial<SpringConfig> = {},
-    onUpdate?: (x: number, y: number) => void,
-): [React.MutableRefObject<{ x: number; y: number }>, (x: number, y: number) => void] {
-    const springRef = useRef<Spring2D | null>(null);
-    const posRef = useRef({ x: initialX, y: initialY });
-    const idRef = useRef(`spring2d-${Math.random().toString(36).slice(2, 8)}`);
+  initialX: number,
+  initialY: number,
+  config: Partial<SpringConfig> = {},
+  onUpdate?: (x: number, y: number) => void
+): [
+  React.MutableRefObject<{ x: number; y: number }>,
+  (x: number, y: number) => void,
+] {
+  const springRef = useRef<Spring2D | null>(null)
+  const posRef = useRef({ x: initialX, y: initialY })
+  const idRef = useRef(`spring2d-${Math.random().toString(36).slice(2, 8)}`)
 
-    if (!springRef.current) {
-        springRef.current = new Spring2D(initialX, initialY, config);
+  springRef.current ??= new Spring2D(initialX, initialY, config)
+
+  useEffect(() => {
+    const spring = springRef.current
+    if (!spring) return
+    const id = idRef.current
+
+    spring.onChange((x, y) => {
+      posRef.current = { x, y }
+      onUpdate?.(x, y)
+    })
+
+    frameScheduler.register(id, dt => {
+      spring.tick(dt / 1000)
+    })
+
+    return () => {
+      frameScheduler.unregister(id)
     }
-
-    useEffect(() => {
-        const spring = springRef.current!;
-        const id = idRef.current;
-
-        spring.onChange((x, y) => {
-            posRef.current = { x, y };
-            onUpdate?.(x, y);
-        });
-
-        frameScheduler.register(id, (dt) => {
-            spring.tick(dt / 1000);
-        });
-
-        return () => {
-            frameScheduler.unregister(id);
-        };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  }, [])
 
-    const setTarget = useCallback((x: number, y: number) => {
-        springRef.current?.setTarget(x, y);
-    }, []);
+  const setTarget = useCallback((x: number, y: number) => {
+    springRef.current?.setTarget(x, y)
+  }, [])
 
-    return [posRef, setTarget];
+  return [posRef, setTarget]
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -146,85 +151,85 @@ export function useSpring2D(
 // ═════════════════════════════════════════════════════════════════
 
 export interface MagneticButtonProps {
-    children: ReactNode;
-    className?: string;
-    style?: CSSProperties;
-    radius?: number;       // attraction radius in px (default 120)
-    strength?: number;     // 0-1 attraction strength (default 0.3)
-    onClick?: () => void;
-    disabled?: boolean;
+  children: ReactNode
+  className?: string
+  style?: CSSProperties
+  radius?: number // attraction radius in px (default 120)
+  strength?: number // 0-1 attraction strength (default 0.3)
+  onClick?: () => void
+  disabled?: boolean
 }
 
 export function MagneticButton({
-    children,
-    className = '',
-    style,
-    radius = 120,
-    strength = 0.3,
-    onClick,
-    disabled = false,
-}: MagneticButtonProps) {
-    const ref = useRef<HTMLButtonElement>(null);
-    const springRef = useRef<Spring2D | null>(null);
-    const idRef = useRef(`magnetic-${Math.random().toString(36).slice(2, 8)}`);
+  children,
+  className = '',
+  style,
+  radius = 120,
+  strength = 0.3,
+  onClick,
+  disabled = false,
+}: Readonly<MagneticButtonProps>) {
+  const ref = useRef<HTMLButtonElement>(null)
+  const springRef = useRef<Spring2D | null>(null)
+  const idRef = useRef(`magnetic-${Math.random().toString(36).slice(2, 8)}`)
 
-    useEffect(() => {
-        if (!ref.current || disabled) return;
-        const el = ref.current;
-        const spring = new Spring2D(0, 0, SPRING_PRESETS.magnetic);
-        springRef.current = spring;
-        const id = idRef.current;
+  useEffect(() => {
+    if (!ref.current || disabled) return
+    const el = ref.current
+    const spring = new Spring2D(0, 0, SPRING_PRESETS.magnetic)
+    springRef.current = spring
+    const id = idRef.current
 
-        spring.onChange((x, y) => {
-            el.style.transform = `translate(${x}px, ${y}px)`;
-        });
+    spring.onChange((x, y) => {
+      el.style.transform = `translate(${x}px, ${y}px)`
+    })
 
-        frameScheduler.register(id, (dt) => {
-            spring.tick(dt / 1000);
-        });
+    frameScheduler.register(id, dt => {
+      spring.tick(dt / 1000)
+    })
 
-        const handleMouseMove = (e: MouseEvent) => {
-            const rect = el.getBoundingClientRect();
-            const cx = rect.left + rect.width / 2;
-            const cy = rect.top + rect.height / 2;
-            const dx = e.clientX - cx;
-            const dy = e.clientY - cy;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = el.getBoundingClientRect()
+      const cx = rect.left + rect.width / 2
+      const cy = rect.top + rect.height / 2
+      const dx = e.clientX - cx
+      const dy = e.clientY - cy
+      const dist = Math.hypot(dx, dy)
 
-            if (dist < radius) {
-                const factor = (1 - dist / radius) * strength;
-                spring.setTarget(dx * factor, dy * factor);
-            } else {
-                spring.setTarget(0, 0);
-            }
-        };
+      if (dist < radius) {
+        const factor = (1 - dist / radius) * strength
+        spring.setTarget(dx * factor, dy * factor)
+      } else {
+        spring.setTarget(0, 0)
+      }
+    }
 
-        const handleMouseLeave = () => {
-            spring.setTarget(0, 0);
-        };
+    const handleMouseLeave = () => {
+      spring.setTarget(0, 0)
+    }
 
-        document.addEventListener('mousemove', handleMouseMove, { passive: true });
-        el.addEventListener('mouseleave', handleMouseLeave);
+    document.addEventListener('mousemove', handleMouseMove, { passive: true })
+    el.addEventListener('mouseleave', handleMouseLeave)
 
-        return () => {
-            frameScheduler.unregister(id);
-            document.removeEventListener('mousemove', handleMouseMove);
-            el.removeEventListener('mouseleave', handleMouseLeave);
-            el.style.transform = '';
-        };
-    }, [disabled, radius, strength]);
+    return () => {
+      frameScheduler.unregister(id)
+      document.removeEventListener('mousemove', handleMouseMove)
+      el.removeEventListener('mouseleave', handleMouseLeave)
+      el.style.transform = ''
+    }
+  }, [disabled, radius, strength])
 
-    return (
-        <button
-            ref={ref}
-            className={className}
-            style={{ ...style, willChange: 'transform' }}
-            onClick={onClick}
-            disabled={disabled}
-        >
-            {children}
-        </button>
-    );
+  return (
+    <button
+      ref={ref}
+      className={className}
+      style={{ ...style, willChange: 'transform' }}
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {children}
+    </button>
+  )
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -233,105 +238,108 @@ export function MagneticButton({
 // ═════════════════════════════════════════════════════════════════
 
 export interface InertiaPanelProps {
-    children: ReactNode;
-    className?: string;
-    style?: CSSProperties;
-    /** Axis constraint */
-    axis?: 'x' | 'y' | 'both';
-    /** Snap back to origin on release */
-    snapBack?: boolean;
-    /** Max drag distance (px) */
-    maxDistance?: number;
-    /** Spring config for release inertia */
-    springConfig?: Partial<SpringConfig>;
-    /** Callback on drag/inertia update */
-    onDrag?: (offsetX: number, offsetY: number) => void;
+  children: ReactNode
+  className?: string
+  style?: CSSProperties
+  /** Axis constraint */
+  axis?: 'x' | 'y' | 'both'
+  /** Snap back to origin on release */
+  snapBack?: boolean
+  /** Max drag distance (px) */
+  maxDistance?: number
+  /** Spring config for release inertia */
+  springConfig?: Partial<SpringConfig>
+  /** Callback on drag/inertia update */
+  onDrag?: (offsetX: number, offsetY: number) => void
 }
 
 export function InertiaPanel({
-    children,
-    className = '',
-    style,
-    axis = 'both',
-    snapBack = true,
-    maxDistance = 500,
-    springConfig = SPRING_PRESETS.gentle,
-    onDrag,
-}: InertiaPanelProps) {
-    const ref = useRef<HTMLDivElement>(null);
-    const gestureRef = useRef<GestureEngine | null>(null);
-    const idRef = useRef(`inertia-${Math.random().toString(36).slice(2, 8)}`);
+  children,
+  className = '',
+  style,
+  axis = 'both',
+  snapBack = true,
+  maxDistance = 500,
+  springConfig = SPRING_PRESETS.gentle,
+  onDrag,
+}: Readonly<InertiaPanelProps>) {
+  const ref = useRef<HTMLDivElement>(null)
+  const gestureRef = useRef<GestureEngine | null>(null)
+  const idRef = useRef(`inertia-${Math.random().toString(36).slice(2, 8)}`)
 
-    useEffect(() => {
-        if (!ref.current) return;
-        const el = ref.current;
-        const gesture = new GestureEngine(springConfig);
-        gestureRef.current = gesture;
-        const id = idRef.current;
+  useEffect(() => {
+    if (!ref.current) return
+    const el = ref.current
+    const gesture = new GestureEngine(springConfig)
+    gestureRef.current = gesture
+    const id = idRef.current
 
-        gesture.onChange((state) => {
-            let x = state.offsetX;
-            let y = state.offsetY;
+    gesture.onChange(state => {
+      let x = state.offsetX
+      let y = state.offsetY
 
-            // Axis constraint
-            if (axis === 'x') y = 0;
-            if (axis === 'y') x = 0;
+      // Axis constraint
+      if (axis === 'x') y = 0
+      if (axis === 'y') x = 0
 
-            // Clamp
-            x = Math.max(-maxDistance, Math.min(maxDistance, x));
-            y = Math.max(-maxDistance, Math.min(maxDistance, y));
+      // Clamp
+      x = Math.max(-maxDistance, Math.min(maxDistance, x))
+      y = Math.max(-maxDistance, Math.min(maxDistance, y))
 
-            el.style.transform = `translate(${x}px, ${y}px)`;
-            onDrag?.(x, y);
-        });
+      el.style.transform = `translate(${x}px, ${y}px)`
+      onDrag?.(x, y)
+    })
 
-        frameScheduler.register(id, (dt) => {
-            gesture.tick(dt / 1000);
-        });
+    frameScheduler.register(id, dt => {
+      gesture.tick(dt / 1000)
+    })
 
-        const handlePointerDown = (e: PointerEvent) => {
-            e.preventDefault();
-            el.setPointerCapture(e.pointerId);
-            gesture.start(e.clientX, e.clientY);
-        };
+    const handlePointerDown = (e: PointerEvent) => {
+      e.preventDefault()
+      el.setPointerCapture(e.pointerId)
+      gesture.start(e.clientX, e.clientY)
+    }
 
-        const handlePointerMove = (e: PointerEvent) => {
-            gesture.move(e.clientX, e.clientY);
-        };
+    const handlePointerMove = (e: PointerEvent) => {
+      gesture.move(e.clientX, e.clientY)
+    }
 
-        const handlePointerUp = () => {
-            gesture.release(snapBack ? 0 : gesture.getState().offsetX, snapBack ? 0 : gesture.getState().offsetY);
-        };
+    const handlePointerUp = () => {
+      gesture.release(
+        snapBack ? 0 : gesture.getState().offsetX,
+        snapBack ? 0 : gesture.getState().offsetY
+      )
+    }
 
-        el.addEventListener('pointerdown', handlePointerDown);
-        el.addEventListener('pointermove', handlePointerMove);
-        el.addEventListener('pointerup', handlePointerUp);
-        el.addEventListener('pointercancel', handlePointerUp);
+    el.addEventListener('pointerdown', handlePointerDown)
+    el.addEventListener('pointermove', handlePointerMove)
+    el.addEventListener('pointerup', handlePointerUp)
+    el.addEventListener('pointercancel', handlePointerUp)
 
-        return () => {
-            frameScheduler.unregister(id);
-            el.removeEventListener('pointerdown', handlePointerDown);
-            el.removeEventListener('pointermove', handlePointerMove);
-            el.removeEventListener('pointerup', handlePointerUp);
-            el.removeEventListener('pointercancel', handlePointerUp);
-        };
+    return () => {
+      frameScheduler.unregister(id)
+      el.removeEventListener('pointerdown', handlePointerDown)
+      el.removeEventListener('pointermove', handlePointerMove)
+      el.removeEventListener('pointerup', handlePointerUp)
+      el.removeEventListener('pointercancel', handlePointerUp)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [axis, snapBack, maxDistance]);
+  }, [axis, snapBack, maxDistance])
 
-    return (
-        <div
-            ref={ref}
-            className={className}
-            style={{
-                ...style,
-                willChange: 'transform',
-                touchAction: 'none',
-                cursor: 'grab',
-            }}
-        >
-            {children}
-        </div>
-    );
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        ...style,
+        willChange: 'transform',
+        touchAction: 'none',
+        cursor: 'grab',
+      }}
+    >
+      {children}
+    </div>
+  )
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -341,57 +349,57 @@ export function InertiaPanel({
 // ═════════════════════════════════════════════════════════════════
 
 export interface SpringNumberProps {
-    value: number;
-    format?: (n: number) => string;
-    className?: string;
-    style?: CSSProperties;
-    config?: Partial<SpringConfig>;
+  value: number
+  format?: (n: number) => string
+  className?: string
+  style?: CSSProperties
+  config?: Partial<SpringConfig>
 }
 
 export function SpringNumber({
-    value,
-    format = (n) => n.toLocaleString(undefined, { maximumFractionDigits: 1 }),
-    className = '',
-    style,
-    config = SPRING_PRESETS.stiff,
-}: SpringNumberProps) {
-    const ref = useRef<HTMLSpanElement>(null);
-    const springRef = useRef<SpringValue | null>(null);
-    const idRef = useRef(`num-${Math.random().toString(36).slice(2, 8)}`);
+  value,
+  format = n => n.toLocaleString(undefined, { maximumFractionDigits: 1 }),
+  className = '',
+  style,
+  config = SPRING_PRESETS.stiff,
+}: Readonly<SpringNumberProps>) {
+  const ref = useRef<HTMLSpanElement>(null)
+  const springRef = useRef<SpringValue | null>(null)
+  const idRef = useRef(`num-${Math.random().toString(36).slice(2, 8)}`)
 
-    useEffect(() => {
-        const spring = new SpringValue(value, config);
-        springRef.current = spring;
-        const id = idRef.current;
+  useEffect(() => {
+    const spring = new SpringValue(value, config)
+    springRef.current = spring
+    const id = idRef.current
 
-        spring.onChange((v) => {
-            if (ref.current) {
-                ref.current.textContent = format(v);
-            }
-        });
+    spring.onChange(v => {
+      if (ref.current) {
+        ref.current.textContent = format(v)
+      }
+    })
 
-        frameScheduler.register(id, (dt) => {
-            spring.tick(dt / 1000);
-        });
+    frameScheduler.register(id, dt => {
+      spring.tick(dt / 1000)
+    })
 
-        return () => {
-            frameScheduler.unregister(id);
-        };
+    return () => {
+      frameScheduler.unregister(id)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  }, [])
 
-    // Update target when prop changes (no re-render needed)
-    useEffect(() => {
-        springRef.current?.setTarget(value);
-    }, [value]);
+  // Update target when prop changes (no re-render needed)
+  useEffect(() => {
+    springRef.current?.setTarget(value)
+  }, [value])
 
-    return (
-        <span
-            ref={ref}
-            className={className}
-            style={{ ...style, fontVariantNumeric: 'tabular-nums' }}
-        >
-            {format(value)}
-        </span>
-    );
+  return (
+    <span
+      ref={ref}
+      className={className}
+      style={{ ...style, fontVariantNumeric: 'tabular-nums' }}
+    >
+      {format(value)}
+    </span>
+  )
 }

@@ -28,7 +28,7 @@ export class RingBuffer<T> {
         const out: T[] = new Array(this._size);
         const start = this._size < this.capacity ? 0 : this.head;
         for (let i = 0; i < this._size; i++) {
-            out[i] = this.buf[(start + i) % this.capacity] as T;
+            out[i] = this.buf[(start + i) % this.capacity]!;
         }
         return out;
     }
@@ -39,7 +39,7 @@ export class RingBuffer<T> {
         const out: T[] = new Array(count);
         const start = (this.head - count + this.capacity) % this.capacity;
         for (let i = 0; i < count; i++) {
-            out[i] = this.buf[(start + i) % this.capacity] as T;
+            out[i] = this.buf[(start + i) % this.capacity]!;
         }
         return out;
     }
