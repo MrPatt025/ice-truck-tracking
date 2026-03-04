@@ -51,6 +51,7 @@ let batchTimer: ReturnType<typeof setInterval> | null = null;
 /** Retry state */
 let retryCount = 0;
 const MAX_RETRIES = 10;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let retryTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // ─── Simulation (when no real backend) ─────────────────────────

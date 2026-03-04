@@ -20,13 +20,12 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 import React, { useEffect, useRef, useState, useCallback, memo } from "react";
-import ClientOnly from "@/components/ClientOnly";
 import {
   Truck, ThermometerSun, Bell, Activity, ArrowUpRight, ArrowDownRight,
   TrendingUp, Maximize2, X, Grid3X3, Layers, Zap, MapPin, Clock,
-  AlertTriangle, CheckCircle2, Settings, Download, RefreshCw,
-  BarChart3, TrendingDown, Fuel, Package, Users, DollarSign,
-  Calendar, Filter, Search, Wifi, WifiOff, Database, Server,
+  AlertTriangle, CheckCircle2, Settings, Download,
+  Fuel, Package, Users, DollarSign,
+  Search, Wifi, WifiOff, Server,
   Play, Pause, Minimize2
 } from "lucide-react";
 
@@ -50,7 +49,6 @@ import {
 } from "@/engine";
 
 // ─── Types ─────────────────────────────────────────────────────
-type Range = "1h" | "24h" | "7d" | "30d" | "90d";
 type Trend = "up" | "down" | "stable";
 type Fullscreen = null | "revenue" | "fleet" | "temp" | "alerts" | "performance";
 
