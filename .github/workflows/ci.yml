@@ -130,11 +130,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @ice-truck/dashboard run test -- --ci
 
-  # ── Playwright E2E ───────────────────────────────────────
-  test-e2e:
+  # ── Playwright E2E — Light Profile (every PR) ────────────
+  test-e2e-light:
     needs: [test-backend, test-dashboard]
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -145,19 +144,21 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: npx playwright install --with-deps chromium
-      - run: pnpm --filter @ice-truck/dashboard run test:e2e
-        continue-on-error: true
+      - run: npx playwright install --with-deps chromium firefox
+      - name: Run E2E Light Tests (no GPU)
+        run: pnpm --filter @ice-truck/dashboard run test:e2e:light
+        env:
+          E2E_LIGHT: 'true'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: playwright-report
-          path: dashboard/playwright-report/
+          name: playwright-report-light
+          path: dashboard/playwright-report/light/
           if-no-files-found: ignore
 
   # ── Build All ────────────────────────────────────────────
   build:
-    needs: [test-backend, test-dashboard]
+    needs: [test-backend, test-dashboard, test-e2e-light]
     runs-on: ubuntu-latest
     env:
       NEXT_PUBLIC_API_URL: http://localhost:5000
