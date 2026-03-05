@@ -33,8 +33,8 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     // Log to analytics
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'exception', {
+    if (typeof globalThis.window !== 'undefined' && globalThis.window.gtag) {
+      globalThis.window.gtag('event', 'exception', {
         description: error.toString(),
         fatal: false,
       })
@@ -91,7 +91,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
           <div className='flex gap-3'>
             <Button onClick={this.handleRetry}>Try Again</Button>
-            <Button variant='outline' onClick={() => window.location.reload()}>
+            <Button variant='outline' onClick={() => globalThis.location.reload()}>
               Refresh Page
             </Button>
           </div>

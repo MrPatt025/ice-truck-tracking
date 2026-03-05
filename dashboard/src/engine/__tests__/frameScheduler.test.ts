@@ -74,7 +74,7 @@ describe('FrameScheduler', () => {
 
         expect(dts.length).toBeGreaterThanOrEqual(1);
         // dt should be roughly 16.67ms / 1000 ≈ 0.01667s
-        expect(dts[dts.length - 1]).toBeCloseTo(0.01667, 2);
+        expect(dts.at(-1)).toBeCloseTo(0.01667, 2);
 
         frameScheduler.stop();
     });
@@ -127,7 +127,7 @@ describe('FrameScheduler', () => {
         // Simulate 5-second gap (tab was backgrounded)
         flushRAF(5000);
 
-        const lastDt = dts[dts.length - 1];
+        const lastDt = dts.at(-1);
         // Should clamp to 50ms / 1000 = 0.05s
         expect(lastDt).toBeLessThanOrEqual(0.05);
 

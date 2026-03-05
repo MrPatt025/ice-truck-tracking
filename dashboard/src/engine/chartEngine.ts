@@ -32,6 +32,17 @@ export interface ChartConfig {
     unit?: string;
 }
 
+interface ChartLayout {
+    pTop: number;
+    pLeft: number;
+    cW: number;
+    cH: number;
+    yMin: number;
+    yMax: number;
+    yPad: number;
+    yRange: number;
+}
+
 export class ImperativeChart {
     private readonly canvas: HTMLCanvasElement;
     private readonly ctx: CanvasRenderingContext2D;
@@ -122,11 +133,12 @@ export class ImperativeChart {
         const { yMin, yMax, yPad, yRange } = this.computeYRange(dataSets);
 
         // Grid lines
-        this.drawGrid(ctx, paddingTop, paddingLeft, chartW, chartH, yMin, yMax, yPad, yRange);
+        const layout: ChartLayout = { pTop: paddingTop, pLeft: paddingLeft, cW: chartW, cH: chartH, yMin, yMax, yPad, yRange };
+        this.drawGrid(ctx, layout);
 
         // Series
         for (const ds of dataSets) {
-            this.drawSeries(ctx, ds, paddingTop, paddingLeft, chartW, chartH, yMin, yPad, yRange);
+            this.drawSeries(ctx, ds, layout);
         }
 
         // Legend
@@ -164,9 +176,9 @@ export class ImperativeChart {
 
     private drawGrid(
         ctx: CanvasRenderingContext2D,
-        pTop: number, pLeft: number, cW: number, cH: number,
-        yMin: number, yMax: number, yPad: number, yRange: number,
+        layout: ChartLayout,
     ): void {
+        const { pTop, pLeft, cW, cH, yMax, yPad, yRange } = layout;
         ctx.strokeStyle = this.gridColor;
         ctx.lineWidth = 1;
         const gridLines = 5;
@@ -189,9 +201,9 @@ export class ImperativeChart {
     private drawSeries(
         ctx: CanvasRenderingContext2D,
         ds: { data: TimeSeriesPoint[]; color: string },
-        pTop: number, pLeft: number, cW: number, cH: number,
-        yMin: number, yPad: number, yRange: number,
+        layout: ChartLayout,
     ): void {
+        const { pTop, pLeft, cW, cH, yMin, yPad, yRange } = layout;
         const { data, color } = ds;
         if (data.length < 2) return;
 

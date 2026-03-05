@@ -26,7 +26,7 @@ export function EnhancedMapView({
   selectedTruck,
   onSelectTruck,
   geofences: _geofences,
-}: MapViewProps) {
+}: Readonly<MapViewProps>) {
   const mapRef = useRef<HTMLDivElement>(null)
   const [mapStyle, setMapStyle] = useState<MapStyle>('streets')
   const [showClusters, setShowClusters] = useState(true)
@@ -50,7 +50,7 @@ export function EnhancedMapView({
       const clickedTruck = trucks.find(truck => {
         const truckX = (truck.longitude + 180) * (rect.width / 360)
         const truckY = (90 - truck.latitude) * (rect.height / 180)
-        const distance = Math.sqrt((x - truckX) ** 2 + (y - truckY) ** 2)
+        const distance = Math.hypot(x - truckX, y - truckY)
         return distance < 20
       })
 
@@ -76,7 +76,7 @@ export function EnhancedMapView({
       const clickedTruck = trucks.find(truck => {
         const truckX = (truck.longitude + 180) * (rect.width / 360)
         const truckY = (90 - truck.latitude) * (rect.height / 180)
-        const distance = Math.sqrt((x - truckX) ** 2 + (y - truckY) ** 2)
+        const distance = Math.hypot(x - truckX, y - truckY)
         return distance < 20
       })
 
@@ -127,7 +127,7 @@ export function EnhancedMapView({
               onChange={e => setShowClusters(e.target.checked)}
               className='mr-2'
             />
-            Clustering
+            <span>Clustering</span>
           </label>
           <label className='flex items-center text-sm'>
             <input
@@ -136,7 +136,7 @@ export function EnhancedMapView({
               onChange={e => setShowHeatmap(e.target.checked)}
               className='mr-2'
             />
-            Heatmap
+            <span>Heatmap</span>
           </label>
         </div>
       </div>
@@ -147,6 +147,8 @@ export function EnhancedMapView({
         className={`w-full h-full ${mapStyles[mapStyle]} relative overflow-hidden cursor-crosshair`}
         onClick={handleMapClick}
         onContextMenu={handleContextMenu}
+        role='application'
+        aria-label='Interactive map showing truck locations'
       >
         {/* Trucks */}
         {trucks.map(truck => {

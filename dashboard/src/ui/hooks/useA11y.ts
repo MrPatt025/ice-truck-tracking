@@ -24,11 +24,9 @@ export function useFocusTrap(isActive: boolean) {
           lastElement?.focus()
           e.preventDefault()
         }
-      } else {
-        if (document.activeElement === lastElement) {
-          firstElement?.focus()
-          e.preventDefault()
-        }
+      } else if (document.activeElement === lastElement) {
+        firstElement?.focus()
+        e.preventDefault()
       }
     }
 
@@ -68,7 +66,7 @@ export function useAnnouncer() {
     document.body.appendChild(announcer)
 
     setTimeout(() => {
-      document.body.removeChild(announcer)
+      announcer.remove()
     }, 1000)
   }
 

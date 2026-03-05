@@ -80,8 +80,8 @@ const DEFAULT_CONFIG: TemporalConfig = {
 // ─── Temporal UI Engine ───────────────────────────────────────
 
 export class TemporalUIEngine {
-  private _config: TemporalConfig;
-  private _state: TemporalState;
+  private readonly _config: TemporalConfig;
+  private readonly _state: TemporalState;
   private _mounted = false;
   private _checkInterval: ReturnType<typeof setInterval> | null = null;
   private _idleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -109,7 +109,7 @@ export class TemporalUIEngine {
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || typeof window === 'undefined') return;
+    if (this._mounted || typeof globalThis.window === 'undefined') return;
     this._mounted = true;
 
     // Check time every minute
@@ -118,10 +118,10 @@ export class TemporalUIEngine {
 
     // Idle detection
     this._activityHandler = () => this._resetIdle();
-    window.addEventListener('mousemove', this._activityHandler, { passive: true });
-    window.addEventListener('keydown', this._activityHandler, { passive: true });
-    window.addEventListener('scroll', this._activityHandler, { passive: true });
-    window.addEventListener('touchstart', this._activityHandler, { passive: true });
+    globalThis.window.addEventListener('mousemove', this._activityHandler, { passive: true });
+    globalThis.window.addEventListener('keydown', this._activityHandler, { passive: true });
+    globalThis.window.addEventListener('scroll', this._activityHandler, { passive: true });
+    globalThis.window.addEventListener('touchstart', this._activityHandler, { passive: true });
 
     this._startIdleTimer();
     this._applyCSSVars();
@@ -132,11 +132,11 @@ export class TemporalUIEngine {
     if (this._checkInterval) clearInterval(this._checkInterval);
     if (this._idleTimer) clearTimeout(this._idleTimer);
 
-    if (typeof window !== 'undefined' && this._activityHandler) {
-      window.removeEventListener('mousemove', this._activityHandler);
-      window.removeEventListener('keydown', this._activityHandler);
-      window.removeEventListener('scroll', this._activityHandler);
-      window.removeEventListener('touchstart', this._activityHandler);
+    if (typeof globalThis.window !== 'undefined' && this._activityHandler) {
+      globalThis.window.removeEventListener('mousemove', this._activityHandler);
+      globalThis.window.removeEventListener('keydown', this._activityHandler);
+      globalThis.window.removeEventListener('scroll', this._activityHandler);
+      globalThis.window.removeEventListener('touchstart', this._activityHandler);
     }
   }
 
@@ -228,12 +228,11 @@ export class TemporalUIEngine {
     root.style.setProperty('--temporal-peak', this._state.isPeakHours ? '1' : '0');
     root.style.setProperty('--temporal-traffic', String(this._state.trafficLoad));
 
-    // Set data attribute for CSS-driven behaviors
-    root.setAttribute('data-temporal', this._state.segment);
+    root.dataset.temporal = this._state.segment;
     if (this._state.isIdle) {
-      root.setAttribute('data-idle', '');
+      root.dataset.idle = '';
     } else {
-      root.removeAttribute('data-idle');
+      delete root.dataset.idle;
     }
   }
 }

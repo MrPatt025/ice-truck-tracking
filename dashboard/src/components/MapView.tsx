@@ -41,7 +41,7 @@ export function MapView({
   onSelectTruck,
   geofences: _geofences = [],
   className,
-}: MapViewProps) {
+}: Readonly<MapViewProps>) {
   const { startRender, endRender } = usePerformanceMonitor('MapView')
   const mapRef = useRef<HTMLDivElement>(null)
   const [mapStyle, setMapStyle] = useState<MapStyle>('streets')
@@ -77,9 +77,9 @@ export function MapView({
           return false
 
         const distance =
-          Math.sqrt(
-            Math.pow(truck.latitude - otherTruck.latitude, 2) +
-              Math.pow(truck.longitude - otherTruck.longitude, 2)
+          Math.hypot(
+            truck.latitude - otherTruck.latitude,
+            truck.longitude - otherTruck.longitude
           ) * 111000 // Convert to meters
 
         return distance < 1000 // 1km clustering radius
@@ -123,7 +123,7 @@ export function MapView({
       const clickedTruck = trucks.find(truck => {
         const truckX = (truck.longitude + 180) * (rect.width / 360)
         const truckY = (90 - truck.latitude) * (rect.height / 180)
-        const distance = Math.sqrt((x - truckX) ** 2 + (y - truckY) ** 2)
+        const distance = Math.hypot(x - truckX, y - truckY)
         return distance < 20
       })
 
@@ -150,7 +150,7 @@ export function MapView({
       const clickedTruck = trucks.find(truck => {
         const truckX = (truck.longitude + 180) * (rect.width / 360)
         const truckY = (90 - truck.latitude) * (rect.height / 180)
-        const distance = Math.sqrt((x - truckX) ** 2 + (y - truckY) ** 2)
+        const distance = Math.hypot(x - truckX, y - truckY)
         return distance < 20
       })
 
@@ -200,10 +200,30 @@ export function MapView({
             className='text-sm border-none outline-none bg-transparent'
             aria-label='Map style'
           >
-            <option value='streets'><span role="img" aria-label="streets">ðŸ—ºï¸</span> Streets</option>
-            <option value='satellite'><span role="img" aria-label="satellite">ðŸ›°ï¸</span> Satellite</option>
-            <option value='terrain'><span role="img" aria-label="terrain">ðŸ”ï¸</span> Terrain</option>
-            <option value='dark'><span role="img" aria-label="dark">ðŸŒ™</span> Dark</option>
+            <option value='streets'>
+              <span role='img' aria-label='streets'>
+                ðŸ—ºï¸
+              </span>{' '}
+              Streets
+            </option>
+            <option value='satellite'>
+              <span role='img' aria-label='satellite'>
+                ðŸ›°ï¸
+              </span>{' '}
+              Satellite
+            </option>
+            <option value='terrain'>
+              <span role='img' aria-label='terrain'>
+                ðŸ”ï¸
+              </span>{' '}
+              Terrain
+            </option>
+            <option value='dark'>
+              <span role='img' aria-label='dark'>
+                ðŸŒ™
+              </span>{' '}
+              Dark
+            </option>
           </select>
         </Card>
 
@@ -217,7 +237,7 @@ export function MapView({
                 className='mr-2'
                 aria-describedby='clustering-help'
               />
-              Clustering
+              <span>Clustering</span>
             </label>
             <label className='flex items-center text-sm'>
               <input
@@ -227,7 +247,7 @@ export function MapView({
                 className='mr-2'
                 aria-describedby='heatmap-help'
               />
-              Heatmap
+              <span>Heatmap</span>
             </label>
           </div>
         </Card>
@@ -265,14 +285,14 @@ export function MapView({
         aria-label='Interactive map showing truck locations'
       >
         {/* Individual Trucks */}
-        {(!showClusters
-          ? trucks
-          : trucks.filter(
+        {(showClusters
+          ? trucks.filter(
               truck =>
                 !clusters.some(cluster =>
                   cluster.trucks.some(t => t.id === truck.id)
                 )
             )
+          : trucks
         ).map(truck => {
           const x = ((truck.longitude + 180) * 100) / 360
           const y = ((90 - truck.latitude) * 100) / 180
@@ -283,19 +303,14 @@ export function MapView({
               key={truck.id}
               content={`${truck.driver_name} - ${truck.status}`}
             >
-              <div
-                className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
+              <button
+                type='button'
+                className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 bg-transparent border-none p-0 cursor-pointer ${
                   isSelected ? 'scale-125 z-20' : 'z-10'
                 }`}
                 style={{ left: `${x}%`, top: `${y}%` }}
-                role='button'
-                tabIndex={0}
                 aria-label={`Truck ${truck.id}, driver ${truck.driver_name}, status ${truck.status}`}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    onSelectTruck(truck.id)
-                  }
-                }}
+                onClick={() => onSelectTruck(truck.id)}
               >
                 <div
                   className={`w-6 h-6 rounded-full border-2 ${getStatusColor(truck.status)} ${
@@ -330,11 +345,12 @@ export function MapView({
                           <span className='text-gray-600'>Status:</span>
                           <span
                             className={`font-medium ${
-                              truck.status === 'active'
-                                ? 'text-green-600'
-                                : truck.status === 'maintenance'
-                                  ? 'text-orange-600'
-                                  : 'text-gray-600'
+                              (
+                                {
+                                  active: 'text-green-600',
+                                  maintenance: 'text-orange-600',
+                                } as Record<string, string>
+                              )[truck.status] ?? 'text-gray-600'
                             }`}
                           >
                             {truck.status}
@@ -344,7 +360,7 @@ export function MapView({
                     </CardContent>
                   </Card>
                 )}
-              </div>
+              </button>
             </Tooltip>
           )
         })}
@@ -360,17 +376,16 @@ export function MapView({
                 key={cluster.id}
                 content={`${cluster.count} trucks in this area`}
               >
-                <div
-                  className='absolute transform -translate-x-1/2 -translate-y-1/2 z-10'
+                <button
+                  type='button'
+                  className='absolute transform -translate-x-1/2 -translate-y-1/2 z-10 bg-transparent border-none p-0 cursor-pointer'
                   style={{ left: `${x}%`, top: `${y}%` }}
-                  role='button'
-                  tabIndex={0}
                   aria-label={`Cluster of ${cluster.count} trucks`}
                 >
                   <div className='w-8 h-8 bg-blue-500 border-2 border-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold'>
                     {cluster.count}
                   </div>
-                </div>
+                </button>
               </Tooltip>
             )
           })}

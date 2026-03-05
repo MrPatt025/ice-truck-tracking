@@ -60,7 +60,7 @@ const DEFAULT_CONFIG: CursorConfig = {
 };
 
 const MODE_STYLES: Record<CursorMode, { scale: number; borderRadius: string; color: string }> = {
-  default: { scale: 1.0, borderRadius: '50%', color: 'oklch(0.85 0.08 250 / 0.5)' },
+  default: { scale: 1, borderRadius: '50%', color: 'oklch(0.85 0.08 250 / 0.5)' },
   map:     { scale: 1.5, borderRadius: '50%', color: 'oklch(0.80 0.12 200 / 0.4)' },
   panel:   { scale: 0.8, borderRadius: '4px', color: 'oklch(0.90 0.06 260 / 0.6)' },
   drag:    { scale: 1.3, borderRadius: '50%', color: 'oklch(0.75 0.10 140 / 0.5)' },
@@ -71,16 +71,16 @@ const MODE_STYLES: Record<CursorMode, { scale: number; borderRadius: string; col
 // ─── Cursor Physics Engine ────────────────────────────────────
 
 export class CursorPhysicsEngine {
-  private _config: CursorConfig;
-  private _state: CursorState;
-  private _trail: TrailPoint[] = [];
+  private readonly _config: CursorConfig;
+  private readonly _state: CursorState;
+  private readonly _trail: TrailPoint[] = [];
   private _el: HTMLDivElement | null = null;
   private _trailEls: HTMLDivElement[] = [];
   private _glowEl: HTMLDivElement | null = null;
   private _mounted = false;
   private _raf = 0;
   private _lastTime = 0;
-  private _magnetTargets: Set<HTMLElement> = new Set();
+  private readonly _magnetTargets: Set<HTMLElement> = new Set();
 
   // Spring constants
   private readonly SPRING_K = 0.15;
@@ -109,7 +109,7 @@ export class CursorPhysicsEngine {
 
     // Create cursor element
     this._el = document.createElement('div');
-    this._el.setAttribute('data-craft', 'cursor');
+    this._el.dataset.craft = 'cursor';
     Object.assign(this._el.style, {
       position: 'fixed',
       width: `${this._config.size}px`,
@@ -128,7 +128,7 @@ export class CursorPhysicsEngine {
 
     // Create glow element
     this._glowEl = document.createElement('div');
-    this._glowEl.setAttribute('data-craft', 'cursor-glow');
+    this._glowEl.dataset.craft = 'cursor-glow';
     Object.assign(this._glowEl.style, {
       position: 'fixed',
       width: `${this._config.size * 3}px`,
@@ -146,7 +146,7 @@ export class CursorPhysicsEngine {
     // Create trail elements
     for (let i = 0; i < this._config.glowTrailLength; i++) {
       const t = document.createElement('div');
-      t.setAttribute('data-craft', 'cursor-trail');
+      t.dataset.craft = 'cursor-trail';
       const trailSize = this._config.size * (1 - i / this._config.glowTrailLength) * 0.6;
       Object.assign(t.style, {
         position: 'fixed',
@@ -219,22 +219,22 @@ export class CursorPhysicsEngine {
   /** Enable/disable cursor physics */
   setEnabled(enabled: boolean): void {
     this._config.enabled = enabled;
-    if (!enabled) {
-      if (typeof document !== 'undefined') {
-        document.documentElement.style.cursor = '';
-      }
-      if (this._el) { this._el.style.opacity = '0'; }
-    } else {
+    if (enabled) {
       if (typeof document !== 'undefined') {
         document.documentElement.style.cursor = 'none';
       }
       if (this._el) { this._el.style.opacity = '1'; }
+    } else {
+      if (typeof document !== 'undefined') {
+        document.documentElement.style.cursor = '';
+      }
+      if (this._el) { this._el.style.opacity = '0'; }
     }
   }
 
   /* ── Internal Animation ────────────────────────────────────── */
 
-  private _loop = (): void => {
+  private readonly _loop = (): void => {
     if (!this._mounted) return;
 
     const now = performance.now();
@@ -258,7 +258,7 @@ export class CursorPhysicsEngine {
       const cy = rect.top + rect.height / 2;
       const dx = cx - s.targetX;
       const dy = cy - s.targetY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
+      const dist = Math.hypot(dx, dy);
 
       if (dist < this._config.magneticRadius && dist > 0) {
         const force = (1 - dist / this._config.magneticRadius) * this._config.magneticStrength;
@@ -282,7 +282,7 @@ export class CursorPhysicsEngine {
     s.y += s.vy;
 
     // Velocity-based stretch
-    const speed = Math.sqrt(s.vx * s.vx + s.vy * s.vy);
+    const speed = Math.hypot(s.vx, s.vy);
     const stretch = Math.min(speed / 30, this._config.stretchFactor - 1);
     s.scale = 1 + stretch;
     s.rotation = speed > 0.5 ? Math.atan2(s.vy, s.vx) : s.rotation;
@@ -296,8 +296,8 @@ export class CursorPhysicsEngine {
       this._trail.pop();
     }
     // Fade trail
-    for (let i = 0; i < this._trail.length; i++) {
-      this._trail[i].opacity *= 0.85;
+    for (const point of this._trail) {
+      point.opacity *= 0.85;
     }
   }
 
@@ -328,12 +328,12 @@ export class CursorPhysicsEngine {
 
   /* ── Event Handlers ────────────────────────────────────────── */
 
-  private _onMouseMove = (e: MouseEvent): void => {
+  private readonly _onMouseMove = (e: MouseEvent): void => {
     this._state.targetX = e.clientX;
     this._state.targetY = e.clientY;
   };
 
-  private _onMouseDown = (): void => {
+  private readonly _onMouseDown = (): void => {
     this.setMode('click');
     // Press scale
     if (this._el) {
@@ -341,7 +341,7 @@ export class CursorPhysicsEngine {
     }
   };
 
-  private _onMouseUp = (): void => {
+  private readonly _onMouseUp = (): void => {
     this.setMode('default');
     if (this._el) {
       this._el.style.transition = '';

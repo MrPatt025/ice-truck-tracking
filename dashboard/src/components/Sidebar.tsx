@@ -30,7 +30,7 @@ export function Sidebar({
   selectedTruck,
   onSelectTruck,
   isConnected,
-}: SidebarProps) {
+}: Readonly<SidebarProps>) {
   return (
     <div className='w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col'>
       <div className='p-4 border-b border-gray-200 dark:border-gray-700'>
@@ -54,10 +54,11 @@ export function Sidebar({
           </h2>
           <div className='space-y-2'>
             {trucks.map(truck => (
-              <div
+              <button
+                type='button'
                 key={truck.id}
                 onClick={() => onSelectTruck(truck.id)}
-                className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                className={`p-3 rounded-lg cursor-pointer transition-colors text-left w-full border-none ${
                   selectedTruck === truck.id
                     ? 'bg-blue-100 dark:bg-blue-900 border-blue-300'
                     : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
@@ -80,7 +81,7 @@ export function Sidebar({
                     {truck.driver_name}
                   </p>
                 )}
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -90,9 +91,9 @@ export function Sidebar({
             Recent Alerts ({alerts.length})
           </h2>
           <div className='space-y-2'>
-            {alerts.slice(0, 5).map((alert, index) => (
+            {alerts.slice(0, 5).map(alert => (
               <div
-                key={index}
+                key={alert.id}
                 className='p-2 rounded bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400'
               >
                 <p className='text-sm font-medium'>{alert.message}</p>

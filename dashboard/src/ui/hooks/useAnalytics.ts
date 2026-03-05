@@ -26,8 +26,8 @@ export function useAnalytics() {
     if (!analyticsEnabled) return
 
     // Google Analytics 4
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', event.action, {
+    if (typeof globalThis.window !== 'undefined' && globalThis.window.gtag) {
+      globalThis.window.gtag('event', event.action, {
         event_category: event.category,
         event_label: event.label,
         value: event.value,
@@ -47,8 +47,8 @@ export function useAnalytics() {
         localStorage.getItem('analytics-enabled') === 'true'
       if (!analyticsEnabled) return
 
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('config', process.env.NEXT_PUBLIC_GA_ID ?? '', {
+      if (typeof globalThis.window !== 'undefined' && globalThis.window.gtag) {
+        globalThis.window.gtag('config', process.env.NEXT_PUBLIC_GA_ID ?? '', {
           page_path,
           page_title,
         })
@@ -63,8 +63,8 @@ export function useAnalytics() {
         localStorage.getItem('analytics-enabled') === 'true'
       if (!analyticsEnabled) return
 
-      if (typeof window !== 'undefined' && window.gtag) {
-        window.gtag('config', process.env.NEXT_PUBLIC_GA_ID ?? '', {
+      if (typeof globalThis.window !== 'undefined' && globalThis.window.gtag) {
+        globalThis.window.gtag('config', process.env.NEXT_PUBLIC_GA_ID ?? '', {
           custom_map: properties,
         })
       }
@@ -146,16 +146,16 @@ export function useAnalytics() {
 
 export function useAnalyticsOptIn() {
   const isOptedIn =
-    typeof window !== 'undefined'
-      ? localStorage.getItem('analytics-enabled') === 'true'
-      : false
+    typeof globalThis.window === 'undefined'
+      ? false
+      : localStorage.getItem('analytics-enabled') === 'true'
 
   const optIn = useCallback(() => {
     localStorage.setItem('analytics-enabled', 'true')
 
     // Initialize analytics
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('consent', 'update', {
+    if (typeof globalThis.window !== 'undefined' && globalThis.window.gtag) {
+      globalThis.window.gtag('consent', 'update', {
         analytics_storage: 'granted',
       })
     }
@@ -165,8 +165,8 @@ export function useAnalyticsOptIn() {
     localStorage.setItem('analytics-enabled', 'false')
 
     // Disable analytics
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('consent', 'update', {
+    if (typeof globalThis.window !== 'undefined' && globalThis.window.gtag) {
+      globalThis.window.gtag('consent', 'update', {
         analytics_storage: 'denied',
       })
     }

@@ -51,7 +51,7 @@ export function PreferencesPanel({
   isOpen,
   onClose,
   onPreferencesChange,
-}: PreferencesPanelProps) {
+}: Readonly<PreferencesPanelProps>) {
   const [preferences, setPreferences] =
     useState<UserPreferences>(defaultPreferences)
   const [hasChanges, setHasChanges] = useState(false)
@@ -80,7 +80,7 @@ export function PreferencesPanel({
         current = current[keys[i]] as Record<string, unknown>
       }
 
-      current[keys[keys.length - 1]] = value
+      current[keys.at(-1)!] = value
       return updated
     })
     setHasChanges(true)
@@ -93,11 +93,11 @@ export function PreferencesPanel({
 
     // Track preference changes
     if (
-      typeof window !== 'undefined' &&
-      window.gtag &&
+      typeof globalThis.window !== 'undefined' &&
+      globalThis.window.gtag &&
       preferences.privacy.analytics
     ) {
-      window.gtag('event', 'preferences_updated', {
+      globalThis.window.gtag('event', 'preferences_updated', {
         map_style: preferences.mapStyle,
         language: preferences.language,
         layout: preferences.dashboard.layout,
@@ -145,10 +145,14 @@ export function PreferencesPanel({
             <h3 className='text-lg font-medium mb-3'>Map Settings</h3>
             <div className='space-y-3'>
               <div>
-                <label className='block text-sm font-medium mb-1'>
+                <label
+                  htmlFor='map-style-select'
+                  className='block text-sm font-medium mb-1'
+                >
                   Default Map Style
                 </label>
                 <select
+                  id='map-style-select'
                   value={preferences.mapStyle}
                   onChange={e => updatePreference('mapStyle', e.target.value)}
                   className='w-full p-2 border rounded-md'
@@ -175,7 +179,7 @@ export function PreferencesPanel({
                   onChange={e => updatePreference('language', e.target.value)}
                   className='mr-2'
                 />
-                English
+                <span>English</span>
               </label>
               <label className='flex items-center'>
                 <input
@@ -186,7 +190,7 @@ export function PreferencesPanel({
                   onChange={e => updatePreference('language', e.target.value)}
                   className='mr-2'
                 />
-                à¹„à¸—à¸¢
+                <span>ไทย</span>
               </label>
             </div>
           </section>
@@ -204,7 +208,7 @@ export function PreferencesPanel({
                   }
                   className='mr-2'
                 />
-                Email notifications
+                <span>Email notifications</span>
               </label>
               <label className='flex items-center'>
                 <input
@@ -215,7 +219,7 @@ export function PreferencesPanel({
                   }
                   className='mr-2'
                 />
-                Push notifications
+                <span>Push notifications</span>
               </label>
               <label className='flex items-center'>
                 <input
@@ -226,7 +230,7 @@ export function PreferencesPanel({
                   }
                   className='mr-2'
                 />
-                Slack notifications
+                <span>Slack notifications</span>
               </label>
             </div>
           </section>
@@ -236,7 +240,7 @@ export function PreferencesPanel({
             <h3 className='text-lg font-medium mb-3'>Dashboard</h3>
             <div className='space-y-3'>
               <div>
-                <label className='block text-sm font-medium mb-1'>Layout</label>
+                <span className='block text-sm font-medium mb-1'>Layout</span>
                 <div className='flex gap-4'>
                   <label className='flex items-center'>
                     <input
@@ -249,7 +253,7 @@ export function PreferencesPanel({
                       }
                       className='mr-2'
                     />
-                    Grid
+                    <span>Grid</span>
                   </label>
                   <label className='flex items-center'>
                     <input
@@ -262,7 +266,7 @@ export function PreferencesPanel({
                       }
                       className='mr-2'
                     />
-                    List
+                    <span>List</span>
                   </label>
                 </div>
               </div>
@@ -276,15 +280,19 @@ export function PreferencesPanel({
                   }
                   className='mr-2'
                 />
-                Auto-refresh data
+                <span>Auto-refresh data</span>
               </label>
 
               {preferences.dashboard.autoRefresh && (
                 <div>
-                  <label className='block text-sm font-medium mb-1'>
+                  <label
+                    htmlFor='refresh-interval'
+                    className='block text-sm font-medium mb-1'
+                  >
                     Refresh interval (seconds)
                   </label>
                   <input
+                    id='refresh-interval'
                     type='number'
                     min='10'
                     max='300'
@@ -292,7 +300,7 @@ export function PreferencesPanel({
                     onChange={e =>
                       updatePreference(
                         'dashboard.refreshInterval',
-                        parseInt(e.target.value)
+                        Number.parseInt(e.target.value)
                       )
                     }
                     className='w-24 p-2 border rounded-md'
@@ -315,7 +323,7 @@ export function PreferencesPanel({
                   }
                   className='mr-2'
                 />
-                Allow usage analytics
+                <span>Allow usage analytics</span>
               </label>
               <p className='text-sm text-gray-600 ml-6'>
                 Help us improve the dashboard by sharing anonymous usage data
@@ -330,7 +338,7 @@ export function PreferencesPanel({
                   }
                   className='mr-2'
                 />
-                Enable crash reporting
+                <span>Enable crash reporting</span>
               </label>
               <p className='text-sm text-gray-600 ml-6'>
                 Automatically report errors to help us fix issues

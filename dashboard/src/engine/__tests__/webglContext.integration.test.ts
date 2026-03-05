@@ -13,7 +13,7 @@ class MockWebGL2Context {
     readonly canvas: HTMLCanvasElement;
 
     private _contextLost = false;
-    private _extensions: Map<string, unknown> = new Map();
+    private readonly _extensions: Map<string, unknown> = new Map();
 
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;

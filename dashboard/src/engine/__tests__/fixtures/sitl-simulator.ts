@@ -138,75 +138,74 @@ export class SITLSimulator {
         }
     }
 
+    // ── Movement Helpers ──────────────────────────────────────
+
+    private updateGPSPosition(truck: TruckState, latRadius: number, lngRadius: number): void {
+        const dLat = (truck._targetLat - truck.lat) * 0.02;
+        const dLng = (truck._targetLng - truck.lng) * 0.02;
+        truck.lat += dLat + (Math.random() - 0.5) * 0.001;
+        truck.lng += dLng + (Math.random() - 0.5) * 0.001;
+
+        const dist = Math.hypot(truck.lat - truck._targetLat, truck.lng - truck._targetLng);
+        if (dist < 0.01) {
+            truck._targetLat = randomOffset(this.config.areaCenter.lat, latRadius);
+            truck._targetLng = randomOffset(this.config.areaCenter.lng, lngRadius);
+        }
+
+        truck.speed = clamp(truck.speed + (Math.random() - 0.5) * 5, 0, 120);
+        truck.heading = (truck.heading + (Math.random() - 0.5) * 15 + 360) % 360;
+    }
+
+    private updateTemperature(truck: TruckState): void {
+        const { spikeChance, temperatureRange } = this.config;
+        if (truck._spiking) {
+            truck._spikeCountdown--;
+            if (truck._spikeCountdown <= 0) {
+                truck._spiking = false;
+                truck.temperature = randomInRange(temperatureRange.min, temperatureRange.max);
+            }
+        } else if (Math.random() < spikeChance) {
+            truck._spiking = true;
+            truck._spikeCountdown = Math.floor(randomInRange(5, 20));
+            truck.temperature = randomInRange(5, 25);
+            truck.status = 'alert';
+            this._spikes++;
+        } else {
+            truck.temperature = clamp(
+                truck.temperature + (Math.random() - 0.5) * 0.5,
+                temperatureRange.min,
+                temperatureRange.max,
+            );
+        }
+    }
+
     // ── Tick Simulation ────────────────────────────────────────
 
     /** Advance simulation by one tick. Returns telemetry batch. */
     tick(): TruckTelemetry[] {
         this._tick++;
         const batch: TruckTelemetry[] = [];
-        const { packetLossRate, spikeChance, temperatureRange, areaCenter, areaRadiusKm } = this.config;
+        const { packetLossRate, areaRadiusKm } = this.config;
         const latRadius = areaRadiusKm * KM_TO_DEG_LAT;
         const lngRadius = areaRadiusKm * KM_TO_DEG_LNG;
 
         for (const truck of this.trucks) {
-            // Packet loss simulation
             if (Math.random() < packetLossRate) {
                 this._droppedPackets++;
                 this._totalPackets++;
                 continue;
             }
 
-            // GPS drift toward target
-            const dLat = (truck._targetLat - truck.lat) * 0.02;
-            const dLng = (truck._targetLng - truck.lng) * 0.02;
-            truck.lat += dLat + (Math.random() - 0.5) * 0.001; // jitter
-            truck.lng += dLng + (Math.random() - 0.5) * 0.001;
+            this.updateGPSPosition(truck, latRadius, lngRadius);
+            this.updateTemperature(truck);
 
-            // Pick new target when close
-            const dist = Math.sqrt(
-                (truck.lat - truck._targetLat) ** 2 + (truck.lng - truck._targetLng) ** 2,
-            );
-            if (dist < 0.01) {
-                truck._targetLat = randomOffset(areaCenter.lat, latRadius);
-                truck._targetLng = randomOffset(areaCenter.lng, lngRadius);
-            }
-
-            // Speed & heading
-            truck.speed = clamp(truck.speed + (Math.random() - 0.5) * 5, 0, 120);
-            truck.heading = (truck.heading + (Math.random() - 0.5) * 15 + 360) % 360;
-
-            // Temperature spike
-            if (truck._spiking) {
-                truck._spikeCountdown--;
-                if (truck._spikeCountdown <= 0) {
-                    truck._spiking = false;
-                    truck.temperature = randomInRange(temperatureRange.min, temperatureRange.max);
-                }
-            } else if (Math.random() < spikeChance) {
-                truck._spiking = true;
-                truck._spikeCountdown = Math.floor(randomInRange(5, 20));
-                truck.temperature = randomInRange(5, 25); // Dangerously warm
-                truck.status = 'alert';
-                this._spikes++;
-            } else {
-                truck.temperature = clamp(
-                    truck.temperature + (Math.random() - 0.5) * 0.5,
-                    temperatureRange.min,
-                    temperatureRange.max,
-                );
-            }
-
-            // Fuel consumption
             truck.fuelLevel = clamp(truck.fuelLevel - Math.random() * 0.05, 0, 100);
             truck.odometer += truck.speed * (this.config.tickIntervalMs / 3_600_000);
             truck.engineRpm = truck.speed > 0
                 ? clamp(800 + truck.speed * 30 + (Math.random() - 0.5) * 200, 800, 6000)
                 : 800;
 
-            // Status transitions
-            if (!truck._spiking && truck.status === 'alert') {
-                truck.status = 'active';
-            }
+            if (!truck._spiking && truck.status === 'alert') truck.status = 'active';
             if (truck.fuelLevel < 5) truck.status = 'maintenance';
 
             batch.push({

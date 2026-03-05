@@ -233,11 +233,9 @@ function handleAlertEvaluation(msg: EvaluateAlertsMsg) {
 function formatCsvCell(val: unknown): string {
   if (val == null) return '';
   if (typeof val === 'object') return JSON.stringify(val);
-  const str = String(val);
-  if (str.includes(',') || str.includes('"')) {
-    return `"${str.replaceAll('"', '""')}"`;
-  }
-  return str;
+  return String(val).includes(',') || String(val).includes('"')
+    ? `"${String(val).replaceAll('"', '""')}"`
+    : String(val);
 }
 
 function handleExport(msg: PrepareExportMsg) {

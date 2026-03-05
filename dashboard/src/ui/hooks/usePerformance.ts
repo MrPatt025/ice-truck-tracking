@@ -42,8 +42,8 @@ export function usePerformanceMonitor(componentName: string) {
     }
 
     // Send to analytics in production
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'component_render', {
+    if (typeof globalThis.window !== 'undefined' && globalThis.window.gtag) {
+      globalThis.window.gtag('event', 'component_render', {
         component_name: componentName,
         render_time: renderTime,
         custom_parameter: 'performance_monitoring',
@@ -65,7 +65,7 @@ export function usePerformanceMonitor(componentName: string) {
 
 export function useWebVitals() {
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof globalThis.window === 'undefined') return
 
     // Measure Core Web Vitals
     const observer = new PerformanceObserver(list => {
@@ -77,11 +77,11 @@ export function useWebVitals() {
         }
 
         // Send to analytics
-        if (window.gtag) {
-          window.gtag('event', 'web_vital', {
+        if (globalThis.window?.gtag) {
+          globalThis.window.gtag('event', 'web_vital', {
             metric_name: metric.name,
             metric_value: metric.value,
-            page_path: window.location.pathname,
+            page_path: globalThis.window.location.pathname,
           })
         }
 

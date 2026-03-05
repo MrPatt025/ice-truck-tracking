@@ -22,7 +22,7 @@ export interface GeofenceAlert {
 class SocketService {
   private socket: Socket | null = null
   private reconnectAttempts = 0
-  private maxReconnectAttempts = 5
+  private readonly maxReconnectAttempts = 5
 
   connect(
     url: string = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5000'

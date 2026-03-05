@@ -25,7 +25,11 @@ interface DashboardProps {
   selectedTruck: string | null
 }
 
-export function Dashboard({ trucks, alerts, selectedTruck }: DashboardProps) {
+export function Dashboard({
+  trucks,
+  alerts,
+  selectedTruck,
+}: Readonly<DashboardProps>) {
   const activeTrucks = trucks.filter(t => t.status === 'active').length
   const totalAlerts = alerts.length
   const selectedTruckData = trucks.find(t => t.id === selectedTruck)
@@ -108,18 +112,19 @@ export function Dashboard({ trucks, alerts, selectedTruck }: DashboardProps) {
             Recent Activity
           </h3>
           <div className='space-y-3'>
-            {alerts.slice(0, 10).map((alert, index) => (
+            {alerts.slice(0, 10).map(alert => (
               <div
-                key={index}
+                key={alert.id}
                 className='flex items-start space-x-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg'
               >
                 <div
                   className={`w-2 h-2 rounded-full mt-2 ${
-                    alert.type === 'error'
-                      ? 'bg-red-500'
-                      : alert.type === 'warning'
-                        ? 'bg-yellow-500'
-                        : 'bg-blue-500'
+                    (
+                      {
+                        error: 'bg-red-500',
+                        warning: 'bg-yellow-500',
+                      } as Record<string, string>
+                    )[alert.type ?? ''] ?? 'bg-blue-500'
                   }`}
                 />
                 <div className='flex-1'>
