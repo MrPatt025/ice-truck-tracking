@@ -10,6 +10,7 @@
     "test": "jest --runInBand --detectOpenHandles --passWithNoTests --setupFiles ./tests/jest.setup.env.js --setupFilesAfterEnv ./tests/jest.setup.mocks.js",
     "test:unit": "jest tests/unit --coverage",
     "test:integration": "jest tests/integration",
+    "test:containers": "jest tests/integration/database.testcontainers.test.js --testTimeout=120000",
     "test:watch": "jest --watch",
     "lint": "eslint . --fix",
     "lint:fix": "eslint . --fix",
@@ -71,6 +72,7 @@
     "nodemon": "^3.1.14",
     "prettier": "^3.8.1",
     "supertest": "^7.2.2",
-    "ts-jest": "^29.4.6"
+    "ts-jest": "^29.4.6",
+    "testcontainers": "^10.18.0"
   }
 }

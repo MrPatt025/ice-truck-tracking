@@ -20,6 +20,9 @@ const {
   requestId: requestIdMiddleware,
   securityHeaders,
 } = require('./src/middleware/security');
+
+// Load observability metrics (registers on shared prom-client registry)
+require('./src/middleware/observability');
 const { auditMiddleware } = require('./src/middleware/audit');
 const { sanitize } = require('./src/middleware/zodValidation');
 

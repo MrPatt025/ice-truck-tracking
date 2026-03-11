@@ -2,6 +2,7 @@
 const Redis = require('ioredis');
 const config = require('./env');
 const logger = require('./logger');
+const { recordCacheOp } = require('../middleware/observability');
 
 let client = null;
 
@@ -36,16 +37,19 @@ const cacheOrFetch = async (key, fetchFn, ttl = 60) => {
         const cached = await redis.get(key);
         if (cached) {
             logger.debug({ key }, 'cache hit');
+            recordCacheOp('get', 'hit');
             return JSON.parse(cached);
         }
     } catch {
         // Redis down — fall through to fetch
     }
 
+    recordCacheOp('get', 'miss');
     const data = await fetchFn();
 
     try {
         await redis.setex(key, ttl, JSON.stringify(data));
+        recordCacheOp('set', 'ok');
     } catch {
         // Redis down — ignore
     }

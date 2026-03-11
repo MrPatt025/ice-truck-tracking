@@ -21,3 +21,13 @@ export {
     type AdaptiveDPRConfig,
     type BudgetSample,
 } from './adaptiveDPR';
+export {
+    SharedCanvasPool,
+    type CanvasConfig,
+} from './sharedCanvas';
+export {
+    GPUMemoryGuard,
+    type GPUMemoryBudget,
+    type GPUMemorySnapshot,
+    type MemoryPressure,
+} from './memoryGuard';

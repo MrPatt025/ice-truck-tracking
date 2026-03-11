@@ -3,6 +3,7 @@ const db = require('../config/database');
 const logger = require('../config/logger');
 const { invalidate, publish: redisPublish } = require('../config/redis');
 const websocketService = require('./websocketService');
+const { recordTelemetryIngestion, recordAlert } = require('../middleware/observability');
 
 /**
  * Register MQTT topic handlers on the mqttService instance.
@@ -21,6 +22,7 @@ const registerHandlers = (mqttService) => {
             humidity = null,
         } = data;
 
+        const startTime = process.hrtime.bigint();
         try {
             // Insert into TimescaleDB hypertable (auto-partitioned by time)
             await db.query(
@@ -57,7 +59,12 @@ const registerHandlers = (mqttService) => {
                 );
                 websocketService.broadcast('alert', alertData);
                 mqttService.publishMessage(`trucks/${truckId}/alerts`, alertData);
+                recordAlert(alertData.severity);
             }
+
+            // Record ingestion metrics
+            const elapsed = Number(process.hrtime.bigint() - startTime) / 1e9;
+            recordTelemetryIngestion('mqtt', 1, elapsed);
         } catch (err) {
             logger.error({ truckId, err: err.message }, 'Telemetry ingestion error');
         }

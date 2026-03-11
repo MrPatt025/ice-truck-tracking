@@ -1,5 +1,6 @@
 const { Server } = require('socket.io');
 const logger = require('../config/logger');
+const { setWsConnections, recordWsMessage, recordWsError } = require('../middleware/observability');
 
 class WebSocketService {
   constructor() {
@@ -19,10 +20,17 @@ class WebSocketService {
     this.io.on('connection', socket => {
       logger.info(`Client connected: ${socket.id}`);
       this.connectedClients.add(socket.id);
+      setWsConnections(this.connectedClients.size);
 
       socket.on('disconnect', () => {
         logger.info(`Client disconnected: ${socket.id}`);
         this.connectedClients.delete(socket.id);
+        setWsConnections(this.connectedClients.size);
+      });
+
+      socket.on('error', (err) => {
+        logger.error(`WebSocket error on ${socket.id}: ${err.message}`);
+        recordWsError('socket');
       });
     });
 
@@ -50,6 +58,7 @@ class WebSocketService {
   broadcast(event, data) {
     if (this.io) {
       this.io.emit(event, data);
+      recordWsMessage('outbound');
     }
   }
 
