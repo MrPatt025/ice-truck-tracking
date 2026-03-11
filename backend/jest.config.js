@@ -5,6 +5,6 @@ module.exports = {
   },
   testPathIgnorePatterns: [
     "/node_modules/",
-    "database\\.testcontainers\\.test\\.js",
+    String.raw`database\.testcontainers\.test\.js`,
   ],
 };

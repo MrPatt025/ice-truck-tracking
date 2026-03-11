@@ -473,6 +473,7 @@ export default function AlertsPage() {
                       <button
                         onClick={() => setShowRuleForm(false)}
                         className='text-muted-foreground hover:text-foreground'
+                        aria-label='Close rule form'
                       >
                         <X className='w-4 h-4' />
                       </button>
@@ -704,6 +705,9 @@ export default function AlertsPage() {
                                 ? 'bg-green-500'
                                 : 'bg-gray-300 dark:bg-gray-600'
                             )}
+                            aria-label={
+                              rule.enabled ? 'Disable rule' : 'Enable rule'
+                            }
                           >
                             <span
                               className={cn(
@@ -716,12 +720,18 @@ export default function AlertsPage() {
                         <td className='px-4 py-3 text-right'>
                           <div className='flex items-center justify-end gap-1'>
                             {canCreate && (
-                              <button className='p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors'>
+                              <button
+                                className='p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors'
+                                aria-label='Edit rule'
+                              >
                                 <Edit className='w-4 h-4' />
                               </button>
                             )}
                             {canDelete && (
-                              <button className='p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors'>
+                              <button
+                                className='p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors'
+                                aria-label='Delete rule'
+                              >
                                 <Trash2 className='w-4 h-4' />
                               </button>
                             )}

@@ -109,7 +109,7 @@ export class TemporalUIEngine {
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || typeof globalThis.window === 'undefined') return;
+    if (this._mounted || globalThis.window === undefined) return;
     this._mounted = true;
 
     // Check time every minute
@@ -118,10 +118,10 @@ export class TemporalUIEngine {
 
     // Idle detection
     this._activityHandler = () => this._resetIdle();
-    globalThis.window.addEventListener('mousemove', this._activityHandler, { passive: true });
-    globalThis.window.addEventListener('keydown', this._activityHandler, { passive: true });
-    globalThis.window.addEventListener('scroll', this._activityHandler, { passive: true });
-    globalThis.window.addEventListener('touchstart', this._activityHandler, { passive: true });
+    globalThis.window?.addEventListener('mousemove', this._activityHandler, { passive: true });
+    globalThis.window?.addEventListener('keydown', this._activityHandler, { passive: true });
+    globalThis.window?.addEventListener('scroll', this._activityHandler, { passive: true });
+    globalThis.window?.addEventListener('touchstart', this._activityHandler, { passive: true });
 
     this._startIdleTimer();
     this._applyCSSVars();
@@ -132,11 +132,11 @@ export class TemporalUIEngine {
     if (this._checkInterval) clearInterval(this._checkInterval);
     if (this._idleTimer) clearTimeout(this._idleTimer);
 
-    if (typeof globalThis.window !== 'undefined' && this._activityHandler) {
-      globalThis.window.removeEventListener('mousemove', this._activityHandler);
-      globalThis.window.removeEventListener('keydown', this._activityHandler);
-      globalThis.window.removeEventListener('scroll', this._activityHandler);
-      globalThis.window.removeEventListener('touchstart', this._activityHandler);
+    if (globalThis.window !== undefined && this._activityHandler) {
+      globalThis.window?.removeEventListener('mousemove', this._activityHandler);
+      globalThis.window?.removeEventListener('keydown', this._activityHandler);
+      globalThis.window?.removeEventListener('scroll', this._activityHandler);
+      globalThis.window?.removeEventListener('touchstart', this._activityHandler);
     }
   }
 

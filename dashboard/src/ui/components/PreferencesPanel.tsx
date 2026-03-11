@@ -80,7 +80,8 @@ export function PreferencesPanel({
         current = current[keys[i]] as Record<string, unknown>
       }
 
-      current[keys.at(-1)!] = value
+      const lastKey = keys.at(-1)
+      if (lastKey) current[lastKey] = value
       return updated
     })
     setHasChanges(true)
@@ -92,12 +93,8 @@ export function PreferencesPanel({
     setHasChanges(false)
 
     // Track preference changes
-    if (
-      typeof globalThis.window !== 'undefined' &&
-      globalThis.window.gtag &&
-      preferences.privacy.analytics
-    ) {
-      globalThis.window.gtag('event', 'preferences_updated', {
+    if (preferences.privacy.analytics) {
+      globalThis.window?.gtag?.('event', 'preferences_updated', {
         map_style: preferences.mapStyle,
         language: preferences.language,
         layout: preferences.dashboard.layout,
@@ -121,6 +118,7 @@ export function PreferencesPanel({
             <button
               onClick={onClose}
               className='text-gray-400 hover:text-gray-600'
+              aria-label='Close preferences'
             >
               <svg
                 className='w-6 h-6'

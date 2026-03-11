@@ -175,7 +175,7 @@ export function createParticleGlowMaterial(): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
         uniforms: {
             uTime: { value: 0 },
-            uPixelRatio: { value: Math.min(globalThis.window !== undefined ? globalThis.window.devicePixelRatio : 1, 2) },
+            uPixelRatio: { value: Math.min(globalThis.window?.devicePixelRatio ?? 1, 2) },
         },
         vertexShader: particleGlowVertex,
         fragmentShader: particleGlowFragment,

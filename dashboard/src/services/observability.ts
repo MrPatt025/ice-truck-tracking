@@ -116,6 +116,12 @@ export class ClientObservability {
 
     // ─── Web Vitals ────────────────────────────────────────────
 
+    private rateMetric(val: number, good: number, fair: number): 'good' | 'needs-improvement' | 'poor' {
+        if (val < good) return 'good';
+        if (val < fair) return 'needs-improvement';
+        return 'poor';
+    }
+
     private observeWebVitals(): void {
         if (typeof PerformanceObserver === 'undefined') return;
 
@@ -128,7 +134,7 @@ export class ClientObservability {
                     this.recordWebVital({
                         name: 'LCP',
                         value: last.startTime,
-                        rating: last.startTime < 2500 ? 'good' : last.startTime < 4000 ? 'needs-improvement' : 'poor',
+                        rating: this.rateMetric(last.startTime, 2500, 4000),
                         timestamp: Date.now(),
                     });
                 }
@@ -148,7 +154,7 @@ export class ClientObservability {
                 this.recordWebVital({
                     name: 'CLS',
                     value: clsValue,
-                    rating: clsValue < 0.1 ? 'good' : clsValue < 0.25 ? 'needs-improvement' : 'poor',
+                    rating: this.rateMetric(clsValue, 0.1, 0.25),
                     timestamp: Date.now(),
                 });
             });
@@ -163,7 +169,7 @@ export class ClientObservability {
                     this.recordWebVital({
                         name: 'FCP',
                         value: entry.startTime,
-                        rating: entry.startTime < 1800 ? 'good' : entry.startTime < 3000 ? 'needs-improvement' : 'poor',
+                        rating: this.rateMetric(entry.startTime, 1800, 3000),
                         timestamp: Date.now(),
                     });
                 }

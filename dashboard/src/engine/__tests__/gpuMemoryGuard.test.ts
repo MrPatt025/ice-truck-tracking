@@ -120,8 +120,8 @@ describe('GPUMemoryGuard', () => {
         guard.start();
         const snap = guard.getLatestSnapshot();
         expect(snap).not.toBeNull();
-        expect(snap!.timestamp).toBeGreaterThan(0);
-        expect(snap!.contextCount).toBe(2); // from mock
+        expect(snap?.timestamp).toBeGreaterThan(0);
+        expect(snap?.contextCount).toBe(2); // from mock
         guard.destroy();
     });
 

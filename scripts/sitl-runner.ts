@@ -23,7 +23,6 @@
 
 import {
     SITLSimulator,
-    DEFAULT_SITL_CONFIG,
     type SITLConfig,
 } from '../dashboard/src/engine/__tests__/fixtures/sitl-simulator';
 
@@ -104,6 +103,63 @@ Options:
 
 // ─── Main ──────────────────────────────────────────────────────
 
+function runBatchMode(sim: SITLSimulator, opts: ReturnType<typeof parseArgs>): void {
+    const allBatches: unknown[] = [];
+
+    for (let t = 0; t < opts.ticks; t++) {
+        if (opts.burst && t === 5) {
+            sim.triggerBurst();
+            process.stderr.write('[SITL] Burst triggered at tick 5\n');
+        }
+
+        const batch = sim.tick();
+        if (opts.jsonArray) {
+            allBatches.push(...batch);
+        } else {
+            for (const telemetry of batch) {
+                process.stdout.write(JSON.stringify(telemetry) + '\n');
+            }
+        }
+    }
+
+    if (opts.jsonArray) {
+        process.stdout.write(JSON.stringify(allBatches, null, 2) + '\n');
+    }
+
+    if (opts.summary) {
+        process.stderr.write(`\n[SITL] Summary:\n${JSON.stringify(sim.stats, null, 2)}\n`);
+    }
+}
+
+function runStreamMode(sim: SITLSimulator, opts: ReturnType<typeof parseArgs>): void {
+    let tickCount = 0;
+
+    sim.start((batch) => {
+        tickCount++;
+        for (const telemetry of batch) {
+            process.stdout.write(JSON.stringify(telemetry) + '\n');
+        }
+
+        if (opts.burst && tickCount === 5) {
+            sim.triggerBurst();
+            process.stderr.write('[SITL] Burst triggered at tick 5\n');
+        }
+    });
+
+    const shutdown = () => {
+        sim.stop();
+        if (opts.summary) {
+            process.stderr.write(`\n[SITL] Summary:\n${JSON.stringify(sim.stats, null, 2)}\n`);
+        }
+        process.exit(0);
+    };
+
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
+
+    process.stderr.write('[SITL] Streaming... Press Ctrl+C to stop.\n');
+}
+
 function main(): void {
     const opts = parseArgs(process.argv);
 
@@ -121,61 +177,9 @@ function main(): void {
     );
 
     if (opts.mode === 'batch') {
-        // ── Batch mode: run N ticks and output all telemetry ────
-        const allBatches: unknown[] = [];
-
-        for (let t = 0; t < opts.ticks; t++) {
-            if (opts.burst && t === 5) {
-                sim.triggerBurst();
-                process.stderr.write('[SITL] Burst triggered at tick 5\n');
-            }
-
-            const batch = sim.tick();
-            if (opts.jsonArray) {
-                allBatches.push(...batch);
-            } else {
-                for (const telemetry of batch) {
-                    process.stdout.write(JSON.stringify(telemetry) + '\n');
-                }
-            }
-        }
-
-        if (opts.jsonArray) {
-            process.stdout.write(JSON.stringify(allBatches, null, 2) + '\n');
-        }
-
-        if (opts.summary) {
-            process.stderr.write(`\n[SITL] Summary:\n${JSON.stringify(sim.stats, null, 2)}\n`);
-        }
+        runBatchMode(sim, opts);
     } else {
-        // ── Stream mode: continuous output ─────────────────────
-        let tickCount = 0;
-
-        sim.start((batch) => {
-            tickCount++;
-            for (const telemetry of batch) {
-                process.stdout.write(JSON.stringify(telemetry) + '\n');
-            }
-
-            if (opts.burst && tickCount === 5) {
-                sim.triggerBurst();
-                process.stderr.write('[SITL] Burst triggered at tick 5\n');
-            }
-        });
-
-        // Graceful shutdown
-        const shutdown = () => {
-            sim.stop();
-            if (opts.summary) {
-                process.stderr.write(`\n[SITL] Summary:\n${JSON.stringify(sim.stats, null, 2)}\n`);
-            }
-            process.exit(0);
-        };
-
-        process.on('SIGINT', shutdown);
-        process.on('SIGTERM', shutdown);
-
-        process.stderr.write('[SITL] Streaming... Press Ctrl+C to stop.\n');
+        runStreamMode(sim, opts);
     }
 }
 

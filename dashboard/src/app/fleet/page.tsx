@@ -341,7 +341,7 @@ export default function FleetManagementPage() {
                                   ? 'bg-green-500'
                                   : 'bg-red-500'
                               )}
-                              style={{ width: `${truck.fuelLevel}%` }}
+                              style={{ width: `${truck.fuelLevel}%` }} // NOSONAR — dynamic percentage
                             />
                           </div>
                           <span className='text-xs text-muted-foreground'>

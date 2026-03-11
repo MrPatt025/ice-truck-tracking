@@ -232,10 +232,20 @@ function handleAlertEvaluation(msg: EvaluateAlertsMsg) {
 // ── Export Preparation ─────────────────────────────────────
 function formatCsvCell(val: unknown): string {
   if (val == null) return '';
-  if (typeof val === 'object') return JSON.stringify(val);
-  return String(val).includes(',') || String(val).includes('"')
-    ? `"${String(val).replaceAll('"', '""')}"`
-    : String(val);
+  switch (typeof val) {
+    case 'string':
+      return val.includes(',') || val.includes('"')
+        ? `"${val.replaceAll('"', '""')}"`
+        : val;
+    case 'object':
+      return JSON.stringify(val);
+    default: {
+      const str = String(val);
+      return str.includes(',') || str.includes('"')
+        ? `"${str.replaceAll('"', '""')}"`
+        : str;
+    }
+  }
 }
 
 function handleExport(msg: PrepareExportMsg) {

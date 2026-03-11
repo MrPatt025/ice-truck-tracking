@@ -100,7 +100,7 @@ export class ImperativeMapLayer {
             const clusterId = features[0].properties?.cluster_id;
             const src = this.map.getSource(this.sourceId);
             if (!src || !('getClusterExpansionZoom' in src)) return;
-            (src as mapboxgl.GeoJSONSource).getClusterExpansionZoom(clusterId, (err: unknown, zoom: number | null | undefined) => {
+            src.getClusterExpansionZoom(clusterId, (err, zoom) => {
                 if (err || !this.map) return;
                 this.map.easeTo({
                     center: (features[0].geometry as GeoJSON.Point).coordinates as [number, number],

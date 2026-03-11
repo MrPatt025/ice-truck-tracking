@@ -107,3 +107,72 @@ jobs:
       - name: Run pnpm audit
         run: pnpm audit --audit-level=high
         continue-on-error: true
+
+  # ── CodeQL Analysis ──────────────────────────────────────
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+      - name: CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:javascript-typescript
+
+  # ── OWASP Dependency Check ──────────────────────────────
+  owasp-dependency-check:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check for known vulnerabilities
+        run: npx audit-ci --high
+        continue-on-error: true
+      - name: License compliance check
+        run: npx license-checker --failOn 'GPL-3.0;AGPL-3.0' --summary
+        continue-on-error: true
+
+  # ── Security Gate (summary) ───────────────────────────────
+  security-gate:
+    needs:
+      [
+        gitleaks,
+        trivy-backend,
+        trivy-dashboard,
+        trivy-iac,
+        audit,
+        codeql,
+        owasp-dependency-check,
+      ]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Security summary
+        run: |
+          echo "## 🔐 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Gitleaks | ${{ needs.gitleaks.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Trivy Backend | ${{ needs.trivy-backend.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Trivy Dashboard | ${{ needs.trivy-dashboard.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Trivy IaC | ${{ needs.trivy-iac.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| pnpm Audit | ${{ needs.audit.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CodeQL | ${{ needs.codeql.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| OWASP Check | ${{ needs.owasp-dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
+      - name: Fail if critical scans failed
+        if: needs.gitleaks.result == 'failure'
+        run: exit 1

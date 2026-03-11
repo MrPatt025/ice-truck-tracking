@@ -33,12 +33,10 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     // Log to analytics
-    if (typeof globalThis.window !== 'undefined' && globalThis.window.gtag) {
-      globalThis.window.gtag('event', 'exception', {
-        description: error.toString(),
-        fatal: false,
-      })
-    }
+    globalThis.window?.gtag?.('event', 'exception', {
+      description: error.toString(),
+      fatal: false,
+    })
   }
 
   handleRetry = () => {

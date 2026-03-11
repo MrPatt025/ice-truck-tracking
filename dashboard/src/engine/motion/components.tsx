@@ -222,8 +222,8 @@ export function MagneticButton({
   return (
     <button
       ref={ref}
-      className={className}
-      style={{ ...style, willChange: 'transform' }}
+      className={`${className ?? ''} will-change-transform`}
+      style={style}
       onClick={onClick}
       disabled={disabled}
     >
@@ -329,13 +329,8 @@ export function InertiaPanel({
   return (
     <div
       ref={ref}
-      className={className}
-      style={{
-        ...style,
-        willChange: 'transform',
-        touchAction: 'none',
-        cursor: 'grab',
-      }}
+      className={`${className ?? ''} touch-none cursor-grab will-change-transform`}
+      style={style}
     >
       {children}
     </div>
@@ -394,11 +389,7 @@ export function SpringNumber({
   }, [value])
 
   return (
-    <span
-      ref={ref}
-      className={className}
-      style={{ ...style, fontVariantNumeric: 'tabular-nums' }}
-    >
+    <span ref={ref} className={`${className ?? ''} tabular-nums`} style={style}> {/* NOSONAR — passed-through style prop */}
       {format(value)}
     </span>
   )

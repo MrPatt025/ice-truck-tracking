@@ -14,8 +14,8 @@
 
 const { GenericContainer, Wait } = require('testcontainers');
 const { Pool } = require('pg');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
+const fs = require('node:fs');
 
 // ─── Container + Pool Setup ────────────────────────────────────
 
@@ -27,7 +27,7 @@ beforeAll(async () => {
     container = await new GenericContainer('postgres:16-alpine')
         .withEnvironment({
             POSTGRES_USER: 'test',
-            POSTGRES_PASSWORD: 'test',
+            POSTGRES_PASSWORD: 'test', // NOSONAR — test-only container credentials
             POSTGRES_DB: 'ice_tracking_test',
         })
         .withExposedPorts(5432)
@@ -42,7 +42,7 @@ beforeAll(async () => {
         host,
         port,
         user: 'test',
-        password: 'test',
+        password: 'test', // NOSONAR — test-only container credentials
         database: 'ice_tracking_test',
         max: 5,
     });
@@ -53,12 +53,12 @@ beforeAll(async () => {
 
     // Remove TimescaleDB-specific statements (not available in plain postgres)
     sql = sql
-        .replace(/CREATE EXTENSION IF NOT EXISTS timescaledb[^;]*;/gi, '')
-        .replace(/SELECT\s+create_hypertable\s*\([^;]*;/gi, '')
-        .replace(/CREATE MATERIALIZED VIEW.*?;/gis, '')
-        .replace(/SELECT\s+add_continuous_aggregate_policy\s*\([^;]*;/gi, '')
-        .replace(/SELECT\s+add_retention_policy\s*\([^;]*;/gi, '')
-        .replace(/WITH\s*\(timescaledb\.continuous\)\s*AS/gi, 'AS');
+        .replaceAll(/CREATE EXTENSION IF NOT EXISTS timescaledb[^;]*;/gi, '')
+        .replaceAll(/SELECT\s+create_hypertable\s*\([^;]*;/gi, '')
+        .replaceAll(/CREATE MATERIALIZED VIEW.*?;/gis, '')
+        .replaceAll(/SELECT\s+add_continuous_aggregate_policy\s*\([^;]*;/gi, '')
+        .replaceAll(/SELECT\s+add_retention_policy\s*\([^;]*;/gi, '')
+        .replaceAll(/WITH\s*\(timescaledb\.continuous\)\s*AS/gi, 'AS');
 
     await pool.query(sql);
 }, 120_000);

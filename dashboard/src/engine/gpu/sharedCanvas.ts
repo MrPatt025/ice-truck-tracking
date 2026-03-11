@@ -121,11 +121,11 @@ export class SharedCanvasPool {
         let version: 1 | 2 = 1;
 
         if (preferWebGL2) {
-            gl = canvas.getContext('webgl2', attrs) as WebGL2RenderingContext | null;
+            gl = canvas.getContext('webgl2', attrs);
             if (gl) version = 2;
         }
         if (!gl) {
-            gl = canvas.getContext('webgl', attrs) as WebGLRenderingContext | null;
+            gl = canvas.getContext('webgl', attrs);
             version = 1;
         }
         if (!gl) {
@@ -191,7 +191,8 @@ export class SharedCanvasPool {
             this.onContextLost.set(id, set);
         }
         set.add(cb);
-        return () => set!.delete(cb);
+        const captured = set;
+        return () => { captured.delete(cb); };
     }
 
     /** Subscribe to context-restore for a canvas */
@@ -202,7 +203,8 @@ export class SharedCanvasPool {
             this.onContextRestored.set(id, set);
         }
         set.add(cb);
-        return () => set!.delete(cb);
+        const captured = set;
+        return () => { captured.delete(cb); };
     }
 
     /** Get pool diagnostics */

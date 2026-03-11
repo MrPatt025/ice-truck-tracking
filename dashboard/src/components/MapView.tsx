@@ -280,9 +280,14 @@ export function MapView({
         ref={mapRef}
         className={`w-full h-full ${mapStyles[mapStyle]} relative overflow-hidden cursor-crosshair transition-colors duration-300`}
         onClick={handleMapClick}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ')
+            handleMapClick(e as unknown as React.MouseEvent<HTMLDivElement>)
+        }}
         onContextMenu={handleContextMenu}
         role='application'
         aria-label='Interactive map showing truck locations'
+        tabIndex={0}
       >
         {/* Individual Trucks */}
         {(showClusters
@@ -408,6 +413,7 @@ export function MapView({
           className='fixed z-50 py-1'
           style={{ left: contextMenu.x, top: contextMenu.y }}
           role='menu'
+          aria-label='Map context menu'
         >
           {contextMenu.truck ? (
             <>
