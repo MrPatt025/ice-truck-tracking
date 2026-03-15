@@ -26,7 +26,7 @@ export function Skeleton({
     <output aria-label='Loading'>
       <div
         className={cn('animate-pulse rounded-md bg-muted', className)}
-        style={{ width, height }} // NOSONAR — dynamic props require inline styles
+        style={{ width, height }} /* NOSONAR — dynamic sizing, cannot be static CSS */
       />
     </output>
   )

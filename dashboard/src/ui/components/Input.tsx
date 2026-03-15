@@ -50,7 +50,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               Boolean(rightIcon) && 'pr-10',
               className
             )}
-            aria-invalid={error ? true : undefined}
+            aria-invalid={error ? 'true' : 'false'}
             aria-describedby={describedById}
             {...props}
           />

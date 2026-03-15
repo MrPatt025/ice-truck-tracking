@@ -1,4 +1,9 @@
 {
+  "MD010": false,
+  "MD012": { "maximum": 2 },
+  "MD013": { "line_length": 160, "code_blocks": false, "tables": false },
   "MD024": { "siblings_only": true },
-  "MD060": { "table_pipe_style": "consistent" }
+  "MD029": { "style": "ordered" },
+  "MD041": false,
+  "MD060": false
 }

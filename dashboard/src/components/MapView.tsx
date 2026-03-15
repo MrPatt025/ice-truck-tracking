@@ -280,7 +280,13 @@ export function MapView({
         ref={mapRef}
         className={`w-full h-full ${mapStyles[mapStyle]} relative overflow-hidden cursor-crosshair transition-colors duration-300`}
         onClick={handleMapClick}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ')
+            handleMapClick(e as unknown as React.MouseEvent<HTMLDivElement>)
+        }}
         onContextMenu={handleContextMenu}
+        role='application'
+        tabIndex={0}
         aria-label={`Interactive map showing truck locations, zoom level ${zoomLevel}`}
       >
         {/* Individual Trucks */}
@@ -307,7 +313,7 @@ export function MapView({
                 className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 bg-transparent border-none p-0 cursor-pointer ${
                   isSelected ? 'scale-125 z-20' : 'z-10'
                 }`}
-                style={{ /* NOSONAR */ left: `${x}%`, top: `${y}%` }}
+                style={{ left: `${x}%`, top: `${y}%` }} /* NOSONAR — GPS-derived position */
                 aria-label={`Truck ${truck.id}, driver ${truck.driver_name}, status ${truck.status}`}
                 onClick={() => onSelectTruck(truck.id)}
               >
@@ -378,7 +384,7 @@ export function MapView({
                 <button
                   type='button'
                   className='absolute transform -translate-x-1/2 -translate-y-1/2 z-10 bg-transparent border-none p-0 cursor-pointer'
-                  style={{ /* NOSONAR */ left: `${x}%`, top: `${y}%` }}
+                  style={{ left: `${x}%`, top: `${y}%` }} /* NOSONAR — GPS-derived position */
                   aria-label={`Cluster of ${cluster.count} trucks`}
                 >
                   <div className='w-8 h-8 bg-blue-500 border-2 border-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold'>
@@ -393,7 +399,7 @@ export function MapView({
         {showHeatmap && (
           <div
             className='absolute inset-0 pointer-events-none'
-            style={{ /* NOSONAR */ background: `radial-gradient(circle at 50% 50%, rgba(255, 0, 0, 0.3) 0%, rgba(255, 255, 0, 0.2) 50%, transparent 70%)` }}
+            style={{ background: `radial-gradient(circle at 50% 50%, rgba(255, 0, 0, 0.3) 0%, rgba(255, 255, 0, 0.2) 50%, transparent 70%)` }} /* NOSONAR — dynamic gradient */
             aria-hidden='true'
           />
         )}
@@ -403,7 +409,7 @@ export function MapView({
       {contextMenu && (
         <div
           className='fixed z-50 py-1 rounded-lg bg-white border border-gray-200 shadow-md'
-          style={{ /* NOSONAR */ left: contextMenu.x, top: contextMenu.y }}
+          style={{ left: contextMenu.x, top: contextMenu.y }} /* NOSONAR — pointer position */
           role='menu'
           aria-label='Map context menu'
         >

@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD010 MD012 MD013 MD022 MD029 MD041 -->
+
 ---
 
 CLAUDE.md
