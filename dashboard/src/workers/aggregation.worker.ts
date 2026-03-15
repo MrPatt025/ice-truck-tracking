@@ -240,7 +240,7 @@ function formatCsvCell(val: unknown): string {
     case 'object':
       return JSON.stringify(val);
     default: {
-      const str = String(val);
+      const str = String(val); // NOSONAR — only numbers, booleans, bigints reach this branch
       return str.includes(',') || str.includes('"')
         ? `"${str.replaceAll('"', '""')}"`
         : str;

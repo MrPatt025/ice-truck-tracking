@@ -12,7 +12,7 @@ dashboards and mobile apps via REST/WebSocket APIs behind a Kong API Gateway.
 
 ## Trust Boundaries
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                     Internet (Untrusted)                    │
 │  ┌──────────┐  ┌───────────┐  ┌─────────────┐               │

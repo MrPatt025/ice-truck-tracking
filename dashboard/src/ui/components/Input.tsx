@@ -15,7 +15,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     const reactId = useId();
-    const inputId = id || `input-${reactId.replace(/[:]/g, '')}`
+    const inputId = id || `input-${reactId.replaceAll(':', '')}`
+    let describedById: string | undefined
+    if (error) describedById = `${inputId}-error`
+    else if (helperText) describedById = `${inputId}-helper`
 
     return (
       <div className='space-y-1'>
@@ -47,14 +50,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               Boolean(rightIcon) && 'pr-10',
               className
             )}
-            aria-invalid={error ? 'true' : undefined}
-            aria-describedby={
-              error
-                ? `${inputId}-error`
-                : helperText
-                  ? `${inputId}-helper`
-                  : undefined
-            }
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedById}
             {...props}
           />
 

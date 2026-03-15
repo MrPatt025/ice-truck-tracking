@@ -37,7 +37,7 @@ export function useRealTimeData() {
   };
   const connect = useMemo(() => {
     return () => {
-      if (typeof globalThis.window === "undefined") return;
+      if (globalThis.window === undefined) return;
       try {
         wsRef.current?.close();
         const ws = new WebSocket(WS_URL.replace(/^http/, "ws"));
@@ -62,7 +62,7 @@ export function useRealTimeData() {
   }, [connect]);
   // Fallback polling (???????????????????? WS)
 useEffect(() => {
-  if (typeof globalThis.window === 'undefined') return;
+  if (globalThis.window === undefined) return;
   let tm: number | undefined;
   const poll = async () => {
     try {
