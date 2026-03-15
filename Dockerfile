@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for Monorepo
-FROM node:22-alpine AS deps
+FROM node:25-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -11,14 +11,14 @@ COPY sdk/edge/package.json ./sdk/edge/
 COPY sdk/mobile/package.json ./sdk/mobile/
 RUN pnpm install --frozen-lockfile --prod
 
-FROM node:22-alpine AS builder
+FROM node:25-alpine AS builder
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm run build
 
-FROM node:22-alpine AS runner
+FROM node:25-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV production
 COPY --from=builder /app/node_modules ./node_modules
