@@ -40,3 +40,5 @@ UPDATE alerts SET is_read = FALSE WHERE is_read IS NULL;
 
 -- Show the updated table structure
 DESCRIBE alerts;
+
+

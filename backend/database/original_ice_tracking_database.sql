@@ -141,7 +141,7 @@ CREATE INDEX idx_route_assignments_date ON route_assignments(assigned_date);
 
 -- เพิ่มแอดมินในตาราง users
 INSERT INTO users (username, password, role) VALUES 
-('admin', '$2b$10$rQZ8K9mN2pL3oI4uV5wX6yA7bC8dE9fG0hI1jK2lM3nO4pQ5rS6tU7vW8xY9zA', 'admin');
+('admin', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', 'admin');
 
 -- เพิ่มแอดมินในตาราง drivers (สำหรับการจัดการพนักงานขับรถ)
 INSERT INTO drivers (driver_code, full_name, username, phone, start_date) VALUES 
@@ -185,9 +185,11 @@ INSERT INTO route_assignments (route_id, truck_id, driver_id, assigned_date, sta
 -- แสดงข้อมูลสรุป
 SELECT 'Database created successfully!' as status;
 SELECT COUNT(*) as total_tables FROM information_schema.tables WHERE table_schema = 'ice_tracking';
-SELECT table_name FROM information_schema.tables WHERE table_schema = 'ice_tracking' ORDER BY table_name;
+SELECT table_name FROM information_schema.tables WHERE table_schema = 'ice_tracking' ORDER BY table_name ASC;
 
 -- แสดงข้อมูลแอดมิน
 SELECT 'Admin user created:' as info;
 SELECT username, role FROM users WHERE role = 'admin';
 SELECT driver_code, full_name, username FROM drivers WHERE driver_code = 'ADMIN001';
+
+

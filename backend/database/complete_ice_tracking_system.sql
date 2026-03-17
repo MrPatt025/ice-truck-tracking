@@ -371,16 +371,16 @@ CREATE INDEX idx_notifications_created_at ON notifications(created_at);
 
 -- เพิ่มผู้ใช้ admin และ owner
 INSERT INTO users (username, password, role) VALUES 
-('admin', '$2b$10$rQZ8K9mN2pL3oI4uV5wX6yA7bC8dE9fG0hI1jK2lM3nO4pQ5rS6tU7vW8xY9zA', 'admin'),
-('owner', '$2b$10$rQZ8K9mN2pL3oI4uV5wX6yA7bC8dE9fG0hI1jK2lM3nO4pQ5rS6tU7vW8xY9zA', 'owner'),
-('admin001', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+('admin', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', 'admin'),
+('owner', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', 'owner'),
+('admin001', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', 'admin');
 
 -- เพิ่มพนักงานขับรถตัวอย่าง
 INSERT INTO drivers (driver_id, full_name, username, password, phone, start_date, status) VALUES 
-('DRV001', 'สมชาย ใจดี', 'driver1', '$2b$10$rQZ8K9mN2pL3oI4uV5wX6yA7bC8dE9fG0hI1jK2lM3nO4pQ5rS6tU7vW8xY9zA', '0812345678', '2024-01-01', 'active'),
-('DRV002', 'สมหญิง รักงาน', 'driver2', '$2b$10$rQZ8K9mN2pL3oI4uV5wX6yA7bC8dE9fG0hI1jK2lM3nO4pQ5rS6tU7vW8xY9zA', '0823456789', '2024-01-15', 'active'),
-('DRV003', 'วิชัย ขยันขันแข็ง', 'driver3', '$2b$10$rQZ8K9mN2pL3oI4uV5wX6yA7bC8dE9fG0hI1jK2lM3nO4pQ5rS6tU7vW8xY9zA', '0834567890', '2024-02-01', 'active'),
-('DRV004', 'มาลี สุขใส', 'driver4', '$2b$10$rQZ8K9mN2pL3oI4uV5wX6yA7bC8dE9fG0hI1jK2lM3nO4pQ5rS6tU7vW8xY9zA', '0845678901', '2024-02-15', 'active');
+('DRV001', 'สมชาย ใจดี', 'driver1', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', '0812345678', '2024-01-01', 'active'),
+('DRV002', 'สมหญิง รักงาน', 'driver2', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', '0823456789', '2024-01-15', 'active'),
+('DRV003', 'วิชัย ขยันขันแข็ง', 'driver3', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', '0834567890', '2024-02-01', 'active'),
+('DRV004', 'มาลี สุขใส', 'driver4', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', '0845678901', '2024-02-15', 'active');
 
 -- เพิ่มรถตัวอย่าง
 INSERT INTO trucks (truck_id, license_plate, model, color, gps_id, driver_id, status, fuel_capacity, max_load) VALUES 
@@ -469,7 +469,7 @@ INSERT INTO notifications (user_id, title, message, type, is_read) VALUES
 -- แสดงข้อมูลสรุป
 SELECT 'Database created successfully!' as status;
 SELECT COUNT(*) as total_tables FROM information_schema.tables WHERE table_schema = 'ice_tracking';
-SELECT table_name FROM information_schema.tables WHERE table_schema = 'ice_tracking' ORDER BY table_name;
+SELECT table_name FROM information_schema.tables WHERE table_schema = 'ice_tracking' ORDER BY table_name ASC;
 
 -- แสดงข้อมูลตัวอย่าง
 SELECT 'Sample data inserted:' as info;
@@ -498,3 +498,5 @@ UNION ALL
 SELECT 'Notifications:', COUNT(*) FROM notifications
 UNION ALL
 SELECT 'System Settings:', COUNT(*) FROM system_settings;
+
+

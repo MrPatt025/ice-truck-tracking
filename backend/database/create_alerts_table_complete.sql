@@ -44,13 +44,44 @@ CREATE TABLE `alerts` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='ตารางการแจ้งเตือนระบบติดตามรถ';
 
 -- Insert sample data for testing (without foreign key references)
+SET @default_location = JSON_OBJECT('note', 'sample location');
 INSERT INTO `alerts` (`truck_code`, `driver_code`, `type`, `message`, `priority`, `location_data`) VALUES
-('กข-1234', 'DRV001', 'off_route', 'รถออกนอกเส้นทางที่กำหนด', 'high', '{"latitude": 13.7563, "longitude": 100.5018, "address": "กรุงเทพมหานคร"}'),
-('กข-5678', 'DRV002', 'idle_too_long', 'รถจอดอยู่นานเกิน 30 นาที', 'medium', '{"latitude": 13.7563, "longitude": 100.5018, "address": "กรุงเทพมหานคร"}'),
-('กข-9012', 'DRV003', 'speed_exceeded', 'รถขับเร็วเกิน 80 กม./ชม.', 'high', '{"latitude": 13.7563, "longitude": 100.5018, "address": "กรุงเทพมหานคร"}');
+(
+    'กข-1234',
+    'DRV001',
+    'off_route',
+    'รถออกนอกเส้นทางที่กำหนด',
+    'high',
+    @default_location
+),
+(
+    'กข-5678',
+    'DRV002',
+    'idle_too_long',
+    'รถจอดอยู่นานเกิน 30 นาที',
+    'low',
+    @default_location
+),
+(
+    'กข-9012',
+    'DRV003',
+    'speed_exceeded',
+    'รถขับเร็วเกิน 80 กม./ชม.',
+    'high',
+    @default_location
+);
 
 -- Show the final table structure
 DESCRIBE `alerts`;
 
 -- Show sample data
-SELECT * FROM `alerts` LIMIT 5;
+SELECT
+    id,
+    truck_code,
+    type,
+    priority,
+    message,
+    alert_time,
+    is_read
+FROM `alerts`
+LIMIT 5;

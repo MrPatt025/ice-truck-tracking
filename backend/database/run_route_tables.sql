@@ -57,3 +57,5 @@ CREATE INDEX IF NOT EXISTS idx_route_assignments_date ON route_assignments(assig
 
 -- แสดงข้อความสำเร็จ
 SELECT 'ตารางสำหรับจัดการเส้นทางถูกสร้างเรียบร้อยแล้ว!' as message;
+
+

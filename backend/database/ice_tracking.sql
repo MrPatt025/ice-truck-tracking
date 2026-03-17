@@ -64,3 +64,5 @@ CREATE TABLE alerts (
     message TEXT,
     alert_time DATETIME
 );
+
+

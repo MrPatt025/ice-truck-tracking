@@ -18,11 +18,13 @@ DESCRIBE users;
 DESCRIBE drivers;
 
 -- ตรวจสอบข้อมูลในตาราง users
-SELECT * FROM users;
+SELECT username, role FROM users;
 
 -- ตรวจสอบข้อมูลในตาราง drivers
-SELECT * FROM drivers;
+SELECT driver_id, full_name, username FROM drivers;
 
 -- ตรวจสอบแอดมิน admin001
-SELECT * FROM users WHERE username = 'admin001';
-SELECT * FROM drivers WHERE username = 'admin001';
+SELECT username, role FROM users WHERE username = 'admin001';
+SELECT driver_id, full_name, username FROM drivers WHERE username = 'admin001';
+
+

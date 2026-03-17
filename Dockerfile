@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Monorepo
 FROM node:25-alpine AS deps
-RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+RUN npm install -g pnpm@10.30.3
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY turbo.json ./
@@ -12,7 +12,7 @@ COPY sdk/mobile/package.json ./sdk/mobile/
 RUN pnpm install --frozen-lockfile --prod
 
 FROM node:25-alpine AS builder
-RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+RUN npm install -g pnpm@10.30.3
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

@@ -8,7 +8,8 @@
     "dashboard",
     "mobile-app",
     "sdk/edge",
-    "sdk/mobile"
+    "sdk/mobile",
+    "sdk/mcp-server"
   ],
   "scripts": {
     "preinstall": "npx only-allow pnpm",
@@ -20,7 +21,7 @@
     "test:e2e": "turbo run test:e2e",
     "test:coverage": "turbo run test:coverage",
     "test:mutation": "npx turbo run test:mutation",
-    "test:all": "turbo run test test:unit test:integration test:e2e",
+    "test:all": "turbo run test:unit test:integration test:e2e",
     "dev": "turbo run dev --parallel",
     "start": "turbo run start",
     "lint": "npx eslint .",
@@ -123,7 +124,6 @@
       "@semantic-release/npm"
     ]
   },
-  "dependencies": {},
   "pnpm": {
     "ignoredBuiltDependencies": [
       "@scarf/scarf",
@@ -132,6 +132,13 @@
       "sharp",
       "snyk",
       "unrs-resolver"
+    ],
+    "onlyBuiltDependencies": [
+      "core-js-pure",
+      "cpu-features",
+      "esbuild",
+      "protobufjs",
+      "ssh2"
     ]
   }
 }

@@ -25,3 +25,5 @@ MODIFY COLUMN `priority` ENUM('low', 'medium', 'high', 'critical') NOT NULL DEFA
 
 -- 6. Show the final table structure
 DESCRIBE `alerts`;
+
+

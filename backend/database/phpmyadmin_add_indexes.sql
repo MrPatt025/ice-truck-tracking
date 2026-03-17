@@ -6,3 +6,5 @@ CREATE INDEX `idx_alerts_type` ON `alerts`(`type`);
 CREATE INDEX `idx_alerts_alert_time` ON `alerts`(`alert_time`);
 CREATE INDEX `idx_alerts_is_read` ON `alerts`(`is_read`);
 CREATE INDEX `idx_alerts_priority` ON `alerts`(`priority`);
+
+

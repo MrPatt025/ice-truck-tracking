@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD033 MD013 MD040 MD009 MD032 -->
+
 <p align="center">
   <img src="https://img.shields.io/badge/🚚❄️-Ice_Truck_Tracking-0ea5e9?style=for-the-badge&labelColor=0f172a" alt="Ice Truck Tracking" />
 </p>
@@ -19,23 +21,49 @@
 
 ## Table of Contents
 
+- [Table of Contents](#table-of-contents)
 - [Overview](#overview)
+  - [Key Capabilities](#key-capabilities)
 - [Architecture](#architecture)
 - [Monorepo Structure](#monorepo-structure)
 - [Technology Stack](#technology-stack)
+  - [Backend](#backend)
+  - [Dashboard](#dashboard)
+  - [Mobile App](#mobile-app)
+  - [DevOps \& Tooling](#devops--tooling)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
+  - [Option 1 — Docker Compose (Recommended)](#option-1--docker-compose-recommended)
+  - [Option 2 — Local Development](#option-2--local-development)
 - [Configuration](#configuration)
+  - [Backend (`backend/.env`)](#backend-backendenv)
+  - [Dashboard (`dashboard/.env.local`)](#dashboard-dashboardenvlocal)
 - [Development](#development)
+  - [Conventions](#conventions)
+  - [Useful Commands](#useful-commands)
 - [Scripts Reference](#scripts-reference)
 - [API Documentation](#api-documentation)
-- [Testing & Quality](#testing--quality)
+  - [Endpoints (v1)](#endpoints-v1)
+  - [Interactive Docs](#interactive-docs)
+  - [Real-time Events (Socket.IO)](#real-time-events-socketio)
+  - [MQTT Topics](#mqtt-topics)
+- [Testing \& Quality](#testing--quality)
+  - [Test Strategy](#test-strategy)
+  - [Running Tests](#running-tests)
+  - [Current Test Results](#current-test-results)
 - [CI/CD Pipeline](#cicd-pipeline)
-- [Infrastructure & Deployment](#infrastructure--deployment)
+- [Infrastructure \& Deployment](#infrastructure--deployment)
+  - [Docker Compose (Local/Staging)](#docker-compose-localstaging)
+  - [Kubernetes (Production)](#kubernetes-production)
+  - [Deploy Commands](#deploy-commands)
 - [Observability](#observability)
+  - [Metrics \& Monitoring](#metrics--monitoring)
+  - [Health Endpoints](#health-endpoints)
+  - [Alert Rules](#alert-rules)
 - [Security](#security)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
+- [Documentation](#documentation)
 - [License](#license)
 
 ---
@@ -46,8 +74,8 @@
 
 ### Key Capabilities
 
-| Capability                |                         Description                           |
-|---------------------------|---------------------------------------------------------------|
+| Capability                | Description                                                   |
+| ------------------------- | ------------------------------------------------------------- |
 | **Real-time Tracking**    | Sub-second GPS & telemetry via MQTT → WebSocket pipeline      |
 | **Cold-chain Monitoring** | Temperature anomaly detection with automated alerts           |
 | **Geofencing**            | Zone-based rules with breach/exit notifications               |
@@ -147,62 +175,62 @@ ice-truck-tracking/
 
 ### Backend
 
-|   Component    |                Technology              |         Version       |
-|----------------|----------------------------------------|-----------------------|
-| Runtime        | Node.js                                |         ≥ 22          |
-| Framework      | Express                                |         4.22          |
-| Database       | PostgreSQL + **TimescaleDB**           |         PG 16         |
-| Cache          | **Redis** (ioredis)                    |         7 Alpine      |
-| Messaging      | **Apache Kafka** (kafkajs)             |         2.2           |
-| IoT Broker     | **Eclipse Mosquitto** (MQTT 5)         |         5.15          |
-| Real-time      | Socket.IO                              |         4.7           |
-| Auth           | JWT + Refresh Token Rotation           |     jsonwebtoken 9    |
-| Validation     | Zod + Joi + express-validator          |         Latest        | 
-| Observability  | OpenTelemetry + prom-client            |   Auto-instrumented   |
-| Logging        | Pino (structured JSON)                 |         10.3          |
-| API Docs       | Swagger / OpenAPI 3.0                  |   swagger-ui-express  |
+| Component     | Technology                     | Version            |
+| ------------- | ------------------------------ | ------------------ |
+| Runtime       | Node.js                        | ≥ 22               |
+| Framework     | Express                        | 4.22               |
+| Database      | PostgreSQL + **TimescaleDB**   | PG 16              |
+| Cache         | **Redis** (ioredis)            | 7 Alpine           |
+| Messaging     | **Apache Kafka** (kafkajs)     | 2.2                |
+| IoT Broker    | **Eclipse Mosquitto** (MQTT 5) | 5.15               |
+| Real-time     | Socket.IO                      | 4.7                |
+| Auth          | JWT + Refresh Token Rotation   | jsonwebtoken 9     |
+| Validation    | Zod + Joi + express-validator  | Latest             |
+| Observability | OpenTelemetry + prom-client    | Auto-instrumented  |
+| Logging       | Pino (structured JSON)         | 10.3               |
+| API Docs      | Swagger / OpenAPI 3.0          | swagger-ui-express |
 
 ### Dashboard
 
-| Componen       |                Technology              |         Version       |
-|----------------|----------------------------------------|-----------------------|
-| Framework      | Next.js (App Router, Turbopack)        | 15.5                  |
-| UI Library     | React                                  | 18.3                  |
-| Components     | shadcn/ui + Radix UI                   | Latest                |
-| Styling        | Tailwind CSS                           | 3.4                   |
-| Map ผs         | Mapbox GL JS + react-map-gl            | 3.9                   |
-| Charts         | Recharts                               | 2.15                  |
-| Animation      | Framer Motion                          | 11.15                 |
-| i18n           | i18next + react-i18next                | Latest                |
-| Real-time      | socket.io-client                       | 4.8                   |
- 
+| Componen   | Technology                      | Version |
+| ---------- | ------------------------------- | ------- |
+| Framework  | Next.js (App Router, Turbopack) | 15.5    |
+| UI Library | React                           | 18.3    |
+| Components | shadcn/ui + Radix UI            | Latest  |
+| Styling    | Tailwind CSS                    | 3.4     |
+| Map ผs     | Mapbox GL JS + react-map-gl     | 3.9     |
+| Charts     | Recharts                        | 2.15    |
+| Animation  | Framer Motion                   | 11.15   |
+| i18n       | i18next + react-i18next         | Latest  |
+| Real-time  | socket.io-client                | 4.8     |
+
 ### Mobile App
 
-| Component      |                Technology              |         Version       |
-|----------------|----------------------------------------|-----------------------|
-| Framework      | Expo (with expo-router)                | SDK 52                |
-| Platform       | React Native                           | 0.76                  |
-| Navigation     | React Navigation (tabs, stack, drawer) | 7                     |
-| Maps           | react-native-maps                      | 1.20                  |
-| Storage        | expo-secure-store + expo-sqlite        | Latest                |
-| Location       | expo-location                          | 18.0                  |
-| Error Tracking | Sentry (react-native)                  | 6.5                   |
-| OTA Updates    | expo-updates                           | Latest                |
+| Component      | Technology                             | Version |
+| -------------- | -------------------------------------- | ------- |
+| Framework      | Expo (with expo-router)                | SDK 52  |
+| Platform       | React Native                           | 0.76    |
+| Navigation     | React Navigation (tabs, stack, drawer) | 7       |
+| Maps           | react-native-maps                      | 1.20    |
+| Storage        | expo-secure-store + expo-sqlite        | Latest  |
+| Location       | expo-location                          | 18.0    |
+| Error Tracking | Sentry (react-native)                  | 6.5     |
+| OTA Updates    | expo-updates                           | Latest  |
 
 ### DevOps & Tooling
 
-|      Tool                        |                    Purpose                   |
-|----------------------------------|----------------------------------------------|
-| pnpm 10 + TurboRepo              | Monorepo management & build orchestration    |
-| TypeScript 5.9                   | Type safety across all packages              |
-| ESLint 9 + Prettier              | Code quality & formatting                    |
-| Husky + lint-staged + commitlint | Git hooks & conventional commits             |
-| Docker Compose                   | Full-stack local development (8 services)    |
-| Helm + Terraform + Kubernetes    | Production infrastructure                    |
-| Kong                             | API Gateway                                  |
-| GitHub Actions                   | CI/CD pipeline                               |
-| Renovate Bot                     | Automated dependency updates                 |
-| Stryker                          | Mutation testing                             |
+| Tool                             | Purpose                                   |
+| -------------------------------- | ----------------------------------------- |
+| pnpm 10 + TurboRepo              | Monorepo management & build orchestration |
+| TypeScript 5.9                   | Type safety across all packages           |
+| ESLint 9 + Prettier              | Code quality & formatting                 |
+| Husky + lint-staged + commitlint | Git hooks & conventional commits          |
+| Docker Compose                   | Full-stack local development (8 services) |
+| Helm + Terraform + Kubernetes    | Production infrastructure                 |
+| Kong                             | API Gateway                               |
+| GitHub Actions                   | CI/CD pipeline                            |
+| Renovate Bot                     | Automated dependency updates              |
+| Stryker                          | Mutation testing                          |
 
 ---
 
@@ -344,26 +372,26 @@ pnpm commit
 
 ## Scripts Reference
 
-| Command                          |                  Description                 |
-|----------------------------------|----------------------------------------------|
-| `pnpm dev`                       | Start all workspaces in parallel (Turbo)     |
-| `pnpm build`                     | Build all workspaces                         |
-| `pnpm test`                      | Run all tests                                | 
-| `pnpm test:unit`                 | Unit tests only                              |
-| `pnpm test:integration`          | Integration tests                            |
-| `pnpm test:e2e`                  | Playwright E2E tests                         |
-| `pnpm test:coverage`             | Tests with coverage report                   |
-| `pnpm test:mutation`             | Stryker mutation testing                     |
-| `pnpm lint`                      | ESLint across all packages                   |
-| `pnpm type-check`                | TypeScript type checking                     |
-| `pnpm format`                    | Prettier formatting                          |
-| `pnpm docker:up`                 | Start Docker Compose stack                   |
-| `pnpm docker:down`               | Stop Docker Compose stack                    |
-| `pnpm docker:logs`               | Tail container logs                          |
-| `pnpm deploy`                    | Build + Docker build + up                    |
-| `pnpm security:audit`            | Security audit (high severity)               |
-| `pnpm clean:all`                 | Remove all node_modules and caches           |
-| `pnpm release`                   | Semantic release                             |
+| Command                 | Description                              |
+| ----------------------- | ---------------------------------------- |
+| `pnpm dev`              | Start all workspaces in parallel (Turbo) |
+| `pnpm build`            | Build all workspaces                     |
+| `pnpm test`             | Run all tests                            |
+| `pnpm test:unit`        | Unit tests only                          |
+| `pnpm test:integration` | Integration tests                        |
+| `pnpm test:e2e`         | Playwright E2E tests                     |
+| `pnpm test:coverage`    | Tests with coverage report               |
+| `pnpm test:mutation`    | Stryker mutation testing                 |
+| `pnpm lint`             | ESLint across all packages               |
+| `pnpm type-check`       | TypeScript type checking                 |
+| `pnpm format`           | Prettier formatting                      |
+| `pnpm docker:up`        | Start Docker Compose stack               |
+| `pnpm docker:down`      | Stop Docker Compose stack                |
+| `pnpm docker:logs`      | Tail container logs                      |
+| `pnpm deploy`           | Build + Docker build + up                |
+| `pnpm security:audit`   | Security audit (high severity)           |
+| `pnpm clean:all`        | Remove all node_modules and caches       |
+| `pnpm release`          | Semantic release                         |
 
 ---
 
@@ -371,16 +399,16 @@ pnpm commit
 
 ### Endpoints (v1)
 
-| Group          |                Base Path               |               Description             |
-|----------------|----------------------------------------|---------------------------------------|
-| Health         | `GET /api/v1/health`                   | Service health check                  |
-| Auth           | `/api/v1/auth`                         | Login, register, refresh token        |
-| Trucks         | `/api/v1/trucks`                       | CRUD + live status                    |
-| Drivers        | `/api/v1/drivers`                      | Driver management                     |
-| Shops          | `/api/v1/shops`                        | Delivery location management          |
-| Tracking       | `/api/v1/tracking`                     | GPS & telemetry records               |
-| Alerts         | `/api/v1/alerts`                       | Alert management & notifications      |
-| Feature Flags  | `/api/v1/feature-flags`                | Runtime feature toggles               |
+| Group         | Base Path               | Description                      |
+| ------------- | ----------------------- | -------------------------------- |
+| Health        | `GET /api/v1/health`    | Service health check             |
+| Auth          | `/api/v1/auth`          | Login, register, refresh token   |
+| Trucks        | `/api/v1/trucks`        | CRUD + live status               |
+| Drivers       | `/api/v1/drivers`       | Driver management                |
+| Shops         | `/api/v1/shops`         | Delivery location management     |
+| Tracking      | `/api/v1/tracking`      | GPS & telemetry records          |
+| Alerts        | `/api/v1/alerts`        | Alert management & notifications |
+| Feature Flags | `/api/v1/feature-flags` | Runtime feature toggles          |
 
 ### Interactive Docs
 
@@ -388,20 +416,20 @@ Swagger UI available at `http://localhost:5000/api-docs` when the backend is run
 
 ### Real-time Events (Socket.IO)
 
-| Event | Direction | Payload |
-|-------|-----------|---------|
-| `truck:update` | Server → Client | Live truck position & status |
-| `alert:new` | Server → Client | New alert notification |
+| Event                 | Direction       | Payload                      |
+| --------------------- | --------------- | ---------------------------- |
+| `truck:update`        | Server → Client | Live truck position & status |
+| `alert:new`           | Server → Client | New alert notification       |
 | `temperature:warning` | Server → Client | Temperature threshold breach |
 
 ### MQTT Topics
 
-| Topic | Direction | Description |
-|-------|-----------|-------------|
-| `trucks/+/telemetry` | Device → Server | GPS + temperature data |
-| `trucks/+/status` | Device → Server | Engine, door, battery status |
-| `trucks/+/alerts` | Device → Server | Geofence & sensor alerts |
-| `system/broadcast` | Server → Devices | System-wide commands |
+| Topic                | Direction        | Description                  |
+| -------------------- | ---------------- | ---------------------------- |
+| `trucks/+/telemetry` | Device → Server  | GPS + temperature data       |
+| `trucks/+/status`    | Device → Server  | Engine, door, battery status |
+| `trucks/+/alerts`    | Device → Server  | Geofence & sensor alerts     |
+| `system/broadcast`   | Server → Devices | System-wide commands         |
 
 ---
 
@@ -409,14 +437,14 @@ Swagger UI available at `http://localhost:5000/api-docs` when the backend is run
 
 ### Test Strategy
 
-| Level           |                   Tool                   |             Target Coverage           |
-|-----------------|------------------------------------------|---------------------------------------|
-| **Unit**        | Jest + @testing-library                  | ≥ 95%                                 |
-| **Integration** | Jest + Supertest (live services)         | ≥ 90%                                 |
-| **E2E**         | Playwright (Chromium)                    | Critical paths                        |
-| **Mutation**    | Stryker                                  | ≥ 80% score                           |
-| **Load**        | k6 (ramp, spike, soak)                   | P95 < 200ms                           |
-| **Mobile**      | jest-expo + @testing-library/jest-native | Core flows                            |
+| Level           | Tool                                     | Target Coverage |
+| --------------- | ---------------------------------------- | --------------- |
+| **Unit**        | Jest + @testing-library                  | ≥ 95%           |
+| **Integration** | Jest + Supertest (live services)         | ≥ 90%           |
+| **E2E**         | Playwright (Chromium)                    | Critical paths  |
+| **Mutation**    | Stryker                                  | ≥ 80% score     |
+| **Load**        | k6 (ramp, spike, soak)                   | P95 < 200ms     |
+| **Mobile**      | jest-expo + @testing-library/jest-native | Core flows      |
 
 ### Running Tests
 
@@ -467,14 +495,14 @@ The GitHub Actions CI/CD pipeline runs on every push/PR to `main` or `develop`:
                                                     └──────────┘
 ```
 
-| Job                |            Service Containers          |                 Notes                 |
-|--------------------|----------------------------------------|---------------------------------------|
-| `test-backend`     | TimescaleDB, Redis, Mosquitto          | Full integration with live services   |
-| `test-dashboard`   | —                                      | Jest unit tests                       |
-| `test-e2e`         | —                                      | Playwright (Chromium)                 |
-| `preview`          | —                                      | Vercel preview deploy on PR           |
-| `deploy-dashboard` | —                                      | Vercel production on merge            |
-| `deploy-backend`   | —                                      | Render deploy hook on merge           |
+| Job                | Service Containers            | Notes                               |
+| ------------------ | ----------------------------- | ----------------------------------- |
+| `test-backend`     | TimescaleDB, Redis, Mosquitto | Full integration with live services |
+| `test-dashboard`   | —                             | Jest unit tests                     |
+| `test-e2e`         | —                             | Playwright (Chromium)               |
+| `preview`          | —                             | Vercel preview deploy on PR         |
+| `deploy-dashboard` | —                             | Vercel production on merge          |
+| `deploy-backend`   | —                             | Render deploy hook on merge         |
 
 ---
 
@@ -484,16 +512,16 @@ The GitHub Actions CI/CD pipeline runs on every push/PR to `main` or `develop`:
 
 8-service stack with health checks:
 
-| Service        |                  Image                 |                  Ports                |
-|----------------|----------------------------------------|---------------------------------------|
-| **postgres**   | `timescale/timescaledb:latest-pg16`    | 5432                                  |
-| **redis**      | `redis:7-alpine`                       | 6379                                  |
-| **mosquitto**  | `eclipse-mosquitto:2`                  | 1883, 9001                            |
-| **backend**    | Custom (Node.js)                       | 5000                                  |
-| **dashboard**  | Custom (Next.js)                       | 3000                                  |
-| **prometheus** | `prom/prometheus:latest`               | 9090                                  |
-| **grafana**    | `grafana/grafana:latest`               | 3001                                  |
-| **nginx**      | `nginx:alpine`                         | 80, 443                                |
+| Service        | Image                               | Ports      |
+| -------------- | ----------------------------------- | ---------- |
+| **postgres**   | `timescale/timescaledb:latest-pg16` | 5432       |
+| **redis**      | `redis:7-alpine`                    | 6379       |
+| **mosquitto**  | `eclipse-mosquitto:2`               | 1883, 9001 |
+| **backend**    | Custom (Node.js)                    | 5000       |
+| **dashboard**  | Custom (Next.js)                    | 3000       |
+| **prometheus** | `prom/prometheus:latest`            | 9090       |
+| **grafana**    | `grafana/grafana:latest`            | 3001       |
+| **nginx**      | `nginx:alpine`                      | 80, 443    |
 
 ### Kubernetes (Production)
 
@@ -526,24 +554,25 @@ helm install ice-truck infra/helm/ -f infra/helm/values.yaml
 
 ### Metrics & Monitoring
 
-| Tool               |                  Purpose               |                 Access                |
-|--------------------|----------------------------------------|---------------------------------------|
-| **Prometheus**     | Metrics collection                     | `http://localhost:9090`               |
-| **Grafana**        | Dashboards & visualization             | `http://localhost:3001`               |
-| **Loki**           | Log aggregation                        | Via Grafana data sources              |
-| **OpenTelemetry**  | Distributed tracing                    | OTLP endpoint                         |
-| **prom-client**    | App-level metrics                      | `GET /metrics`                        |
+| Tool              | Purpose                    | Access                   |
+| ----------------- | -------------------------- | ------------------------ |
+| **Prometheus**    | Metrics collection         | `http://localhost:9090`  |
+| **Grafana**       | Dashboards & visualization | `http://localhost:3001`  |
+| **Loki**          | Log aggregation            | Via Grafana data sources |
+| **OpenTelemetry** | Distributed tracing        | OTLP endpoint            |
+| **prom-client**   | App-level metrics          | `GET /metrics`           |
 
 ### Health Endpoints
 
-| Endpoint             |                  Description              |
-|----------------------|-------------------------------------------|
+| Endpoint             | Description                               |
+| -------------------- | ----------------------------------------- |
 | `GET /api/v1/health` | Application health check                  |
 | `GET /metrics`       | Prometheus metrics (counters, histograms) |
 
 ### Alert Rules
 
 Pre-configured Prometheus alert rules in `monitoring/alerts/alert-rules.yml` for:
+
 - High error rates
 - Response time degradation
 - Database connection pool exhaustion
@@ -554,19 +583,19 @@ Pre-configured Prometheus alert rules in `monitoring/alerts/alert-rules.yml` for
 
 ## Security
 
-| Layer                 |                      Implementation                       |
-|-----------------------|-----------------------------------------------------------|
-| **Authentication**    | JWT with refresh token rotation (15m access / 7d refresh) |
-| **Authorization**     | RBAC (5 roles) + ABAC policies                            |
-| **Transport**         | HTTPS/TLS via Nginx, secure WebSocket (wss://)            |
-| **Headers**           | Helmet (CSP, HSTS, X-Frame-Options, etc.)                 |
-| **Rate Limiting**     | express-rate-limit (configurable per-route)               |
-| **Input Validation**  | Zod schemas + Joi + express-validator                     |
-| **Audit Logging**     | Request/response audit middleware                         |
-| **Dependencies**      | Snyk + pnpm audit (CI-integrated)                         |
-| **Secrets**           | Environment variables, never in code                      |
-| **Container**         | Non-root user, read-only filesystem, minimal images       |
-| **Mobile**            | expo-secure-store for credential storage                  |
+| Layer                | Implementation                                            |
+| -------------------- | --------------------------------------------------------- |
+| **Authentication**   | JWT with refresh token rotation (15m access / 7d refresh) |
+| **Authorization**    | RBAC (5 roles) + ABAC policies                            |
+| **Transport**        | HTTPS/TLS via Nginx, secure WebSocket (wss://)            |
+| **Headers**          | Helmet (CSP, HSTS, X-Frame-Options, etc.)                 |
+| **Rate Limiting**    | express-rate-limit (configurable per-route)               |
+| **Input Validation** | Zod schemas + Joi + express-validator                     |
+| **Audit Logging**    | Request/response audit middleware                         |
+| **Dependencies**     | Snyk + pnpm audit (CI-integrated)                         |
+| **Secrets**          | Environment variables, never in code                      |
+| **Container**        | Non-root user, read-only filesystem, minimal images       |
+| **Mobile**           | expo-secure-store for credential storage                  |
 
 > Report security vulnerabilities via [GitHub Security Advisories](https://github.com/MrPatt025/ice-truck-tracking/security).
 
@@ -609,13 +638,13 @@ See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
 
 ## Documentation
 
-| Document                                       |               Description              |
-|------------------------------------------------|----------------------------------------|
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md)        | System design & architecture decisions |
-| [API.md](docs/API.md)                          | API reference & examples               |
-| [CONTRIBUTING.md](docs/CONTRIBUTING.md)        | Development guidelines                 |
-| [CODE_OF_CONDUCT.md](docs/CODE_OF_CONDUCT.md)  | Community standards                    |
-| [ROADMAP.md](docs/ROADMAP.md)                  | Feature planning & priorities          | 
+| Document                                      | Description                            |
+| --------------------------------------------- | -------------------------------------- |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md)       | System design & architecture decisions |
+| [API.md](docs/API.md)                         | API reference & examples               |
+| [CONTRIBUTING.md](docs/CONTRIBUTING.md)       | Development guidelines                 |
+| [CODE_OF_CONDUCT.md](docs/CODE_OF_CONDUCT.md) | Community standards                    |
+| [ROADMAP.md](docs/ROADMAP.md)                 | Feature planning & priorities          |
 
 ---
 

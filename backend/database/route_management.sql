@@ -52,3 +52,5 @@ CREATE INDEX idx_route_details_shop ON route_details(shop_id);
 CREATE INDEX idx_route_assignments_truck ON route_assignments(truck_id);
 CREATE INDEX idx_route_assignments_driver ON route_assignments(driver_id);
 CREATE INDEX idx_route_assignments_date ON route_assignments(assigned_date);
+
+

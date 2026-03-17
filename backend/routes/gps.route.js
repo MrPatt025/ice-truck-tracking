@@ -9,7 +9,7 @@ router.post('/update', auth(['driver']), async (req, res) => {
   const { truck_id, lat, lng } = req.body;
 
   // ✅ ตรวจสอบว่าข้อมูลครบ และ lat/lng เป็นตัวเลข
-  if (!truck_id || !lat || !lng || isNaN(Number(lat)) || isNaN(Number(lng))) {
+  if (!truck_id || !lat || !lng || Number.isNaN(Number(lat)) || Number.isNaN(Number(lng))) {
     return res.status(400).json({ message: 'กรุณาส่ง truck_id, lat และ lng ที่ถูกต้อง' });
   }
 
@@ -60,7 +60,7 @@ router.post('/update', auth(['driver']), async (req, res) => {
           oldPos.latitude, oldPos.longitude,
           Number(lat), Number(lng)
         );
-        const timeDiff = (new Date() - new Date(oldPos.updated_at)) / (1000 * 60 * 60); // ชั่วโมง
+        const timeDiff = (Date.now() - new Date(oldPos.updated_at).getTime()) / (1000 * 60 * 60); // ชั่วโมง
         currentSpeed = timeDiff > 0 ? distance / timeDiff : 0;
       }
 

@@ -191,3 +191,5 @@ UNION ALL
 SELECT 'Additional Route Details:', COUNT(*) FROM route_details WHERE id > 8
 UNION ALL
 SELECT 'Additional Route Assignments:', COUNT(*) FROM route_assignments WHERE id > 4;
+
+

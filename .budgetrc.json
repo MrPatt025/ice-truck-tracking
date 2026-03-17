@@ -1,0 +1,64 @@
+{
+  "comment": "Performance budgets for Ice Truck Tracking platform - Phase 3 Definition of Done",
+  "version": "1.0.0",
+  "budgets": [
+    {
+      "type": "bundle",
+      "name": "dashboard",
+      "threshold": "200kB",
+      "thresholdType": "gzip",
+      "warn": 150,
+      "warnType": "kB"
+    },
+    {
+      "type": "bundle",
+      "name": "main",
+      "threshold": "100kB",
+      "thresholdType": "gzip",
+      "warn": 80,
+      "warnType": "kB"
+    },
+    {
+      "type": "bundle",
+      "name": "landing",
+      "threshold": "80kB",
+      "thresholdType": "gzip",
+      "warn": 60,
+      "warnType": "kB"
+    }
+  ],
+  "performance": {
+    "FirstContentfulPaint": {
+      "threshold": 1.5,
+      "thresholdType": "seconds",
+      "warn": 2,
+      "warnType": "seconds"
+    },
+    "TimeToFirstByte": {
+      "threshold": 0.6,
+      "thresholdType": "seconds",
+      "warn": 1,
+      "warnType": "seconds"
+    },
+    "LargestContentfulPaint": {
+      "threshold": 2.5,
+      "thresholdType": "seconds",
+      "warn": 3,
+      "warnType": "seconds"
+    }
+  },
+  "api": {
+    "p95_latency": {
+      "threshold": 100,
+      "thresholdType": "ms",
+      "warn": 150,
+      "warnType": "ms"
+    },
+    "p95_error_rate": {
+      "threshold": 0.01,
+      "thresholdType": "percentage",
+      "warn": 0.05,
+      "warnType": "percentage"
+    }
+  }
+}

@@ -6,7 +6,11 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../config/db'); // ✅ ใช้ config/db.js
 
-const SECRET_KEY = process.env.JWT_SECRET || '123456';
+const SECRET_KEY = process.env.JWT_SECRET;
+
+if (!SECRET_KEY) {
+  throw new Error('JWT_SECRET must be set for auth.route.js');
+}
 
 /**
  * ✅ Login (รองรับ users และ drivers)

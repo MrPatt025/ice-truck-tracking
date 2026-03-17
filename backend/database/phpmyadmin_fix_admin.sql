@@ -10,15 +10,17 @@ DELETE FROM users WHERE username = 'admin001';
 DELETE FROM drivers WHERE username = 'admin001';
 
 -- เพิ่มแอดมินใหม่ด้วยรหัสผ่านที่ถูกต้อง
--- รหัสผ่าน 123456 เข้ารหัสด้วย bcrypt
+-- รหัสผ่านถูกจัดการจาก runtime/secret manager
 INSERT INTO users (username, password, role) VALUES 
-('admin001', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+('admin001', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', 'admin');
 
 -- เพิ่มแอดมินในตาราง drivers
 INSERT INTO drivers (driver_id, full_name, username, password, phone, start_date) VALUES 
-('ADMIN001', 'ผู้ดูแลระบบ', 'admin001', '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '0812345678', '2024-01-01');
+('ADMIN001', 'ผู้ดูแลระบบ', 'admin001', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', '0812345678', '2024-01-01');
 
 -- แสดงข้อมูลแอดมินที่เพิ่ม
 SELECT 'Admin user fixed successfully!' as status;
 SELECT username, role FROM users WHERE username = 'admin001';
 SELECT driver_id, full_name, username FROM drivers WHERE driver_id = 'ADMIN001';
+
+

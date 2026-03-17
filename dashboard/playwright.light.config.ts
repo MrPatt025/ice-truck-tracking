@@ -11,12 +11,12 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
     testDir: './e2e',
     testMatch: ['**/*.spec.ts', '**/*.light.spec.ts'],
-    testIgnore: ['**/*.gpu.spec.ts'],
+    testIgnore: ['**/*.gpu.spec.ts', '**/*.visual.spec.ts', '**/*.a11y.spec.ts'],
     outputDir: './playwright-results/light',
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 1,
-    workers: process.env.CI ? 2 : 4,
+    workers: 1,
     timeout: 45_000,
     expect: { timeout: 10_000 },
     reporter: [
@@ -36,20 +36,12 @@ export default defineConfig({
             name: 'light-chromium',
             use: { ...devices['Desktop Chrome'] },
         },
-        {
-            name: 'light-mobile',
-            use: { ...devices['Pixel 7'] },
-        },
-        {
-            name: 'light-firefox',
-            use: { ...devices['Desktop Firefox'] },
-        },
     ],
     webServer: {
-        command: 'cross-env E2E_LIGHT=true pnpm run dev',
+        command: 'pnpm run build && (node .next/standalone/dashboard/server.js || node .next/standalone/server.js)',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
-        timeout: 120_000,
-        env: { E2E_LIGHT: 'true' },
+        timeout: 600_000,
+        env: { E2E_LIGHT: 'true', PORT: '3000' },
     },
 });

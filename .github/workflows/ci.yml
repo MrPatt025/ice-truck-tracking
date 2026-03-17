@@ -15,21 +15,23 @@ env:
   PNPM_VERSION: '10.30.3'
   CI: 'true'
   NEXT_TELEMETRY_DISABLED: '1'
-
-permissions:
-  contents: read
-  pull-requests: write
+  VERCEL_TOKEN_SECRET_NAME: VERCEL_TOKEN
+  VERCEL_ORG_ID_SECRET_NAME: VERCEL_ORG_ID
+  VERCEL_PROJECT_ID_SECRET_NAME: VERCEL_PROJECT_ID
+  RENDER_DEPLOY_HOOK_SECRET_NAME: RENDER_DEPLOY_HOOK_URL
 
 jobs:
   # ── Install & Cache ──────────────────────────────────────
   install:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -39,12 +41,14 @@ jobs:
   lint:
     needs: install
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -56,14 +60,16 @@ jobs:
   commitlint:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -74,56 +80,64 @@ jobs:
   test-backend:
     needs: lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     services:
-      postgres:
-        image: timescale/timescaledb:latest-pg16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: ice_tracking_test
-        ports: ['5432:5432']
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
       redis:
         image: redis:7-alpine
         ports: ['6379:6379']
         options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
-      mosquitto:
-        image: eclipse-mosquitto:2
-        ports: ['1883:1883']
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ice_tracking_test
       REDIS_URL: redis://localhost:6379
-      MQTT_BROKER_URL: mqtt://localhost:1883
-      JWT_SECRET: test-secret
       NODE_ENV: test
       USE_FAKE_DB: 'true'
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @ice-truck/backend run test -- --ci --coverage --forceExit --testTimeout=15000
-      - uses: actions/upload-artifact@v7
+      - run: JWT_SECRET="$(openssl rand -hex 32)" pnpm --filter @ice-truck/backend run test -- --ci --coverage --forceExit --testTimeout=15000
+      - uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
           path: backend/coverage/
           if-no-files-found: ignore
 
+  # ── Backend Testcontainers (Real DB) ─────────────────────
+  testcontainers-backend:
+    needs: lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ice-truck/backend run test:containers
+
   # ── Dashboard Tests ──────────────────────────────────────
   test-dashboard:
     needs: lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -134,12 +148,14 @@ jobs:
   test-e2e-light:
     needs: [test-backend, test-dashboard]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -149,7 +165,7 @@ jobs:
         run: pnpm --filter @ice-truck/dashboard run test:e2e:light
         env:
           E2E_LIGHT: 'true'
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report-light
@@ -158,17 +174,20 @@ jobs:
 
   # ── Build All ────────────────────────────────────────────
   build:
-    needs: [test-backend, test-dashboard, test-e2e-light]
+    needs:
+      [test-backend, testcontainers-backend, test-dashboard, test-e2e-light]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       NEXT_PUBLIC_API_URL: http://localhost:5000
       NEXT_PUBLIC_WS_URL: ws://localhost:5000
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -180,71 +199,34 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     environment: preview
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - name: Deploy Preview to Vercel
-        id: vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./dashboard
-      - name: Comment PR with preview URL
-        uses: actions/github-script@v8
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `🚀 **Preview Deployment Ready!**\n\n🔗 ${{ steps.vercel.outputs.preview-url }}\n\nCommit: \`${context.sha.substring(0, 7)}\``
-            })
+      - name: Preview deployment placeholder
+        run: |
+          echo "Preview deployment job is intentionally disabled in CI."
+          echo "Configure deployment in a dedicated workflow with environment-level secrets."
 
   # ── Deploy Dashboard → Vercel (production) ──────────────
   deploy-dashboard:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: false
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://ice-truck-tracking.com
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v6
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - name: Deploy to Vercel (prod)
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./dashboard
-          vercel-args: '--prod'
+      - name: Disabled deploy placeholder
+        run: echo "Dashboard production deploy is disabled in this workflow."
 
   # ── Deploy Backend → Render ─────────────────────────────
   deploy-backend:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: false
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://api.ice-truck-tracking.com
+    permissions:
+      contents: read
     steps:
-      - name: Trigger Render deploy hook
-        run: curl -sS "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+      - name: Disabled deploy placeholder
+        run: echo "Backend production deploy is disabled in this workflow."

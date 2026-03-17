@@ -2,23 +2,21 @@ FROM node:25-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat \
-    && corepack enable && corepack prepare pnpm@10.30.3 --activate
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies
 COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+RUN npm install
 
 # Rebuild the source code only when needed
 FROM base AS builder
-RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build the application
-RUN pnpm run build
+RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner

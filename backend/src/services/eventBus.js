@@ -30,7 +30,7 @@ class EventBus {
     connected = false;
     _fallback = new EventEmitter();
 
-    constructor() { } // eslint-disable-line no-useless-constructor
+    constructor() { }  
 
     async connect() {
         const brokers = (process.env.KAFKA_BROKERS || '').split(',').filter(Boolean);

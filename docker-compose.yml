@@ -8,7 +8,7 @@ services:
       - '5432:5432'
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: ${POSTGRES_DB:-ice_tracking}
     volumes:
       - pg-data:/var/lib/postgresql/data
@@ -63,13 +63,13 @@ services:
     ports:
       - '5000:5000'
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-development}
       PORT: 5000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-ice_tracking}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-ice_tracking}
       DB_POOL_MAX: 20
       REDIS_URL: redis://redis:6379
       MQTT_BROKER_URL: mqtt://mosquitto:1883
-      JWT_SECRET: ${JWT_SECRET:-changeme-in-production}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
       SALT_ROUNDS: 12
       CLIENT_URL: http://localhost:3000
     depends_on:
@@ -126,7 +126,7 @@ services:
     ports:
       - '3001:3000'
     environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
       GF_USERS_ALLOW_SIGN_UP: 'false'
     volumes:
       - grafana-storage:/var/lib/grafana

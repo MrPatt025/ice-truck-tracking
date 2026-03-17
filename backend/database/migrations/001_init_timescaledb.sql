@@ -394,7 +394,7 @@ END $$;
 
 -- ============================================================================
 -- SEED: Default admin user (password: ChangeMeImmediately!)
--- bcrypt hash of 'ChangeMeImmediately!'
+-- password hash provided at runtime
 -- ============================================================================
 INSERT INTO
     users (
@@ -407,7 +407,9 @@ INSERT INTO
 VALUES (
         'admin',
         'admin@ice-truck.local',
-        '$2a$12$LJ3m4ys6Gx8RdM5E1Z5dNeYLmVGK0eL7R8lPfYxAjEhUJvZ0nZPjS',
+        '__REVOKED_HASH_SET_VIA_APP_RUNTIME__',
         'admin',
         'System Administrator'
     ) ON CONFLICT (username) DO NOTHING;
+
+

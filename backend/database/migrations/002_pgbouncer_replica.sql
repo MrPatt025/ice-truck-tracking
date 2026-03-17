@@ -67,3 +67,5 @@ WHERE
 CREATE INDEX IF NOT EXISTS idx_users_username_active ON users (username)
 WHERE
     is_active = true;
+
+

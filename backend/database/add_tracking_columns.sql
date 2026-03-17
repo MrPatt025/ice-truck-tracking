@@ -22,3 +22,5 @@ CREATE INDEX idx_trucks_driver_id ON trucks(driver_id);
 
 
 
+
+

@@ -8,7 +8,9 @@
 
 ### Context
 
-The Ice Truck Tracking system generates continuous telemetry data (GPS coordinates, temperature readings, speed) at high volume from IoT devices. The existing MySQL/SQLite storage could not efficiently handle:
+The Ice Truck Tracking system generates continuous telemetry data (GPS coordinates,
+temperature readings, speed) at high volume from IoT devices. The existing
+MySQL/SQLite storage could not efficiently handle:
 
 - Time-range queries across millions of rows
 - Automatic data lifecycle management (compression, retention)

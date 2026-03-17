@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import {
   Truck,
   Thermometer,
@@ -89,6 +89,10 @@ const stats = [
 
 /* ───────────────────── Landing Page Component ───────────────── */
 export default function LandingPage() {
+  const { scrollYProgress } = useScroll()
+  const heroY = useTransform(scrollYProgress, [0, 0.25], ['0%', '12%'])
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.55])
+
   return (
     <div className='min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white overflow-hidden'>
       {/* ── Nav ─────────────────────────────────────────────── */}
@@ -138,7 +142,25 @@ export default function LandingPage() {
       </motion.nav>
 
       {/* ── Hero ────────────────────────────────────────────── */}
-      <section className='relative mx-auto max-w-7xl px-6 pb-20 pt-28 text-center'>
+      <motion.section
+        style={{ y: heroY, opacity: heroOpacity }}
+        className='relative mx-auto max-w-7xl px-6 pb-20 pt-28 text-center'
+      >
+        <div className='absolute inset-0 -z-20 overflow-hidden rounded-3xl'>
+          <video
+            className='h-full w-full object-cover opacity-35'
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload='metadata'
+            poster='/favicon.ico'
+          >
+            <source src='/media/ice-fleet-loop.mp4' type='video/mp4' />
+          </video>
+          <div className='absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(56,189,248,0.22),transparent_45%),radial-gradient(circle_at_75%_80%,rgba(59,130,246,0.24),transparent_45%),linear-gradient(to_bottom,rgba(2,6,23,0.75),rgba(2,6,23,0.95))]' />
+        </div>
+
         {/* Animated gradient orb */}
         <motion.div
           className='absolute left-1/2 top-0 -z-10 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-blue-500/20 blur-[120px]'
@@ -199,7 +221,7 @@ export default function LandingPage() {
             </Button>
           </motion.div>
         </motion.div>
-      </section>
+      </motion.section>
 
       {/* ── Stats ───────────────────────────────────────────── */}
       <section
@@ -247,7 +269,7 @@ export default function LandingPage() {
               viewport={{ once: true, amount: 0.3 }}
               variants={fadeUp}
             >
-              <Card className='h-full border-white/10 bg-slate-800/50 transition hover:border-blue-400/40 hover:shadow-lg hover:shadow-blue-500/5'>
+              <Card className='h-full border-white/10 bg-slate-800/45 backdrop-blur-xl transition hover:border-cyan-300/50 hover:shadow-xl hover:shadow-cyan-500/15'>
                 <CardHeader>
                   <feature.icon className={`h-8 w-8 ${feature.color}`} />
                   <CardTitle className='mt-2 text-lg text-white'>

@@ -16,3 +16,5 @@ WHERE r.id IS NULL;
 SELECT COUNT(*) as remaining_route_details FROM route_details;
 SELECT COUNT(*) as remaining_routes FROM routes;
 
+
+

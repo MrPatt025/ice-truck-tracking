@@ -87,3 +87,4 @@ UPDATE `alerts` SET `is_read` = 0 WHERE `is_read` IS NULL;
 
 -- Step 5: Show the updated table structure
 DESCRIBE `alerts`;
+

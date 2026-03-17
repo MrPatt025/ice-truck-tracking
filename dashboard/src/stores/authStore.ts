@@ -79,7 +79,10 @@ const permissionMatrix: Record<UserRole, string[]> = {
 };
 
 // ── API Base URL ───────────────────────────────────────────
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_ROOT = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE = API_ROOT.endsWith('/api/v1')
+  ? API_ROOT
+  : `${API_ROOT.replace(/\/+$/, '')}/api/v1`;
 
 // ── Store ──────────────────────────────────────────────────
 export const useAuthStore = create<AuthState>()(
@@ -94,10 +97,11 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
+          const username = email.includes('@') ? email.split('@')[0] : email;
           const res = await fetch(`${API_BASE}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ email, username, password }),
             credentials: 'include',
           });
 

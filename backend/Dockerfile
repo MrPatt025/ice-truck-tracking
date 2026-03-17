@@ -1,9 +1,8 @@
 # Multi-stage build for production
 FROM node:25-alpine AS base
 
-# Install security updates, pnpm, and dumb-init
-RUN apk update && apk upgrade && apk add --no-cache dumb-init curl \
-  && corepack enable && corepack prepare pnpm@10.30.3 --activate
+# Install security updates and dumb-init
+RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -13,15 +12,15 @@ COPY package.json pnpm-lock.yaml* ./
 
 # Development stage
 FROM base AS development
-RUN pnpm install --frozen-lockfile
+RUN npm install
 COPY . .
 EXPOSE 5000
 USER node
-CMD ["dumb-init", "pnpm", "run", "dev"]
+CMD ["dumb-init", "npm", "run", "dev"]
 
 # Production dependencies stage
 FROM base AS dependencies
-RUN pnpm install --prod --frozen-lockfile
+RUN npm install --omit=dev
 
 # Production stage
 FROM node:25-alpine AS production

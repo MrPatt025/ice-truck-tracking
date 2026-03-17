@@ -2,7 +2,6 @@
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const http = require('node:http');
-const path = require('node:path');
 
 // Import configurations
 const config = require('./src/config/env');
@@ -170,7 +169,9 @@ if (process.env.USE_FAKE_DB === 'true') {
         const pkt = { type: 'trucks', trucks: mem.trucks, alerts: mem.alerts };
         for (const c of globalThis.wss.clients) c.send(JSON.stringify(pkt));
       }
-    } catch { }
+    } catch {
+      return;
+    }
   }, 2000).unref?.();
 
   app.get('/api/v1/trucks', (req, res) => res.json(mem.trucks));
@@ -189,7 +190,9 @@ if (process.env.USE_FAKE_DB === 'true') {
       if (globalThis.wss?.clients) {
         for (const c of globalThis.wss.clients) c.send(JSON.stringify({ type: 'alert', payload: a }));
       }
-    } catch { }
+    } catch {
+      return res.json(a);
+    }
     res.json(a);
   });
 
@@ -200,7 +203,9 @@ if (process.env.USE_FAKE_DB === 'true') {
       if (globalThis.wss?.clients) {
         for (const c of globalThis.wss.clients) c.send(JSON.stringify({ type: 'alerts', payload: mem.alerts }));
       }
-    } catch { }
+    } catch {
+      return res.json({ ok: true });
+    }
     res.json({ ok: true });
   });
 
@@ -220,7 +225,9 @@ if (process.env.USE_FAKE_DB === 'true') {
       if (globalThis.wss?.clients) {
         for (const c of globalThis.wss.clients) c.send(JSON.stringify({ type: 'trucks', payload: mem.trucks }));
       }
-    } catch { }
+    } catch {
+      return res.json(mem.trucks);
+    }
     res.json(mem.trucks);
   });
 }

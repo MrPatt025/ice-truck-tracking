@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS telemetry (
 
 -- Convert to hypertable (partitioned by time — 1-day chunks)
 SELECT create_hypertable (
-        'telemetry', 'time', if_not_exists = > TRUE, chunk_time_interval = > INTERVAL '1 day'
+        'telemetry', 'time', if_not_exists => TRUE, chunk_time_interval => INTERVAL '1 day'
     );
 
 -- Continuous aggregate: 5-min downsampled averages
@@ -123,15 +123,15 @@ GROUP BY
 SELECT
     add_continuous_aggregate_policy (
         'telemetry_5min',
-        start_offset = > INTERVAL '30 minutes',
-        end_offset = > INTERVAL '5 minutes',
-        schedule_interval = > INTERVAL '5 minutes',
-        if_not_exists = > TRUE
+        start_offset => INTERVAL '30 minutes',
+        end_offset => INTERVAL '5 minutes',
+        schedule_interval => INTERVAL '5 minutes',
+        if_not_exists => TRUE
     );
 
 -- Auto-drop raw telemetry older than 90 days
 SELECT add_retention_policy (
-        'telemetry', INTERVAL '90 days', if_not_exists = > TRUE
+        'telemetry', INTERVAL '90 days', if_not_exists => TRUE
     );
 
 -- ────────────────────────────────────────────────────────────
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS alerts (
 );
 
 SELECT create_hypertable (
-        'alerts', 'time', if_not_exists = > TRUE, chunk_time_interval = > INTERVAL '7 days'
+        'alerts', 'time', if_not_exists => TRUE, chunk_time_interval => INTERVAL '7 days'
     );
 
 -- ────────────────────────────────────────────────────────────
@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS tracking (
 );
 
 SELECT create_hypertable (
-        'tracking', 'time', if_not_exists = > TRUE, chunk_time_interval = > INTERVAL '1 day'
+        'tracking', 'time', if_not_exists => TRUE, chunk_time_interval => INTERVAL '1 day'
     );
 
 -- ────────────────────────────────────────────────────────────
@@ -204,7 +204,10 @@ INSERT INTO
     )
 VALUES (
         'admin',
-        '$2a$12$LJ3m4ys3Gz9h5g0z3f5.o.xTd/EY0RJ3KBDxHXqKjSIqI4VfSiZPi',
+        '__REVOKED_HASH_SET_VIA_APP_RUNTIME__',
         'admin',
         'System Admin'
     ) ON CONFLICT (username) DO NOTHING;
+
+
+

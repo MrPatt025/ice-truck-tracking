@@ -167,11 +167,11 @@ CREATE INDEX idx_route_assignments_date ON route_assignments(assigned_date);
 
 -- เพิ่มแอดมินในตาราง users
 INSERT INTO users (username, password, role) VALUES 
-('admin001', '$2b$10$rQZ8K9mN2pL3oI4uV5wX6yA7bC8dE9fG0hI1jK2lM3nO4pQ5rS6tU7vW8xY9zA', 'admin');
+('admin001', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', 'admin');
 
 -- เพิ่มแอดมินในตาราง drivers (สำหรับการจัดการพนักงานขับรถ)
 INSERT INTO drivers (driver_id, full_name, username, password, phone, start_date) VALUES 
-('ADMIN001', 'ผู้ดูแลระบบ', 'admin001', '$2b$10$rQZ8K9mN2pL3oI4uV5wX6yA7bC8dE9fG0hI1jK2lM3nO4pQ5rS6tU7vW8xY9zA', '0812345678', '2024-01-01');
+('ADMIN001', 'ผู้ดูแลระบบ', 'admin001', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', '0812345678', '2024-01-01');
 
 -- =============================================
 -- ข้อมูลตัวอย่างเพิ่มเติม
@@ -227,7 +227,7 @@ INSERT INTO alerts (truck_code, driver_code, message, alert_time) VALUES
 -- แสดงข้อมูลสรุป
 SELECT 'Database created successfully!' as status;
 SELECT COUNT(*) as total_tables FROM information_schema.tables WHERE table_schema = 'ice_tracking';
-SELECT table_name FROM information_schema.tables WHERE table_schema = 'ice_tracking' ORDER BY table_name;
+SELECT table_name FROM information_schema.tables WHERE table_schema = 'ice_tracking' ORDER BY table_name ASC;
 
 -- แสดงข้อมูลแอดมิน
 SELECT 'Admin user created:' as info;
@@ -241,3 +241,5 @@ SELECT COUNT(*) as total_shops FROM shops;
 SELECT COUNT(*) as total_routes FROM routes;
 SELECT COUNT(*) as total_tracking FROM tracking;
 SELECT COUNT(*) as total_alerts FROM alerts;
+
+

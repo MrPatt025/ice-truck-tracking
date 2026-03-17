@@ -4,3 +4,5 @@
 UPDATE `alerts` SET `type` = 'manual' WHERE `type` IS NULL;
 UPDATE `alerts` SET `priority` = 'medium' WHERE `priority` IS NULL;
 UPDATE `alerts` SET `is_read` = 0 WHERE `is_read` IS NULL;
+
+

@@ -4,3 +4,5 @@
 ALTER TABLE `alerts` 
 MODIFY COLUMN `truck_id` INT NULL,
 MODIFY COLUMN `driver_id` INT NULL;
+
+
