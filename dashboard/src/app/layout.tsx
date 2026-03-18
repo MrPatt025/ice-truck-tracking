@@ -1,7 +1,8 @@
 ﻿import './globals.css'
 import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/components/ThemeProvider'
-import SharedCanvasHost from '@/components/SharedCanvasHost'
+import TransitionLayoutGroup from '@/components/TransitionLayoutGroup'
+import ClientSharedCanvasHost from '@/components/ClientSharedCanvasHost'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,10 +18,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en' suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.className} relative isolate`}>
         <ThemeProvider>
-          <SharedCanvasHost />
-          {children}
+          <div
+            id='webgl-background-layer'
+            className='pointer-events-none fixed inset-0 -z-10'
+            aria-hidden='true'
+          >
+            <ClientSharedCanvasHost />
+          </div>
+          <div id='ui-overlay' className='relative z-10'>
+            <TransitionLayoutGroup>{children}</TransitionLayoutGroup>
+          </div>
         </ThemeProvider>
       </body>
     </html>

@@ -3,7 +3,6 @@ const { protect } = require('../../middleware/auth');
 const { requirePermission } = require('../../middleware/rbac');
 const { validate, schemas } = require('../../middleware/validation');
 const alertService = require('../../services/alertService');
-const { AppError } = require('../../middleware/error');
 
 const router = express.Router();
 

@@ -7,8 +7,8 @@ import { useState, useCallback, useRef, useTransition } from 'react';
  * @example
  * const { data, mutate } = useOptimistic(trucks);
  * mutate(
- *   (prev) => [...prev, newTruck],          // optimistic updater
- *   () => fetch('/api/trucks', { method: 'POST', body: ... }),   // server call
+*   (prev) => [...prev, newTruck],          // optimistic updater
+*   () => fetch('/api/v1/trucks', { method: 'POST', body: ... }),   // server call
  * );
  */
 export function useOptimistic<T>(serverState: T) {

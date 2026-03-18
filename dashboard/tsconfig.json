@@ -30,6 +30,7 @@
       "@/engine/*": ["./src/engine/*"],
       "@/workers/*": ["./src/workers/*"]
     },
+    "typeRoots": ["./node_modules/@types"],
     "types": ["node", "react", "react-dom", "jest"]
   },
   "include": [

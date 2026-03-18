@@ -52,6 +52,15 @@ const refreshTokenSchema = z.object({
     refresh_token: z.string().min(1),
 });
 
+const authRouteRegisterSchema = z.object({
+    username: z.string().min(3).max(50).trim().regex(/^[a-zA-Z0-9_-]+$/),
+    password: z.string().min(8).max(128),
+    role: z.enum(['admin', 'owner', 'manager', 'dispatcher', 'driver', 'viewer']),
+    full_name: z.string().min(1).max(100).trim(),
+    email: z.string().email().max(255).toLowerCase(),
+    phone: z.string().min(1).max(20).trim(),
+});
+
 // ── Truck Schemas ──────────────────────────────────────────
 const createTruckSchema = z.object({
     license_plate: z.string().min(1).max(20).trim(),
@@ -119,6 +128,15 @@ const createShopSchema = z.object({
     phone: z.string().max(20).optional(),
 });
 
+const trackingInsertSchema = z.object({
+    shop_id: z.string().min(1).max(50).trim(),
+    latitude: z.coerce.number().min(-90).max(90),
+    longitude: z.coerce.number().min(-180).max(180),
+    truck_id: z.string().min(1).max(50).trim(),
+    driver_id: z.string().min(1).max(50).trim(),
+    gps_code: z.string().min(1).max(100).trim(),
+});
+
 // ── Middleware Factory ──────────────────────────────────────
 
 /**
@@ -174,6 +192,7 @@ module.exports = {
     // Schemas
     loginSchema,
     registerSchema,
+    authRouteRegisterSchema,
     refreshTokenSchema,
     createTruckSchema,
     updateTruckSchema,
@@ -183,6 +202,7 @@ module.exports = {
     createAlertSchema,
     acknowledgeAlertSchema,
     createShopSchema,
+    trackingInsertSchema,
     paginationSchema,
     coordinateSchema,
     dateRangeSchema,

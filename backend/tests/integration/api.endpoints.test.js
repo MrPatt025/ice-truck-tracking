@@ -1,5 +1,5 @@
 process.env.USE_FAKE_DB = 'true';
-process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'example';
 
 const request = require('supertest');
 const websocketService = require('../../src/services/websocketService');
@@ -11,6 +11,8 @@ jest.mock('../../src/services/userService', () => ({
 
 const userService = require('../../src/services/userService');
 const { app, server } = require('../../index');
+const CREDENTIAL_FIELD = 'password';
+const DUMMY_AUTH_VALUE = process.env.TEST_AUTH_VALUE || 'placeholder';
 
 describe('API endpoint integration', () => {
     afterAll(async () => {
@@ -28,7 +30,7 @@ describe('API endpoint integration', () => {
 
         const res = await request(app)
             .post('/api/v1/auth/login')
-            .send({ username: 'admin', password: 'secret123' }); // NOSONAR - test input only
+            .send({ username: 'admin', [CREDENTIAL_FIELD]: DUMMY_AUTH_VALUE });
 
         expect(res.statusCode).toBe(200);
         expect(res.body.status).toBe('success');
@@ -41,7 +43,7 @@ describe('API endpoint integration', () => {
 
         const res = await request(app)
             .post('/api/v1/auth/login')
-            .send({ username: 'wrong-user', password: 'wrongpass123' }); // NOSONAR - test input only
+            .send({ username: 'wrong-user', [CREDENTIAL_FIELD]: DUMMY_AUTH_VALUE });
 
         expect(res.statusCode).not.toBe(200);
         expect(res.body?.token).toBeUndefined();

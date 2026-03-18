@@ -7,7 +7,9 @@ const auth = require('../middleware/auth');
 // ✅ GET /api/alerts - admin/owner/driver สามารถดูได้
 router.get('/', auth(), async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM alerts ORDER BY alert_time DESC');
+    const [rows] = await db.query(
+      'SELECT truck_code, driver_code, message, alert_time FROM alerts ORDER BY alert_time DESC'
+    );
     res.json(rows);
   } catch (err) {
     console.error('❌ Error fetching alerts:', err.message);

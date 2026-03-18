@@ -1,5 +1,3 @@
-const config = require('./env');
-
 // Simple swagger mock for now
 const specs = {
   openapi: '3.0.0',
@@ -12,7 +10,7 @@ const specs = {
 
 const swaggerUi = {
   serve: (req, res, next) => next(),
-  setup: (specs, options) => (req, res) => {
+  setup: (_specs, _options) => (req, res) => {
     res.json({
       message: 'API Documentation',
       swagger: 'Available at /api-docs',

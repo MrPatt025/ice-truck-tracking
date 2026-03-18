@@ -22,8 +22,43 @@ const fs = require('node:fs');
 let container;
 let pool;
 
+/**
+ * Wait until the pool can actually execute a query (PostgreSQL fully ready).
+ * Retries SELECT 1 every 500 ms for up to `maxAttempts` attempts.
+ */
+async function waitForPostgres(pg, maxAttempts = 20) {
+    for (let i = 0; i < maxAttempts; i++) {
+        try {
+            await pg.query('SELECT 1');
+            return; // connected
+        } catch {
+            await new Promise((r) => setTimeout(r, 500));
+        }
+    }
+    throw new Error(`PostgreSQL did not become ready after ${maxAttempts * 500} ms`);
+}
+
+/**
+ * Split a SQL file on semicolons and execute each non-empty statement
+ * individually.  Running them one-by-one avoids the pg driver dropping the
+ * connection mid-batch on large multi-statement strings.
+ */
+async function runMigration(pg, sql) {
+    const statements = sql
+        .split(';')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+
+    for (const stmt of statements) {
+        await pg.query(stmt);  
+    }
+}
+
 beforeAll(async () => {
-    // Start PostgreSQL 16 container
+    // Start PostgreSQL 16 container.
+    // Use pg_isready health-check so the wait strategy tracks actual
+    // client-facing readiness, not just the first log message (which can
+    // fire before the target database exists).
     container = await new GenericContainer('postgres:16-alpine')
         .withEnvironment({
             POSTGRES_USER: 'test',
@@ -31,8 +66,15 @@ beforeAll(async () => {
             POSTGRES_DB: 'ice_tracking_test',
         })
         .withExposedPorts(5432)
-        .withWaitStrategy(Wait.forLogMessage(/database system is ready to accept connections/))
-        .withStartupTimeout(60_000)
+        .withHealthCheck({
+            test: ['CMD-SHELL', 'pg_isready -U test -d ice_tracking_test'],
+            interval: 2_000,
+            timeout: 5_000,
+            retries: 10,
+            startPeriod: 5_000,
+        })
+        .withWaitStrategy(Wait.forHealthCheck())
+        .withStartupTimeout(90_000)
         .start();
 
     const host = container.getHost();
@@ -45,7 +87,12 @@ beforeAll(async () => {
         password: 'test', // NOSONAR — test-only container credentials
         database: 'ice_tracking_test',
         max: 5,
+        connectionTimeoutMillis: 10_000,
+        idleTimeoutMillis: 30_000,
     });
+
+    // Extra safeguard: retry SELECT 1 until the pg client can connect
+    await waitForPostgres(pool);
 
     // Apply migration (skip TimescaleDB-specific parts)
     const migrationPath = path.resolve(__dirname, '../../database/migrations/001_init.sql');
@@ -60,7 +107,8 @@ beforeAll(async () => {
         .replaceAll(/SELECT\s+add_retention_policy\s*\([^;]*;/gi, '')
         .replaceAll(/WITH\s*\(timescaledb\.continuous\)\s*AS/gi, 'AS');
 
-    await pool.query(sql);
+    // Execute statements one at a time to avoid mid-batch connection drops
+    await runMigration(pool, sql);
 }, 120_000);
 
 afterAll(async () => {
@@ -117,7 +165,10 @@ describe('Testcontainers — PostgreSQL Integration', () => {
         expect(user.role).toBe('admin');
         expect(user.is_active).toBe(true);
 
-        const fetched = await get('SELECT * FROM users WHERE id = $1', [user.id]);
+        const fetched = await get(
+            'SELECT id, username, email, role, is_active FROM users WHERE id = $1 ORDER BY id DESC LIMIT 1',
+            [user.id],
+        );
         expect(fetched.email).toBe('test@example.com');
     });
 
@@ -212,7 +263,10 @@ describe('Testcontainers — PostgreSQL Integration', () => {
         );
 
         const rows = await query(
-            `SELECT * FROM telemetry WHERE truck_id = $1`,
+            `SELECT id, truck_id, latitude, longitude, temperature, speed, time
+             FROM telemetry
+             WHERE truck_id = $1
+             ORDER BY time DESC`,
             ['TRK-001'],
         );
         expect(rows.length).toBe(1);
@@ -252,7 +306,10 @@ describe('Testcontainers — PostgreSQL Integration', () => {
             client.release();
         }
 
-        const shop = await get(`SELECT * FROM shops WHERE shop_code = $1`, ['TX-OK']);
+        const shop = await get(
+            `SELECT id, shop_code, shop_name FROM shops WHERE shop_code = $1 ORDER BY id DESC LIMIT 1`,
+            ['TX-OK'],
+        );
         expect(shop).not.toBeNull();
     });
 
@@ -269,7 +326,10 @@ describe('Testcontainers — PostgreSQL Integration', () => {
             client.release();
         }
 
-        const shop = await get(`SELECT * FROM shops WHERE shop_code = $1`, ['TX-FAIL']);
+        const shop = await get(
+            `SELECT id, shop_code, shop_name FROM shops WHERE shop_code = $1 ORDER BY id DESC LIMIT 1`,
+            ['TX-FAIL'],
+        );
         expect(shop).toBeNull();
     });
 
@@ -282,7 +342,10 @@ describe('Testcontainers — PostgreSQL Integration', () => {
             ['SAFE-001', malicious],
         );
 
-        const shop = await get(`SELECT * FROM shops WHERE shop_code = $1`, ['SAFE-001']);
+        const shop = await get(
+            `SELECT id, shop_code, shop_name FROM shops WHERE shop_code = $1 ORDER BY id DESC LIMIT 1`,
+            ['SAFE-001'],
+        );
         expect(shop.shop_name).toBe(malicious); // stored as literal string
     });
 });

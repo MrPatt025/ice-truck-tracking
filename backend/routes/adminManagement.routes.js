@@ -13,7 +13,9 @@ const onlyAdmin = authorize('admin');
 // GET ดึงข้อมูลพนักงานขับรถทั้งหมด
 router.get('/drivers', onlyAdmin, async (req, res) => {
   try {
-    const [rows] = await db.execute('SELECT * FROM drivers ORDER BY driver_id ASC');
+    const [rows] = await db.execute(
+      'SELECT driver_id, full_name, national_id, license_number, username, address, phone, start_date FROM drivers ORDER BY driver_id ASC'
+    );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ message: 'เกิดข้อผิดพลาด', error: err.message });
@@ -28,7 +30,10 @@ router.post('/drivers', onlyAdmin, async (req, res) => {
 
   try {
     // ตรวจสอบ username ซ้ำ
-    const [exist] = await db.execute('SELECT * FROM drivers WHERE username = ?', [username]);
+    const [exist] = await db.execute(
+      'SELECT driver_id, username FROM drivers WHERE username = ? ORDER BY driver_id ASC LIMIT 1',
+      [username]
+    );
     if (exist.length > 0) {
       return res.status(409).json({ message: 'ชื่อผู้ใช้นี้ถูกใช้แล้ว' });
     }
@@ -51,14 +56,20 @@ router.put('/drivers/:id', onlyAdmin, async (req, res) => {
   
   try {
     // ตรวจสอบว่ามี driver_id นี้อยู่หรือไม่
-    const [exist] = await db.execute('SELECT * FROM drivers WHERE driver_id = ?', [req.params.id]);
+    const [exist] = await db.execute(
+      'SELECT driver_id, username, start_date FROM drivers WHERE driver_id = ? ORDER BY driver_id ASC LIMIT 1',
+      [req.params.id]
+    );
     if (exist.length === 0) {
       return res.status(404).json({ message: 'ไม่พบพนักงานขับรถที่ต้องการแก้ไข' });
     }
 
     // ถ้ามีการเปลี่ยน username ให้ตรวจสอบซ้ำ
     if (username && username !== exist[0].username) {
-      const [usernameExist] = await db.execute('SELECT * FROM drivers WHERE username = ? AND driver_id != ?', [username, req.params.id]);
+      const [usernameExist] = await db.execute(
+        'SELECT driver_id, username FROM drivers WHERE username = ? AND driver_id != ? ORDER BY driver_id ASC LIMIT 1',
+        [username, req.params.id]
+      );
       if (usernameExist.length > 0) {
         return res.status(409).json({ message: 'ชื่อผู้ใช้นี้ถูกใช้แล้ว' });
       }
@@ -106,7 +117,10 @@ router.post('/trucks', onlyAdmin, async (req, res) => {
   }
 
   try {
-    const [exist] = await db.execute('SELECT * FROM trucks WHERE truck_id = ?', [truck_id]);
+    const [exist] = await db.execute(
+      'SELECT truck_id FROM trucks WHERE truck_id = ? ORDER BY truck_id ASC LIMIT 1',
+      [truck_id]
+    );
     if (exist.length > 0) {
       return res.status(409).json({ message: 'รหัสรถนี้มีอยู่แล้ว' });
     }
@@ -149,7 +163,10 @@ router.post('/shops', onlyAdmin, async (req, res) => {
   }
 
   try {
-    const [exist] = await db.execute('SELECT * FROM shops WHERE shop_id = ?', [shop_id]);
+    const [exist] = await db.execute(
+      'SELECT shop_id FROM shops WHERE shop_id = ? ORDER BY shop_id ASC LIMIT 1',
+      [shop_id]
+    );
     if (exist.length > 0) {
       return res.status(409).json({ message: 'รหัสร้านค้านี้มีอยู่แล้ว' });
     }

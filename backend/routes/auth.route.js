@@ -5,6 +5,12 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../config/db'); // ✅ ใช้ config/db.js
+const {
+  validate,
+  sanitize,
+  loginSchema,
+  authRouteRegisterSchema,
+} = require('../src/middleware/zodValidation');
 
 const SECRET_KEY = process.env.JWT_SECRET;
 
@@ -16,12 +22,15 @@ if (!SECRET_KEY) {
  * ✅ Login (รองรับ users และ drivers)
  * POST /api/login
  */
-router.post('/login', async (req, res) => {
+router.post('/login', sanitize, validate(loginSchema), async (req, res) => {
   const { username, password } = req.body;
 
   try {
     // 1️⃣ ตรวจสอบในตาราง users
-    const [userRows] = await db.execute('SELECT * FROM users WHERE username = ?', [username]);
+    const [userRows] = await db.execute(
+      'SELECT id, username, password, role FROM users WHERE username = ? ORDER BY id DESC LIMIT 1',
+      [username]
+    );
     if (userRows.length > 0) {
       const user = userRows[0];
       const match = await bcrypt.compare(password, user.password);
@@ -40,7 +49,10 @@ router.post('/login', async (req, res) => {
     }
 
     // 2️⃣ ตรวจสอบในตาราง drivers
-    const [driverRows] = await db.execute('SELECT * FROM drivers WHERE username = ?', [username]);
+    const [driverRows] = await db.execute(
+      'SELECT id, username, password FROM drivers WHERE username = ? ORDER BY id DESC LIMIT 1',
+      [username]
+    );
     if (driverRows.length > 0) {
       const driver = driverRows[0];
       const match = await bcrypt.compare(password, driver.password);
@@ -91,7 +103,7 @@ const authenticateToken = (req, res, next) => {
  * ✅ Register ผู้ใช้ใหม่ (admin เท่านั้น)
  * POST /api/register
  */
-router.post('/register', authenticateToken, async (req, res) => {
+router.post('/register', authenticateToken, sanitize, validate(authRouteRegisterSchema), async (req, res) => {
   const { username, password, role, full_name, email, phone } = req.body;
 
   if (req.user.role !== 'admin') {
@@ -104,19 +116,28 @@ router.post('/register', authenticateToken, async (req, res) => {
 
   try {
     // ตรวจสอบ username ซ้ำ
-    const [existUsername] = await db.execute('SELECT * FROM users WHERE username = ?', [username]);
+    const [existUsername] = await db.execute(
+      'SELECT id, username FROM users WHERE username = ? ORDER BY id DESC LIMIT 1',
+      [username]
+    );
     if (existUsername.length > 0) {
       return res.status(409).json({ message: 'ชื่อผู้ใช้นี้ถูกใช้แล้ว' });
     }
 
     // ตรวจสอบ email ซ้ำ
-    const [existEmail] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
+    const [existEmail] = await db.execute(
+      'SELECT id, email FROM users WHERE email = ? ORDER BY id DESC LIMIT 1',
+      [email]
+    );
     if (existEmail.length > 0) {
       return res.status(409).json({ message: 'อีเมลนี้ถูกใช้แล้ว' });
     }
 
     // ตรวจสอบ phone ซ้ำ
-    const [existPhone] = await db.execute('SELECT * FROM users WHERE phone = ?', [phone]);
+    const [existPhone] = await db.execute(
+      'SELECT id, phone FROM users WHERE phone = ? ORDER BY id DESC LIMIT 1',
+      [phone]
+    );
     if (existPhone.length > 0) {
       return res.status(409).json({ message: 'เบอร์โทรศัพท์นี้ถูกใช้แล้ว' });
     }

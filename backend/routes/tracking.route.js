@@ -2,11 +2,16 @@ const router = require('express').Router();
 const db = require('../config/db');
 const auth = require('../middleware/auth');
 const AlertService = require('../services/alertService');
+const { validate, sanitize, trackingInsertSchema } = require('../src/middleware/zodValidation');
 
 // ✅ GET - ข้อมูลการติดตามทั้งหมด (admin/owner)
 router.get('/', auth(['admin', 'owner']), async (req, res) => {
   try {
-    const [rows] = await db.query(`SELECT * FROM tracking ORDER BY timestamp DESC`);
+    const [rows] = await db.query(
+      `SELECT id, shop_id, latitude, longitude, truck_id, driver_id, gps_code, timestamp
+       FROM tracking
+       ORDER BY timestamp DESC`
+    );
     res.json(rows);
   } catch (err) {
     console.error('❌ ดึงข้อมูลการติดตามล้มเหลว:', err);
@@ -15,7 +20,7 @@ router.get('/', auth(['admin', 'owner']), async (req, res) => {
 });
 
 // ✅ POST - บันทึกข้อมูลการติดตาม (driver)
-router.post('/', auth(['driver']), async (req, res) => {
+router.post('/', auth(['driver']), sanitize, validate(trackingInsertSchema), async (req, res) => {
   const {
     shop_id,
     latitude,
@@ -24,15 +29,6 @@ router.post('/', auth(['driver']), async (req, res) => {
     driver_id,
     gps_code
   } = req.body;
-
-  // ตรวจสอบความครบถ้วน
-  if (!shop_id || !latitude || !longitude || !truck_id || !driver_id || !gps_code) {
-    return res.status(400).json({ message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
-  }
-
-  if (isNaN(Number(latitude)) || isNaN(Number(longitude))) {
-    return res.status(400).json({ message: 'latitude และ longitude ต้องเป็นตัวเลข' });
-  }
 
   try {
     await db.query(

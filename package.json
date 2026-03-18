@@ -3,16 +3,8 @@
   "version": "2.0.0",
   "description": "Professional Ice Truck Tracking System - Enterprise Monorepo",
   "private": true,
-  "workspaces": [
-    "backend",
-    "dashboard",
-    "mobile-app",
-    "sdk/edge",
-    "sdk/mobile",
-    "sdk/mcp-server"
-  ],
   "scripts": {
-    "preinstall": "npx only-allow pnpm",
+    "preinstall": "only-allow pnpm",
     "build": "npx turbo run build",
     "build:all": "turbo run build --force",
     "test": "jest --passWithNoTests",
@@ -59,6 +51,7 @@
     "@commitlint/config-conventional": "^20.4.2",
     "@eslint/eslintrc": "^3.3.4",
     "@eslint/js": "^9.39.3",
+    "@playwright/test": "^1.58.2",
     "@stryker-mutator/core": "^9.6.0",
     "@stryker-mutator/jest-runner": "^9.6.0",
     "@stryker-mutator/typescript-checker": "^9.6.0",
@@ -79,7 +72,9 @@
     "globals": "^16.5.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.3.1",
+    "lucide-react": "^0.576.0",
     "npm-check-updates": "^19.6.3",
+    "only-allow": "^1.2.2",
     "prettier": "^3.8.1",
     "rimraf": "^6.1.3",
     "snyk": "^1.1303.0",
@@ -91,7 +86,7 @@
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"
   },
-  "packageManager": "pnpm@10.30.3",
+  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",
   "keywords": [
     "monorepo",
     "ice-truck",

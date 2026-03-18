@@ -25,14 +25,38 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 import React, { useEffect, useRef, useState, useCallback, memo } from "react";
+import { motion } from 'framer-motion'
 import {
-  Truck, ThermometerSun, Bell, Activity, ArrowUpRight, ArrowDownRight,
-  TrendingUp, Maximize2, X, Grid3X3, Layers, Zap, MapPin, Clock,
-  AlertTriangle, CheckCircle2, Settings, Download,
-  Fuel, Package, Users, DollarSign,
-  Search, Wifi, WifiOff, Server,
-  Play, Pause, Minimize2
-} from "lucide-react";
+  Truck,
+  ThermometerSun,
+  Bell,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  TrendingUp,
+  Maximize2,
+  X,
+  Grid3X3,
+  Layers,
+  Zap,
+  MapPin,
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
+  Settings,
+  Download,
+  Fuel,
+  Package,
+  Users,
+  DollarSign,
+  Search,
+  Wifi,
+  WifiOff,
+  Server,
+  Play,
+  Pause,
+  Minimize2,
+} from 'lucide-react'
 
 // ─── IoT Engine imports (zero-render architecture) ─────────────
 import {
@@ -52,249 +76,297 @@ import {
   unmountChart,
   getPerfOverlay,
   getAdaptiveController,
-} from "@/engine";
+} from '@/engine'
+import { useTransitionStore } from '@/stores/transitionStore'
 
 // ─── Types ─────────────────────────────────────────────────────
-type Trend = "up" | "down" | "stable";
-type Fullscreen = null | "revenue" | "fleet" | "temp" | "alerts" | "performance";
+type Trend = 'up' | 'down' | 'stable'
+type Fullscreen = null | 'revenue' | 'fleet' | 'temp' | 'alerts' | 'performance'
 
 /* ============== Constants ============== */
 const THEME_COLORS: Record<Theme, { gradient: string }> = {
   dark: {
-    gradient: "radial-gradient(1400px 700px at 10% -10%, rgba(139,92,246,.38), transparent 65%), radial-gradient(1000px 600px at 100% 10%, rgba(34,211,238,.32), transparent 65%), radial-gradient(1000px 600px at 50% 120%, rgba(16,185,129,.32), transparent 65%), #0b1220"
+    gradient:
+      'radial-gradient(1400px 700px at 10% -10%, rgba(139,92,246,.38), transparent 65%), radial-gradient(1000px 600px at 100% 10%, rgba(34,211,238,.32), transparent 65%), radial-gradient(1000px 600px at 50% 120%, rgba(16,185,129,.32), transparent 65%), #0b1220',
   },
   neon: {
-    gradient: "radial-gradient(1400px 700px at 10% -10%, rgba(255,0,110,.4), transparent 65%), radial-gradient(1000px 600px at 100% 10%, rgba(0,245,255,.35), transparent 65%), radial-gradient(1000px 600px at 50% 120%, rgba(0,255,159,.35), transparent 65%), #0d0221"
+    gradient:
+      'radial-gradient(1400px 700px at 10% -10%, rgba(255,0,110,.4), transparent 65%), radial-gradient(1000px 600px at 100% 10%, rgba(0,245,255,.35), transparent 65%), radial-gradient(1000px 600px at 50% 120%, rgba(0,255,159,.35), transparent 65%), #0d0221',
   },
   ocean: {
-    gradient: "radial-gradient(1400px 700px at 10% -10%, rgba(6,182,212,.4), transparent 65%), radial-gradient(1000px 600px at 100% 10%, rgba(14,165,233,.35), transparent 65%), radial-gradient(1000px 600px at 50% 120%, rgba(20,184,166,.35), transparent 65%), #0a1628"
+    gradient:
+      'radial-gradient(1400px 700px at 10% -10%, rgba(6,182,212,.4), transparent 65%), radial-gradient(1000px 600px at 100% 10%, rgba(14,165,233,.35), transparent 65%), radial-gradient(1000px 600px at 50% 120%, rgba(20,184,166,.35), transparent 65%), #0a1628',
   },
   forest: {
-    gradient: "radial-gradient(1400px 700px at 10% -10%, rgba(16,185,129,.4), transparent 65%), radial-gradient(1000px 600px at 100% 10%, rgba(5,150,105,.35), transparent 65%), radial-gradient(1000px 600px at 50% 120%, rgba(52,211,153,.35), transparent 65%), #0a1810"
-  }
-};
+    gradient:
+      'radial-gradient(1400px 700px at 10% -10%, rgba(16,185,129,.4), transparent 65%), radial-gradient(1000px 600px at 100% 10%, rgba(5,150,105,.35), transparent 65%), radial-gradient(1000px 600px at 50% 120%, rgba(52,211,153,.35), transparent 65%), #0a1810',
+  },
+}
 
 const CHART_CONFIGS = {
   revenue: {
-    series: [
-      { id: "revenue", label: "Revenue", color: "#8b5cf6" },
-    ],
-    title: "Revenue Trend Analysis",
-    unit: "$",
+    series: [{ id: 'revenue', label: 'Revenue', color: '#8b5cf6' }],
+    title: 'Revenue Trend Analysis',
+    unit: '$',
   },
   fleet: {
     series: [
-      { id: "active-trucks", label: "Active Trucks", color: "#06b6d4" },
-      { id: "speed", label: "Avg Speed", color: "#10b981" },
+      { id: 'active-trucks', label: 'Active Trucks', color: '#06b6d4' },
+      { id: 'speed', label: 'Avg Speed', color: '#10b981' },
     ],
-    title: "Fleet Activity & Efficiency",
+    title: 'Fleet Activity & Efficiency',
   },
   temperature: {
-    series: [
-      { id: "temperature", label: "Avg Temp", color: "#a78bfa" },
-    ],
-    title: "Cargo Temperature Distribution",
-    unit: "°C",
+    series: [{ id: 'temperature', label: 'Avg Temp', color: '#a78bfa' }],
+    title: 'Cargo Temperature Distribution',
+    unit: '°C',
   },
   alerts: {
-    series: [
-      { id: "alerts", label: "Total Alerts", color: "#ef4444" },
-    ],
-    title: "Alert Timeline",
+    series: [{ id: 'alerts', label: 'Total Alerts', color: '#ef4444' }],
+    title: 'Alert Timeline',
   },
   fuel: {
-    series: [
-      { id: "fuel", label: "Fuel Level", color: "#10b981" },
-    ],
-    title: "Performance Metrics",
-    unit: "%",
+    series: [{ id: 'fuel', label: 'Fuel Level', color: '#10b981' }],
+    title: 'Performance Metrics',
+    unit: '%',
   },
-};
+}
 
 /* ============== UI Helpers (ternary extractors) ============ */
 const INTENT_CLS: Record<string, string> = {
-  ok: "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/50 shadow-[0_0_24px_-6px_rgba(16,185,129,.7)]",
-  warn: "bg-amber-500/20 text-amber-200 ring-1 ring-amber-400/50 shadow-[0_0_24px_-6px_rgba(245,158,11,.7)]",
-  error: "bg-rose-500/20 text-rose-200 ring-1 ring-rose-400/50 shadow-[0_0_24px_-6px_rgba(244,63,94,.7)]",
-  info: "bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-400/50 shadow-[0_0_24px_-6px_rgba(6,182,212,.7)]",
-  neutral: "bg-white/10 text-slate-200 ring-1 ring-white/20",
-};
+  ok: 'bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/50 shadow-[0_0_24px_-6px_rgba(16,185,129,.7)]',
+  warn: 'bg-amber-500/20 text-amber-200 ring-1 ring-amber-400/50 shadow-[0_0_24px_-6px_rgba(245,158,11,.7)]',
+  error:
+    'bg-rose-500/20 text-rose-200 ring-1 ring-rose-400/50 shadow-[0_0_24px_-6px_rgba(244,63,94,.7)]',
+  info: 'bg-cyan-500/20 text-cyan-200 ring-1 ring-cyan-400/50 shadow-[0_0_24px_-6px_rgba(6,182,212,.7)]',
+  neutral: 'bg-white/10 text-slate-200 ring-1 ring-white/20',
+}
 
-function resolveApiHealthIntent(apiHealthy: boolean | null): "ok" | "error" | "neutral" {
-  if (apiHealthy === true) return "ok";
-  if (apiHealthy === false) return "error";
-  return "neutral";
+function resolveApiHealthIntent(
+  apiHealthy: boolean | null
+): 'ok' | 'error' | 'neutral' {
+  if (apiHealthy === true) return 'ok'
+  if (apiHealthy === false) return 'error'
+  return 'neutral'
 }
 
 function resolveApiHealthIcon(apiHealthy: boolean | null) {
-  if (apiHealthy === true) return <Wifi className="h-3 w-3" />;
-  if (apiHealthy === false) return <WifiOff className="h-3 w-3" />;
-  return <Server className="h-3 w-3 animate-pulse" />;
+  if (apiHealthy === true) return <Wifi className='h-3 w-3' />
+  if (apiHealthy === false) return <WifiOff className='h-3 w-3' />
+  return <Server className='h-3 w-3 animate-pulse' />
 }
 
 function resolveApiHealthLabel(apiHealthy: boolean | null): string {
-  if (apiHealthy === true) return "API Online";
-  if (apiHealthy === false) return "API Offline";
-  return "API Checking";
+  if (apiHealthy === true) return 'API Online'
+  if (apiHealthy === false) return 'API Offline'
+  return 'API Checking'
 }
 
-function resolveConnectionIntent(status: string): "ok" | "warn" | "info" {
-  if (status === "connected") return "ok";
-  if (status === "reconnecting") return "warn";
-  return "info";
+function resolveConnectionIntent(status: string): 'ok' | 'warn' | 'info' {
+  if (status === 'connected') return 'ok'
+  if (status === 'reconnecting') return 'warn'
+  return 'info'
 }
 
 function resolveConnectionDot(status: string): string {
-  if (status === "connected") return "bg-emerald-400 animate-pulse";
-  if (status === "reconnecting") return "bg-amber-400 animate-pulse";
-  return "bg-slate-400";
+  if (status === 'connected') return 'bg-emerald-400 animate-pulse'
+  if (status === 'reconnecting') return 'bg-amber-400 animate-pulse'
+  return 'bg-slate-400'
 }
 
 function resolveConnectionLabel(status: string): string {
-  if (status === "connected") return "Live Data";
-  if (status === "reconnecting") return "Reconnecting...";
-  return "Simulation Mode";
+  if (status === 'connected') return 'Live Data'
+  if (status === 'reconnecting') return 'Reconnecting...'
+  return 'Simulation Mode'
 }
 
 function resolveStatusText(paused: boolean, lastUpdate: Date | null): string {
-  if (paused) return "Simulation paused";
-  if (lastUpdate) return `Last updated ${lastUpdate.toLocaleTimeString()}`;
-  return "All systems operational";
+  if (paused) return 'Simulation paused'
+  if (lastUpdate) return `Last updated ${lastUpdate.toLocaleTimeString()}`
+  return 'All systems operational'
 }
 
 function resolveTrendColor(trend: Trend): string {
-  if (trend === "up") return "text-emerald-400";
-  if (trend === "down") return "text-rose-400";
-  return "text-slate-400";
+  if (trend === 'up') return 'text-emerald-400'
+  if (trend === 'down') return 'text-rose-400'
+  return 'text-slate-400'
 }
 
 function resolveTrendIcon(trend: Trend) {
-  if (trend === "up") return <ArrowUpRight className="h-4 w-4" />;
-  if (trend === "down") return <ArrowDownRight className="h-4 w-4" />;
-  return <TrendingUp className="h-4 w-4" />;
+  if (trend === 'up') return <ArrowUpRight className='h-4 w-4' />
+  if (trend === 'down') return <ArrowDownRight className='h-4 w-4' />
+  return <TrendingUp className='h-4 w-4' />
 }
 
 function resolveAlertBg(level: string): string {
-  if (level === "critical") return "bg-red-500/10 ring-red-500/30";
-  if (level === "warning") return "bg-amber-500/10 ring-amber-500/30";
-  return "bg-cyan-500/10 ring-cyan-500/30";
+  if (level === 'critical') return 'bg-red-500/10 ring-red-500/30'
+  if (level === 'warning') return 'bg-amber-500/10 ring-amber-500/30'
+  return 'bg-cyan-500/10 ring-cyan-500/30'
 }
 
 function resolveAlertIconColor(level: string): string {
-  if (level === "critical") return "text-red-400";
-  if (level === "warning") return "text-amber-400";
-  return "text-cyan-400";
+  if (level === 'critical') return 'text-red-400'
+  if (level === 'warning') return 'text-amber-400'
+  return 'text-cyan-400'
 }
 
-const FULLSCREEN_CONFIGS: Record<string, typeof CHART_CONFIGS[keyof typeof CHART_CONFIGS]> = {
+const FULLSCREEN_CONFIGS: Record<
+  string,
+  (typeof CHART_CONFIGS)[keyof typeof CHART_CONFIGS]
+> = {
   revenue: CHART_CONFIGS.revenue,
   fleet: CHART_CONFIGS.fleet,
   temp: CHART_CONFIGS.temperature,
   alerts: CHART_CONFIGS.alerts,
   performance: CHART_CONFIGS.fuel,
-};
+}
 
 const FULLSCREEN_TITLES: Record<string, string> = {
-  revenue: "Revenue Trend Analysis",
-  fleet: "Fleet Activity & Efficiency",
-  temp: "Cargo Temperature Distribution",
-  alerts: "Alert Timeline & History",
-  performance: "Performance Metrics",
-};
+  revenue: 'Revenue Trend Analysis',
+  fleet: 'Fleet Activity & Efficiency',
+  temp: 'Cargo Temperature Distribution',
+  alerts: 'Alert Timeline & History',
+  performance: 'Performance Metrics',
+}
 
 /* ============== UI Components (React — lightweight) ============ */
 function PingLayer({ count = 12 }: Readonly<{ count?: number }>) {
-  const [dots, setDots] = React.useState<{ left: string; top: string; delay: number }[]>([]);
+  const [dots, setDots] = React.useState<
+    { left: string; top: string; delay: number }[]
+  >([])
   React.useEffect(() => {
-    setDots(Array.from({ length: count }, (_, i) => ({
-      left: `${20 + Math.random() * 60}%`,
-      top: `${20 + Math.random() * 60}%`,
-      delay: i * 0.3,
-    })));
-  }, [count]);
-  if (!dots.length) return null;
+    setDots(
+      Array.from({ length: count }, (_, i) => ({
+        left: `${20 + Math.random() * 60}%`,
+        top: `${20 + Math.random() * 60}%`,
+        delay: i * 0.3,
+      }))
+    )
+  }, [count])
+  if (!dots.length) return null
   return (
-    <div className="absolute inset-0 opacity-60">
-      {dots.map((d) => (
-        <div key={`${d.left}-${d.top}`} className="absolute animate-ping"
-          style={{ left: d.left, top: d.top, animationDelay: `${d.delay}s`, animationDuration: "3s" }} // NOSONAR — dynamic positions
+    <div className='absolute inset-0 opacity-60'>
+      {dots.map(d => (
+        <div
+          key={`${d.left}-${d.top}`}
+          className='absolute animate-ping'
+          style={{
+            left: d.left,
+            top: d.top,
+            animationDelay: `${d.delay}s`,
+            animationDuration: '3s',
+          }} // NOSONAR — dynamic positions
         />
       ))}
     </div>
-  );
+  )
 }
 
-const Pill = memo(({ children, intent = "neutral", onClick }: Readonly<{
-  children: React.ReactNode;
-  intent?: "neutral" | "ok" | "warn" | "info" | "error";
-  onClick?: () => void;
-}>) => {
-  const cls = INTENT_CLS[intent] ?? INTENT_CLS.neutral;
-  const base = `inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium backdrop-blur-xl transition-all ${cls}`;
-  if (onClick) {
-    return (
-      <button type="button" className={`${base} cursor-pointer hover:scale-105 border-0 bg-transparent`} onClick={onClick}>
-        {children}
-      </button>
-    );
+const Pill = memo(
+  ({
+    children,
+    intent = 'neutral',
+    onClick,
+  }: Readonly<{
+    children: React.ReactNode
+    intent?: 'neutral' | 'ok' | 'warn' | 'info' | 'error'
+    onClick?: () => void
+  }>) => {
+    const cls = INTENT_CLS[intent] ?? INTENT_CLS.neutral
+    const base = `inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium backdrop-blur-xl transition-all ${cls}`
+    if (onClick) {
+      return (
+        <button
+          type='button'
+          className={`${base} cursor-pointer hover:scale-105 border-0 bg-transparent`}
+          onClick={onClick}
+        >
+          {children}
+        </button>
+      )
+    }
+    return <span className={base}>{children}</span>
   }
-  return <span className={base}>{children}</span>;
-});
+)
 
-const GlassCard = memo(({ children, accent = "from-violet-400/30 via-purple-400/20 to-cyan-400/30", className = "", onClick }: Readonly<{
-  children: React.ReactNode;
-  accent?: string;
-  className?: string;
-  onClick?: () => void;
-}>) => {
-  const inner = (
-    <div className={`group relative rounded-3xl p-[1.5px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02]`}>
-      <div className={`relative rounded-3xl bg-slate-900/70 backdrop-blur-2xl ring-1 ring-white/10 ${className}`}>
-        <div className="pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.2),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.18),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]" />
-        <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.1),transparent)] bg-[length:200%_100%] animate-shimmer" />
-        <div className="relative">{children}</div>
+const GlassCard = memo(
+  ({
+    children,
+    accent = 'from-violet-400/30 via-purple-400/20 to-cyan-400/30',
+    className = '',
+    onClick,
+  }: Readonly<{
+    children: React.ReactNode
+    accent?: string
+    className?: string
+    onClick?: () => void
+  }>) => {
+    const inner = (
+      <div
+        className={`group relative rounded-3xl p-[1.5px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02]`}
+      >
+        <div
+          className={`relative rounded-3xl bg-slate-900/70 backdrop-blur-2xl ring-1 ring-white/10 ${className}`}
+        >
+          <div className='pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.2),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.18),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]' />
+          <div className='pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.1),transparent)] bg-[length:200%_100%] animate-shimmer' />
+          <div className='relative'>{children}</div>
+        </div>
       </div>
-    </div>
-  );
-  if (onClick) {
-    return <button type="button" className="cursor-pointer text-left w-full border-0 bg-transparent p-0" onClick={onClick}>{inner}</button>;
+    )
+    if (onClick) {
+      return (
+        <button
+          type='button'
+          className='cursor-pointer text-left w-full border-0 bg-transparent p-0'
+          onClick={onClick}
+        >
+          {inner}
+        </button>
+      )
+    }
+    return inner
   }
-  return inner;
-});
+)
 
 const Tilt = memo(({ children }: Readonly<{ children: React.ReactNode }>) => {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
+    const el = ref.current
+    if (!el) return
     const onMove = (e: MouseEvent) => {
-      const rect = el.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      el.style.transform = `perspective(1200px) rotateX(${(0.5 - y) * 8}deg) rotateY(${(x - 0.5) * 8}deg) translateZ(10px)`;
-    };
+      const rect = el.getBoundingClientRect()
+      const x = (e.clientX - rect.left) / rect.width
+      const y = (e.clientY - rect.top) / rect.height
+      el.style.transform = `perspective(1200px) rotateX(${(0.5 - y) * 8}deg) rotateY(${(x - 0.5) * 8}deg) translateZ(10px)`
+    }
     const onLeave = () => {
-      el.style.transform = `perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px)`;
-    };
-    el.addEventListener('mousemove', onMove);
-    el.addEventListener('mouseleave', onLeave);
+      el.style.transform = `perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px)`
+    }
+    el.addEventListener('mousemove', onMove)
+    el.addEventListener('mouseleave', onLeave)
     return () => {
-      el.removeEventListener('mousemove', onMove);
-      el.removeEventListener('mouseleave', onLeave);
-    };
-  }, []);
+      el.removeEventListener('mousemove', onMove)
+      el.removeEventListener('mouseleave', onLeave)
+    }
+  }, [])
   return (
-    <div ref={ref} className="transition-transform duration-300 ease-out will-change-transform">
+    <div
+      ref={ref}
+      className='transition-transform duration-300 ease-out will-change-transform'
+    >
       {children}
     </div>
-  );
-});
+  )
+})
 
-const ClientOnlyText: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return <span suppressHydrationWarning>{mounted ? children : null}</span>;
-};
+const ClientOnlyText: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  return <span suppressHydrationWarning>{mounted ? children : null}</span>
+}
 
 /* ============== Imperative Chart Canvas Wrapper ============== */
 /** Thin React wrapper that provides a <canvas> and calls mountChart/unmountChart */
@@ -456,7 +528,13 @@ export default function Dashboard() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [mounted, setMounted] = useState(false)
 
+  const isTransitioning = useTransitionStore(s => s.isTransitioning)
+  const phase = useTransitionStore(s => s.phase)
+  const startIntro = useTransitionStore(s => s.startIntro)
+  const finishTransition = useTransitionStore(s => s.finishTransition)
+
   // ── Imperative layer refs ────────────────────────────────────
+  const rootRef = useRef<HTMLDivElement>(null)
   const threeContainerRef = useRef<HTMLDivElement>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
@@ -481,6 +559,33 @@ export default function Dashboard() {
       unmount3D()
     }
   }, [mounted, show3D])
+
+  // ── Intro synchronization from login transition ───────────────
+  useEffect(() => {
+    if (!isTransitioning) return
+
+    if (phase === 'outro') {
+      startIntro()
+    }
+
+    const root = rootRef.current
+    if (root) {
+      root.style.opacity = '0'
+      root.style.transform = 'scale(1.03)'
+      root.style.transition =
+        'opacity 0.85s cubic-bezier(0.76,0,0.24,1), transform 0.85s cubic-bezier(0.76,0,0.24,1)'
+      requestAnimationFrame(() => {
+        root.style.opacity = '1'
+        root.style.transform = 'scale(1)'
+      })
+    }
+
+    const timer = globalThis.setTimeout(() => {
+      finishTransition()
+    }, 1200)
+
+    return () => globalThis.clearTimeout(timer)
+  }, [isTransitioning, phase, startIntro, finishTransition])
 
   // ── Mount imperative Map layer ───────────────────────────────
   useEffect(() => {
@@ -608,7 +713,10 @@ export default function Dashboard() {
    *  All real-time visualization is imperative (3D, Map, Charts).
    * ================================================================ */
   return (
-    <div className='relative min-h-screen overflow-x-hidden text-white selection:bg-violet-500/30 selection:text-white'>
+    <div
+      ref={rootRef}
+      className='relative min-h-screen overflow-x-hidden text-white selection:bg-violet-500/30 selection:text-white'
+    >
       {/* ── Background gradient ── */}
       <div
         className='pointer-events-none fixed inset-0 -z-20 transition-all duration-1000'
@@ -619,7 +727,8 @@ export default function Dashboard() {
       {showGrid && (
         <div
           className='pointer-events-none fixed inset-0 -z-10 opacity-[0.09] transition-opacity duration-500'
-          style={{ // NOSONAR — complex CSS pattern
+          style={{
+            // NOSONAR — complex CSS pattern
             backgroundImage:
               'linear-gradient(to right, #fff 1px, transparent 1px),linear-gradient(to bottom, #fff 1px, transparent 1px)',
             backgroundSize: '48px 48px',
@@ -641,12 +750,12 @@ export default function Dashboard() {
           <div className='flex items-center justify-between py-4'>
             {/* Logo + Title */}
             <div className='flex items-center gap-3 sm:gap-4'>
-              <div className='relative'>
+              <motion.div layoutId='brand-mark' className='relative'>
                 <div className='absolute -inset-1 rounded-2xl bg-gradient-to-br from-violet-500/60 to-cyan-500/60 blur-lg animate-pulse-slow' />
                 <div className='relative flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-500 shadow-lg'>
                   <Truck className='h-6 w-6 text-white' />
                 </div>
-              </div>
+              </motion.div>
               <div>
                 <h1 className='text-xl sm:text-2xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-violet-200 via-white to-cyan-200'>
                   Ultra-Modern Console

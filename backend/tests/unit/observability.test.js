@@ -13,7 +13,6 @@ const {
     recordAlert,
     recordTelemetryIngestion,
     updateDbPoolStats,
-    recordDbQuery,
     recordCacheOp,
 } = require('../../src/middleware/observability');
 

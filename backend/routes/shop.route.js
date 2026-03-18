@@ -6,7 +6,9 @@ const auth = require('../middleware/auth');
 // ✅ GET - ดูร้านค้าทั้งหมด
 router.get('/', auth(), async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM shops ORDER BY shop_name ASC');
+    const [rows] = await db.query(
+      'SELECT shop_id, shop_name, phone, address, lat, lng FROM shops ORDER BY shop_name ASC'
+    );
     res.json(rows);
   } catch (err) {
     console.error('❌ ดึงข้อมูลร้านค้าล้มเหลว:', err);
@@ -24,7 +26,10 @@ router.post('/', auth(['admin']), async (req, res) => {
   }
 
   try {
-    const [exist] = await db.query('SELECT * FROM shops WHERE shop_id = ?', [shop.shop_id]);
+    const [exist] = await db.query(
+      'SELECT shop_id FROM shops WHERE shop_id = ? ORDER BY shop_id ASC LIMIT 1',
+      [shop.shop_id]
+    );
     if (exist.length > 0) {
       return res.status(409).json({ message: 'shop_id นี้ถูกใช้แล้ว' });
     }
@@ -46,7 +51,10 @@ router.put('/:id', auth(['admin']), async (req, res) => {
   const shop = req.body;
 
   try {
-    const [exist] = await db.query('SELECT * FROM shops WHERE shop_id = ?', [req.params.id]);
+    const [exist] = await db.query(
+      'SELECT shop_id FROM shops WHERE shop_id = ? ORDER BY shop_id ASC LIMIT 1',
+      [req.params.id]
+    );
     if (exist.length === 0) {
       return res.status(404).json({ message: 'ไม่พบร้านค้าที่ต้องการแก้ไข' });
     }
@@ -66,7 +74,10 @@ router.put('/:id', auth(['admin']), async (req, res) => {
 // ✅ DELETE - ลบร้านค้า (admin)
 router.delete('/:id', auth(['admin']), async (req, res) => {
   try {
-    const [exist] = await db.query('SELECT * FROM shops WHERE shop_id = ?', [req.params.id]);
+    const [exist] = await db.query(
+      'SELECT shop_id FROM shops WHERE shop_id = ? ORDER BY shop_id ASC LIMIT 1',
+      [req.params.id]
+    );
     if (exist.length === 0) {
       return res.status(404).json({ message: 'ไม่พบร้านค้าที่ต้องการลบ' });
     }

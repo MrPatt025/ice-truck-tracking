@@ -2,11 +2,16 @@ const db = require('../config/database');
 
 class TruckRepository {
   async getAll() {
-    return db.query('SELECT * FROM trucks ORDER BY truck_code');
+    return db.query(
+      'SELECT id, truck_code, plate_number, model, color, gps_code, status, updated_at FROM trucks ORDER BY truck_code'
+    );
   }
 
   async getById(id) {
-    return db.get('SELECT * FROM trucks WHERE id = $1', [id]);
+    return db.get(
+      'SELECT id, truck_code, plate_number, model, color, gps_code, status, updated_at FROM trucks WHERE id = $1 ORDER BY id DESC LIMIT 1',
+      [id]
+    );
   }
 
   async create(truck) {

@@ -6,7 +6,9 @@ const auth = require('../middleware/auth');
 // ✅ GET: ดึงข้อมูลรถทั้งหมด (admin, owner, driver)
 router.get('/', auth(['admin', 'owner', 'driver']), async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM trucks ORDER BY truck_id ASC');
+    const [rows] = await db.query(
+      'SELECT truck_id, license_plate, model, color, gps_id, latitude, longitude, updated_at FROM trucks ORDER BY truck_id ASC'
+    );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ message: 'โหลดข้อมูลล้มเหลว', error: err.message });
@@ -23,7 +25,10 @@ router.post('/', auth(['admin']), async (req, res) => {
   }
 
   try {
-    const [exist] = await db.query('SELECT * FROM trucks WHERE truck_id = ?', [truck.truck_id]);
+    const [exist] = await db.query(
+      'SELECT truck_id FROM trucks WHERE truck_id = ? ORDER BY truck_id ASC LIMIT 1',
+      [truck.truck_id]
+    );
     if (exist.length > 0) {
       return res.status(409).json({ message: 'รหัสรถนี้มีอยู่แล้ว' });
     }
@@ -44,7 +49,10 @@ router.put('/:id', auth(['admin']), async (req, res) => {
   const truck = req.body;
 
   try {
-    const [exist] = await db.query('SELECT * FROM trucks WHERE truck_id = ?', [req.params.id]);
+    const [exist] = await db.query(
+      'SELECT truck_id FROM trucks WHERE truck_id = ? ORDER BY truck_id ASC LIMIT 1',
+      [req.params.id]
+    );
     if (exist.length === 0) {
       return res.status(404).json({ message: 'ไม่พบรถที่ต้องการแก้ไข' });
     }
@@ -62,7 +70,10 @@ router.put('/:id', auth(['admin']), async (req, res) => {
 // ✅ DELETE: ลบรถ (admin เท่านั้น)
 router.delete('/:id', auth(['admin']), async (req, res) => {
   try {
-    const [exist] = await db.query('SELECT * FROM trucks WHERE truck_id = ?', [req.params.id]);
+    const [exist] = await db.query(
+      'SELECT truck_id FROM trucks WHERE truck_id = ? ORDER BY truck_id ASC LIMIT 1',
+      [req.params.id]
+    );
     if (exist.length === 0) {
       return res.status(404).json({ message: 'ไม่พบรถที่ต้องการลบ' });
     }

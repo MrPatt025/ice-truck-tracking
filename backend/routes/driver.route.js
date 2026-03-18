@@ -8,7 +8,9 @@ const bcrypt = require("bcryptjs");
 // ✅ GET พนักงานขับรถทั้งหมด (admin, owner)
 router.get("/", auth(["admin", "owner"]), async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM drivers ORDER BY start_date DESC");
+    const [rows] = await db.query(
+      'SELECT id, driver_id, full_name, national_id, license_number, username, address, phone, start_date FROM drivers ORDER BY start_date DESC'
+    );
     res.json(rows);
   } catch (err) {
     res.status(500).json({ message: "เกิดข้อผิดพลาด", error: err.message });
@@ -27,7 +29,10 @@ router.post("/", auth(["admin"]), async (req, res) => {
   }
 
   try {
-    const [exist] = await db.query("SELECT * FROM drivers WHERE username = ?", [driver.username]);
+    const [exist] = await db.query(
+      'SELECT id, username FROM drivers WHERE username = ? ORDER BY id DESC LIMIT 1',
+      [driver.username]
+    );
     if (exist.length > 0) {
       return res.status(409).json({ message: "ชื่อผู้ใช้นี้มีอยู่แล้ว" });
     }
@@ -63,14 +68,20 @@ router.put("/:id", auth(["admin"]), async (req, res) => {
   const driver = req.body;
 
   try {
-    const [exist] = await db.query("SELECT * FROM drivers WHERE id=?", [req.params.id]);
+    const [exist] = await db.query(
+      'SELECT id, username FROM drivers WHERE id = ? ORDER BY id DESC LIMIT 1',
+      [req.params.id]
+    );
     if (exist.length === 0) {
       return res.status(404).json({ message: "ไม่พบพนักงานขับรถที่ต้องการแก้ไข" });
     }
 
     // ตรวจสอบ username ซ้ำ (ถ้ามีการเปลี่ยน username)
     if (driver.username && driver.username !== exist[0].username) {
-      const [usernameExist] = await db.query("SELECT * FROM drivers WHERE username = ? AND id != ?", [driver.username, req.params.id]);
+      const [usernameExist] = await db.query(
+        'SELECT id, username FROM drivers WHERE username = ? AND id != ? ORDER BY id DESC LIMIT 1',
+        [driver.username, req.params.id]
+      );
       if (usernameExist.length > 0) {
         return res.status(409).json({ message: "ชื่อผู้ใช้นี้ถูกใช้แล้ว" });
       }
@@ -109,7 +120,10 @@ router.put("/:id", auth(["admin"]), async (req, res) => {
 // ✅ DELETE พนักงานตาม id
 router.delete("/:id", auth(["admin"]), async (req, res) => {
   try {
-    const [exist] = await db.query("SELECT * FROM drivers WHERE id=?", [req.params.id]);
+    const [exist] = await db.query(
+      'SELECT id FROM drivers WHERE id = ? ORDER BY id DESC LIMIT 1',
+      [req.params.id]
+    );
     if (exist.length === 0) {
       return res.status(404).json({ message: "ไม่พบพนักงานที่ต้องการลบ" });
     }

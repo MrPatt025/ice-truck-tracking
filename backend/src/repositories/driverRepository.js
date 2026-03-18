@@ -2,11 +2,16 @@ const db = require('../config/database');
 
 class DriverRepository {
   async getAll() {
-    return db.query('SELECT * FROM drivers ORDER BY full_name');
+    return db.query(
+      'SELECT id, driver_code, full_name, national_id, license_number, username, address, phone, start_date FROM drivers ORDER BY full_name'
+    );
   }
 
   async getById(id) {
-    return db.get('SELECT * FROM drivers WHERE id = $1', [id]);
+    return db.get(
+      'SELECT id, driver_code, full_name, national_id, license_number, username, address, phone, start_date FROM drivers WHERE id = $1 ORDER BY id DESC LIMIT 1',
+      [id]
+    );
   }
 
   async create(driver) {

@@ -2,11 +2,17 @@ const db = require('../config/database');
 
 class UserRepository {
   async getByUsername(username) {
-    return db.get('SELECT * FROM users WHERE username = $1', [username]);
+    return db.get(
+      'SELECT id, username, password, role, last_login FROM users WHERE username = $1 ORDER BY id DESC LIMIT 1',
+      [username]
+    );
   }
 
   async getById(id) {
-    return db.get('SELECT * FROM users WHERE id = $1', [id]);
+    return db.get(
+      'SELECT id, username, password, role, last_login FROM users WHERE id = $1 ORDER BY id DESC LIMIT 1',
+      [id]
+    );
   }
 
   async create({ username, password, role }) {

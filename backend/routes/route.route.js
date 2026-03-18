@@ -68,7 +68,10 @@ router.get('/:id', auth(['admin', 'owner']), async (req, res) => {
     const routeId = req.params.id;
     
     // ดึงข้อมูลเส้นทางหลัก
-    const [routes] = await db.query('SELECT * FROM routes WHERE id = ?', [routeId]);
+    const [routes] = await db.query(
+      'SELECT id, route_name, description, created_at, updated_at FROM routes WHERE id = ? ORDER BY created_at DESC LIMIT 1',
+      [routeId]
+    );
     if (routes.length === 0) {
       return res.status(404).json({ message: 'ไม่พบเส้นทางที่ต้องการ' });
     }

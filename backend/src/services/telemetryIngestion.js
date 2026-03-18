@@ -1,7 +1,7 @@
 // MQTT → TimescaleDB telemetry ingestion handler
 const db = require('../config/database');
 const logger = require('../config/logger');
-const { invalidate, publish: redisPublish } = require('../config/redis');
+const { invalidate } = require('../config/redis');
 const websocketService = require('./websocketService');
 const { recordTelemetryIngestion, recordAlert } = require('../middleware/observability');
 

@@ -2,7 +2,6 @@
 const mqtt = require('mqtt');
 const config = require('../config/env');
 const logger = require('../config/logger');
-const { publish: redisPublish } = require('../config/redis');
 
 class MqttService {
     client = null;

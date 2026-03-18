@@ -14,7 +14,7 @@ class TrackingRepository {
     async findByTruckId(truckId, options = {}) {
         const { limit = 100, offset = 0 } = options;
         return db.query(
-            `SELECT * FROM tracking
+            `SELECT id, truck_id, latitude, longitude, speed, heading, time FROM tracking
        WHERE truck_id = $1
        ORDER BY time DESC
        LIMIT $2 OFFSET $3`,
@@ -24,7 +24,7 @@ class TrackingRepository {
 
     async findLatestByTruckId(truckId) {
         const rows = await db.query(
-            `SELECT * FROM tracking
+            `SELECT id, truck_id, latitude, longitude, speed, heading, time FROM tracking
        WHERE truck_id = $1
        ORDER BY time DESC
        LIMIT 1`,
@@ -35,7 +35,7 @@ class TrackingRepository {
 
     async findLatestAll() {
         return db.query(
-            `SELECT DISTINCT ON (truck_id) *
+            `SELECT DISTINCT ON (truck_id) id, truck_id, latitude, longitude, speed, heading, time
        FROM tracking
        ORDER BY truck_id, time DESC`
         );
@@ -43,7 +43,7 @@ class TrackingRepository {
 
     async findInTimeRange(truckId, startTime, endTime) {
         return db.query(
-            `SELECT * FROM tracking
+            `SELECT id, truck_id, latitude, longitude, speed, heading, time FROM tracking
        WHERE truck_id = $1 AND time BETWEEN $2 AND $3
        ORDER BY time ASC`,
             [truckId, startTime, endTime]

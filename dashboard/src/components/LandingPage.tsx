@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
   Truck,
@@ -21,6 +22,9 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import HeroBackground from '@/components/landing/HeroBackground'
+import GlassPanel from '@/components/landing/GlassPanel'
+import ScrollTruckStory from '@/components/landing/ScrollTruckStory'
 
 /* ───────────────────── Animation variants ───────────────────── */
 const fadeUp = {
@@ -89,9 +93,23 @@ const stats = [
 
 /* ───────────────────── Landing Page Component ───────────────── */
 export default function LandingPage() {
+  const router = useRouter()
+  const [isTransitioning, setIsTransitioning] = React.useState(false)
+
   const { scrollYProgress } = useScroll()
   const heroY = useTransform(scrollYProgress, [0, 0.25], ['0%', '12%'])
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.55])
+
+  const handleOpenDashboard = React.useCallback(
+    (e?: React.MouseEvent<HTMLAnchorElement>) => {
+      if (e) e.preventDefault()
+      setIsTransitioning(true)
+      globalThis.setTimeout(() => {
+        router.push('/dashboard')
+      }, 850)
+    },
+    [router]
+  )
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white overflow-hidden'>
@@ -135,7 +153,9 @@ export default function LandingPage() {
               Tech Stack
             </a>
             <Button size='sm' asChild>
-              <a href='/dashboard'>Open Dashboard</a>
+              <a href='/dashboard' onClick={handleOpenDashboard}>
+                Open Dashboard
+              </a>
             </Button>
           </div>
         </div>
@@ -146,20 +166,7 @@ export default function LandingPage() {
         style={{ y: heroY, opacity: heroOpacity }}
         className='relative mx-auto max-w-7xl px-6 pb-20 pt-28 text-center'
       >
-        <div className='absolute inset-0 -z-20 overflow-hidden rounded-3xl'>
-          <video
-            className='h-full w-full object-cover opacity-35'
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload='metadata'
-            poster='/favicon.ico'
-          >
-            <source src='/media/ice-fleet-loop.mp4' type='video/mp4' />
-          </video>
-          <div className='absolute inset-0 bg-[radial-gradient(circle_at_25%_20%,rgba(56,189,248,0.22),transparent_45%),radial-gradient(circle_at_75%_80%,rgba(59,130,246,0.24),transparent_45%),linear-gradient(to_bottom,rgba(2,6,23,0.75),rgba(2,6,23,0.95))]' />
-        </div>
+        <HeroBackground />
 
         {/* Animated gradient orb */}
         <motion.div
@@ -168,59 +175,61 @@ export default function LandingPage() {
           transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
         />
 
-        <motion.div initial='hidden' animate='visible' variants={stagger}>
-          <motion.div custom={0} variants={fadeUp}>
-            <Badge
-              variant='outline'
-              className='mb-6 border-blue-400/30 text-blue-300'
-            >
-              <Globe className='mr-1 h-3 w-3' /> Open Source &middot; Free Tier
-              Ready
-            </Badge>
-          </motion.div>
-
-          <motion.h1
-            custom={1}
-            variants={fadeUp}
-            className='mx-auto max-w-4xl text-5xl font-extrabold leading-tight tracking-tight sm:text-6xl lg:text-7xl'
-          >
-            Cold-Chain Logistics,{' '}
-            <span className='bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent'>
-              Real-Time Visibility
-            </span>
-          </motion.h1>
-
-          <motion.p
-            custom={2}
-            variants={fadeUp}
-            className='mx-auto mt-6 max-w-2xl text-lg text-slate-400'
-          >
-            Monitor temperature, GPS coordinates, and delivery status across
-            your entire ice-truck fleet — powered by MQTT, TimescaleDB, and
-            Redis for sub-second updates.
-          </motion.p>
-
-          <motion.div
-            custom={3}
-            variants={fadeUp}
-            className='mt-10 flex justify-center gap-4'
-          >
-            <Button size='lg' asChild>
-              <a href='/dashboard'>
-                <MapPin className='mr-2 h-4 w-4' /> Live Dashboard
-              </a>
-            </Button>
-            <Button size='lg' variant='outline' asChild>
-              <a
-                href='https://github.com/PATTANAKORN025/Ice-truck-racking'
-                target='_blank'
-                rel='noopener noreferrer'
+        <GlassPanel className='mx-auto max-w-5xl rounded-3xl border border-white/10 px-6 py-12 shadow-[0_20px_90px_-35px_rgba(34,211,238,0.45)] sm:px-10'>
+          <motion.div initial='hidden' animate='visible' variants={stagger}>
+            <motion.div custom={0} variants={fadeUp}>
+              <Badge
+                variant='outline'
+                className='mb-6 border-blue-400/30 text-blue-300'
               >
-                GitHub Repo
-              </a>
-            </Button>
+                <Globe className='mr-1 h-3 w-3' /> Open Source &middot; Free
+                Tier Ready
+              </Badge>
+            </motion.div>
+
+            <motion.h1
+              custom={1}
+              variants={fadeUp}
+              className='mx-auto max-w-4xl text-5xl font-extrabold leading-tight tracking-tight sm:text-6xl lg:text-7xl'
+            >
+              Cold-Chain Logistics,{' '}
+              <span className='bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent'>
+                Real-Time Visibility
+              </span>
+            </motion.h1>
+
+            <motion.p
+              custom={2}
+              variants={fadeUp}
+              className='mx-auto mt-6 max-w-2xl text-lg text-slate-400'
+            >
+              Monitor temperature, GPS coordinates, and delivery status across
+              your entire ice-truck fleet — powered by MQTT, TimescaleDB, and
+              Redis for sub-second updates.
+            </motion.p>
+
+            <motion.div
+              custom={3}
+              variants={fadeUp}
+              className='mt-10 flex justify-center gap-4'
+            >
+              <Button size='lg' asChild>
+                <a href='/dashboard' onClick={handleOpenDashboard}>
+                  <MapPin className='mr-2 h-4 w-4' /> Live Dashboard
+                </a>
+              </Button>
+              <Button size='lg' variant='outline' asChild>
+                <a
+                  href='https://github.com/PATTANAKORN025/Ice-truck-racking'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                >
+                  GitHub Repo
+                </a>
+              </Button>
+            </motion.div>
           </motion.div>
-        </motion.div>
+        </GlassPanel>
       </motion.section>
 
       {/* ── Stats ───────────────────────────────────────────── */}
@@ -245,6 +254,8 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
+
+      <ScrollTruckStory />
 
       {/* ── Features ────────────────────────────────────────── */}
       <section id='features' className='mx-auto max-w-7xl px-6 py-24'>
@@ -363,7 +374,7 @@ export default function LandingPage() {
           </motion.p>
           <motion.div custom={2} variants={fadeUp} className='mt-8'>
             <Button size='lg' asChild>
-              <a href='/dashboard'>
+              <a href='/dashboard' onClick={handleOpenDashboard}>
                 <Truck className='mr-2 h-4 w-4' /> Launch Dashboard
               </a>
             </Button>
@@ -383,6 +394,17 @@ export default function LandingPage() {
           </a>
         </p>
       </footer>
+
+      <motion.div
+        aria-hidden='true'
+        initial={false}
+        animate={{
+          opacity: isTransitioning ? 1 : 0,
+          scale: isTransitioning ? 1 : 0.96,
+        }}
+        transition={{ duration: 0.75, ease: 'easeInOut' }}
+        className='pointer-events-none fixed inset-0 z-[60] bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.45),rgba(2,6,23,0.97)_55%)]'
+      />
     </div>
   )
 }

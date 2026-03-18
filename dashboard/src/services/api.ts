@@ -4,9 +4,9 @@
  */
 
 const API_ROOT = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const API_BASE = API_ROOT.endsWith('/api/v1')
-  ? API_ROOT
-  : `${API_ROOT.replace(/\/+$/, '')}/api/v1`;
+const API_BASE = `${API_ROOT
+  .replace(/\/+$/, '')
+  .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`;
 
 // ── Request Helpers ────────────────────────────────────────
 async function getAuthToken(): Promise<string | null> {

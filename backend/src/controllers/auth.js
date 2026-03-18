@@ -1,9 +1,7 @@
-const bcrypt = require('bcryptjs');
 const { createSendToken } = require('../middleware/auth');
 const { AppError } = require('../middleware/error');
 const userService = require('../services/userService');
 const logger = require('../config/logger');
-const config = require('../config/env');
 
 const login = async (req, res, next) => {
   try {

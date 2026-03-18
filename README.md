@@ -613,8 +613,8 @@ Pre-configured Prometheus alert rules in `monitoring/alerts/alert-rules.yml` for
 - [x] Prometheus + Grafana monitoring
 - [x] Dark mode & i18n support
 - [x] Mobile app (Expo/React Native)
-- [x] Helm chart + Kubernetes deployment
-- [x] CI/CD with Vercel + Render deployment
+- [ ] Helm chart + Kubernetes deployment
+- [ ] CI/CD with Vercel + Render deployment
 - [ ] Predictive ETA & temperature anomaly ML models
 - [ ] Multi-tenant architecture
 - [ ] Advanced geofence rule engine

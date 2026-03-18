@@ -211,9 +211,9 @@ export class ClientObservability {
 
         // Use sendBeacon for reliability (survives page unload)
         if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
-            navigator.sendBeacon('/api/metrics', JSON.stringify(payload));
+            navigator.sendBeacon('/metrics', JSON.stringify(payload));
         } else {
-            fetch('/api/metrics', {
+            fetch('/metrics', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
