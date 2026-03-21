@@ -22,9 +22,10 @@ import type {
     TimeSeriesPoint,
     TruckStatus,
 } from './types';
+import { io, type Socket } from 'socket.io-client';
 
 // ─── State inside the worker ───────────────────────────────────
-let ws: WebSocket | null = null;
+let socket: Socket | null = null;
 let config: WorkerConfig = {
     wsUrl: 'ws://localhost:5000',
     apiUrl: 'http://localhost:5000',
@@ -146,37 +147,47 @@ function stopSimulation(): void {
 
 // ─── WebSocket management ──────────────────────────────────────
 function connectWebSocket(): void {
-    if (ws) {
-        ws.onclose = null;
-        ws.close();
+    if (socket) {
+        socket.removeAllListeners();
+        socket.disconnect();
+        socket = null;
     }
 
     try {
-        ws = new WebSocket(config.wsUrl.replace(/^http/, 'ws'));
+        socket = io(config.wsUrl, {
+            transports: ['websocket'],
+            autoConnect: true,
+            reconnection: false,
+            timeout: 10_000,
+        });
 
-        ws.onopen = () => {
+        socket.on('connect', () => {
             retryCount = 0;
             post({ type: 'connection-status', payload: 'connected' });
             stopSimulation(); // stop sim if real backend available
-        };
+        });
 
-        ws.onmessage = (ev) => {
-            try {
-                const data = JSON.parse(ev.data as string);
-                handleIncomingTelemetry(data);
-            } catch {
-                // ignore malformed messages
-            }
-        };
+        socket.on('truck-update', (payload: unknown) => {
+            handleIncomingTelemetry({ type: 'truck', payload });
+        });
 
-        ws.onclose = () => {
+        socket.on('truck-status', (payload: unknown) => {
+            handleTruckStatusUpdate(payload);
+        });
+
+        socket.on('alert', (payload: unknown) => {
+            handleIncomingTelemetry({ type: 'alert', payload });
+        });
+
+        socket.on('disconnect', () => {
             post({ type: 'connection-status', payload: 'disconnected' });
             scheduleReconnect();
-        };
+        });
 
-        ws.onerror = () => {
-            // onclose will fire after onerror
-        };
+        socket.on('connect_error', () => {
+            post({ type: 'connection-status', payload: 'disconnected' });
+            scheduleReconnect();
+        });
     } catch {
         post({ type: 'connection-status', payload: 'disconnected' });
         // Start simulation as fallback
@@ -201,41 +212,82 @@ function handleIncomingTelemetry(data: unknown): void {
     if (!data || typeof data !== 'object') return;
     const d = data as Record<string, unknown>;
 
-    // Full snapshot
-    if (Array.isArray(d.trucks)) {
-        const batch: TruckTelemetry[] = [];
-        for (const raw of d.trucks) {
-            const t = normalizeTruck(raw);
-            if (t) {
-                trucks.set(t.id, t);
-                batch.push(t);
-            }
-        }
-        if (batch.length) pendingBatch.push(...batch);
-    }
+    applySnapshotBatch(d.trucks);
+    applySingleTruckEnvelope(d);
+    applyDirectTruckPayload(d);
+    postAlertEnvelope(d);
+}
 
-    // Single truck update
-    if (d.type === 'truck' && d.payload) {
-        const t = normalizeTruck(d.payload);
-        if (t) {
-            trucks.set(t.id, t);
-            pendingBatch.push(t);
-        }
-    }
+function applySnapshotBatch(rawBatch: unknown): void {
+    if (!Array.isArray(rawBatch)) return;
 
-    // Alert
-    if (d.type === 'alert' && d.payload) {
-        const p = d.payload as Record<string, unknown>;
-        const alert: TelemetryAlert = {
-            id: (p.id as string) || `A${++alertSeq}`,
-            truckId: (p.truckId as string) || '',
-            level: (p.level as TelemetryAlert['level']) || 'info',
-            message: (p.message as string) || '',
-            timestamp: (p.timestamp as number) || Date.now(),
-            acknowledged: false,
-        };
-        post({ type: 'alert', payload: alert });
+    const batch: TruckTelemetry[] = [];
+    for (const raw of rawBatch) {
+        const t = normalizeTruck(raw);
+        if (!t) continue;
+        trucks.set(t.id, t);
+        batch.push(t);
     }
+    if (batch.length) pendingBatch.push(...batch);
+}
+
+function applySingleTruckEnvelope(payload: Record<string, unknown>): void {
+    if (payload.type !== 'truck' || !payload.payload) return;
+    const t = normalizeTruck(payload.payload);
+    if (!t) return;
+    trucks.set(t.id, t);
+    pendingBatch.push(t);
+}
+
+function hasCoordinates(payload: Record<string, unknown>): boolean {
+    return payload.lat !== undefined
+        || payload.lng !== undefined
+        || payload.latitude !== undefined
+        || payload.longitude !== undefined;
+}
+
+function applyDirectTruckPayload(payload: Record<string, unknown>): void {
+    if (!(payload.id || payload.truckId || payload.truck_id) || !hasCoordinates(payload)) return;
+    const t = normalizeTruck(payload);
+    if (!t) return;
+    trucks.set(t.id, t);
+    pendingBatch.push(t);
+}
+
+function postAlertEnvelope(payload: Record<string, unknown>): void {
+    if (payload.type !== 'alert' || !payload.payload) return;
+    const p = payload.payload as Record<string, unknown>;
+    const alert: TelemetryAlert = {
+        id: (p.id as string) || `A${++alertSeq}`,
+        truckId: (p.truckId as string) || '',
+        level: (p.level as TelemetryAlert['level']) || 'info',
+        message: (p.message as string) || '',
+        timestamp: normalizeTimestamp(p.timestamp),
+        acknowledged: false,
+    };
+    post({ type: 'alert', payload: alert });
+}
+
+function handleTruckStatusUpdate(raw: unknown): void {
+    if (!raw || typeof raw !== 'object') return;
+    const payload = raw as Record<string, unknown>;
+    const id = (payload.id as string) || (payload.truckId as string) || (payload.truck_id as string);
+    if (!id) return;
+
+    const existing = trucks.get(id);
+    if (!existing) return;
+
+    const status = payload.status as TruckStatus | undefined;
+    if (!status) return;
+
+    const next: TruckTelemetry = {
+        ...existing,
+        status,
+        timestamp: normalizeTimestamp(payload.timestamp),
+    };
+
+    trucks.set(id, next);
+    pendingBatch.push(next);
 }
 
 function normalizeTruck(raw: unknown): TruckTelemetry | null {
@@ -257,8 +309,20 @@ function normalizeTruck(raw: unknown): TruckTelemetry | null {
         status: (r.status as TruckTelemetry['status']) ?? 'active',
         driverName: (r.driverName as string) ?? (r.driver_name as string) ?? '',
         routeId: (r.routeId as string) ?? (r.route_id as string) ?? '',
-        timestamp: Number(r.timestamp ?? Date.now()),
+        timestamp: normalizeTimestamp(r.timestamp),
     };
+}
+
+function normalizeTimestamp(raw: unknown): number {
+    if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+    if (typeof raw === 'string') {
+        const asNumber = Number(raw);
+        if (Number.isFinite(asNumber) && asNumber > 0) return asNumber;
+
+        const parsed = Date.parse(raw);
+        if (Number.isFinite(parsed)) return parsed;
+    }
+    return Date.now();
 }
 
 // ─── Metrics aggregation (runs every config.metricsInterval) ───

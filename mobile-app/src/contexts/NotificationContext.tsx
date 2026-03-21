@@ -15,7 +15,7 @@ interface NotificationContextType {
   scheduleNotification: (
     title: string,
     body: string,
-    data?: any
+    data?: Record<string, unknown>
   ) => Promise<void>
 }
 
@@ -28,10 +28,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     // Handle notification responses
     const subscription = Notifications.addNotificationResponseReceivedListener(
       response => {
-        const data = response.notification.request.content.data
+        const data = response.notification.request.content.data as
+          | Record<string, unknown>
+          | undefined
 
         // Handle deep linking based on notification data
-        if (data?.screen) {
+        if (typeof data?.screen === 'string') {
           // Navigate to specific screen
           console.log('Navigate to:', data.screen)
         }
@@ -62,7 +64,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const scheduleNotification = async (
     title: string,
     body: string,
-    data?: any
+    data?: Record<string, unknown>
   ) => {
     await Notifications.scheduleNotificationAsync({
       content: {

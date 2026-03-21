@@ -1,9 +1,33 @@
 // MQTT → TimescaleDB telemetry ingestion handler
+const { z } = require('zod');
 const db = require('../config/database');
 const logger = require('../config/logger');
 const { invalidate } = require('../config/redis');
 const websocketService = require('./websocketService');
 const { recordTelemetryIngestion, recordAlert } = require('../middleware/observability');
+
+const topicTruckIdSchema = z.string().trim().min(1).max(64).regex(/^[A-Za-z0-9_-]+$/);
+
+const telemetryMessageSchema = z.object({
+    latitude: z.coerce.number().min(-90).max(90),
+    longitude: z.coerce.number().min(-180).max(180),
+    temperature: z.coerce.number().min(-80).max(120),
+    speed: z.coerce.number().min(0).max(300).default(0),
+    battery: z.coerce.number().min(0).max(100).nullable().optional(),
+    humidity: z.coerce.number().min(0).max(100).nullable().optional(),
+    heading: z.coerce.number().min(0).max(360).nullable().optional(),
+    timestamp: z.union([z.coerce.date(), z.coerce.number().int().positive()]).optional(),
+}).passthrough();
+
+function toObservedAt(timestamp) {
+    if (timestamp === undefined || timestamp === null) {
+        return new Date();
+    }
+    if (timestamp instanceof Date) {
+        return timestamp;
+    }
+    return new Date(timestamp);
+}
 
 /**
  * Register MQTT topic handlers on the mqttService instance.
@@ -12,23 +36,54 @@ const { recordTelemetryIngestion, recordAlert } = require('../middleware/observa
 const registerHandlers = (mqttService) => {
     // ── trucks/{truckId}/telemetry ──────────────────────────
     mqttService.on('trucks/+/telemetry', async (data, params) => {
-        const truckId = params.p1;
-        const {
-            latitude,
-            longitude,
-            temperature,
-            speed = 0,
-            battery = null,
-            humidity = null,
-        } = data;
+        const truckIdResult = topicTruckIdSchema.safeParse(params.p1);
+        if (!truckIdResult.success) {
+            logger.warn({ topicValue: params.p1 }, 'Invalid truckId in telemetry topic');
+            return;
+        }
+
+        const parsedTelemetry = telemetryMessageSchema.safeParse(data);
+        if (!parsedTelemetry.success) {
+            logger.warn(
+                {
+                    truckId: params.p1,
+                    issues: parsedTelemetry.error.issues,
+                },
+                'Rejected telemetry payload from MQTT',
+            );
+            return;
+        }
+
+        const truckId = truckIdResult.data;
+        const telemetry = parsedTelemetry.data;
+        const observedAt = toObservedAt(telemetry.timestamp);
 
         const startTime = process.hrtime.bigint();
         try {
             // Insert into TimescaleDB hypertable (auto-partitioned by time)
             await db.query(
-                `INSERT INTO telemetry (truck_id, latitude, longitude, temperature, speed, battery, humidity)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-                [truckId, latitude, longitude, temperature, speed, battery, humidity],
+                `INSERT INTO telemetry (
+           time,
+           truck_id,
+           latitude,
+           longitude,
+           temperature,
+           speed,
+           battery,
+           humidity,
+           heading
+         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                [
+                    observedAt,
+                    truckId,
+                    telemetry.latitude,
+                    telemetry.longitude,
+                    telemetry.temperature,
+                    telemetry.speed,
+                    telemetry.battery ?? null,
+                    telemetry.humidity ?? null,
+                    telemetry.heading ?? null,
+                ],
             );
 
             // Update materialised "latest position" cache in Redis
@@ -37,20 +92,26 @@ const registerHandlers = (mqttService) => {
             // Fan-out to WebSocket clients
             websocketService.broadcast('truck-update', {
                 id: truckId,
-                latitude,
-                longitude,
-                temperature,
-                speed,
-                timestamp: new Date().toISOString(),
+                truckId,
+                latitude: telemetry.latitude,
+                longitude: telemetry.longitude,
+                lat: telemetry.latitude,
+                lng: telemetry.longitude,
+                temperature: telemetry.temperature,
+                speed: telemetry.speed,
+                heading: telemetry.heading ?? 0,
+                battery: telemetry.battery ?? null,
+                humidity: telemetry.humidity ?? null,
+                timestamp: observedAt.toISOString(),
             });
 
             // Check temperature thresholds → generate alert
-            if (temperature > -2 || temperature < -25) {
+            if (telemetry.temperature > -2 || telemetry.temperature < -25) {
                 const alertData = {
                     truck_id: truckId,
                     alert_type: 'temperature',
-                    message: `Temperature out of range: ${temperature}°C`,
-                    severity: temperature > 0 ? 'critical' : 'warning',
+                    message: `Temperature out of range: ${telemetry.temperature}°C`,
+                    severity: telemetry.temperature > 0 ? 'critical' : 'warning',
                 };
                 await db.query(
                     `INSERT INTO alerts (truck_id, alert_type, message, severity)
@@ -68,7 +129,7 @@ const registerHandlers = (mqttService) => {
         } catch (err) {
             logger.error({ truckId, err: err.message }, 'Telemetry ingestion error');
         }
-    });
+    }, { schema: mqttService.telemetryPayloadSchema });
 
     // ── trucks/{truckId}/status ─────────────────────────────
     mqttService.on('trucks/+/status', async (data, params) => {

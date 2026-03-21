@@ -9,6 +9,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 
+type IoniconName = keyof typeof Ionicons.glyphMap
+
 interface Alert {
   id: string
   type: 'geofence' | 'temperature' | 'speed' | 'offline'
@@ -41,7 +43,7 @@ const mockAlerts: Alert[] = [
 ]
 
 export function AlertsScreen() {
-  const getAlertIcon = (type: Alert['type']) => {
+  const getAlertIcon = (type: Alert['type']): IoniconName => {
     switch (type) {
       case 'temperature':
         return 'thermometer-outline'
@@ -83,7 +85,7 @@ export function AlertsScreen() {
       <View style={styles.alertHeader}>
         <View style={styles.alertIconContainer}>
           <Ionicons
-            name={getAlertIcon(item.type) as any}
+            name={getAlertIcon(item.type)}
             size={24}
             color={getSeverityColor(item.severity)}
           />

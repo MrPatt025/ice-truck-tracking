@@ -1,11 +1,23 @@
 // MQTT Service — Eclipse Mosquitto IoT message broker integration
 const mqtt = require('mqtt');
+const { z } = require('zod');
 const config = require('../config/env');
 const logger = require('../config/logger');
 
 class MqttService {
     client = null;
     handlers = new Map();
+
+    telemetryPayloadSchema = z.object({
+        latitude: z.coerce.number().min(-90).max(90),
+        longitude: z.coerce.number().min(-180).max(180),
+        temperature: z.coerce.number().min(-80).max(120),
+        speed: z.coerce.number().min(0).max(300).default(0),
+        battery: z.coerce.number().min(0).max(100).nullable().optional(),
+        humidity: z.coerce.number().min(0).max(100).nullable().optional(),
+        heading: z.coerce.number().min(0).max(360).nullable().optional(),
+        timestamp: z.union([z.coerce.date(), z.coerce.number().int().positive()]).optional(),
+    }).passthrough();
 
     /**
      * Connect to MQTT broker and subscribe to truck telemetry topics
@@ -61,12 +73,16 @@ class MqttService {
     }
 
     /**
-     * Register a handler function for a topic pattern
+     * Register a handler function for a topic pattern.
      * @param {string} topicPattern - MQTT topic (supports + and # wildcards)
-     * @param {Function} handler - (parsedPayload, params) => void
+     * @param {Function} handler - (parsedPayload, params, topic) => void
+     * @param {{schema?: import('zod').ZodTypeAny}} [options]
      */
-    on(topicPattern, handler) {
-        this.handlers.set(topicPattern, handler);
+    on(topicPattern, handler, options = {}) {
+        this.handlers.set(topicPattern, {
+            handler,
+            schema: options.schema,
+        });
         return this;
     }
 
@@ -80,11 +96,27 @@ class MqttService {
             return;
         }
 
-        for (const [pattern, handler] of this.handlers) {
+        for (const [pattern, entry] of this.handlers) {
             const params = this._matchTopic(pattern, topic);
             if (params) {
                 try {
-                    handler(data, params);
+                    if (entry.schema) {
+                        const parsed = entry.schema.safeParse(data);
+                        if (!parsed.success) {
+                            logger.warn(
+                                {
+                                    topic,
+                                    issues: parsed.error.issues,
+                                },
+                                'MQTT payload validation failed',
+                            );
+                            continue;
+                        }
+                        entry.handler(parsed.data, params, topic);
+                        continue;
+                    }
+
+                    entry.handler(data, params, topic);
                 } catch (err) {
                     logger.error({ topic, err: err.message }, 'MQTT handler error');
                 }

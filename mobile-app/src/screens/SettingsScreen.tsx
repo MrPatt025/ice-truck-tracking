@@ -12,6 +12,8 @@ import { Ionicons } from '@expo/vector-icons'
 
 import { useAuth } from '../contexts/AuthContext'
 
+type IoniconName = keyof typeof Ionicons.glyphMap
+
 export function SettingsScreen() {
   const { user, logout } = useAuth()
   const [notifications, setNotifications] = React.useState(true)
@@ -32,7 +34,7 @@ export function SettingsScreen() {
     onPress,
     rightElement,
   }: {
-    icon: string
+    icon: IoniconName
     title: string
     subtitle?: string
     onPress?: () => void
@@ -40,7 +42,7 @@ export function SettingsScreen() {
   }) => (
     <TouchableOpacity style={styles.settingItem} onPress={onPress}>
       <View style={styles.settingLeft}>
-        <Ionicons name={icon as any} size={24} color='#2196F3' />
+        <Ionicons name={icon} size={24} color='#2196F3' />
         <View style={styles.settingText}>
           <Text style={styles.settingTitle}>{title}</Text>
           {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
