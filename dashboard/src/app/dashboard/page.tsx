@@ -94,6 +94,7 @@ import {
   getAdaptiveController,
 } from '@/engine'
 import { useTransitionStore } from '@/stores/transitionStore'
+import FpsTargetMonitor from '@/components/FpsTargetMonitor'
 
 // ─── Types ─────────────────────────────────────────────────────
 type Trend = 'up' | 'down' | 'stable'
@@ -872,6 +873,8 @@ export default function Dashboard() {
               </div>
 
               {/* API Status */}
+              <FpsTargetMonitor />
+
               <Pill intent={resolveApiHealthIntent(apiHealthy)}>
                 {resolveApiHealthIcon(apiHealthy)}
                 <span className='hidden sm:inline'>

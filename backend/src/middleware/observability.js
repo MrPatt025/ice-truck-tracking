@@ -66,6 +66,12 @@ const telemetryIngestionRate = new client.Counter({
     labelNames: ['source'], // mqtt, websocket, api
 });
 
+const mqttMessageThroughputTotal = new client.Counter({
+    name: 'mqtt_message_throughput_total',
+    help: 'Total MQTT messages observed by telemetry ingestion pipeline',
+    labelNames: ['topic', 'status'], // received, rejected, processed, error
+});
+
 const telemetryIngestionDuration = new client.Histogram({
     name: 'telemetry_ingestion_duration_seconds',
     help: 'Duration of telemetry ingestion processing',
@@ -93,6 +99,12 @@ const dbQueryDuration = new client.Histogram({
     buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 2],
 });
 
+const telemetryDbInsertLatency = new client.Histogram({
+    name: 'telemetry_db_insert_latency_seconds',
+    help: 'Latency of telemetry INSERT operations into TimescaleDB',
+    buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1],
+});
+
 // ─── Cache Metrics ─────────────────────────────────────────────
 
 const cacheOperationsTotal = new client.Counter({
@@ -117,10 +129,12 @@ const allMetrics = [
     fleetTemperatureGauge,
     fleetAlertsTotal,
     telemetryIngestionRate,
+    mqttMessageThroughputTotal,
     telemetryIngestionDuration,
     telemetryBatchSize,
     dbPoolGauge,
     dbQueryDuration,
+    telemetryDbInsertLatency,
     cacheOperationsTotal,
     cacheSizeGauge,
 ];
@@ -172,6 +186,11 @@ function recordTelemetryIngestion(source, batchSize, durationSeconds) {
     telemetryIngestionDuration.observe(durationSeconds);
 }
 
+/** Record MQTT message throughput by topic + processing status */
+function recordMqttMessage(topic, status, count = 1) {
+    mqttMessageThroughputTotal.inc({ topic, status }, count);
+}
+
 /** Update db pool stats */
 function updateDbPoolStats(total, idle, waiting) {
     dbPoolGauge.set({ state: 'total' }, total);
@@ -182,6 +201,11 @@ function updateDbPoolStats(total, idle, waiting) {
 /** Record a database query duration */
 function recordDbQuery(operation, durationSeconds) {
     dbQueryDuration.observe({ operation }, durationSeconds);
+}
+
+/** Record telemetry insert latency into TimescaleDB */
+function recordTelemetryDbInsert(durationSeconds) {
+    telemetryDbInsertLatency.observe(durationSeconds);
 }
 
 /** Record a cache operation */
@@ -200,9 +224,11 @@ module.exports = {
     recordAlert,
     // Telemetry
     recordTelemetryIngestion,
+    recordMqttMessage,
     // Database
     updateDbPoolStats,
     recordDbQuery,
+    recordTelemetryDbInsert,
     // Cache
     recordCacheOp,
     cacheSizeGauge,

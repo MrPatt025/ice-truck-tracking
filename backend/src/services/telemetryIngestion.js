@@ -4,7 +4,13 @@ const db = require('../config/database');
 const logger = require('../config/logger');
 const { invalidate } = require('../config/redis');
 const websocketService = require('./websocketService');
-const { recordTelemetryIngestion, recordAlert } = require('../middleware/observability');
+const {
+    recordTelemetryIngestion,
+    recordAlert,
+    recordDbQuery,
+    recordTelemetryDbInsert,
+    recordMqttMessage,
+} = require('../middleware/observability');
 
 const topicTruckIdSchema = z.string().trim().min(1).max(64).regex(/^[A-Za-z0-9_-]+$/);
 
@@ -36,9 +42,12 @@ function toObservedAt(timestamp) {
 const registerHandlers = (mqttService) => {
     // ── trucks/{truckId}/telemetry ──────────────────────────
     mqttService.on('trucks/+/telemetry', async (data, params) => {
+        recordMqttMessage('trucks/+/telemetry', 'received');
+
         const truckIdResult = topicTruckIdSchema.safeParse(params.p1);
         if (!truckIdResult.success) {
             logger.warn({ topicValue: params.p1 }, 'Invalid truckId in telemetry topic');
+            recordMqttMessage('trucks/+/telemetry', 'rejected');
             return;
         }
 
@@ -51,6 +60,7 @@ const registerHandlers = (mqttService) => {
                 },
                 'Rejected telemetry payload from MQTT',
             );
+            recordMqttMessage('trucks/+/telemetry', 'rejected');
             return;
         }
 
@@ -58,9 +68,10 @@ const registerHandlers = (mqttService) => {
         const telemetry = parsedTelemetry.data;
         const observedAt = toObservedAt(telemetry.timestamp);
 
-        const startTime = process.hrtime.bigint();
+        const ingestionStartTime = process.hrtime.bigint();
         try {
             // Insert into TimescaleDB hypertable (auto-partitioned by time)
+            const insertStartTime = process.hrtime.bigint();
             await db.query(
                 `INSERT INTO telemetry (
            time,
@@ -85,6 +96,9 @@ const registerHandlers = (mqttService) => {
                     telemetry.heading ?? null,
                 ],
             );
+            const insertElapsed = Number(process.hrtime.bigint() - insertStartTime) / 1e9;
+            recordDbQuery('insert', insertElapsed);
+            recordTelemetryDbInsert(insertElapsed);
 
             // Update materialised "latest position" cache in Redis
             await invalidate(`truck:${truckId}:latest`);
@@ -124,9 +138,11 @@ const registerHandlers = (mqttService) => {
             }
 
             // Record ingestion metrics
-            const elapsed = Number(process.hrtime.bigint() - startTime) / 1e9;
+            const elapsed = Number(process.hrtime.bigint() - ingestionStartTime) / 1e9;
             recordTelemetryIngestion('mqtt', 1, elapsed);
+            recordMqttMessage('trucks/+/telemetry', 'processed');
         } catch (err) {
+            recordMqttMessage('trucks/+/telemetry', 'error');
             logger.error({ truckId, err: err.message }, 'Telemetry ingestion error');
         }
     }, { schema: mqttService.telemetryPayloadSchema });
