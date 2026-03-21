@@ -11,7 +11,7 @@ type HeroBackgroundProps = {
 export default function HeroBackground({
   videoWebm = '/video/ice-truck-loop.webm',
   videoMp4 = '/media/ice-fleet-loop.mp4',
-  poster = '/poster/ice-truck-poster.webp',
+  poster = '/poster/ice-truck-poster.svg',
 }: Readonly<HeroBackgroundProps>) {
   return (
     <div className='absolute inset-0 -z-20 overflow-hidden rounded-3xl'>

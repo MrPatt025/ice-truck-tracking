@@ -2,7 +2,13 @@
 
 import React from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useScroll,
+  useTransform,
+} from 'framer-motion'
 import {
   Truck,
   Thermometer,
@@ -25,6 +31,7 @@ import { Badge } from '@/components/ui/badge'
 import HeroBackground from '@/components/landing/HeroBackground'
 import GlassPanel from '@/components/landing/GlassPanel'
 import ScrollTruckStory from '@/components/landing/ScrollTruckStory'
+import { useTransitionStore } from '@/stores/transitionStore'
 
 /* ───────────────────── Animation variants ───────────────────── */
 const fadeUp = {
@@ -94,31 +101,69 @@ const stats = [
 /* ───────────────────── Landing Page Component ───────────────── */
 export default function LandingPage() {
   const router = useRouter()
-  const [isTransitioning, setIsTransitioning] = React.useState(false)
+  const isTransitioning = useTransitionStore(s => s.isTransitioning)
+  const phase = useTransitionStore(s => s.phase)
+  const startTransition = useTransitionStore(s => s.startTransition)
+  const setProgress = useTransitionStore(s => s.setProgress)
+  const transitionProgress = useMotionValue(0)
 
   const { scrollYProgress } = useScroll()
   const heroY = useTransform(scrollYProgress, [0, 0.25], ['0%', '12%'])
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.55])
+  const pageOpacity = useTransform(transitionProgress, [0, 1], [1, 0.08])
+  const pageScale = useTransform(transitionProgress, [0, 1], [1, 0.94])
+  const pageLift = useTransform(transitionProgress, [0, 1], ['0px', '-18px'])
+  const veilOpacity = useTransform(transitionProgress, [0, 1], [0, 1])
 
   const handleOpenDashboard = React.useCallback(
     (e?: React.MouseEvent<HTMLAnchorElement>) => {
       if (e) e.preventDefault()
-      setIsTransitioning(true)
-      globalThis.setTimeout(() => {
-        router.push('/dashboard')
-      }, 850)
+      if (isTransitioning) return
+      transitionProgress.set(0)
+      startTransition()
+      setProgress(0)
     },
-    [router]
+    [isTransitioning, setProgress, startTransition, transitionProgress]
   )
 
+  React.useEffect(() => {
+    if (!isTransitioning || phase !== 'outro') {
+      transitionProgress.set(0)
+      return
+    }
+
+    const controls = animate(transitionProgress, 1, {
+      duration: 0.88,
+      ease: [0.76, 0, 0.24, 1],
+      onUpdate: latest => {
+        setProgress(latest)
+      },
+      onComplete: () => {
+        router.push('/dashboard')
+      },
+    })
+
+    return () => {
+      controls.stop()
+    }
+  }, [isTransitioning, phase, router, setProgress, transitionProgress])
+
   return (
-    <div className='min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white overflow-hidden'>
+    <motion.div
+      style={{
+        opacity: pageOpacity,
+        scale: pageScale,
+        y: pageLift,
+        willChange: 'opacity, transform',
+      }}
+      className='min-h-screen overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white'
+    >
       {/* ── Nav ─────────────────────────────────────────────── */}
       <motion.nav
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className='sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-lg'
+        className='sticky top-0 z-50 border-b border-white/15 bg-slate-950/55 backdrop-blur-2xl shadow-[0_18px_50px_-30px_rgba(34,211,238,0.35)]'
       >
         <div className='mx-auto flex h-16 max-w-7xl items-center justify-between px-6'>
           <div className='flex items-center gap-2'>
@@ -175,7 +220,7 @@ export default function LandingPage() {
           transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
         />
 
-        <GlassPanel className='mx-auto max-w-5xl rounded-3xl border border-white/10 px-6 py-12 shadow-[0_20px_90px_-35px_rgba(34,211,238,0.45)] sm:px-10'>
+        <GlassPanel className='mx-auto max-w-5xl rounded-3xl border border-white/20 bg-white/[0.05] px-6 py-12 shadow-[0_24px_100px_-40px_rgba(34,211,238,0.55)] backdrop-blur-2xl sm:px-10'>
           <motion.div initial='hidden' animate='visible' variants={stagger}>
             <motion.div custom={0} variants={fadeUp}>
               <Badge
@@ -280,7 +325,7 @@ export default function LandingPage() {
               viewport={{ once: true, amount: 0.3 }}
               variants={fadeUp}
             >
-              <Card className='h-full border-white/10 bg-slate-800/45 backdrop-blur-xl transition hover:border-cyan-300/50 hover:shadow-xl hover:shadow-cyan-500/15'>
+              <Card className='h-full border-white/15 bg-white/[0.04] backdrop-blur-2xl transition hover:border-cyan-300/55 hover:shadow-xl hover:shadow-cyan-500/20'>
                 <CardHeader>
                   <feature.icon className={`h-8 w-8 ${feature.color}`} />
                   <CardTitle className='mt-2 text-lg text-white'>
@@ -340,7 +385,7 @@ export default function LandingPage() {
                 key={tech}
                 custom={i}
                 variants={fadeUp}
-                className='rounded-lg border border-white/10 bg-slate-800/60 p-4 text-center text-sm font-medium text-slate-300 transition hover:border-blue-400/40 hover:text-white'
+                className='rounded-xl border border-white/15 bg-white/[0.04] p-4 text-center text-sm font-medium text-slate-300 backdrop-blur-xl transition hover:border-blue-400/50 hover:text-white'
               >
                 {tech}
               </motion.div>
@@ -397,14 +442,9 @@ export default function LandingPage() {
 
       <motion.div
         aria-hidden='true'
-        initial={false}
-        animate={{
-          opacity: isTransitioning ? 1 : 0,
-          scale: isTransitioning ? 1 : 0.96,
-        }}
-        transition={{ duration: 0.75, ease: 'easeInOut' }}
+        style={{ opacity: veilOpacity }}
         className='pointer-events-none fixed inset-0 z-[60] bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.45),rgba(2,6,23,0.97)_55%)]'
       />
-    </div>
+    </motion.div>
   )
 }

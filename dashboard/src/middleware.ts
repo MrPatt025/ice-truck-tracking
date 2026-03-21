@@ -12,7 +12,47 @@ const AUTH_ROUTES = ['/login', '/register', '/forgot-password', '/reset-password
 
 export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
-    const response = NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    const response = NextResponse.next({
+        request: {
+            headers: requestHeaders,
+        },
+    });
+
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const apiOrigin = process.env.NEXT_PUBLIC_API_URL;
+    const connectSrc: string[] = [
+        "'self'",
+        'https://*.tile.openstreetmap.org',
+        'https://*.basemaps.cartocdn.com',
+    ];
+
+    if (apiOrigin) {
+        connectSrc.push(apiOrigin);
+    }
+
+    if (isDevelopment) {
+        connectSrc.push('ws://localhost:3000', 'ws://localhost:5000');
+    }
+
+    const scriptSrc = isDevelopment
+        ? "script-src 'self' 'unsafe-eval'"
+        : "script-src 'self'";
+    const csp = [
+        "default-src 'self'",
+        scriptSrc,
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob:",
+        "font-src 'self' data:",
+        `connect-src ${connectSrc.join(' ')}`,
+        "media-src 'self'",
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "object-src 'none'",
+        "worker-src 'self' blob:",
+        "upgrade-insecure-requests",
+    ].join('; ');
 
     // ── Security Headers (defense in depth) ─────────────────
     response.headers.set('X-Content-Type-Options', 'nosniff');
@@ -27,6 +67,7 @@ export function middleware(request: NextRequest) {
         'Strict-Transport-Security',
         'max-age=63072000; includeSubDomains; preload'
     );
+    response.headers.set('Content-Security-Policy', csp);
 
     // ── Auth Guard for protected routes ─────────────────────
     const isProtected = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
@@ -44,9 +85,10 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
-    // Pass auth token to downstream RSC
+    // Pass auth token only via internal request header for downstream logic.
+    // Do not mirror auth token into response headers.
     if (token) {
-        response.headers.set('x-auth-token', token);
+        requestHeaders.set('x-auth-token', token);
     }
 
     // ── Rate Limiting Header (advisory) ─────────────────────

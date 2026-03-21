@@ -26,6 +26,6 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- แสดงข้อความสำเร็จ
 SELECT 'Database reset completed successfully!' as status;
-SELECT 'All tables have been dropped. You can now run the complete_ice_tracking_database.sql to recreate the database.' as message;
+SELECT 'All tables have been dropped. Run setup_database.sql (or docker migrations) to recreate the database.' as message;
 
 

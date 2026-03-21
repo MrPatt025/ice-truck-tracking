@@ -10,6 +10,7 @@ const SHARED_CANVAS_ID = 'fleet-shared-webgl-root'
 export default function SharedCanvasHost() {
   const isTransitioning = useTransitionStore(s => s.isTransitioning)
   const phase = useTransitionStore(s => s.phase)
+  const progress = useTransitionStore(s => s.progress)
 
   const pool = SharedCanvasPool.getInstance()
   const { canvas } = pool.acquire(
@@ -24,7 +25,7 @@ export default function SharedCanvasHost() {
     true
   )
 
-  useCinematicCamera(canvas, isTransitioning, phase)
+  useCinematicCamera(canvas, isTransitioning, phase, progress)
 
   useEffect(() => {
     canvas.id = SHARED_CANVAS_ID

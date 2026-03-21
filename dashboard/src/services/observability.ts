@@ -57,9 +57,7 @@ export class ClientObservability {
     private constructor() { }
 
     static getInstance(): ClientObservability {
-        if (!ClientObservability.instance) {
-            ClientObservability.instance = new ClientObservability();
-        }
+        ClientObservability.instance ??= new ClientObservability();
         return ClientObservability.instance;
     }
 
@@ -181,7 +179,7 @@ export class ClientObservability {
     // ─── Error Tracking ────────────────────────────────────────
 
     private observeErrors(): void {
-        if (typeof globalThis.window === 'undefined') return;
+        if (!('window' in globalThis)) return;
 
         globalThis.window.addEventListener('error', (event) => {
             this.recordError(

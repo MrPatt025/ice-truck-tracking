@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="title desc">
+  <title id="title">Ice Truck Fleet Poster</title>
+  <desc id="desc">Stylized refrigerated trucks driving through a cold-chain logistics corridor.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="55%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#0b1120"/>
+    </linearGradient>
+    <linearGradient id="ice" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#67e8f9"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1280" height="720" fill="url(#bg)"/>
+
+  <g opacity="0.18">
+    <circle cx="230" cy="140" r="180" fill="#0ea5e9"/>
+    <circle cx="980" cy="560" r="240" fill="#06b6d4"/>
+  </g>
+
+  <g transform="translate(110 330)">
+    <rect x="0" y="72" width="920" height="20" rx="10" fill="#1e293b"/>
+    <g transform="translate(40 0)">
+      <rect x="0" y="14" width="240" height="62" rx="12" fill="#e2e8f0"/>
+      <rect x="160" y="30" width="60" height="30" rx="6" fill="#94a3b8"/>
+      <rect x="18" y="26" width="120" height="38" rx="6" fill="url(#ice)"/>
+      <circle cx="52" cy="86" r="14" fill="#0f172a"/>
+      <circle cx="190" cy="86" r="14" fill="#0f172a"/>
+    </g>
+    <g transform="translate(330 10)">
+      <rect x="0" y="14" width="240" height="62" rx="12" fill="#e2e8f0"/>
+      <rect x="160" y="30" width="60" height="30" rx="6" fill="#94a3b8"/>
+      <rect x="18" y="26" width="120" height="38" rx="6" fill="url(#ice)"/>
+      <circle cx="52" cy="86" r="14" fill="#0f172a"/>
+      <circle cx="190" cy="86" r="14" fill="#0f172a"/>
+    </g>
+    <g transform="translate(620 20)">
+      <rect x="0" y="14" width="240" height="62" rx="12" fill="#e2e8f0"/>
+      <rect x="160" y="30" width="60" height="30" rx="6" fill="#94a3b8"/>
+      <rect x="18" y="26" width="120" height="38" rx="6" fill="url(#ice)"/>
+      <circle cx="52" cy="86" r="14" fill="#0f172a"/>
+      <circle cx="190" cy="86" r="14" fill="#0f172a"/>
+    </g>
+  </g>
+
+  <text x="120" y="150" fill="#e2e8f0" font-size="54" font-family="Segoe UI, sans-serif" font-weight="700">
+    Ice Truck Tracking Platform
+  </text>
+  <text x="122" y="195" fill="#93c5fd" font-size="24" font-family="Segoe UI, sans-serif">
+    Real-time cold-chain telemetry and fleet intelligence
+  </text>
+</svg>

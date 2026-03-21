@@ -1,27 +1,57 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useMemo, useState } from 'react'
+import { Download, Plus, Search, Truck } from 'lucide-react'
+import AppSidebar from '@/components/AppSidebar'
+import { SectionErrorBoundary } from '@/components/common/SectionErrorBoundary'
+import { VirtualizedFleetGrid } from '@/components/fleet/VirtualizedFleetGrid'
+import { cn } from '@/lib/utils'
 import {
-  Truck, Search, ChevronDown, ChevronUp,
-  MapPin, Thermometer, Fuel, Gauge, Battery, ArrowUpDown,
-  Eye, Edit, Trash2, Download, Plus,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { truckStatusColors } from '@/lib/tokens';
-import AppSidebar from '@/components/AppSidebar';
-import { useAuthStore, hasPermission } from '@/stores/authStore';
-import type { TruckResponse } from '@/services/api';
+  fleetTruckRowsSchema,
+  truckStatusSchema,
+  type FleetTruckRow,
+} from '@/lib/schemas/telemetry'
+import { hasPermission, useAuthStore } from '@/stores/authStore'
 
-// ── Mock Data Generator ────────────────────────────────────
-function generateMockTrucks(count: number): TruckResponse[] {
-  const statuses: TruckResponse['status'][] = [
-    'active',
-    'idle',
-    'maintenance',
-    'offline',
-    'alert',
-  ]
+type FleetStatusFilter =
+  | 'all'
+  | 'active'
+  | 'idle'
+  | 'maintenance'
+  | 'offline'
+  | 'alert'
+
+const ALL_FILTERS: FleetStatusFilter[] = ['all', ...truckStatusSchema.options]
+
+const API_BASE = (() => {
+  const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim()
+  if (configuredApiRoot) {
+    return `${configuredApiRoot
+      .replace(/\/+$/, '')
+      .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`
+  }
+
+  if (
+    globalThis.window !== undefined &&
+    /^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)
+  ) {
+    return '/api/v1'
+  }
+
+  return 'http://localhost:5000/api/v1'
+})()
+
+function createTrend(seed: number): number[] {
+  return Array.from({ length: 24 }, (_, idx) => {
+    const wave = Math.sin((idx + seed) / 3.2)
+    const drift = (idx / 24) * 0.8
+    const noise = ((seed * 13 + idx * 7) % 10) / 15
+    return -18 + wave * 2.4 + drift + noise
+  })
+}
+
+function createMockRows(count: number): FleetTruckRow[] {
+  const statuses = truckStatusSchema.options
   const drivers = [
     'Somchai K.',
     'Prasert W.',
@@ -32,55 +62,51 @@ function generateMockTrucks(count: number): TruckResponse[] {
     'Piyapong C.',
     'Surasak L.',
   ]
-  const routes = [
-    'Bangkok → Chiang Mai',
-    'Phuket → Surat Thani',
-    'Nonthaburi Loop',
-    'Eastern Seaboard',
-    'Isaan Ring',
-  ]
 
-  return Array.from({ length: count }, (_, i) => ({
-    id: `truck-${String(i + 1).padStart(3, '0')}`,
-    name: `ICE-${String(i + 1).padStart(3, '0')}`,
-    plateNumber: `${String.fromCodePoint(65 + (i % 26))}${String.fromCodePoint(65 + ((i * 7) % 26))}-${1000 + i}`,
-    status: statuses[i % statuses.length],
-    driver: drivers[i % drivers.length],
-    temperature: -18 + Math.random() * 10,
-    humidity: 30 + Math.random() * 40,
-    speed:
-      statuses[i % statuses.length] === 'active' ? 40 + Math.random() * 60 : 0,
-    fuelLevel: 20 + Math.random() * 80,
-    batteryLevel: 50 + Math.random() * 50,
-    lat: 13.7 + Math.random() * 5,
-    lng: 100.5 + Math.random() * 3,
-    lastUpdate: new Date(Date.now() - Math.random() * 3600000).toISOString(),
-    totalDistance: 1000 + Math.random() * 50000,
-    deliveries: Math.floor(Math.random() * 500),
-    route: routes[i % routes.length],
-  }))
+  return Array.from({ length: count }, (_, i) => {
+    const status = statuses[i % statuses.length]
+    return {
+      id: `truck-${String(i + 1).padStart(4, '0')}`,
+      name: `ICE-${String(i + 1).padStart(4, '0')}`,
+      plateNumber: `TH-${1000 + i}`,
+      status,
+      driver: drivers[i % drivers.length],
+      temperature: -18 + (i % 7) * 0.9,
+      humidity: 48 + (i % 18),
+      speed: status === 'active' ? 38 + (i % 40) : 0,
+      fuelLevel: 20 + (i % 80),
+      batteryLevel: 55 + (i % 45),
+      lat: 13.75 + (i % 11) * 0.11,
+      lng: 100.55 + (i % 11) * 0.06,
+      lastUpdate: new Date(Date.now() - (i % 3600) * 1000).toISOString(),
+      totalDistance: 12000 + i * 47,
+      deliveries: i % 420,
+      route: i % 2 === 0 ? 'Bangkok → Chiang Mai' : 'Eastern Seaboard',
+      temperatureTrend: createTrend(i + 1),
+    }
+  })
 }
 
-type SortKey =
-  | 'name'
-  | 'status'
-  | 'temperature'
-  | 'speed'
-  | 'fuelLevel'
-  | 'driver'
-  | 'lastUpdate'
-type SortDir = 'asc' | 'desc'
-
-function SortIcon({
-  col,
-  sortKey,
-  sortDir,
-}: Readonly<{ col: SortKey; sortKey: SortKey; sortDir: SortDir }>) {
-  if (sortKey !== col) return <ArrowUpDown className='w-3 h-3 opacity-40' />
-  return sortDir === 'asc' ? (
-    <ChevronUp className='w-3 h-3' />
-  ) : (
-    <ChevronDown className='w-3 h-3' />
+function FleetGridSkeleton() {
+  return (
+    <div className='rounded-2xl border border-white/15 bg-slate-900/40 p-4'>
+      <div className='mb-4 h-5 w-56 animate-pulse rounded bg-white/10' />
+      <div className='space-y-2'>
+        {Array.from({ length: 10 }, (_, idx) => (
+          <div
+            key={idx}
+            className='grid grid-cols-[1.1fr_0.75fr_0.95fr_0.85fr_0.65fr_0.95fr_0.8fr_0.7fr] gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-3'
+          >
+            {Array.from({ length: 8 }, (_, cellIdx) => (
+              <div
+                key={cellIdx}
+                className='h-5 animate-pulse rounded bg-white/10'
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -89,425 +115,203 @@ export default function FleetManagementPage() {
   const canEdit = hasPermission(user?.role, 'fleet:edit')
   const canDelete = hasPermission(user?.role, 'fleet:delete')
 
-  const [trucks] = useState<TruckResponse[]>(() => generateMockTrucks(50))
+  const [rows, setRows] = useState<FleetTruckRow[]>([])
+  const [statusFilter, setStatusFilter] = useState<FleetStatusFilter>('all')
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [sortKey, setSortKey] = useState<SortKey>('name')
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
-  const [page, setPage] = useState(1)
-  const [selectedTruck, setSelectedTruck] = useState<string | null>(null)
-  const pageSize = 12
-
-  // ── Derived Data ─────────────────────────────────────────
-  const filtered = useMemo(() => {
-    let result = trucks
-
-    if (search) {
-      const q = search.toLowerCase()
-      result = result.filter(
-        t =>
-          t.name.toLowerCase().includes(q) ||
-          t.plateNumber.toLowerCase().includes(q) ||
-          t.driver.toLowerCase().includes(q) ||
-          t.route?.toLowerCase().includes(q)
-      )
-    }
-
-    if (statusFilter !== 'all') {
-      result = result.filter(t => t.status === statusFilter)
-    }
-
-    result.sort((a, b) => {
-      const aVal = a[sortKey]
-      const bVal = b[sortKey]
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return sortDir === 'asc'
-          ? aVal.localeCompare(bVal)
-          : bVal.localeCompare(aVal)
-      }
-      return sortDir === 'asc'
-        ? (aVal as number) - (bVal as number)
-        : (bVal as number) - (aVal as number)
-    })
-
-    return result
-  }, [trucks, search, statusFilter, sortKey, sortDir])
-
-  const totalPages = Math.ceil(filtered.length / pageSize)
-  const paged = filtered.slice((page - 1) * pageSize, page * pageSize)
-
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: trucks.length }
-    for (const t of trucks) counts[t.status] = (counts[t.status] || 0) + 1
-    return counts
-  }, [trucks])
-
-  const handleSort = useCallback(
-    (key: SortKey) => {
-      if (sortKey === key) {
-        setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))
-      } else {
-        setSortKey(key)
-        setSortDir('asc')
-      }
-    },
-    [sortKey]
-  )
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedRow, setSelectedRow] = useState<string | null>(null)
 
   useEffect(() => {
-    setPage(1)
-  }, [search, statusFilter])
+    const controller = new AbortController()
+
+    const loadRows = async (): Promise<void> => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const response = await fetch(`${API_BASE}/trucks`, {
+          signal: controller.signal,
+          cache: 'no-store',
+        })
+
+        if (!response.ok) {
+          throw new Error(`Fleet API unavailable: ${response.status}`)
+        }
+
+        const payload: unknown = await response.json()
+        const parsed = fleetTruckRowsSchema.safeParse(payload)
+
+        if (!parsed.success) {
+          throw new Error('Telemetry validation failed for fleet payload')
+        }
+
+        setRows(parsed.data)
+      } catch (caughtError) {
+        const message =
+          caughtError instanceof Error
+            ? caughtError.message
+            : 'Network interruption'
+        setError(message)
+
+        const fallbackRows = createMockRows(2400)
+        const parsedFallback = fleetTruckRowsSchema.safeParse(fallbackRows)
+        if (parsedFallback.success) {
+          setRows(parsedFallback.data)
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadRows()
+
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
+  const filteredRows = useMemo(() => {
+    const query = search.trim().toLowerCase()
+
+    return rows.filter(row => {
+      const statusMatch = statusFilter === 'all' || row.status === statusFilter
+      const queryMatch =
+        query.length === 0 ||
+        row.name.toLowerCase().includes(query) ||
+        row.driver.toLowerCase().includes(query) ||
+        row.plateNumber.toLowerCase().includes(query) ||
+        row.route?.toLowerCase().includes(query)
+
+      return statusMatch && queryMatch
+    })
+  }, [rows, search, statusFilter])
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<FleetStatusFilter, number> = {
+      all: rows.length,
+      active: 0,
+      idle: 0,
+      maintenance: 0,
+      offline: 0,
+      alert: 0,
+    }
+
+    for (const row of rows) {
+      counts[row.status] += 1
+    }
+
+    return counts
+  }, [rows])
 
   return (
     <AppSidebar>
-      <div className='p-4 lg:p-6 space-y-6 max-w-[1600px] mx-auto'>
-        {/* Header */}
-        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
+      <div className='mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>
+        <header className='flex flex-col gap-3 rounded-2xl border border-white/15 bg-slate-900/40 p-5 backdrop-blur-2xl md:flex-row md:items-center md:justify-between'>
           <div>
-            <h1 className='text-2xl font-bold flex items-center gap-2'>
-              <Truck className='w-7 h-7 text-primary' />
+            <h1 className='flex items-center gap-2 text-2xl font-bold text-slate-100'>
+              <Truck className='h-7 w-7 text-cyan-300' />
               Fleet Management
             </h1>
-            <p className='text-muted-foreground text-sm mt-1'>
-              Monitor and manage {trucks.length} vehicles in real-time
+            <p className='mt-1 text-sm text-slate-400'>
+              High-density live telemetry grid with virtualization and micro
+              trend charts.
             </p>
+            {error ? (
+              <p className='mt-2 text-xs text-amber-300'>
+                Running in graceful degraded mode: {error}
+              </p>
+            ) : null}
           </div>
+
           <div className='flex items-center gap-2'>
-            <button className='px-3 py-2 rounded-lg border border-border hover:bg-muted text-sm flex items-center gap-2 transition-colors'>
-              <Download className='w-4 h-4' />
-              <span className='hidden sm:inline'>Export</span>
-            </button>
-            {canEdit && (
-              <button className='px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm flex items-center gap-2 hover:bg-primary/90 transition-colors'>
-                <Plus className='w-4 h-4' />
-                <span className='hidden sm:inline'>Add Vehicle</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Status Filter Tabs */}
-        <div className='flex items-center gap-2 overflow-x-auto pb-1'>
-          {(
-            [
-              'all',
-              'active',
-              'idle',
-              'maintenance',
-              'offline',
-              'alert',
-            ] as const
-          ).map(status => (
             <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={cn(
-                'px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors',
-                statusFilter === status
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:text-foreground'
-              )}
+              type='button'
+              className='inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 transition hover:bg-white/[0.08]'
             >
-              {status === 'all'
-                ? 'All'
-                : status.charAt(0).toUpperCase() + status.slice(1)}
-              <span className='ml-1 opacity-70'>
-                ({statusCounts[status] || 0})
-              </span>
+              <Download className='h-4 w-4' />
+              Export
             </button>
-          ))}
-        </div>
-
-        {/* Search */}
-        <div className='relative max-w-md'>
-          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
-          <input
-            type='text'
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder='Search by name, plate, driver, or route...'
-            className='w-full pl-10 pr-4 py-2.5 rounded-lg border border-input bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors'
-          />
-        </div>
-
-        {/* Table */}
-        <div className='bg-card rounded-xl border border-border overflow-hidden'>
-          <div className='overflow-x-auto'>
-            <table className='w-full text-sm'>
-              <thead className='bg-muted/50 border-b border-border'>
-                <tr>
-                  {(
-                    [
-                      ['name', 'Vehicle'],
-                      ['status', 'Status'],
-                      ['driver', 'Driver'],
-                      ['temperature', 'Temp'],
-                      ['speed', 'Speed'],
-                      ['fuelLevel', 'Fuel'],
-                      ['lastUpdate', 'Last Update'],
-                    ] as [SortKey, string][]
-                  ).map(([key, label]) => (
-                    <th
-                      key={key}
-                      onClick={() => handleSort(key)}
-                      className='px-4 py-3 text-left font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors whitespace-nowrap'
-                    >
-                      <span className='inline-flex items-center gap-1'>
-                        {label}
-                        <SortIcon
-                          col={key}
-                          sortKey={sortKey}
-                          sortDir={sortDir}
-                        />
-                      </span>
-                    </th>
-                  ))}
-                  <th className='px-4 py-3 text-right font-medium text-muted-foreground w-20'>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className='divide-y divide-border'>
-                {paged.map(truck => {
-                  const statusStyle =
-                    truckStatusColors[truck.status] || truckStatusColors.offline
-                  return (
-                    <motion.tr
-                      key={truck.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className={cn(
-                        'hover:bg-muted/30 transition-colors cursor-pointer',
-                        selectedTruck === truck.id && 'bg-primary/5'
-                      )}
-                      onClick={() =>
-                        setSelectedTruck(
-                          selectedTruck === truck.id ? null : truck.id
-                        )
-                      }
-                    >
-                      <td className='px-4 py-3'>
-                        <div className='flex items-center gap-3'>
-                          <div
-                            className={cn(
-                              'w-2 h-2 rounded-full shrink-0',
-                              statusStyle.dot
-                            )}
-                          />
-                          <div>
-                            <p className='font-medium'>{truck.name}</p>
-                            <p className='text-xs text-muted-foreground'>
-                              {truck.plateNumber}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className='px-4 py-3'>
-                        <span
-                          className={cn(
-                            'px-2 py-1 rounded-full text-xs font-medium',
-                            statusStyle.bg,
-                            statusStyle.text
-                          )}
-                        >
-                          {truck.status}
-                        </span>
-                      </td>
-                      <td className='px-4 py-3 text-muted-foreground'>
-                        {truck.driver}
-                      </td>
-                      <td className='px-4 py-3'>
-                        <span
-                          className={cn(
-                            'font-mono',
-                            truck.temperature > -10
-                              ? 'text-amber-500'
-                              : 'text-blue-500'
-                          )}
-                        >
-                          {truck.temperature.toFixed(1)}°C
-                        </span>
-                      </td>
-                      <td className='px-4 py-3 font-mono'>
-                        {truck.speed.toFixed(0)} km/h
-                      </td>
-                      <td className='px-4 py-3'>
-                        <div className='flex items-center gap-2'>
-                          <div className='w-16 h-1.5 rounded-full bg-muted overflow-hidden'>
-                            <div
-                              className={cn(
-                                'h-full rounded-full',
-                                truck.fuelLevel > 30
-                                  ? 'bg-green-500'
-                                  : 'bg-red-500'
-                              )}
-                              style={{ width: `${truck.fuelLevel}%` }} // NOSONAR — dynamic percentage
-                            />
-                          </div>
-                          <span className='text-xs text-muted-foreground'>
-                            {truck.fuelLevel.toFixed(0)}%
-                          </span>
-                        </div>
-                      </td>
-                      <td className='px-4 py-3 text-xs text-muted-foreground whitespace-nowrap'>
-                        {new Date(truck.lastUpdate).toLocaleTimeString()}
-                      </td>
-                      <td className='px-4 py-3 text-right'>
-                        <div className='flex items-center justify-end gap-1'>
-                          <button
-                            className='p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors'
-                            title='View details'
-                          >
-                            <Eye className='w-4 h-4' />
-                          </button>
-                          {canEdit && (
-                            <button
-                              className='p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors'
-                              title='Edit'
-                            >
-                              <Edit className='w-4 h-4' />
-                            </button>
-                          )}
-                          {canDelete && (
-                            <button
-                              className='p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors'
-                              title='Delete'
-                            >
-                              <Trash2 className='w-4 h-4' />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </motion.tr>
-                  )
-                })}
-              </tbody>
-            </table>
+            {canEdit ? (
+              <button
+                type='button'
+                className='inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400'
+              >
+                <Plus className='h-4 w-4' />
+                Add Vehicle
+              </button>
+            ) : null}
           </div>
+        </header>
 
-          {/* Pagination */}
-          <div className='flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t border-border bg-muted/30'>
-            <p className='text-sm text-muted-foreground'>
-              Showing {(page - 1) * pageSize + 1}–
-              {Math.min(page * pageSize, filtered.length)} of {filtered.length}{' '}
-              vehicles
-            </p>
-            <div className='flex items-center gap-1'>
-              <button
-                disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
-                className='px-3 py-1.5 rounded-md border border-border text-sm hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-              >
-                Previous
-              </button>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                const p = page <= 3 ? i + 1 : page + i - 2
-                if (p < 1 || p > totalPages) return null
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setPage(p)}
-                    className={cn(
-                      'w-8 h-8 rounded-md text-sm transition-colors',
-                      p === page
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted'
-                    )}
-                  >
-                    {p}
-                  </button>
-                )
-              })}
-              <button
-                disabled={page >= totalPages}
-                onClick={() => setPage(p => p + 1)}
-                className='px-3 py-1.5 rounded-md border border-border text-sm hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-              >
-                Next
-              </button>
+        <section className='rounded-2xl border border-white/15 bg-slate-900/40 p-4 backdrop-blur-2xl'>
+          <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
+            <div className='flex flex-wrap items-center gap-2'>
+              {ALL_FILTERS.map(filter => (
+                <button
+                  key={filter}
+                  type='button'
+                  onClick={() => setStatusFilter(filter)}
+                  className={cn(
+                    'rounded-full px-3 py-1.5 text-sm font-medium transition',
+                    statusFilter === filter
+                      ? 'bg-cyan-400 text-slate-950'
+                      : 'bg-white/5 text-slate-300 hover:bg-white/10'
+                  )}
+                >
+                  {filter === 'all'
+                    ? 'All'
+                    : `${filter[0].toUpperCase()}${filter.slice(1)}`}
+                  <span className='ml-1 opacity-70'>
+                    ({statusCounts[filter]})
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className='relative w-full lg:w-[440px]'>
+              <Search className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400' />
+              <input
+                type='text'
+                value={search}
+                onChange={event => setSearch(event.target.value)}
+                placeholder='Search by truck, plate, driver, route...'
+                className='w-full rounded-lg border border-white/15 bg-slate-950/60 py-2.5 pl-10 pr-4 text-sm text-slate-100 outline-none transition focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-500/35'
+                data-testid='fleet-grid-search'
+              />
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Selected Truck Detail Panel */}
-        <AnimatePresence>
-          {selectedTruck && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className='overflow-hidden'
-            >
-              {(() => {
-                const t = trucks.find(tr => tr.id === selectedTruck)
-                if (!t) return null
-                return (
-                  <div className='bg-card rounded-xl border border-border p-6'>
-                    <div className='flex items-center justify-between mb-4'>
-                      <h3 className='text-lg font-semibold'>
-                        {t.name} — {t.plateNumber}
-                      </h3>
-                      <button
-                        onClick={() => setSelectedTruck(null)}
-                        className='text-muted-foreground hover:text-foreground'
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4'>
-                      {[
-                        {
-                          icon: MapPin,
-                          label: 'Route',
-                          value: t.route || '—',
-                          color: 'text-blue-500',
-                        },
-                        {
-                          icon: Thermometer,
-                          label: 'Temperature',
-                          value: `${t.temperature.toFixed(1)}°C`,
-                          color: 'text-cyan-500',
-                        },
-                        {
-                          icon: Gauge,
-                          label: 'Speed',
-                          value: `${t.speed.toFixed(0)} km/h`,
-                          color: 'text-amber-500',
-                        },
-                        {
-                          icon: Fuel,
-                          label: 'Fuel',
-                          value: `${t.fuelLevel.toFixed(0)}%`,
-                          color: 'text-green-500',
-                        },
-                        {
-                          icon: Battery,
-                          label: 'Battery',
-                          value: `${t.batteryLevel.toFixed(0)}%`,
-                          color: 'text-purple-500',
-                        },
-                        {
-                          icon: Truck,
-                          label: 'Deliveries',
-                          value: String(t.deliveries),
-                          color: 'text-primary',
-                        },
-                      ].map(({ icon: Icon, label, value, color }) => (
-                        <div key={label} className='space-y-1'>
-                          <div className='flex items-center gap-1 text-xs text-muted-foreground'>
-                            <Icon className={cn('w-3 h-3', color)} />
-                            {label}
-                          </div>
-                          <p className='font-medium'>{value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })()}
-            </motion.div>
+        <SectionErrorBoundary title='Fleet grid'>
+          {loading ? (
+            <FleetGridSkeleton />
+          ) : (
+            <VirtualizedFleetGrid
+              rows={filteredRows}
+              canEdit={canEdit}
+              canDelete={canDelete}
+              onSelectRow={setSelectedRow}
+            />
           )}
-        </AnimatePresence>
+        </SectionErrorBoundary>
+
+        <section className='rounded-2xl border border-white/15 bg-slate-900/40 p-4 backdrop-blur-2xl'>
+          <p className='text-sm text-slate-300'>
+            Showing{' '}
+            <span className='font-semibold text-slate-100'>
+              {filteredRows.length}
+            </span>{' '}
+            validated rows
+            {selectedRow ? (
+              <span>
+                {' '}
+                • Selected:{' '}
+                <span className='font-mono text-cyan-300'>{selectedRow}</span>
+              </span>
+            ) : null}
+          </p>
+        </section>
       </div>
     </AppSidebar>
   )

@@ -7,12 +7,21 @@ const validate = schema => {
 
     // Basic validation for login
     if (schema.name === 'login') {
-      if (!body.username || !body.password) {
-        return next(new AppError('Username and password are required', 400));
+      let identifier = null;
+      if (typeof body.username === 'string' && body.username.trim().length > 0) {
+        identifier = body.username.trim();
+      } else if (typeof body.email === 'string' && body.email.trim().length > 0) {
+        identifier = body.email.trim();
       }
-      if (body.username.length < 3) {
-        return next(new AppError('Username must be at least 3 characters', 400));
+
+      if (!identifier || !body.password) {
+        return next(new AppError('Username/email and password are required', 400));
       }
+
+      if (identifier.length < 3) {
+        return next(new AppError('Username/email must be at least 3 characters', 400));
+      }
+
       if (body.password.length < 6) {
         return next(new AppError('Password must be at least 6 characters', 400));
       }

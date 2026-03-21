@@ -1,15 +1,14 @@
 const logger = require('../config/logger');
 
 const errorHandler = (err, req, res, _next) => {
-  let error = { ...err };
-  error.message = err.message;
-
-  // Log error
-  logger.error(err);
-
-  // Default error
-  let message = 'Server Error';
+  // Prefer explicit application error status first.
   let statusCode = 500;
+  if (Number.isInteger(err.statusCode)) {
+    statusCode = err.statusCode;
+  } else if (Number.isInteger(err.status)) {
+    statusCode = err.status;
+  }
+  let message = err.message || 'Server Error';
 
   // Mongoose bad ObjectId
   if (err.name === 'CastError') {
@@ -29,6 +28,12 @@ const errorHandler = (err, req, res, _next) => {
       .map(val => val.message)
       .join(', ');
     statusCode = 400;
+  }
+
+  if (statusCode >= 500) {
+    logger.error(err);
+  } else {
+    logger.warn(`Client error ${statusCode} on ${req.method} ${req.originalUrl}: ${message}`);
   }
 
   res.status(statusCode).json({

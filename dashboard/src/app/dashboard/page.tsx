@@ -41,7 +41,7 @@ const API_BASE = (() => {
 })()
 
 import React, { useEffect, useRef, useState, useCallback, memo } from 'react'
-import { motion } from 'framer-motion'
+import { animate, motion, useMotionValue, useTransform } from 'framer-motion'
 import {
   Truck,
   ThermometerSun,
@@ -547,10 +547,13 @@ export default function Dashboard() {
   const isTransitioning = useTransitionStore(s => s.isTransitioning)
   const phase = useTransitionStore(s => s.phase)
   const startIntro = useTransitionStore(s => s.startIntro)
+  const setTransitionProgress = useTransitionStore(s => s.setProgress)
   const finishTransition = useTransitionStore(s => s.finishTransition)
+  const introProgress = useMotionValue(1)
+  const introOpacity = useTransform(introProgress, [0, 1], [0, 1])
+  const introScale = useTransform(introProgress, [0, 1], [1.03, 1])
 
   // ── Imperative layer refs ────────────────────────────────────
-  const rootRef = useRef<HTMLDivElement>(null)
   const threeContainerRef = useRef<HTMLDivElement>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
@@ -578,30 +581,43 @@ export default function Dashboard() {
 
   // ── Intro synchronization from login transition ───────────────
   useEffect(() => {
-    if (!isTransitioning) return
+    if (!isTransitioning) {
+      introProgress.set(1)
+      return
+    }
 
     if (phase === 'outro') {
       startIntro()
+      return
     }
 
-    const root = rootRef.current
-    if (root) {
-      root.style.opacity = '0'
-      root.style.transform = 'scale(1.03)'
-      root.style.transition =
-        'opacity 0.85s cubic-bezier(0.76,0,0.24,1), transform 0.85s cubic-bezier(0.76,0,0.24,1)'
-      requestAnimationFrame(() => {
-        root.style.opacity = '1'
-        root.style.transform = 'scale(1)'
-      })
+    if (phase !== 'intro') return
+
+    introProgress.set(0)
+    setTransitionProgress(0)
+
+    const controls = animate(introProgress, 1, {
+      duration: 0.92,
+      ease: [0.76, 0, 0.24, 1],
+      onUpdate: latest => {
+        setTransitionProgress(latest)
+      },
+      onComplete: () => {
+        finishTransition()
+      },
+    })
+
+    return () => {
+      controls.stop()
     }
-
-    const timer = globalThis.setTimeout(() => {
-      finishTransition()
-    }, 1200)
-
-    return () => globalThis.clearTimeout(timer)
-  }, [isTransitioning, phase, startIntro, finishTransition])
+  }, [
+    finishTransition,
+    introProgress,
+    isTransitioning,
+    phase,
+    setTransitionProgress,
+    startIntro,
+  ])
 
   // ── Mount imperative Map layer ───────────────────────────────
   useEffect(() => {
@@ -729,8 +745,12 @@ export default function Dashboard() {
    *  All real-time visualization is imperative (3D, Map, Charts).
    * ================================================================ */
   return (
-    <div
-      ref={rootRef}
+    <motion.div
+      style={{
+        opacity: introOpacity,
+        scale: introScale,
+        willChange: 'opacity, transform',
+      }}
       className='relative min-h-screen overflow-x-hidden text-white selection:bg-violet-500/30 selection:text-white'
     >
       {/* ── Background gradient ── */}
@@ -1491,6 +1511,6 @@ export default function Dashboard() {
           -moz-osx-font-smoothing: grayscale;
         }
       `}</style>
-    </div>
+    </motion.div>
   )
 }

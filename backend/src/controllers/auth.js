@@ -6,7 +6,12 @@ const logger = require('../config/logger');
 const login = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
-    const identifier = username || (typeof email === 'string' ? email.split('@')[0] : null);
+    let identifier = null;
+    if (typeof username === 'string' && username.trim().length > 0) {
+      identifier = username.trim();
+    } else if (typeof email === 'string' && email.trim().length > 0) {
+      identifier = email.trim();
+    }
 
     if (!identifier || !password) {
       return next(new AppError('Please provide username/email and password!', 400));

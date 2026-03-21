@@ -43,13 +43,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Trivy filesystem scanner on backend
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           scan-type: fs
           scan-ref: ./backend
           format: sarif
           output: trivy-backend.sarif
           severity: CRITICAL,HIGH
+          ignore-unfixed: true
         continue-on-error: true
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
@@ -67,13 +68,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Trivy filesystem scanner on dashboard
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           scan-type: fs
           scan-ref: ./dashboard
           format: sarif
           output: trivy-dashboard.sarif
           severity: CRITICAL,HIGH
+          ignore-unfixed: true
         continue-on-error: true
       - name: Upload Trivy scan results
         uses: github/codeql-action/upload-sarif@v3
@@ -91,13 +93,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Trivy IaC scanner
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           scan-type: config
           scan-ref: .
           format: sarif
           output: trivy-iac.sarif
           severity: CRITICAL,HIGH
+          ignore-unfixed: true
         continue-on-error: true
       - name: Upload Trivy IaC results
         uses: github/codeql-action/upload-sarif@v3

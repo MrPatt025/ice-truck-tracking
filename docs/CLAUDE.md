@@ -12,7 +12,6 @@ This file defines the engineering rules, architecture, and development protocols
 
 All AI assistants must follow this document strictly.
 
-
 ---
 
 1. Project Overview
@@ -35,7 +34,6 @@ Telemetry ingestion: 100k+ messages/sec
 Frontend performance: ≥ 60 FPS
 API latency: < 100ms p95
 End-to-end latency: < 200ms
-
 
 ---
 
@@ -67,7 +65,6 @@ PROFILE bottleneck
 OPTIMIZE
 RETEST
 
-
 ---
 
 2.2 Security by Default
@@ -91,14 +88,18 @@ gitleaks detect
 
 No commit may introduce secrets.
 
-
 ---
 
 2.3 Open Source First
 
 This project must remain 100% open source compatible.
 
-Forbidden services:
+Temporary Phase 2 exception (must be removed in Phase 3):
+
+• Mapbox is temporarily allowed only for compatibility with existing dashboard integrations.
+• This exception is tracked as technical debt and must be migrated to MapLibre GL in Phase 3.
+
+Forbidden services (production baseline):
 
 Mapbox
 Firebase
@@ -107,19 +108,32 @@ New Relic
 Auth0
 Google Analytics
 
+Temporary exceptions allowed only while migration work is active:
+
+• Mapbox in dashboard runtime paths explicitly tracked for replacement with MapLibre GL.
+• Express in backend runtime paths explicitly tracked for replacement with Fastify.
+
+Exception exit criteria:
+
+• Mapbox packages and `mapbox://` style URLs are fully removed.
+• Express app bootstrap and routers are replaced by Fastify plugins/routes.
+
+Phase 3 technical debt requirement:
+
+• Remove Mapbox dependencies and runtime usage.
+• Enforce MapLibre GL as the only approved mapping stack.
+
 Approved alternatives:
 
-Proprietary	Open Source Alternative
+Proprietary Open Source Alternative
 
-Mapbox	MapLibre GL
-Firebase	Supabase / Appwrite
-Datadog	Prometheus + Grafana
-New Relic	OpenTelemetry
-Auth0	Ory / Keycloak
-Algolia	Meilisearch / Typesense
-Google Analytics	Umami
-
-
+Mapbox MapLibre GL
+Firebase Supabase / Appwrite
+Datadog Prometheus + Grafana
+New Relic OpenTelemetry
+Auth0 Ory / Keycloak
+Algolia Meilisearch / Typesense
+Google Analytics Umami
 
 ---
 
@@ -144,7 +158,6 @@ Good example:
 
 const totalDistanceKm = originDistanceKm + routeDistanceKm;
 
-
 ---
 
 3. Monorepo Structure
@@ -154,30 +167,29 @@ This repository uses pnpm workspaces + turborepo.
 ice-truck-tracking/
 
 packages/
-  core/
-  backend-api/
-  frontend-web/
-  mobile-app/
-  websocket-server/
-  mqtt-subscriber/
-  streaming/
-  sdk/
-  ui/
+core/
+backend-api/
+frontend-web/
+mobile-app/
+websocket-server/
+mqtt-subscriber/
+streaming/
+sdk/
+ui/
 
 infra/
-  docker-compose/
-  terraform/
-  helm/
+docker-compose/
+terraform/
+helm/
 
 tests/
-  e2e/
-  integration/
-  k6/
+e2e/
+integration/
+k6/
 
 scripts/
 docs/
 .github/
-
 
 ---
 
@@ -199,7 +211,6 @@ Three.js
 WebGL2
 WebGPU (future)
 
-
 ---
 
 Backend
@@ -211,6 +222,10 @@ Zod
 Prisma / SQL clients
 Socket.IO
 
+Temporary Phase 2 exception (must be removed in Phase 3):
+
+• Express is temporarily allowed for runtime compatibility with the current backend service.
+• Fastify migration is mandatory technical debt for Phase 3 and tracked as a release blocker for full policy compliance.
 
 ---
 
@@ -223,7 +238,6 @@ Apache Flink
 ksqlDB
 Ray (ML inference)
 
-
 ---
 
 Databases
@@ -231,7 +245,6 @@ Databases
 TimescaleDB — time series telemetry
 ClickHouse — analytics queries
 Redis — caching and pub/sub
-
 
 ---
 
@@ -242,7 +255,6 @@ Grafana
 Loki
 Tempo
 OpenTelemetry
-
 
 ---
 
@@ -255,25 +267,22 @@ Helm
 ArgoCD
 GitHub Actions
 
-
 ---
 
 5. Performance Budgets
 
 All components must respect these budgets.
 
-Metric	Target
+Metric Target
 
-FCP	< 1.0s
-TTI	< 2.0s
-FPS	≥ 60
-Bundle size	<150KB gz
-API latency	<100ms
-WebSocket latency	<200ms
-Query time	<2s
-Test coverage	>95%
-
-
+FCP < 1.0s
+TTI < 2.0s
+FPS ≥ 60
+Bundle size <150KB gz
+API latency <100ms
+WebSocket latency <200ms
+Query time <2s
+Test coverage >95%
 
 ---
 
@@ -292,7 +301,6 @@ Evaluate:
 • dependencies
 • test strategy
 
-
 ---
 
 Step 2 — Test Design
@@ -306,7 +314,6 @@ integration tests
 E2E tests (Playwright)
 performance tests
 
-
 ---
 
 Step 3 — Implementation Order
@@ -315,29 +322,19 @@ Always implement in this order:
 
 1. Type definitions
 
-
 2. Zod validation schemas
-
 
 3. Pure business logic
 
-
 4. Database / I/O layers
-
 
 5. API routes
 
-
 6. Frontend integration
-
 
 7. Tests
 
-
 8. Documentation
-
-
-
 
 ---
 
@@ -357,7 +354,6 @@ gitleaks detect
 
 All must pass.
 
-
 ---
 
 Step 5 — Commit
@@ -369,7 +365,6 @@ Examples:
 feat(api): add truck telemetry endpoint
 fix(streaming): correct geofence detection
 perf(frontend): optimize deck.gl rendering
-
 
 ---
 
@@ -384,8 +379,7 @@ Vitest
 
 Coverage requirement:
 
->95%
-
+> 95%
 
 ---
 
@@ -399,7 +393,6 @@ PostgreSQL
 Redis
 Redpanda
 EMQX
-
 
 ---
 
@@ -416,7 +409,6 @@ Scenarios:
 • real-time truck updates
 • alert notifications
 
-
 ---
 
 8. Real-Time Architecture
@@ -424,21 +416,20 @@ Scenarios:
 Data pipeline:
 
 Truck Sensors
-   ↓
+↓
 MQTT (EMQX)
-   ↓
+↓
 MQTT Subscriber
-   ↓
+↓
 Redpanda
-   ↓
+↓
 Apache Flink
-   ↓
+↓
 TimescaleDB / ClickHouse
-   ↓
+↓
 WebSocket Server
-   ↓
+↓
 Frontend Dashboard
-
 
 ---
 
@@ -453,7 +444,6 @@ Rules:
 • Avoid multiple WebGL contexts
 • Use Web Workers for heavy computation
 • Use shader-based effects instead of CSS blur
-
 
 ---
 
@@ -477,7 +467,6 @@ Fleet Overview
 Performance Metrics
 Business KPIs
 
-
 ---
 
 11. AI Agent Execution Protocol
@@ -486,9 +475,10 @@ Every AI coding agent must follow this format.
 
 Before coding:
 
-TASK PLAN
----------
+## TASK PLAN
+
 Subtasks:
+
 1.
 2.
 3.
@@ -500,13 +490,12 @@ Security considerations:
 
 After completion:
 
-RESULT
-------
+## RESULT
+
 Tests passed:
 Performance metrics:
 Security scan results:
 Files changed:
-
 
 ---
 
@@ -523,7 +512,6 @@ Security scans pass
 Documentation updated
 PR created
 
-
 ---
 
 13. Repository Startup Instructions
@@ -532,22 +520,15 @@ When starting work on this repository:
 
 1. Install dependencies
 
-
-
 pnpm install
 
 2. Start local infrastructure
-
-
 
 docker compose -f infra/docker-compose.dev.yml up
 
 3. Run development servers
 
-
-
 pnpm dev
-
 
 ---
 
@@ -563,7 +544,6 @@ Each decision should include:
 • alternatives considered
 • chosen solution
 • consequences
-
 
 ---
 
@@ -582,7 +562,6 @@ Tasks:
 • configure CI pipeline
 
 Report progress after each step.
-
 
 ---
 
