@@ -38,9 +38,10 @@ export default function SharedCanvasHost() {
     canvas.style.zIndex = '-1'
     canvas.style.opacity = '0.32'
     canvas.style.willChange = 'transform, opacity, filter'
+    canvas.style.mixBlendMode = 'screen'
     canvas.style.pointerEvents = 'none'
     canvas.style.background =
-      'radial-gradient(1200px 500px at 10% -10%, rgba(56,189,248,0.32), transparent 60%), radial-gradient(1000px 600px at 100% 20%, rgba(59,130,246,0.26), transparent 62%), linear-gradient(180deg, rgba(2,6,23,0.85) 0%, rgba(2,6,23,0.98) 100%)'
+      'radial-gradient(1400px 620px at 8% -10%, rgba(56,189,248,0.35), transparent 60%), radial-gradient(1200px 620px at 94% 18%, rgba(14,165,233,0.28), transparent 66%), radial-gradient(900px 560px at 50% 110%, rgba(245,158,11,0.12), transparent 70%), linear-gradient(180deg, rgba(2,6,23,0.82) 0%, rgba(2,6,23,0.98) 100%)'
 
     const mountNode =
       document.getElementById('webgl-background-layer') ?? document.body

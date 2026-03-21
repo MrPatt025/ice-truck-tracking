@@ -110,6 +110,7 @@ export default function LandingPage() {
   const { scrollYProgress } = useScroll()
   const heroY = useTransform(scrollYProgress, [0, 0.25], ['0%', '12%'])
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.55])
+  const heroScale = useTransform(scrollYProgress, [0, 0.35], [1, 0.92])
   const pageOpacity = useTransform(transitionProgress, [0, 1], [1, 0.08])
   const pageScale = useTransform(transitionProgress, [0, 1], [1, 0.94])
   const pageLift = useTransform(transitionProgress, [0, 1], ['0px', '-18px'])
@@ -156,14 +157,17 @@ export default function LandingPage() {
         y: pageLift,
         willChange: 'opacity, transform',
       }}
-      className='min-h-screen overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white'
+      className='mission-control-shell min-h-screen overflow-hidden text-white'
     >
+      <div className='pointer-events-none fixed inset-0 -z-20 hud-grid-overlay opacity-45' />
+      <div className='pointer-events-none fixed inset-0 -z-10 scanline-overlay opacity-40' />
+
       {/* ── Nav ─────────────────────────────────────────────── */}
       <motion.nav
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className='sticky top-0 z-50 border-b border-white/15 bg-slate-950/55 backdrop-blur-2xl shadow-[0_18px_50px_-30px_rgba(34,211,238,0.35)]'
+        className='sticky top-0 z-50 border-b border-cyan-200/20 bg-slate-950/65 backdrop-blur-2xl shadow-[0_20px_70px_-35px_rgba(34,211,238,0.5)]'
       >
         <div className='mx-auto flex h-16 max-w-7xl items-center justify-between px-6'>
           <div className='flex items-center gap-2'>
@@ -173,7 +177,7 @@ export default function LandingPage() {
             >
               <Truck className='h-7 w-7 text-blue-400' />
             </motion.div>
-            <span className='text-lg font-bold tracking-tight'>
+            <span data-display-font='true' className='text-lg font-bold tracking-[0.14em] uppercase'>
               Ice Truck <span className='text-blue-400'>Tracking</span>
             </span>
           </div>
@@ -208,8 +212,8 @@ export default function LandingPage() {
 
       {/* ── Hero ────────────────────────────────────────────── */}
       <motion.section
-        style={{ y: heroY, opacity: heroOpacity }}
-        className='relative mx-auto max-w-7xl px-6 pb-20 pt-28 text-center'
+        style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
+        className='relative mx-auto flex min-h-[92vh] max-w-7xl items-center px-6 pb-16 pt-24 text-center'
       >
         <HeroBackground scrollProgress={scrollYProgress} />
 
@@ -225,38 +229,58 @@ export default function LandingPage() {
             <motion.div custom={0} variants={fadeUp}>
               <Badge
                 variant='outline'
-                className='mb-6 border-blue-400/30 text-blue-300'
+                className='mb-6 border-cyan-300/45 bg-cyan-400/10 px-3 py-1 text-cyan-100'
               >
-                <Globe className='mr-1 h-3 w-3' /> Open Source &middot; Free
-                Tier Ready
+                <Globe className='mr-1 h-3 w-3' /> Command Grid Online &middot;
+                Live Fleet Telemetry
               </Badge>
             </motion.div>
 
             <motion.h1
+              data-display-font='true'
               custom={1}
               variants={fadeUp}
-              className='mx-auto max-w-4xl text-5xl font-extrabold leading-tight tracking-tight sm:text-6xl lg:text-7xl'
+              className='mx-auto max-w-4xl text-4xl font-extrabold uppercase leading-tight tracking-[0.08em] sm:text-5xl lg:text-6xl'
             >
-              Cold-Chain Logistics,{' '}
-              <span className='bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent'>
-                Real-Time Visibility
+              Cold-Chain Mission Control for{' '}
+              <span className='bg-gradient-to-r from-cyan-300 via-sky-300 to-amber-200 bg-clip-text text-transparent'>
+                Real-Time Fleet Command
               </span>
             </motion.h1>
 
             <motion.p
               custom={2}
               variants={fadeUp}
-              className='mx-auto mt-6 max-w-2xl text-lg text-slate-400'
+              className='mx-auto mt-6 max-w-2xl text-lg text-slate-300'
             >
-              Monitor temperature, GPS coordinates, and delivery status across
-              your entire ice-truck fleet — powered by MQTT, TimescaleDB, and
-              Redis for sub-second updates.
+              Track truck temperature, GPS, route health, and alert escalation
+              through a cinematic operations layer designed for sub-second
+              decision loops.
             </motion.p>
+
+            <motion.div
+              custom={2}
+              variants={fadeUp}
+              className='mx-auto mt-8 grid max-w-3xl grid-cols-2 gap-3 text-left text-xs uppercase tracking-[0.08em] text-cyan-100/90 sm:grid-cols-4'
+            >
+              <div className='rounded-xl border border-cyan-300/30 bg-cyan-400/10 px-3 py-2'>
+                Node Uplink Stable
+              </div>
+              <div className='rounded-xl border border-emerald-300/30 bg-emerald-400/10 px-3 py-2'>
+                Route Integrity 99.9%
+              </div>
+              <div className='rounded-xl border border-blue-300/30 bg-blue-400/10 px-3 py-2'>
+                Sensor Mesh Active
+              </div>
+              <div className='rounded-xl border border-amber-300/30 bg-amber-400/10 px-3 py-2'>
+                Dispatch AI Assisted
+              </div>
+            </motion.div>
 
             <motion.div
               custom={3}
               variants={fadeUp}
-              className='mt-10 flex justify-center gap-4'
+              className='mt-10 flex flex-wrap justify-center gap-4'
             >
               <Button size='lg' asChild>
                 <a href='/dashboard' onClick={handleOpenDashboard}>
@@ -278,10 +302,7 @@ export default function LandingPage() {
       </motion.section>
 
       {/* ── Stats ───────────────────────────────────────────── */}
-      <section
-        id='stats'
-        className='border-y border-white/10 bg-slate-900/50 py-12'
-      >
+      <section id='stats' className='border-y border-cyan-100/10 bg-slate-900/45 py-12'>
         <div className='mx-auto grid max-w-5xl grid-cols-2 gap-8 px-6 md:grid-cols-4'>
           {stats.map((stat, i) => (
             <motion.div

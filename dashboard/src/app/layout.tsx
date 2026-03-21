@@ -1,10 +1,20 @@
 ﻿import './globals.css'
-import { Inter } from 'next/font/google'
+import { Orbitron, Space_Grotesk } from 'next/font/google'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import TransitionLayoutGroup from '@/components/TransitionLayoutGroup'
 import ClientSharedCanvasHost from '@/components/ClientSharedCanvasHost'
 
-const inter = Inter({ subsets: ['latin'] })
+const bodyFont = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-body',
+  display: 'swap',
+})
+
+const displayFont = Orbitron({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+})
 
 export const metadata = {
   title: ' Ice Truck Tracking Dashboard',
@@ -18,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en' suppressHydrationWarning>
-      <body className={`${inter.className} relative isolate`}>
+      <body className={`${bodyFont.variable} ${displayFont.variable} relative isolate`}>
         <ThemeProvider>
           <div
             id='webgl-background-layer'

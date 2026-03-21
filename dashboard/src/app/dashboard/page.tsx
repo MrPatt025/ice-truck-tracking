@@ -752,11 +752,14 @@ export default function Dashboard() {
         scale: introScale,
         willChange: 'opacity, transform',
       }}
-      className='relative min-h-screen overflow-x-hidden text-white selection:bg-violet-500/30 selection:text-white'
+      className='mission-control-shell relative min-h-screen overflow-x-hidden text-white selection:bg-cyan-500/30 selection:text-white'
     >
+      <div className='pointer-events-none fixed inset-0 -z-20 hud-grid-overlay opacity-45' />
+      <div className='pointer-events-none fixed inset-0 -z-10 scanline-overlay opacity-40' />
+
       {/* ── Background gradient ── */}
       <div
-        className='pointer-events-none fixed inset-0 -z-20 transition-all duration-1000'
+        className='pointer-events-none fixed inset-0 -z-20 transition-all duration-1000 mix-blend-screen'
         style={{ background: THEME_COLORS[theme].gradient }} // NOSONAR — dynamic theme
       />
 
@@ -782,7 +785,7 @@ export default function Dashboard() {
       )}
 
       {/* ── Sticky Header ── */}
-      <header className='sticky top-0 z-50 backdrop-blur-2xl bg-slate-950/40 ring-1 ring-white/10 shadow-2xl'>
+      <header className='sticky top-0 z-50 bg-slate-950/50 backdrop-blur-2xl ring-1 ring-cyan-200/20 shadow-[0_24px_90px_-45px_rgba(34,211,238,0.6)]'>
         <div className='mx-auto max-w-[120rem] px-4 sm:px-6'>
           <div className='flex items-center justify-between py-4'>
             {/* Logo + Title */}
@@ -794,11 +797,14 @@ export default function Dashboard() {
                 </div>
               </motion.div>
               <div>
-                <h1 className='text-xl sm:text-2xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-violet-200 via-white to-cyan-200'>
-                  Ultra-Modern Console
+                <h1
+                  data-display-font='true'
+                  className='bg-gradient-to-r from-cyan-100 via-white to-amber-100 bg-clip-text text-xl font-black uppercase tracking-[0.09em] text-transparent sm:text-2xl'
+                >
+                  Cryogenic Mission Console
                 </h1>
-                <p className='text-[11px] sm:text-xs text-slate-400 font-medium tracking-wide'>
-                  Professional Fleet Management • IoT Engine v4.0 Masterpiece
+                <p className='text-[11px] sm:text-xs text-slate-300 font-medium tracking-[0.12em] uppercase'>
+                  Fleet Sentinel Grid • IoT Engine v4.0
                 </p>
               </div>
             </div>
@@ -1249,7 +1255,7 @@ export default function Dashboard() {
                 <MapPin className='h-5 w-5 text-indigo-400' />
                 Live Fleet Map
               </h3>
-              <div className='h-[400px] rounded-2xl bg-slate-950/50 ring-1 ring-white/10 overflow-hidden relative'>
+              <div className='bloom-edge vignette-strong h-[400px] rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative'>
                 {showMap ? (
                   <div ref={mapContainerRef} className='absolute inset-0' />
                 ) : (
@@ -1274,6 +1280,10 @@ export default function Dashboard() {
                     </div>
                   </>
                 )}
+
+                <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(34,211,238,0.18),transparent_55%)] mix-blend-screen' />
+                <div className='pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0)_0%,rgba(34,211,238,0.12)_48%,rgba(255,255,255,0)_100%)] animate-[pulse_3.8s_ease-in-out_infinite]' />
+                <div className='pointer-events-none absolute inset-0 scanline-overlay opacity-30' />
               </div>
             </div>
           </GlassCard>
