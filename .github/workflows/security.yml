@@ -43,7 +43,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Trivy filesystem scanner on backend
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: fs
           scan-ref: ./backend
@@ -68,7 +68,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Trivy filesystem scanner on dashboard
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: fs
           scan-ref: ./dashboard
@@ -93,7 +93,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run Trivy IaC scanner
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: config
           scan-ref: .
