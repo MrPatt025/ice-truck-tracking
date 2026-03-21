@@ -271,6 +271,7 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 
 // Start server
 const server = http.createServer(app);
+let isServerStarted = false;
 
 // Initialize WebSocket
 websocketService.initialize(server);
@@ -280,11 +281,11 @@ if (NODE_ENV !== 'production') {
   websocketService.startSimulation();
 }
 
-server.listen(PORT, async () => {
+async function onServerStarted() {
   logger.info(`Server running on port ${PORT} in ${NODE_ENV} mode`);
   logger.info(`Health Check: http://localhost:${PORT}/api/v1/health`);
   logger.info(`Metrics: http://localhost:${PORT}/metrics`);
-  logger.info(`WebSocket enabled for real-time updates`);
+  logger.info('WebSocket enabled for real-time updates');
 
   // Connect MQTT and register telemetry handlers
   if (mqttService && telemetryIngestion) {
@@ -309,8 +310,20 @@ server.listen(PORT, async () => {
       logger.warn('Redis not available — caching disabled: ' + err.message);
     }
   }
-});
+}
 
-module.exports = { app, server };
+function startServer() {
+  if (isServerStarted) return;
+  isServerStarted = true;
+  server.listen(PORT, () => {
+    void onServerStarted();
+  });
+}
+
+if (!process.env.JEST_WORKER_ID) {
+  startServer();
+}
+
+module.exports = { app, server, startServer };
 
 

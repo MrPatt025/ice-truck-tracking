@@ -95,8 +95,6 @@ class MockWebGL2Context {
 // ─── Install Mock ──────────────────────────────────────────────
 
 function installWebGLMock(): void {
-    const origGetContext = HTMLCanvasElement.prototype.getContext;
-
     HTMLCanvasElement.prototype.getContext = function (
         this: HTMLCanvasElement,
         contextId: string,
@@ -105,12 +103,11 @@ function installWebGLMock(): void {
         if (contextId === 'webgl2' || contextId === 'webgl') {
             return new MockWebGL2Context(this);
         }
-        try {
-            return (origGetContext as (...args: unknown[]) => unknown).call(this, contextId);
-        } catch {
-            return null;
-        }
-    } as typeof origGetContext;
+
+        // jsdom logs a noisy "not implemented" error when getContext('2d')
+        // falls through to the native implementation without canvas bindings.
+        return null;
+    } as HTMLCanvasElement['getContext'];
 }
 
 // ═══════════════════════════════════════════════════════════════
