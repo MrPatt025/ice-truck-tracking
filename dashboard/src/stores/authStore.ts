@@ -79,10 +79,15 @@ const permissionMatrix: Record<UserRole, string[]> = {
 };
 
 // ── API Base URL ───────────────────────────────────────────
-const API_ROOT = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const API_BASE = `${API_ROOT
-  .replace(/\/+$/, '')
-  .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`;
+const API_BASE = (() => {
+  // In browser, pin requests to same-origin proxy path (/api/v1).
+  if (globalThis.window !== undefined) return '/api/v1';
+
+  const apiRoot = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  return `${apiRoot
+    .replace(/\/+$/, '')
+    .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`;
+})();
 
 // ── Store ──────────────────────────────────────────────────
 export const useAuthStore = create<AuthState>()(

@@ -22,9 +22,9 @@
  * ================================================================ */
 "use client";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_BASE = '/api/v1'
 
-import React, { useEffect, useRef, useState, useCallback, memo } from "react";
+import React, { useEffect, useRef, useState, useCallback, memo } from 'react'
 import { motion } from 'framer-motion'
 import {
   Truck,
@@ -602,7 +602,7 @@ export default function Dashboard() {
     const maxRetries = 3
     const checkHealth = async () => {
       try {
-        const response = await fetch(API_URL + '/api/v1/health', {
+        const response = await fetch(`${API_BASE}/health`, {
           signal: AbortSignal.timeout(5000),
         })
         setApiHealthy(response.ok)

@@ -10,7 +10,18 @@ type Truck = {
 };
 type Alert = { id?: string; level?: string; message?: string; ts?: string } & Record<string, unknown>;
 const WS_URL  = process.env.NEXT_PUBLIC_WS_URL  || "ws://localhost:5000";
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const API_BASE = '/api/v1';
+
+function resolveWebSocketUrl(): string {
+  if (globalThis.window === undefined) return WS_URL.replace(/^http/i, 'ws');
+
+  if (process.env.NEXT_PUBLIC_WS_URL) {
+    return process.env.NEXT_PUBLIC_WS_URL.replace(/^http/i, 'ws');
+  }
+
+  const protocol = globalThis.window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${protocol}//${globalThis.window.location.host}`;
+}
 export function useRealTimeData() {
   const [trucks, setTrucks] = useState<Truck[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -40,7 +51,7 @@ export function useRealTimeData() {
       if (globalThis.window === undefined) return;
       try {
         wsRef.current?.close();
-        const ws = new WebSocket(WS_URL.replace(/^http/, "ws"));
+        const ws = new WebSocket(resolveWebSocketUrl());
         wsRef.current = ws;
         ws.onopen = () => { setIsConnected(true); retryRef.current = 0; };
         ws.onmessage = handleWsMessage;
@@ -67,8 +78,8 @@ useEffect(() => {
   const poll = async () => {
     try {
       const [tRes, aRes] = await Promise.all([
-        fetch(`${API_URL}/api/v1/trucks`).catch(() => null),
-        fetch(`${API_URL}/api/v1/alerts`).catch(() => null),
+        fetch(`${API_BASE}/trucks`).catch(() => null),
+        fetch(`${API_BASE}/alerts`).catch(() => null),
       ]);
       if (tRes?.ok) setTrucks(await tRes.json());
       if (aRes?.ok) setAlerts(await aRes.json());

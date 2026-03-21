@@ -3,10 +3,15 @@
  * Provides typed methods for all backend endpoints.
  */
 
-const API_ROOT = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-const API_BASE = `${API_ROOT
-  .replace(/\/+$/, '')
-  .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`;
+const API_BASE = (() => {
+  // In browser, always use same-origin API to avoid stale host/env mismatches.
+  if (globalThis.window !== undefined) return '/api/v1';
+
+  const apiRoot = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  return `${apiRoot
+    .replace(/\/+$/, '')
+    .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`;
+})();
 
 // ── Request Helpers ────────────────────────────────────────
 async function getAuthToken(): Promise<string | null> {
