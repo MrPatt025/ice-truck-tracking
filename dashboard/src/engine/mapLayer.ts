@@ -1,60 +1,109 @@
 /* ================================================================
- *  Ice-Truck IoT Engine — Imperative Mapbox GL Layer
- *  ──────────────────────────────────────────────────
- *  • Initializes a Mapbox GL JS map imperatively (no React tree)
- *  • Uses GeoJSON source + symbol layer for truck markers
- *  • Updates marker positions via setData() — zero React renders
- *  • Supports clustering at low zoom levels
- *  • Frame scheduler drives the update loop
+ *  Ice-Truck IoT Engine — Imperative Map Layer (Mapbox + deck.gl)
+ *  ────────────────────────────────────────────────────────────────
+ *  • Reads truck coordinates directly from transient Zustand map
+ *  • Renders via deck.gl ScatterplotLayer (GPU instancing)
+ *  • Color-codes trucks by temperature / speed risk
+ *  • Zero React involvement in real-time marker updates
  * ================================================================ */
 
 import mapboxgl from 'mapbox-gl';
-import type { TruckTelemetry } from './types';
+import { ScatterplotLayer } from '@deck.gl/layers';
+import type { PickingInfo } from '@deck.gl/core';
+import { MapboxOverlay } from '@deck.gl/mapbox';
+import type { Theme, TruckTelemetry } from './types';
 import { getTruckMap } from './store';
 
-// Mapbox token — uses env var or a placeholder for dev
-const MAPBOX_TOKEN =
-    process.env.NEXT_PUBLIC_MAPBOX_TOKEN ||
-    'pk.eyJ1IjoiaWNlLXRydWNrLWRldiIsImEiOiJjbHRlc3QifQ.demo';
+type RGBA = [number, number, number, number];
+type Position = [number, number];
 
-const MAP_STYLES: Record<string, string> = {
+interface TruckRenderPoint {
+    id: string;
+    position: Position;
+    speed: number;
+    temperature: number;
+    driverName: string;
+    status: string;
+    color: RGBA;
+    radius: number;
+}
+
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim() ?? '';
+const OPEN_STYLE_URL = 'https://demotiles.maplibre.org/style.json';
+const MAPBOX_STYLES: Record<Theme, string> = {
     dark: 'mapbox://styles/mapbox/dark-v11',
     neon: 'mapbox://styles/mapbox/dark-v11',
     ocean: 'mapbox://styles/mapbox/dark-v11',
     forest: 'mapbox://styles/mapbox/dark-v11',
 };
 
+const TEMP_HIGH_LIMIT = -2;
+const TEMP_LOW_LIMIT = -25;
+const SPEED_WARNING_LIMIT = 95;
+const UPDATE_INTERVAL_MS = 32;
+
+function resolveMapStyle(theme: Theme): string {
+    if (!MAPBOX_TOKEN) return OPEN_STYLE_URL;
+    return MAPBOX_STYLES[theme] ?? MAPBOX_STYLES.dark;
+}
+
+function getTruckColor(truck: TruckTelemetry): RGBA {
+    if (truck.temperature > TEMP_HIGH_LIMIT || truck.temperature < TEMP_LOW_LIMIT) {
+        return [239, 68, 68, 230];
+    }
+    if (truck.speed >= SPEED_WARNING_LIMIT) {
+        return [245, 158, 11, 220];
+    }
+    if (truck.status === 'offline') {
+        return [107, 114, 128, 210];
+    }
+    if (truck.status === 'maintenance') {
+        return [139, 92, 246, 220];
+    }
+    return [16, 185, 129, 215];
+}
+
+function getTruckRadius(speed: number): number {
+    const clampedSpeed = Math.max(0, Math.min(speed, 130));
+    return 5 + (clampedSpeed / 130) * 4;
+}
+
 export class ImperativeMapLayer {
     private map: mapboxgl.Map | null = null;
     private container: HTMLElement | null = null;
-    private readonly sourceId = 'trucks-source';
-    private readonly layerId = 'trucks-layer';
-    private readonly clusterLayerId = 'trucks-cluster';
-    private readonly clusterCountId = 'trucks-cluster-count';
     private popup: mapboxgl.Popup | null = null;
+    private overlay: MapboxOverlay | null = null;
     private _ready = false;
     private _destroyed = false;
+    private lastSyncAt = 0;
+    private dataVersion = 0;
+    private readonly renderData: TruckRenderPoint[] = [];
 
     get ready(): boolean {
         return this._ready;
     }
 
     /** Mount the map into a DOM element */
-    init(container: HTMLElement, style: string = 'dark'): void {
+    init(container: HTMLElement, style: Theme = 'dark'): void {
         if (this._destroyed) return;
         this.container = container;
-        mapboxgl.accessToken = MAPBOX_TOKEN;
+
+        if (MAPBOX_TOKEN) {
+            mapboxgl.accessToken = MAPBOX_TOKEN;
+        } else {
+            console.warn('NEXT_PUBLIC_MAPBOX_TOKEN missing. Using public open style fallback.');
+        }
 
         this.map = new mapboxgl.Map({
             container,
-            style: MAP_STYLES[style] || MAP_STYLES.dark,
-            center: [100.5018, 13.7563], // Bangkok
+            style: resolveMapStyle(style),
+            center: [100.5018, 13.7563],
             zoom: 10,
             antialias: true,
             maxZoom: 18,
             minZoom: 3,
             attributionControl: false,
-            fadeDuration: 0,        // no fade = better perf
+            fadeDuration: 0,
             trackResize: true,
         });
 
@@ -63,170 +112,123 @@ export class ImperativeMapLayer {
 
         this.map.on('load', () => {
             if (!this.map || this._destroyed) return;
-            this.setupLayers();
+            this.installDeckOverlay();
             this._ready = true;
-        });
-
-        // Click on truck marker
-        this.map.on('click', this.layerId, (e) => {
-            if (!e.features?.length) return;
-            const f = e.features[0];
-            const coords = (f.geometry as GeoJSON.Point).coordinates.slice() as [number, number];
-            const props = f.properties;
-
-            this.popup?.remove();
-            if (!this.map) return;
-            this.popup = new mapboxgl.Popup({ closeOnClick: true, maxWidth: '300px' })
-                .setLngLat(coords)
-                .setHTML(
-                    `<div class="p-2 text-sm">
-            <strong>${props?.id}</strong><br/>
-            Driver: ${props?.driverName}<br/>
-            Speed: ${props?.speed?.toFixed?.(0) ?? props?.speed} km/h<br/>
-            Temp: ${props?.temperature?.toFixed?.(1) ?? props?.temperature}°C<br/>
-            Status: <span class="font-semibold">${props?.status}</span>
-          </div>`,
-                )
-                .addTo(this.map);
-        });
-
-        // Cluster click → zoom in
-        this.map.on('click', this.clusterLayerId, (e) => {
-            if (!this.map) return;
-            const features = this.map.queryRenderedFeatures(e.point, {
-                layers: [this.clusterLayerId],
-            });
-            if (!features.length) return;
-            const clusterId = features[0].properties?.cluster_id;
-            const src = this.map.getSource(this.sourceId);
-            if (!src || !('getClusterExpansionZoom' in src)) return;
-            src.getClusterExpansionZoom(clusterId, (err, zoom) => {
-                if (err || !this.map) return;
-                this.map.easeTo({
-                    center: (features[0].geometry as GeoJSON.Point).coordinates as [number, number],
-                    zoom: zoom ?? 14,
-                });
-            });
-        });
-
-        // Cursor style
-        this.map.on('mouseenter', this.layerId, () => {
-            if (this.map) this.map.getCanvas().style.cursor = 'pointer';
-        });
-        this.map.on('mouseleave', this.layerId, () => {
-            if (this.map) this.map.getCanvas().style.cursor = '';
+            this.refreshDeckLayer();
         });
     }
 
-    private setupLayers(): void {
+    private installDeckOverlay(): void {
         if (!this.map) return;
+        if (this.overlay) {
+            this.map.removeControl(this.overlay);
+            this.overlay.finalize();
+            this.overlay = null;
+        }
+        this.overlay = new MapboxOverlay({ interleaved: true, layers: [] });
+        this.map.addControl(this.overlay);
+    }
 
-        // Add empty GeoJSON source with clustering
-        this.map.addSource(this.sourceId, {
-            type: 'geojson',
-            data: { type: 'FeatureCollection', features: [] },
-            cluster: true,
-            clusterMaxZoom: 14,
-            clusterRadius: 50,
-        });
-
-        // Cluster circles
-        this.map.addLayer({
-            id: this.clusterLayerId,
-            type: 'circle',
-            source: this.sourceId,
-            filter: ['has', 'point_count'],
-            paint: {
-                'circle-color': [
-                    'step', ['get', 'point_count'],
-                    '#06b6d4', 10,
-                    '#8b5cf6', 30,
-                    '#ef4444',
-                ],
-                'circle-radius': [
-                    'step', ['get', 'point_count'],
-                    20, 10,
-                    30, 30,
-                    40,
-                ],
-                'circle-opacity': 0.8,
-                'circle-stroke-width': 2,
-                'circle-stroke-color': 'rgba(255,255,255,0.3)',
+    private buildLayer(): ScatterplotLayer<TruckRenderPoint> {
+        return new ScatterplotLayer<TruckRenderPoint>({
+            id: 'trucks-scatter',
+            data: this.renderData,
+            pickable: true,
+            stroked: true,
+            filled: true,
+            radiusUnits: 'pixels',
+            getPosition: (d) => d.position,
+            getFillColor: (d) => d.color,
+            getLineColor: [255, 255, 255, 180],
+            getLineWidth: 1,
+            lineWidthUnits: 'pixels',
+            getRadius: (d) => d.radius,
+            radiusMinPixels: 4,
+            radiusMaxPixels: 14,
+            parameters: {
+                depthTest: false,
             },
-        });
-
-        // Cluster count labels
-        this.map.addLayer({
-            id: this.clusterCountId,
-            type: 'symbol',
-            source: this.sourceId,
-            filter: ['has', 'point_count'],
-            layout: {
-                'text-field': ['get', 'point_count_abbreviated'],
-                'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-                'text-size': 14,
+            updateTriggers: {
+                getPosition: this.dataVersion,
+                getFillColor: this.dataVersion,
+                getRadius: this.dataVersion,
             },
-            paint: { 'text-color': '#ffffff' },
-        });
-
-        // Individual truck markers (unclustered)
-        this.map.addLayer({
-            id: this.layerId,
-            type: 'circle',
-            source: this.sourceId,
-            filter: ['!', ['has', 'point_count']],
-            paint: {
-                'circle-color': [
-                    'match', ['get', 'status'],
-                    'active', '#10b981',
-                    'idle', '#f59e0b',
-                    'offline', '#6b7280',
-                    'maintenance', '#8b5cf6',
-                    'alert', '#ef4444',
-                    '#06b6d4',
-                ],
-                'circle-radius': 8,
-                'circle-stroke-width': 2,
-                'circle-stroke-color': 'rgba(255,255,255,0.5)',
-                'circle-opacity': 0.9,
+            onClick: (info: PickingInfo<TruckRenderPoint>) => {
+                this.showTruckPopup(info);
+            },
+            onHover: (info: PickingInfo<TruckRenderPoint>) => {
+                if (!this.map) return;
+                this.map.getCanvas().style.cursor = info.object ? 'pointer' : '';
             },
         });
     }
 
-    /** Called by the frame scheduler every frame — reads from mutable truck map */
-    update(_dt: number): void {
-        if (!this._ready || !this.map || this._destroyed) return;
+    private showTruckPopup(info: PickingInfo<TruckRenderPoint>): void {
+        if (!this.map || !info.object || !info.coordinate) return;
 
+        const [lng, lat] = info.coordinate as [number, number];
+        const truck = info.object;
+        this.popup?.remove();
+
+        this.popup = new mapboxgl.Popup({ closeOnClick: true, maxWidth: '300px' })
+            .setLngLat([lng, lat])
+            .setHTML(
+                `<div class="p-2 text-sm">`
+                + `<strong>${truck.id}</strong><br/>`
+                + `Driver: ${truck.driverName || 'N/A'}<br/>`
+                + `Speed: ${truck.speed.toFixed(0)} km/h<br/>`
+                + `Temp: ${truck.temperature.toFixed(1)}°C<br/>`
+                + `Status: <span class="font-semibold">${truck.status}</span>`
+                + `</div>`,
+            )
+            .addTo(this.map);
+    }
+
+    private syncFromTransientStore(): void {
         const trucks = getTruckMap();
-        const features: GeoJSON.Feature[] = [];
+        this.renderData.length = 0;
 
-        trucks.forEach((t: TruckTelemetry) => {
-            features.push({
-                type: 'Feature',
-                geometry: { type: 'Point', coordinates: [t.lng, t.lat] },
-                properties: {
-                    id: t.id,
-                    status: t.status,
-                    speed: t.speed,
-                    temperature: t.temperature,
-                    driverName: t.driverName,
-                    heading: t.heading,
-                },
+        trucks.forEach((truck) => {
+            this.renderData.push({
+                id: truck.id,
+                position: [truck.lng, truck.lat],
+                speed: truck.speed,
+                temperature: truck.temperature,
+                driverName: truck.driverName,
+                status: truck.status,
+                color: getTruckColor(truck),
+                radius: getTruckRadius(truck.speed),
             });
         });
 
-        const src = this.map.getSource(this.sourceId);
-        if (src) {
-            (src as mapboxgl.GeoJSONSource).setData({ type: 'FeatureCollection', features });
-        }
+        this.dataVersion += 1;
+    }
+
+    private refreshDeckLayer(): void {
+        this.syncFromTransientStore();
+        if (!this.overlay) return;
+        this.overlay.setProps({
+            layers: [this.buildLayer()],
+        });
+    }
+
+    /** Called by frame scheduler — reads directly from transient store */
+    update(_dt: number): void {
+        if (!this._ready || this._destroyed) return;
+        const now = performance.now();
+        if (now - this.lastSyncAt < UPDATE_INTERVAL_MS) return;
+        this.lastSyncAt = now;
+        this.refreshDeckLayer();
     }
 
     /** Change map style */
-    setStyle(style: string): void {
+    setStyle(style: Theme): void {
         if (!this.map) return;
-        this.map.setStyle(MAP_STYLES[style] || MAP_STYLES.dark);
-        // Re-add layers after style change
-        this.map.once('style.load', () => this.setupLayers());
+        this.map.setStyle(resolveMapStyle(style));
+        this.map.once('style.load', () => {
+            this.installDeckOverlay();
+            this.refreshDeckLayer();
+        });
     }
 
     /** Fly to a specific truck */
@@ -247,20 +249,23 @@ export class ImperativeMapLayer {
         if (trucks.size === 0) return;
 
         const bounds = new mapboxgl.LngLatBounds();
-        trucks.forEach((t) => bounds.extend([t.lng, t.lat]));
+        trucks.forEach((truck) => bounds.extend([truck.lng, truck.lat]));
         this.map.fitBounds(bounds, { padding: 60, duration: 1000 });
     }
 
-    /** Resize (call when container size changes) */
     resize(): void {
         this.map?.resize();
     }
 
-    /** Cleanup */
     destroy(): void {
         this._destroyed = true;
         this._ready = false;
         this.popup?.remove();
+        if (this.map && this.overlay) {
+            this.map.removeControl(this.overlay);
+        }
+        this.overlay?.finalize();
+        this.overlay = null;
         this.map?.remove();
         this.map = null;
     }
