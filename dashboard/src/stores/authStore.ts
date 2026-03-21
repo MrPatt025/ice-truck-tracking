@@ -80,13 +80,21 @@ const permissionMatrix: Record<UserRole, string[]> = {
 
 // ── API Base URL ───────────────────────────────────────────
 const API_BASE = (() => {
-  // In browser, pin requests to same-origin proxy path (/api/v1).
-  if (globalThis.window !== undefined) return '/api/v1';
+  const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (configuredApiRoot) {
+    return `${configuredApiRoot
+      .replace(/\/+$/, '')
+      .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`;
+  }
 
-  const apiRoot = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-  return `${apiRoot
-    .replace(/\/+$/, '')
-    .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`;
+  if (
+    globalThis.window !== undefined
+    && /^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)
+  ) {
+    return '/api/v1';
+  }
+
+  return 'http://localhost:5000/api/v1';
 })();
 
 // ── Store ──────────────────────────────────────────────────

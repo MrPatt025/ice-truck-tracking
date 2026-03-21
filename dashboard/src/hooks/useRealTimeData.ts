@@ -10,13 +10,39 @@ type Truck = {
 };
 type Alert = { id?: string; level?: string; message?: string; ts?: string } & Record<string, unknown>;
 const WS_URL  = process.env.NEXT_PUBLIC_WS_URL  || "ws://localhost:5000";
-const API_BASE = '/api/v1';
+const API_BASE = (() => {
+  const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (configuredApiRoot) {
+    return `${configuredApiRoot
+      .replace(/\/+$/, '')
+      .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`;
+  }
+
+  if (
+    globalThis.window !== undefined
+    && /^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)
+  ) {
+    return '/api/v1';
+  }
+
+  return 'http://localhost:5000/api/v1';
+})();
 
 function resolveWebSocketUrl(): string {
-  if (globalThis.window === undefined) return WS_URL.replace(/^http/i, 'ws');
+  if (globalThis.window === undefined) {
+    const apiRoot = process.env.NEXT_PUBLIC_API_URL?.trim();
+    if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL.replace(/^http/i, 'ws');
+    if (apiRoot) return apiRoot.replace(/^http/i, 'ws').replace(/\/+$/, '');
+    return WS_URL.replace(/^http/i, 'ws');
+  }
 
   if (process.env.NEXT_PUBLIC_WS_URL) {
     return process.env.NEXT_PUBLIC_WS_URL.replace(/^http/i, 'ws');
+  }
+
+  const apiRoot = process.env.NEXT_PUBLIC_API_URL?.trim();
+  if (apiRoot) {
+    return apiRoot.replace(/^http/i, 'ws').replace(/\/+$/, '');
   }
 
   const protocol = globalThis.window.location.protocol === 'https:' ? 'wss:' : 'ws:';
