@@ -42,7 +42,7 @@ export default [
             react: reactPlugin,
             'react-hooks': reactHooks,
         },
-        settings: { react: { version: 'detect' } },
+        settings: { react: { version: '18.3' } },
         rules: {
             // React
             ...reactPlugin.configs.recommended.rules,

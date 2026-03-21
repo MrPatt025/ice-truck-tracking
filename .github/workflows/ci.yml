@@ -214,22 +214,44 @@ jobs:
 
   # ── Deploy Dashboard → Vercel (production) ──────────────
   deploy-dashboard:
-    if: false
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    environment: production
     steps:
-      - name: Disabled deploy placeholder
-        run: echo "Dashboard production deploy is disabled in this workflow."
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Deploy dashboard to Vercel
+        working-directory: dashboard
+        env:
+          VERCEL_TOKEN: ${{ secrets[env.VERCEL_TOKEN_SECRET_NAME] }}
+          VERCEL_ORG_ID: ${{ secrets[env.VERCEL_ORG_ID_SECRET_NAME] }}
+          VERCEL_PROJECT_ID: ${{ secrets[env.VERCEL_PROJECT_ID_SECRET_NAME] }}
+        run: |
+          npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx vercel build --prod --token="$VERCEL_TOKEN"
+          npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
 
   # ── Deploy Backend → Render ─────────────────────────────
   deploy-backend:
-    if: false
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    environment: production
     steps:
-      - name: Disabled deploy placeholder
-        run: echo "Backend production deploy is disabled in this workflow."
+      - name: Trigger Render production deploy hook
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets[env.RENDER_DEPLOY_HOOK_SECRET_NAME] }}
+        run: |
+          curl --fail --silent --show-error --max-time 30 -X POST "$RENDER_DEPLOY_HOOK_URL"
