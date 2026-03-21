@@ -211,7 +211,7 @@ export default function LandingPage() {
         style={{ y: heroY, opacity: heroOpacity }}
         className='relative mx-auto max-w-7xl px-6 pb-20 pt-28 text-center'
       >
-        <HeroBackground />
+        <HeroBackground scrollProgress={scrollYProgress} />
 
         {/* Animated gradient orb */}
         <motion.div

@@ -1,0 +1,258 @@
+/* eslint-disable react/no-unknown-property */
+
+import React from 'react'
+import { useFrame } from '@react-three/fiber'
+import {
+  AdditiveBlending,
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  Group,
+  Mesh,
+  Points,
+  ShaderMaterial,
+  Vector3,
+} from 'three'
+import { Bloom, DepthOfField, EffectComposer } from '@react-three/postprocessing'
+import { runtimeState } from './cinematicRuntimeState'
+
+const tmpCameraPos = new Vector3()
+
+function TruckModel() {
+  const root = React.useRef<Group>(null)
+  const leftHull = React.useRef<Mesh>(null)
+  const rightHull = React.useRef<Mesh>(null)
+  const sensorGroup = React.useRef<Group>(null)
+
+  useFrame(({ clock, camera }, delta) => {
+    const p = runtimeState.scroll
+    const exploded = 1 - p
+    const glide = Math.max(0, p - 0.58)
+
+    const openDistance = exploded * 1.5
+    if (leftHull.current) leftHull.current.position.x = -0.72 - openDistance
+    if (rightHull.current) rightHull.current.position.x = 0.72 + openDistance
+
+    if (sensorGroup.current) {
+      sensorGroup.current.rotation.y += delta * (0.4 + exploded * 0.7)
+      sensorGroup.current.position.y = 0.45 + Math.sin(clock.elapsedTime * 2.2) * 0.03
+      sensorGroup.current.scale.setScalar(0.8 + exploded * 0.36)
+    }
+
+    if (root.current) {
+      root.current.position.x = glide * 8.4
+      root.current.position.z = glide * -1.4
+      root.current.rotation.y = -0.5 + p * 0.58
+      root.current.rotation.z = Math.sin(clock.elapsedTime * 1.4) * 0.015
+    }
+
+    tmpCameraPos.set(0.8 + p * 2.8, 1.65 - p * 0.66, 7.4 - p * 3.55)
+    camera.position.lerp(tmpCameraPos, 0.08)
+    camera.lookAt(0.8 + p * 4.5, 0.5, -0.6)
+  })
+
+  return (
+    <group ref={root} position={[0, 0, 0]}>
+      <mesh position={[0, 0.2, 0]}>
+        <boxGeometry args={[2.8, 0.24, 1.45]} />
+        <meshStandardMaterial color='#1d4ed8' roughness={0.35} metalness={0.5} />
+      </mesh>
+
+      <mesh ref={leftHull} position={[-0.72, 0.6, 0]}>
+        <boxGeometry args={[1.25, 0.7, 1.35]} />
+        <meshStandardMaterial color='#38bdf8' roughness={0.24} metalness={0.68} emissive='#0b2f5e' emissiveIntensity={0.18} />
+      </mesh>
+
+      <mesh ref={rightHull} position={[0.72, 0.6, 0]}>
+        <boxGeometry args={[1.25, 0.7, 1.35]} />
+        <meshStandardMaterial color='#60a5fa' roughness={0.24} metalness={0.68} emissive='#0b2f5e' emissiveIntensity={0.2} />
+      </mesh>
+
+      <group ref={sensorGroup} position={[0, 0.45, 0]}>
+        <mesh position={[0, 0, 0]}>
+          <sphereGeometry args={[0.2, 24, 24]} />
+          <meshStandardMaterial color='#22d3ee' emissive='#22d3ee' emissiveIntensity={1.6} roughness={0.12} metalness={0.4} />
+        </mesh>
+        <mesh position={[-0.34, 0.08, 0.38]}>
+          <boxGeometry args={[0.16, 0.16, 0.16]} />
+          <meshStandardMaterial color='#67e8f9' emissive='#67e8f9' emissiveIntensity={1.25} />
+        </mesh>
+        <mesh position={[0.38, -0.04, -0.31]}>
+          <boxGeometry args={[0.14, 0.14, 0.14]} />
+          <meshStandardMaterial color='#7dd3fc' emissive='#7dd3fc' emissiveIntensity={1.15} />
+        </mesh>
+      </group>
+
+      {[-1.05, 1.05].map(x => (
+        <mesh key={`front-wheel-${x}`} position={[x, -0.1, 0.64]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
+          <meshStandardMaterial color='#0f172a' roughness={0.8} metalness={0.1} />
+        </mesh>
+      ))}
+
+      {[-1.05, 1.05].map(x => (
+        <mesh key={`rear-wheel-${x}`} position={[x, -0.1, -0.64]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
+          <meshStandardMaterial color='#0f172a' roughness={0.8} metalness={0.1} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function RouteAndGround() {
+  return (
+    <>
+      <mesh position={[0, -0.34, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[42, 20]} />
+        <meshStandardMaterial color='#030712' roughness={0.88} metalness={0.05} />
+      </mesh>
+
+      <mesh position={[2.8, -0.33, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[24, 1.3]} />
+        <meshStandardMaterial color='#0e7490' emissive='#06b6d4' emissiveIntensity={0.62} roughness={0.26} metalness={0.55} />
+      </mesh>
+    </>
+  )
+}
+
+function ColdFogParticles() {
+  const pointsRef = React.useRef<Points>(null)
+  const shaderRef = React.useRef<ShaderMaterial | null>(null)
+
+  const geometry = React.useMemo(() => {
+    const g = new BufferGeometry()
+    const count = 640
+    const positions = new Float32Array(count * 3)
+    const seeds = new Float32Array(count)
+
+    for (let i = 0; i < count; i += 1) {
+      const i3 = i * 3
+      const radius = 0.8 + Math.random() * 2.4
+      const angle = Math.random() * Math.PI * 2
+      positions[i3] = Math.cos(angle) * radius
+      positions[i3 + 1] = -0.18 + Math.random() * 1.9
+      positions[i3 + 2] = Math.sin(angle) * (0.55 + Math.random() * 1.9)
+      seeds[i] = Math.random()
+    }
+
+    g.setAttribute('position', new BufferAttribute(positions, 3))
+    g.setAttribute('aSeed', new BufferAttribute(seeds, 1))
+    return g
+  }, [])
+
+  const ColdFogShaderMaterial = React.useMemo(() => {
+    const material = new ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: AdditiveBlending,
+      uniforms: {
+        uTime: { value: 0 },
+        uDensity: { value: 0.42 },
+        uTint: { value: new Color('#67e8f9') },
+        uTemp: { value: -14 },
+      },
+      vertexShader: `
+        uniform float uTime;
+        uniform float uDensity;
+        attribute float aSeed;
+        varying float vAlpha;
+        varying float vSeed;
+        void main() {
+          vec3 p = position;
+          p.x += sin(uTime * 0.65 + aSeed * 11.0) * (0.13 + uDensity * 0.2);
+          p.z += cos(uTime * 0.52 + aSeed * 13.0) * (0.15 + uDensity * 0.24);
+          p.y += sin(uTime * 0.72 + aSeed * 7.0) * 0.08;
+
+          vec4 mv = modelViewMatrix * vec4(p, 1.0);
+          gl_PointSize = (12.0 + aSeed * 15.0) * (1.15 + uDensity * 0.65) / max(0.45, -mv.z * 0.3);
+          gl_Position = projectionMatrix * mv;
+
+          vSeed = aSeed;
+          vAlpha = 0.18 + uDensity * 0.55;
+        }
+      `,
+      fragmentShader: `
+        uniform vec3 uTint;
+        uniform float uTemp;
+        varying float vAlpha;
+        varying float vSeed;
+        void main() {
+          vec2 uv = gl_PointCoord - vec2(0.5);
+          float dist = length(uv);
+          if (dist > 0.5) discard;
+
+          float cloud = smoothstep(0.5, 0.0, dist);
+          float heatShift = clamp((uTemp + 24.0) / 22.0, 0.0, 1.0);
+          vec3 cold = mix(vec3(0.12, 0.58, 0.86), vec3(0.66, 0.91, 1.0), heatShift);
+          vec3 color = mix(cold, uTint, 0.6 + vSeed * 0.2);
+          gl_FragColor = vec4(color, cloud * vAlpha);
+        }
+      `,
+    })
+
+    return material
+  }, [])
+
+  React.useEffect(() => {
+    shaderRef.current = ColdFogShaderMaterial
+    return () => {
+      ColdFogShaderMaterial.dispose()
+    }
+  }, [ColdFogShaderMaterial])
+
+  useFrame(({ clock }, delta) => {
+    if (!pointsRef.current || !shaderRef.current) return
+
+    pointsRef.current.rotation.y += delta * 0.08
+    const { telemetry } = runtimeState
+    shaderRef.current.uniforms.uTime.value = clock.elapsedTime
+    shaderRef.current.uniforms.uDensity.value = telemetry.fogDensity
+    shaderRef.current.uniforms.uTemp.value = telemetry.temperatureC
+
+    const hueMix = Math.min(1, Math.max(0, telemetry.fogTint))
+    const color = new Color().setHSL(0.54 + (1 - hueMix) * 0.08, 0.88, 0.65)
+    shaderRef.current.uniforms.uTint.value = color
+  })
+
+  return (
+    <points ref={pointsRef} geometry={geometry} position={[0.2, 0.4, 0]}>
+      <primitive attach='material' object={ColdFogShaderMaterial} />
+    </points>
+  )
+}
+
+export default function CinematicRig() {
+  const bloomIntensity = 0.45 + runtimeState.scroll * 1.1
+  const dofFocusDistance = 0.02 + (1 - runtimeState.scroll) * 0.035
+  const dofBokeh = 1.6 + runtimeState.scroll * 3.8
+
+  return (
+    <>
+      <color attach='background' args={['#020617']} />
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[5, 6, 3]} intensity={1.2} color='#bae6fd' />
+      <pointLight position={[0, 1.2, 0]} intensity={2.4} color='#22d3ee' />
+      <pointLight position={[4.8, 1.6, -2.6]} intensity={0.9} color='#2563eb' />
+
+      <RouteAndGround />
+      <TruckModel />
+      <ColdFogParticles />
+
+      <EffectComposer multisampling={0}>
+        <Bloom
+          intensity={bloomIntensity}
+          luminanceThreshold={0.28}
+          luminanceSmoothing={0.35}
+          mipmapBlur
+        />
+        <DepthOfField
+          focusDistance={dofFocusDistance}
+          focalLength={0.025}
+          bokehScale={dofBokeh}
+          height={700}
+        />
+      </EffectComposer>
+    </>
+  )
+}
