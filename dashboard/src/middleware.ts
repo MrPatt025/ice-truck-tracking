@@ -36,14 +36,18 @@ export function middleware(request: NextRequest) {
     }
 
     const scriptSrc = isDevelopment
-        ? "script-src 'self' 'unsafe-eval'"
+        ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
         : "script-src 'self'";
+    // style-src allows unsafe-inline for Tailwind CSS and global styles
+    const styleSrc = "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com";
+    // font-src allows external fonts from Google Fonts CDN and data URIs
+    const fontSrc = "font-src 'self' data: https: https://fonts.gstatic.com";
     const csp = [
         "default-src 'self'",
         scriptSrc,
-        "style-src 'self' 'unsafe-inline'",
+        styleSrc,
         "img-src 'self' data: blob:",
-        "font-src 'self' data:",
+        fontSrc,
         `connect-src ${connectSrc.join(' ')}`,
         "media-src 'self'",
         "frame-ancestors 'none'",
