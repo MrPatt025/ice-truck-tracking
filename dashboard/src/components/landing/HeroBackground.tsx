@@ -8,8 +8,10 @@ import {
   useFleetTelemetryStore,
   type FleetTruck,
 } from '@/stores/fleetTelemetryStore'
-import type { CinematicTransitionPhase } from '@/workers/cinematicMessages'
-import type { CinematicWorkerMessage } from '@/workers/cinematicMessages'
+import type {
+  CinematicTransitionPhase,
+  CinematicWorkerMessage,
+} from '@/workers/cinematicMessages'
 
 type HeroBackgroundProps = {
   scrollProgress?: MotionValue<number>

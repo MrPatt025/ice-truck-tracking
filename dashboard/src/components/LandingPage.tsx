@@ -117,18 +117,20 @@ export default function LandingPage() {
   const pageScale = useTransform(transitionProgress, [0, 1], [1, 0.94])
   const pageLift = useTransform(transitionProgress, [0, 1], ['0px', '-18px'])
   const veilOpacity = useTransform(transitionProgress, [0, 1], [0, 1])
+  const veilBloomOpacity = useTransform(transitionProgress, [0, 0.65, 1], [0, 0.75, 1])
+  const veilSolidOpacity = useTransform(transitionProgress, [0, 0.55, 1], [0, 0.22, 1])
 
   useMotionValueEvent(scrollYProgress, 'change', latest => {
     latestScrollRef.current = Math.min(1, Math.max(0, latest))
   })
 
-  const handleOpenDashboard = React.useCallback(
+  const beginDashboardTransition = React.useCallback(
     (e?: React.MouseEvent<HTMLAnchorElement>) => {
       if (e) e.preventDefault()
       if (isTransitioning) return
-      transitionProgress.set(0)
+      transitionProgress.set(0.04)
       startTransition()
-      setProgress(0)
+      setProgress(0.04)
     },
     [isTransitioning, setProgress, startTransition, transitionProgress]
   )
@@ -140,8 +142,8 @@ export default function LandingPage() {
     }
 
     const controls = animate(transitionProgress, 1, {
-      duration: 0.88,
-      ease: [0.76, 0, 0.24, 1],
+      duration: 0.74,
+      ease: [0.88, 0, 0.13, 1],
       onUpdate: latest => {
         setProgress(latest)
       },
@@ -208,7 +210,7 @@ export default function LandingPage() {
               Tech Stack
             </a>
             <Button size='sm' asChild>
-              <a href='/dashboard' onClick={handleOpenDashboard}>
+              <a href='/dashboard' onClick={beginDashboardTransition}>
                 Open Dashboard
               </a>
             </Button>
@@ -235,7 +237,11 @@ export default function LandingPage() {
           transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
         />
 
-        <GlassPanel className='mx-auto max-w-5xl rounded-3xl border border-white/20 bg-white/[0.05] px-6 py-12 shadow-[0_24px_100px_-40px_rgba(34,211,238,0.55)] backdrop-blur-2xl sm:px-10'>
+        <GlassPanel
+          scrollProgress={scrollYProgress}
+          parallaxRange={[0, 0.25]}
+          className='mx-auto max-w-5xl px-6 py-12 sm:px-10'
+        >
           <motion.div initial='hidden' animate='visible' variants={stagger}>
             <motion.div custom={0} variants={fadeUp}>
               <Badge
@@ -294,17 +300,13 @@ export default function LandingPage() {
               className='mt-10 flex flex-wrap justify-center gap-4'
             >
               <Button size='lg' asChild>
-                <a href='/dashboard' onClick={handleOpenDashboard}>
+                <a href='/dashboard' onClick={beginDashboardTransition}>
                   <MapPin className='mr-2 h-4 w-4' /> Live Dashboard
                 </a>
               </Button>
               <Button size='lg' variant='outline' asChild>
-                <a
-                  href='https://github.com/PATTANAKORN025/Ice-truck-racking'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  GitHub Repo
+                <a href='/dashboard' onClick={beginDashboardTransition}>
+                  Login
                 </a>
               </Button>
             </motion.div>
@@ -451,7 +453,7 @@ export default function LandingPage() {
           </motion.p>
           <motion.div custom={2} variants={fadeUp} className='mt-8'>
             <Button size='lg' asChild>
-              <a href='/dashboard' onClick={handleOpenDashboard}>
+              <a href='/dashboard' onClick={beginDashboardTransition}>
                 <Truck className='mr-2 h-4 w-4' /> Launch Dashboard
               </a>
             </Button>
@@ -474,8 +476,18 @@ export default function LandingPage() {
 
       <motion.div
         aria-hidden='true'
+        style={{ opacity: veilBloomOpacity }}
+        className='pointer-events-none fixed inset-0 z-[60] bg-[radial-gradient(circle_at_50%_38%,rgba(34,211,238,0.5),rgba(7,10,27,0.94)_58%)]'
+      />
+      <motion.div
+        aria-hidden='true'
+        style={{ opacity: veilSolidOpacity }}
+        className='pointer-events-none fixed inset-0 z-[61] bg-slate-950'
+      />
+      <motion.div
+        aria-hidden='true'
         style={{ opacity: veilOpacity }}
-        className='pointer-events-none fixed inset-0 z-[60] bg-[radial-gradient(circle_at_50%_40%,rgba(34,211,238,0.45),rgba(2,6,23,0.97)_55%)]'
+        className='pointer-events-none fixed inset-0 z-[62] bg-[radial-gradient(circle_at_50%_50%,rgba(125,211,252,0.18),rgba(2,6,23,0.98)_65%)]'
       />
     </motion.div>
   )
