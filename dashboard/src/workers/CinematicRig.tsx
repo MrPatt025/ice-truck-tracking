@@ -12,11 +12,18 @@ import {
   Points,
   ShaderMaterial,
   Vector3,
+  PerspectiveCamera,
 } from 'three'
 import { Bloom, DepthOfField, EffectComposer } from '@react-three/postprocessing'
 import { runtimeState } from './cinematicRuntimeState'
 
 const tmpCameraPos = new Vector3()
+
+function isPerspectiveCamera(camera: unknown): camera is PerspectiveCamera {
+  if (!camera || typeof camera !== 'object') return false
+  const candidate = camera as { isPerspectiveCamera?: unknown }
+  return candidate.isPerspectiveCamera === true
+}
 
 function TruckModel() {
   const root = React.useRef<Group>(null)
@@ -28,6 +35,7 @@ function TruckModel() {
     const p = runtimeState.scroll
     const exploded = 1 - p
     const glide = Math.max(0, p - 0.58)
+    const targetFov = runtimeState.cameraFov
 
     const openDistance = exploded * 1.5
     if (leftHull.current) leftHull.current.position.x = -0.72 - openDistance
@@ -35,7 +43,8 @@ function TruckModel() {
 
     if (sensorGroup.current) {
       sensorGroup.current.rotation.y += delta * (0.4 + exploded * 0.7)
-      sensorGroup.current.position.y = 0.45 + Math.sin(clock.elapsedTime * 2.2) * 0.03
+      sensorGroup.current.position.y =
+        0.45 + Math.sin(clock.elapsedTime * 2.2) * 0.03
       sensorGroup.current.scale.setScalar(0.8 + exploded * 0.36)
     }
 
@@ -48,6 +57,10 @@ function TruckModel() {
 
     tmpCameraPos.set(0.8 + p * 2.8, 1.65 - p * 0.66, 7.4 - p * 3.55)
     camera.position.lerp(tmpCameraPos, 0.08)
+    if (isPerspectiveCamera(camera) && Math.abs(camera.fov - targetFov) > 0.01) {
+      camera.fov += (targetFov - camera.fov) * 0.14
+      camera.updateProjectionMatrix()
+    }
     camera.lookAt(0.8 + p * 4.5, 0.5, -0.6)
   })
 
@@ -55,45 +68,91 @@ function TruckModel() {
     <group ref={root} position={[0, 0, 0]}>
       <mesh position={[0, 0.2, 0]}>
         <boxGeometry args={[2.8, 0.24, 1.45]} />
-        <meshStandardMaterial color='#1d4ed8' roughness={0.35} metalness={0.5} />
+        <meshStandardMaterial
+          color='#1d4ed8'
+          roughness={0.35}
+          metalness={0.5}
+        />
       </mesh>
 
       <mesh ref={leftHull} position={[-0.72, 0.6, 0]}>
         <boxGeometry args={[1.25, 0.7, 1.35]} />
-        <meshStandardMaterial color='#38bdf8' roughness={0.24} metalness={0.68} emissive='#0b2f5e' emissiveIntensity={0.18} />
+        <meshStandardMaterial
+          color='#38bdf8'
+          roughness={0.24}
+          metalness={0.68}
+          emissive='#0b2f5e'
+          emissiveIntensity={0.18}
+        />
       </mesh>
 
       <mesh ref={rightHull} position={[0.72, 0.6, 0]}>
         <boxGeometry args={[1.25, 0.7, 1.35]} />
-        <meshStandardMaterial color='#60a5fa' roughness={0.24} metalness={0.68} emissive='#0b2f5e' emissiveIntensity={0.2} />
+        <meshStandardMaterial
+          color='#60a5fa'
+          roughness={0.24}
+          metalness={0.68}
+          emissive='#0b2f5e'
+          emissiveIntensity={0.2}
+        />
       </mesh>
 
       <group ref={sensorGroup} position={[0, 0.45, 0]}>
         <mesh position={[0, 0, 0]}>
           <sphereGeometry args={[0.2, 24, 24]} />
-          <meshStandardMaterial color='#22d3ee' emissive='#22d3ee' emissiveIntensity={1.6} roughness={0.12} metalness={0.4} />
+          <meshStandardMaterial
+            color='#22d3ee'
+            emissive='#22d3ee'
+            emissiveIntensity={1.6}
+            roughness={0.12}
+            metalness={0.4}
+          />
         </mesh>
         <mesh position={[-0.34, 0.08, 0.38]}>
           <boxGeometry args={[0.16, 0.16, 0.16]} />
-          <meshStandardMaterial color='#67e8f9' emissive='#67e8f9' emissiveIntensity={1.25} />
+          <meshStandardMaterial
+            color='#67e8f9'
+            emissive='#67e8f9'
+            emissiveIntensity={1.25}
+          />
         </mesh>
         <mesh position={[0.38, -0.04, -0.31]}>
           <boxGeometry args={[0.14, 0.14, 0.14]} />
-          <meshStandardMaterial color='#7dd3fc' emissive='#7dd3fc' emissiveIntensity={1.15} />
+          <meshStandardMaterial
+            color='#7dd3fc'
+            emissive='#7dd3fc'
+            emissiveIntensity={1.15}
+          />
         </mesh>
       </group>
 
       {[-1.05, 1.05].map(x => (
-        <mesh key={`front-wheel-${x}`} position={[x, -0.1, 0.64]} rotation={[Math.PI / 2, 0, 0]}>
+        <mesh
+          key={`front-wheel-${x}`}
+          position={[x, -0.1, 0.64]}
+          rotation={[Math.PI / 2, 0, 0]}
+        >
           <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
-          <meshStandardMaterial color='#0f172a' roughness={0.8} metalness={0.1} />
+          <meshStandardMaterial
+            color='#0f172a'
+            roughness={0.8}
+            metalness={0.1}
+          />
         </mesh>
       ))}
 
       {[-1.05, 1.05].map(x => (
-        <mesh key={`rear-wheel-${x}`} position={[x, -0.1, -0.64]} rotation={[Math.PI / 2, 0, 0]}>
+        <mesh
+          key={`rear-wheel-${x}`}
+          position={[x, -0.1, -0.64]}
+          rotation={[Math.PI / 2, 0, 0]}
+        >
           <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
-          <meshStandardMaterial color='#0f172a' roughness={0.8} metalness={0.1} />
+          <meshStandardMaterial
+            color='#0f172a'
+            roughness={0.8}
+            metalness={0.1}
+          />
         </mesh>
       ))}
     </group>
@@ -105,12 +164,22 @@ function RouteAndGround() {
     <>
       <mesh position={[0, -0.34, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[42, 20]} />
-        <meshStandardMaterial color='#030712' roughness={0.88} metalness={0.05} />
+        <meshStandardMaterial
+          color='#030712'
+          roughness={0.88}
+          metalness={0.05}
+        />
       </mesh>
 
       <mesh position={[2.8, -0.33, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[24, 1.3]} />
-        <meshStandardMaterial color='#0e7490' emissive='#06b6d4' emissiveIntensity={0.62} roughness={0.26} metalness={0.55} />
+        <meshStandardMaterial
+          color='#0e7490'
+          emissive='#06b6d4'
+          emissiveIntensity={0.62}
+          roughness={0.26}
+          metalness={0.55}
+        />
       </mesh>
     </>
   )
@@ -226,6 +295,12 @@ export default function CinematicRig() {
   const bloomIntensity = 0.45 + runtimeState.scroll * 1.1
   const dofFocusDistance = 0.02 + (1 - runtimeState.scroll) * 0.035
   const dofBokeh = 1.6 + runtimeState.scroll * 3.8
+  const transitionActive =
+    runtimeState.transition.phase !== 'idle' ||
+    runtimeState.transition.progress > 0.02
+  const heavyScrollTransition =
+    runtimeState.scroll > 0.1 && runtimeState.scroll < 0.92
+  const shouldEnablePostFx = !(transitionActive || heavyScrollTransition)
 
   return (
     <>
@@ -239,20 +314,22 @@ export default function CinematicRig() {
       <TruckModel />
       <ColdFogParticles />
 
-      <EffectComposer multisampling={0}>
-        <Bloom
-          intensity={bloomIntensity}
-          luminanceThreshold={0.28}
-          luminanceSmoothing={0.35}
-          mipmapBlur
-        />
-        <DepthOfField
-          focusDistance={dofFocusDistance}
-          focalLength={0.025}
-          bokehScale={dofBokeh}
-          height={700}
-        />
-      </EffectComposer>
+      {shouldEnablePostFx ? (
+        <EffectComposer multisampling={0}>
+          <Bloom
+            intensity={bloomIntensity}
+            luminanceThreshold={0.28}
+            luminanceSmoothing={0.35}
+            mipmapBlur
+          />
+          <DepthOfField
+            focusDistance={dofFocusDistance}
+            focalLength={0.025}
+            bokehScale={dofBokeh}
+            height={700}
+          />
+        </EffectComposer>
+      ) : null}
     </>
   )
 }
