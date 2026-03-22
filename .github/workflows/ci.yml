@@ -15,10 +15,6 @@ env:
   PNPM_VERSION: '10.32.1'
   CI: 'true'
   NEXT_TELEMETRY_DISABLED: '1'
-  VERCEL_TOKEN_SECRET_NAME: VERCEL_TOKEN
-  VERCEL_ORG_ID_SECRET_NAME: VERCEL_ORG_ID
-  VERCEL_PROJECT_ID_SECRET_NAME: VERCEL_PROJECT_ID
-  RENDER_DEPLOY_HOOK_SECRET_NAME: RENDER_DEPLOY_HOOK_URL
 
 jobs:
   # ── Install & Cache ──────────────────────────────────────
@@ -233,9 +229,11 @@ jobs:
       - name: Deploy dashboard to Vercel
         working-directory: dashboard
         env:
-          VERCEL_TOKEN: ${{ secrets[env.VERCEL_TOKEN_SECRET_NAME] }}
-          VERCEL_ORG_ID: ${{ secrets[env.VERCEL_ORG_ID_SECRET_NAME] }}
-          VERCEL_PROJECT_ID: ${{ secrets[env.VERCEL_PROJECT_ID_SECRET_NAME] }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID:
+            ${{ secrets.VERCEL_PROJECT_ID }}
+            # shellcheck disable=SC2154
         run: |
           npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
           npx vercel build --prod --token="$VERCEL_TOKEN"
@@ -252,6 +250,8 @@ jobs:
     steps:
       - name: Trigger Render production deploy hook
         env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets[env.RENDER_DEPLOY_HOOK_SECRET_NAME] }}
+          RENDER_DEPLOY_HOOK_URL:
+            ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+            # shellcheck disable=SC2154
         run: |
           curl --fail --silent --show-error --max-time 30 -X POST "$RENDER_DEPLOY_HOOK_URL"
