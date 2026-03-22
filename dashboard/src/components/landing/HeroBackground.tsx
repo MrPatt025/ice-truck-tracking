@@ -4,17 +4,49 @@ import React from 'react'
 import { Canvas as OffscreenCanvas } from '@react-three/offscreen'
 import { useMotionValueEvent, useScroll, type MotionValue } from 'framer-motion'
 import {
-  startLandingTelemetrySimulation,
-  useLandingTelemetryStore,
-} from '@/stores/landingTelemetryStore'
+  startFleetTelemetrySimulation,
+  useFleetTelemetryStore,
+  type FleetTruck,
+} from '@/stores/fleetTelemetryStore'
+import type { CinematicTransitionPhase } from '@/workers/cinematicMessages'
 import type { CinematicWorkerMessage } from '@/workers/cinematicMessages'
 
 type HeroBackgroundProps = {
   scrollProgress?: MotionValue<number>
+  transitionProgress?: MotionValue<number>
+  transitionPhase?: CinematicTransitionPhase
+  isTransitioning?: boolean
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value))
+}
+
+function summarizeFleetTelemetry(trucks: readonly FleetTruck[]): {
+  temperatureC: number
+  fogDensity: number
+  fogTint: number
+} {
+  if (trucks.length === 0) {
+    return { temperatureC: -12, fogDensity: 0.4, fogTint: 0.3 }
+  }
+
+  const totalTemp = trucks.reduce((sum, truck) => sum + truck.tempC, 0)
+  const warningRatio =
+    trucks.filter(truck => truck.status === 'warning').length / trucks.length
+
+  const temperatureC = Number((totalTemp / trucks.length).toFixed(2))
+  const fogDensity = clamp(0.26 + warningRatio * 0.55, 0.22, 0.9)
+  const fogTint = clamp((temperatureC + 24) / 26, 0, 1)
+
+  return { temperatureC, fogDensity, fogTint }
 }
 
 export default function HeroBackground({
   scrollProgress,
+  transitionProgress,
+  transitionPhase = 'idle',
+  isTransitioning = false,
 }: Readonly<HeroBackgroundProps>) {
   const [worker, setWorker] = React.useState<Worker | null>(null)
   const workerRef = React.useRef<Worker | null>(null)
@@ -55,14 +87,13 @@ export default function HeroBackground({
   }, [])
 
   React.useEffect(() => {
-    const stopSimulation = startLandingTelemetrySimulation()
+    const stopSimulation = startFleetTelemetrySimulation()
 
-    const pushTelemetry = (
-      values: readonly [number, number, number]
-    ) => {
+    const pushTelemetry = (trucks: readonly FleetTruck[]) => {
       if (!workerRef.current) return
 
-      const [temperatureC, fogDensity, fogTint] = values
+      const { temperatureC, fogDensity, fogTint } =
+        summarizeFleetTelemetry(trucks)
       const msg: CinematicWorkerMessage = {
         type: 'cinematic:telemetry',
         payload: {
@@ -75,13 +106,13 @@ export default function HeroBackground({
       workerRef.current.postMessage(msg)
     }
 
-    const unsubscribe = useLandingTelemetryStore.subscribe(
-      s => [s.temperatureC, s.fogDensity, s.fogTint] as const,
+    const unsubscribe = useFleetTelemetryStore.subscribe(
+      s => s.trucks,
       pushTelemetry
     )
 
-    const initial = useLandingTelemetryStore.getState()
-    pushTelemetry([initial.temperatureC, initial.fogDensity, initial.fogTint])
+    const initial = useFleetTelemetryStore.getState()
+    pushTelemetry(initial.trucks)
 
     return () => {
       unsubscribe()
@@ -90,7 +121,7 @@ export default function HeroBackground({
   }, [])
 
   useMotionValueEvent(activeScrollProgress, 'change', latest => {
-    const normalized = Math.min(1, Math.max(0, latest))
+    const normalized = clamp(latest, 0, 1)
     if (!workerRef.current) return
     if (Math.abs(normalized - latestScrollRef.current) < 0.002) return
 
@@ -101,6 +132,36 @@ export default function HeroBackground({
     }
     workerRef.current.postMessage(msg)
   })
+
+  useMotionValueEvent(transitionProgress, 'change', latest => {
+    if (!workerRef.current) return
+
+    const msg: CinematicWorkerMessage = {
+      type: 'cinematic:transition',
+      payload: {
+        phase: transitionPhase,
+        progress: clamp(latest, 0, 1),
+        isActive: isTransitioning,
+      },
+    }
+
+    workerRef.current.postMessage(msg)
+  })
+
+  React.useEffect(() => {
+    if (!workerRef.current) return
+
+    const msg: CinematicWorkerMessage = {
+      type: 'cinematic:transition',
+      payload: {
+        phase: transitionPhase,
+        progress: 0,
+        isActive: isTransitioning,
+      },
+    }
+
+    workerRef.current.postMessage(msg)
+  }, [isTransitioning, transitionPhase])
 
   return (
     <div className='absolute inset-0 -z-20 overflow-hidden'>

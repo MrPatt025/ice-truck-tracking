@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   animate,
   motion,
+  useMotionValueEvent,
   useMotionValue,
   useScroll,
   useTransform,
@@ -106,6 +107,7 @@ export default function LandingPage() {
   const startTransition = useTransitionStore(s => s.startTransition)
   const setProgress = useTransitionStore(s => s.setProgress)
   const transitionProgress = useMotionValue(0)
+  const latestScrollRef = React.useRef(0)
 
   const { scrollYProgress } = useScroll()
   const heroY = useTransform(scrollYProgress, [0, 0.25], ['0%', '12%'])
@@ -115,6 +117,10 @@ export default function LandingPage() {
   const pageScale = useTransform(transitionProgress, [0, 1], [1, 0.94])
   const pageLift = useTransform(transitionProgress, [0, 1], ['0px', '-18px'])
   const veilOpacity = useTransform(transitionProgress, [0, 1], [0, 1])
+
+  useMotionValueEvent(scrollYProgress, 'change', latest => {
+    latestScrollRef.current = Math.min(1, Math.max(0, latest))
+  })
 
   const handleOpenDashboard = React.useCallback(
     (e?: React.MouseEvent<HTMLAnchorElement>) => {
@@ -215,7 +221,12 @@ export default function LandingPage() {
         style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
         className='relative mx-auto flex min-h-[92vh] max-w-7xl items-center px-6 pb-16 pt-24 text-center'
       >
-        <HeroBackground scrollProgress={scrollYProgress} />
+        <HeroBackground
+          scrollProgress={scrollYProgress}
+          transitionProgress={transitionProgress}
+          transitionPhase={phase}
+          isTransitioning={isTransitioning}
+        />
 
         {/* Animated gradient orb */}
         <motion.div
