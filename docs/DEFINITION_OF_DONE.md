@@ -8,8 +8,8 @@ This document defines the quality gates and acceptance criteria for each pull
 request and release in the Ice Truck Tracking platform. All code must satisfy
 these criteria before merging.
 
-**Last Updated:** March 17, 2026  
-**Phase:** 3 (Code Quality) & beyond  
+**Last Updated:** March 22, 2026  
+**Phase:** 5 (Release) & beyond  
 **Enforced:** GitHub Actions CI, branch protection rules
 
 ---
