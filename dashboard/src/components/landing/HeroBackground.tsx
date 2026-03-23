@@ -2,7 +2,12 @@
 
 import React from 'react'
 import { Canvas as OffscreenCanvas } from '@react-three/offscreen'
-import { useMotionValueEvent, useScroll, type MotionValue } from 'framer-motion'
+import {
+  useMotionValue,
+  useMotionValueEvent,
+  useScroll,
+  type MotionValue,
+} from 'framer-motion'
 import {
   startFleetTelemetrySimulation,
   useFleetTelemetryStore,
@@ -55,6 +60,9 @@ export default function HeroBackground({
   const latestScrollRef = React.useRef(0)
   const { scrollYProgress: localScrollProgress } = useScroll()
   const activeScrollProgress = scrollProgress ?? localScrollProgress
+  const fallbackTransitionProgress = useMotionValue(0)
+  const activeTransitionProgress =
+    transitionProgress ?? fallbackTransitionProgress
 
   React.useEffect(() => {
     const worker = new Worker(
@@ -135,7 +143,7 @@ export default function HeroBackground({
     workerRef.current.postMessage(msg)
   })
 
-  useMotionValueEvent(transitionProgress, 'change', latest => {
+  useMotionValueEvent(activeTransitionProgress, 'change', latest => {
     if (!workerRef.current) return
 
     const msg: CinematicWorkerMessage = {

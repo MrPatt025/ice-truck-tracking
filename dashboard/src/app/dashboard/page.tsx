@@ -72,6 +72,7 @@ import {
   Play,
   Pause,
   Minimize2,
+  type LucideIcon,
 } from 'lucide-react'
 
 // ─── IoT Engine imports (zero-render architecture) ─────────────
@@ -433,7 +434,7 @@ interface MetricItem {
   value: string
   change: string
   trend: Trend
-  icon: React.ElementType
+  icon: LucideIcon
   accent: string
   detail: string
 }
