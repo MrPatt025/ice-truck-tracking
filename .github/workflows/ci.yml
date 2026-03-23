@@ -231,9 +231,7 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID:
-            ${{ secrets.VERCEL_PROJECT_ID }}
-            # shellcheck disable=SC2154
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         run: |
           npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
           npx vercel build --prod --token="$VERCEL_TOKEN"
@@ -250,8 +248,6 @@ jobs:
     steps:
       - name: Trigger Render production deploy hook
         env:
-          RENDER_DEPLOY_HOOK_URL:
-            ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-            # shellcheck disable=SC2154
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
           curl --fail --silent --show-error --max-time 30 -X POST "$RENDER_DEPLOY_HOOK_URL"
