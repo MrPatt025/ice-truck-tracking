@@ -186,11 +186,13 @@ export default function HeroBackground({
             powerPreference: 'high-performance',
           }}
           className='h-full w-full opacity-95'
-          fallback={
-            <div className='h-full w-full bg-[radial-gradient(circle_at_25%_20%,rgba(34,211,238,0.38),transparent_40%),radial-gradient(circle_at_75%_80%,rgba(56,189,248,0.32),transparent_45%),radial-gradient(circle_at_50%_120%,rgba(245,158,11,0.2),transparent_50%),linear-gradient(180deg,rgba(2,6,23,0.82)_0%,rgba(2,6,23,0.98)_100%)]' />
-          }
+          fallback={null}
         />
       ) : null}
+
+      {worker ? null : (
+        <div className='h-full w-full bg-[radial-gradient(circle_at_25%_20%,rgba(34,211,238,0.38),transparent_40%),radial-gradient(circle_at_75%_80%,rgba(56,189,248,0.32),transparent_45%),radial-gradient(circle_at_50%_120%,rgba(245,158,11,0.2),transparent_50%),linear-gradient(180deg,rgba(2,6,23,0.82)_0%,rgba(2,6,23,0.98)_100%)]' />
+      )}
 
       <div className='absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.28),transparent_45%),radial-gradient(circle_at_80%_85%,rgba(14,165,233,0.3),transparent_45%),radial-gradient(circle_at_50%_120%,rgba(245,158,11,0.15),transparent_52%),linear-gradient(to_bottom,rgba(2,6,23,0.66),rgba(2,6,23,0.96))]' />
       <div className='absolute inset-0 condensation-layer opacity-45' />
