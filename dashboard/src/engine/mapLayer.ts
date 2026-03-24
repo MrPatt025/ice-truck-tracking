@@ -29,6 +29,7 @@ interface TruckRenderPoint {
     temperature: number;
     driverName: string;
     status: string;
+    baseColor: RGBA;
     color: RGBA;
     radius: number;
 }
@@ -50,6 +51,10 @@ const LERP_BASE_DURATION_MS = 170;
 const LERP_MIN_DURATION_MS = 80;
 const LERP_MAX_DURATION_MS = 260;
 const POSITION_EPSILON = 0.000001;
+const STALE_PACKET_THRESHOLD_MS = 5 * 60 * 1000;
+const STALE_FADE_DURATION_MS = 90 * 1000;
+const STALE_TARGET_ALPHA = 128;
+const STALE_COLOR_TARGET: readonly [number, number, number] = [148, 163, 184];
 
 function resolveMapStyle(theme: Theme): string {
     if (!MAPBOX_TOKEN) return OPEN_STYLE_URL;
@@ -75,6 +80,36 @@ function getTruckColor(truck: TruckTelemetry): RGBA {
 function getTruckRadius(speed: number): number {
     const clampedSpeed = Math.max(0, Math.min(speed, 130));
     return 5 + (clampedSpeed / 130) * 4;
+}
+
+function clampUnit(value: number): number {
+    return Math.max(0, Math.min(1, value));
+}
+
+function resolveStaleFactor(ageMs: number): number {
+    if (ageMs <= STALE_PACKET_THRESHOLD_MS) return 0;
+    return clampUnit((ageMs - STALE_PACKET_THRESHOLD_MS) / STALE_FADE_DURATION_MS);
+}
+
+function mixChannel(from: number, to: number, factor: number): number {
+    return Math.round(from + (to - from) * factor);
+}
+
+function applyStaleVisual(base: RGBA, staleFactor: number): RGBA {
+    const [r, g, b, a] = base;
+    return [
+        mixChannel(r, STALE_COLOR_TARGET[0], staleFactor),
+        mixChannel(g, STALE_COLOR_TARGET[1], staleFactor),
+        mixChannel(b, STALE_COLOR_TARGET[2], staleFactor),
+        mixChannel(a, STALE_TARGET_ALPHA, staleFactor),
+    ];
+}
+
+function resolveTelemetryTimestampMs(truck: TruckTelemetry, fallback: number): number {
+    if (Number.isFinite(truck.timestamp) && truck.timestamp > 0) {
+        return truck.timestamp;
+    }
+    return fallback;
 }
 
 export class ImperativeMapLayer {
@@ -213,12 +248,16 @@ export class ImperativeMapLayer {
             seen.add(truck.id);
             const existingPoint = this.renderPointById.get(truck.id);
             const nextPosition: Position = [truck.lng, truck.lat];
+            const packetTimestamp = resolveTelemetryTimestampMs(truck, now);
+            const nextBaseColor = getTruckColor(truck);
 
             if (existingPoint) {
                 const [targetLng, targetLat] = existingPoint.targetPosition;
                 const moved =
                     Math.abs(targetLng - nextPosition[0]) > POSITION_EPSILON
                     || Math.abs(targetLat - nextPosition[1]) > POSITION_EPSILON;
+
+                const hasFreshPacket = packetTimestamp > existingPoint.lastPacketAt;
 
                 if (moved) {
                     existingPoint.startPosition = [...existingPoint.position] as Position;
@@ -228,20 +267,28 @@ export class ImperativeMapLayer {
                         LERP_MAX_DURATION_MS,
                         Math.max(
                             LERP_MIN_DURATION_MS,
-                            (now - existingPoint.lastPacketAt) * 0.9 || LERP_BASE_DURATION_MS,
+                            (packetTimestamp - existingPoint.lastPacketAt) * 0.9 || LERP_BASE_DURATION_MS,
                         ),
                     );
                 }
 
-                existingPoint.lastPacketAt = now;
+                if (hasFreshPacket) {
+                    existingPoint.lastPacketAt = packetTimestamp;
+                }
                 existingPoint.speed = truck.speed;
                 existingPoint.temperature = truck.temperature;
                 existingPoint.driverName = truck.driverName;
                 existingPoint.status = truck.status;
-                existingPoint.color = getTruckColor(truck);
+                existingPoint.baseColor = nextBaseColor;
+
+                const staleFactor = resolveStaleFactor(now - existingPoint.lastPacketAt);
+                existingPoint.color = applyStaleVisual(nextBaseColor, staleFactor);
                 existingPoint.radius = getTruckRadius(truck.speed);
                 return;
             }
+
+            const initialPacketTimestamp = resolveTelemetryTimestampMs(truck, now);
+            const initialStaleFactor = resolveStaleFactor(now - initialPacketTimestamp);
 
             this.renderPointById.set(truck.id, {
                 id: truck.id,
@@ -250,12 +297,13 @@ export class ImperativeMapLayer {
                 targetPosition: [...nextPosition] as Position,
                 lerpStartAt: now,
                 lerpDurationMs: LERP_BASE_DURATION_MS,
-                lastPacketAt: now,
+                lastPacketAt: initialPacketTimestamp,
                 speed: truck.speed,
                 temperature: truck.temperature,
                 driverName: truck.driverName,
                 status: truck.status,
-                color: getTruckColor(truck),
+                baseColor: nextBaseColor,
+                color: applyStaleVisual(nextBaseColor, initialStaleFactor),
                 radius: getTruckRadius(truck.speed),
             });
         });
@@ -270,21 +318,24 @@ export class ImperativeMapLayer {
 
         for (const point of this.renderData) {
             const elapsed = now - point.lerpStartAt;
-            if (elapsed <= 0) continue;
-
-            if (elapsed >= point.lerpDurationMs) {
-                point.position[0] = point.targetPosition[0];
-                point.position[1] = point.targetPosition[1];
-                continue;
+            if (elapsed > 0) {
+                if (elapsed >= point.lerpDurationMs) {
+                    point.position[0] = point.targetPosition[0];
+                    point.position[1] = point.targetPosition[1];
+                } else {
+                    const progress = elapsed / point.lerpDurationMs;
+                    point.position[0] =
+                        point.startPosition[0]
+                        + (point.targetPosition[0] - point.startPosition[0]) * progress;
+                    point.position[1] =
+                        point.startPosition[1]
+                        + (point.targetPosition[1] - point.startPosition[1]) * progress;
+                }
             }
 
-            const progress = elapsed / point.lerpDurationMs;
-            point.position[0] =
-                point.startPosition[0]
-                + (point.targetPosition[0] - point.startPosition[0]) * progress;
-            point.position[1] =
-                point.startPosition[1]
-                + (point.targetPosition[1] - point.startPosition[1]) * progress;
+            const staleFactor = resolveStaleFactor(now - point.lastPacketAt);
+            point.color = applyStaleVisual(point.baseColor, staleFactor);
+            point.radius = getTruckRadius(point.speed) * (1 - staleFactor * 0.08);
         }
 
         this.dataVersion += 1;

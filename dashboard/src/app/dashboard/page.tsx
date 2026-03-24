@@ -40,7 +40,7 @@ const API_BASE = (() => {
   return 'http://localhost:5000/api/v1'
 })()
 
-import React, { useEffect, useRef, useState, useCallback, memo } from 'react'
+import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion'
 import {
   Truck,
@@ -96,6 +96,9 @@ import {
 } from '@/engine'
 import { useTransitionStore } from '@/stores/transitionStore'
 import FpsTargetMonitor from '@/components/FpsTargetMonitor'
+import PremiumSystemStatusBanner, {
+  type StatusIssue,
+} from '@/components/common/PremiumSystemStatusBanner'
 
 // ─── Types ─────────────────────────────────────────────────────
 type Trend = 'up' | 'down' | 'stable'
@@ -544,6 +547,8 @@ export default function Dashboard() {
 
   // ── Local React state (UI-only, not telemetry) ───────────────
   const [apiHealthy, setApiHealthy] = useState<boolean | null>(null)
+  const [apiServerError, setApiServerError] = useState(false)
+  const [browserOffline, setBrowserOffline] = useState(false)
   const [fullscreen, setFullscreen] = useState<Fullscreen>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [mounted, setMounted] = useState(false)
@@ -643,6 +648,7 @@ export default function Dashboard() {
           signal: AbortSignal.timeout(5000),
         })
         setApiHealthy(response.ok)
+        setApiServerError(response.status >= 500)
         retryCount = 0
       } catch {
         retryCount++
@@ -652,6 +658,23 @@ export default function Dashboard() {
     checkHealth()
     const interval = setInterval(checkHealth, 30000)
     return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    if (globalThis.window === undefined) return
+
+    const syncOnlineState = () => {
+      setBrowserOffline(!globalThis.navigator.onLine)
+    }
+
+    syncOnlineState()
+    globalThis.addEventListener('online', syncOnlineState)
+    globalThis.addEventListener('offline', syncOnlineState)
+
+    return () => {
+      globalThis.removeEventListener('online', syncOnlineState)
+      globalThis.removeEventListener('offline', syncOnlineState)
+    }
   }, [])
 
   // ── Keyboard shortcuts ───────────────────────────────────────
@@ -745,6 +768,49 @@ export default function Dashboard() {
     getPerfOverlay()?.toggle()
   }, [])
 
+  const statusIssues = useMemo<StatusIssue[]>(() => {
+    if (!mounted) return []
+
+    const issues: StatusIssue[] = []
+
+    if (browserOffline) {
+      issues.push({
+        id: 'network-offline',
+        kind: 'network',
+        title: 'Offline mode enabled',
+        detail:
+          'Network access is unavailable. Telemetry and map sync will resume automatically once connectivity is restored.',
+      })
+    }
+
+    if (apiServerError) {
+      issues.push({
+        id: 'api-5xx',
+        kind: 'api',
+        title: 'Backend service degraded (5xx)',
+        detail:
+          'The API health endpoint returned a server fault. Dashboard visuals stay active while retries continue in the background.',
+      })
+    }
+
+    if (connectionStatus !== 'connected') {
+      issues.push({
+        id: 'ws-state',
+        kind: 'websocket',
+        title:
+          connectionStatus === 'reconnecting'
+            ? 'Realtime stream reconnecting'
+            : 'Realtime stream offline',
+        detail:
+          connectionStatus === 'reconnecting'
+            ? 'Live socket is renegotiating. Fresh telemetry may arrive with slight delay.'
+            : 'Live socket is not connected. The dashboard remains in graceful fallback mode.',
+      })
+    }
+
+    return issues
+  }, [apiServerError, browserOffline, connectionStatus, mounted])
+
   /* ================================================================
    *  RENDER — React only renders the UI shell, panels, controls.
    *  All real-time visualization is imperative (3D, Map, Charts).
@@ -781,6 +847,8 @@ export default function Dashboard() {
           }}
         />
       )}
+
+      <PremiumSystemStatusBanner issues={statusIssues} />
 
       {/* ── Imperative Three.js 3D Background (no React rendering) ── */}
       {show3D && (

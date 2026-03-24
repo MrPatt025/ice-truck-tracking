@@ -63,7 +63,22 @@ const BASE_LERP_DURATION_MS = 180
 const MIN_LERP_DURATION_MS = 90
 const MAX_LERP_DURATION_MS = 280
 const MIN_MOVEMENT_DELTA = 0.000001
+const STALE_PACKET_THRESHOLD_MS = 5 * 60 * 1000
+const STALE_FADE_DURATION_MS = 90 * 1000
 let interpolationLoopActive = false
+
+function clampUnit(value: number): number {
+  return Math.max(0, Math.min(1, value))
+}
+
+function resolveStaleFactor(ageMs: number): number {
+  if (ageMs <= STALE_PACKET_THRESHOLD_MS) return 0
+  return clampUnit((ageMs - STALE_PACKET_THRESHOLD_MS) / STALE_FADE_DURATION_MS)
+}
+
+function mixChannel(from: number, to: number, factor: number): number {
+  return Math.round(from + (to - from) * factor)
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value) && typeof value === 'object'
@@ -84,6 +99,7 @@ function isOffscreenInitMessage(
 }
 
 function buildDeckLayers() {
+  const now = performance.now()
     const thermalLimit = Math.max(-3, runtimeState.telemetry.temperatureC - 1)
 
     const iconLayer = new IconLayer<FleetNode>({
@@ -97,10 +113,53 @@ function buildDeckLayers() {
       getSize: node => (node.hotspot ? 3.2 : 2.5),
       getAngle: node => node.heading,
       getIcon: () => TRUCK_ICON,
+        getColor: node => {
+          const staleFactor = resolveStaleFactor(now - node.lastPacketAt)
+          const base = node.hotspot
+            ? [125, 211, 252, 232]
+            : [56, 189, 248, 220]
+
+          return [
+            mixChannel(base[0], 148, staleFactor),
+            mixChannel(base[1], 163, staleFactor),
+            mixChannel(base[2], 184, staleFactor),
+            mixChannel(base[3], 132, staleFactor),
+          ]
+        },
       updateTriggers: {
           getSize: runtimeState.scroll,
+          getColor: runtimeState.telemetry.temperatureC,
       },
   })
+
+      const auraLayer = new ScatterplotLayer<FleetNode>({
+        id: 'cinematic-fleet-aura',
+        data: fleetNodes,
+        pickable: false,
+        stroked: false,
+        radiusUnits: 'meters',
+        radiusMinPixels: 1,
+        radiusMaxPixels: 12,
+        getPosition: node => [node.renderLongitude, node.renderLatitude],
+        getRadius: node => (node.hotspot ? 58 : 34),
+        getFillColor: node => {
+          const staleFactor = resolveStaleFactor(now - node.lastPacketAt)
+          const base = node.hotspot
+            ? [56, 189, 248, 118]
+            : [14, 165, 233, 85]
+
+          return [
+            mixChannel(base[0], 148, staleFactor),
+            mixChannel(base[1], 163, staleFactor),
+            mixChannel(base[2], 184, staleFactor),
+            mixChannel(base[3], 54, staleFactor),
+          ]
+        },
+        updateTriggers: {
+          getRadius: runtimeState.scroll,
+          getFillColor: runtimeState.telemetry.fogDensity,
+        },
+      })
 
     const scatterplotLayer = new ScatterplotLayer<FleetNode>({
         id: 'cinematic-thermal-hotspots',
@@ -127,7 +186,7 @@ function buildDeckLayers() {
       },
   })
 
-    return [iconLayer, scatterplotLayer]
+    return [auraLayer, iconLayer, scatterplotLayer]
 }
 
 function hasMeaningfulMovement(

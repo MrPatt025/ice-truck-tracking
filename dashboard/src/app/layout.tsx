@@ -3,6 +3,7 @@ import { Orbitron, Space_Grotesk } from 'next/font/google'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import TransitionLayoutGroup from '@/components/TransitionLayoutGroup'
 import ClientSharedCanvasHost from '@/components/ClientSharedCanvasHost'
+import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary'
 
 const bodyFont = Space_Grotesk({
   subsets: ['latin'],
@@ -30,16 +31,18 @@ export default function RootLayout({
     <html lang='en' suppressHydrationWarning>
       <body className={`${bodyFont.variable} ${displayFont.variable} relative isolate`}>
         <ThemeProvider>
-          <div
-            id='webgl-background-layer'
-            className='pointer-events-none fixed inset-0 -z-10'
-            aria-hidden='true'
-          >
-            <ClientSharedCanvasHost />
-          </div>
-          <div id='ui-overlay' className='relative z-10'>
-            <TransitionLayoutGroup>{children}</TransitionLayoutGroup>
-          </div>
+          <GlobalErrorBoundary>
+            <div
+              id='webgl-background-layer'
+              className='pointer-events-none fixed inset-0 -z-10'
+              aria-hidden='true'
+            >
+              <ClientSharedCanvasHost />
+            </div>
+            <div id='ui-overlay' className='relative z-10'>
+              <TransitionLayoutGroup>{children}</TransitionLayoutGroup>
+            </div>
+          </GlobalErrorBoundary>
         </ThemeProvider>
       </body>
     </html>

@@ -14,7 +14,11 @@ import {
   Vector3,
   PerspectiveCamera,
 } from 'three'
-import { Bloom, EffectComposer } from '@react-three/postprocessing'
+import {
+  Bloom,
+  DepthOfField,
+  EffectComposer,
+} from '@react-three/postprocessing'
 import { runtimeState } from './cinematicRuntimeState'
 
 const tmpCameraPos = new Vector3()
@@ -293,14 +297,18 @@ function ColdFogParticles() {
 }
 
 export default function CinematicRig() {
-  const bloomIntensity = 0.32 + runtimeState.scroll * 0.45
+  const bloomIntensity = 0.26 + runtimeState.scroll * 0.34
   const transitionActive =
     runtimeState.transition.phase !== 'idle' ||
     runtimeState.transition.progress > 0.02
   const heavyScrollTransition =
     runtimeState.scroll > 0.1 && runtimeState.scroll < 0.92
+  const fastThermalSwing = runtimeState.telemetry.temperatureC > 2.5
   const highDpr = runtimeState.viewport.dpr > 1.4
-  const shouldEnablePostFx = !(transitionActive || heavyScrollTransition || highDpr)
+  const shouldEnablePostFx =
+    !(transitionActive || heavyScrollTransition || highDpr || fastThermalSwing)
+  const shouldEnableDepthOfField =
+    shouldEnablePostFx && runtimeState.scroll < 0.84 && runtimeState.viewport.dpr <= 1.25
 
   return (
     <>
@@ -318,10 +326,18 @@ export default function CinematicRig() {
         <EffectComposer multisampling={0}>
           <Bloom
             intensity={bloomIntensity}
-            luminanceThreshold={0.28}
-            luminanceSmoothing={0.35}
+            luminanceThreshold={0.31}
+            luminanceSmoothing={0.4}
             mipmapBlur
           />
+          {shouldEnableDepthOfField ? (
+            <DepthOfField
+              focusDistance={0.018}
+              focalLength={0.016}
+              bokehScale={0.62}
+              height={360}
+            />
+          ) : null}
         </EffectComposer>
       ) : null}
     </>

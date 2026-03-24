@@ -34,6 +34,9 @@ import GlassPanel from '@/components/landing/GlassPanel'
 import ScrollTruckStory from '@/components/landing/ScrollTruckStory'
 import { useTransitionStore } from '@/stores/transitionStore'
 import { useFleetTelemetryStore } from '@/stores/fleetTelemetryStore'
+import PremiumSystemStatusBanner, {
+  type StatusIssue,
+} from '@/components/common/PremiumSystemStatusBanner'
 
 const EASE_STANDARD: [number, number, number, number] = [0.22, 1, 0.36, 1]
 const EASE_OUTRO: [number, number, number, number] = [0.68, 0, 0.12, 1]
@@ -114,7 +117,10 @@ export default function LandingPage() {
   const latestScrollRef = React.useRef(0)
   const lastTelemetryAt = useFleetTelemetryStore(state => state.updatedAt)
   const [telemetryClock, setTelemetryClock] = React.useState(() => Date.now())
+  const [browserOffline, setBrowserOffline] = React.useState(false)
+  const [apiServerError, setApiServerError] = React.useState(false)
   const isLiveFlowing = telemetryClock - lastTelemetryAt < 1800
+  const telemetryStalled = telemetryClock - lastTelemetryAt > 10000
 
   const navigateToDashboard = React.useCallback(() => {
     try {
@@ -166,6 +172,88 @@ export default function LandingPage() {
   }, [])
 
   React.useEffect(() => {
+    if (globalThis.window === undefined) return
+
+    const syncOnlineState = () => {
+      setBrowserOffline(!globalThis.navigator.onLine)
+    }
+
+    syncOnlineState()
+    globalThis.addEventListener('online', syncOnlineState)
+    globalThis.addEventListener('offline', syncOnlineState)
+
+    return () => {
+      globalThis.removeEventListener('online', syncOnlineState)
+      globalThis.removeEventListener('offline', syncOnlineState)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    if (globalThis.window === undefined) return
+
+    let cancelled = false
+
+    const checkApiHealth = async () => {
+      try {
+        const response = await fetch('/api/v1/health', {
+          signal: AbortSignal.timeout(5000),
+        })
+        if (!cancelled) {
+          setApiServerError(response.status >= 500)
+        }
+      } catch {
+        if (!cancelled) {
+          setApiServerError(false)
+        }
+      }
+    }
+
+    checkApiHealth()
+    const interval = globalThis.setInterval(checkApiHealth, 30000)
+
+    return () => {
+      cancelled = true
+      globalThis.clearInterval(interval)
+    }
+  }, [])
+
+  const statusIssues = React.useMemo<StatusIssue[]>(() => {
+    const issues: StatusIssue[] = []
+
+    if (browserOffline) {
+      issues.push({
+        id: 'landing-network-offline',
+        kind: 'network',
+        title: 'Offline mode enabled',
+        detail:
+          'Network access is unavailable. Cinematic preview remains active and reconnects automatically when online.',
+      })
+    }
+
+    if (apiServerError) {
+      issues.push({
+        id: 'landing-api-5xx',
+        kind: 'api',
+        title: 'Control API degraded (5xx)',
+        detail:
+          'Backend health checks are failing. You can still navigate while the platform retries recovery in the background.',
+      })
+    }
+
+    if (telemetryStalled) {
+      issues.push({
+        id: 'landing-telemetry-stalled',
+        kind: 'websocket',
+        title: 'Live telemetry stream stalled',
+        detail:
+          'No fresh fleet packets were detected recently. Dashboard launch remains available with graceful fallback behavior.',
+      })
+    }
+
+    return issues
+  }, [apiServerError, browserOffline, telemetryStalled])
+
+  React.useEffect(() => {
     if (!isTransitioning || phase !== 'outro') {
       transitionProgress.set(0)
       return
@@ -198,6 +286,8 @@ export default function LandingPage() {
       }}
       className='mission-control-shell min-h-screen overflow-hidden text-white'
     >
+      <PremiumSystemStatusBanner issues={statusIssues} className='top-24' />
+
       <div className='pointer-events-none fixed inset-0 -z-20 hud-grid-overlay opacity-45' />
       <div className='pointer-events-none fixed inset-0 -z-10 scanline-overlay opacity-40' />
 
