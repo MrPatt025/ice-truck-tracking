@@ -86,21 +86,24 @@ export default function SettingsPage() {
           {/* Sidebar Tabs */}
           <div className='lg:w-52 shrink-0'>
             <nav className='flex lg:flex-col gap-1 overflow-x-auto pb-2 lg:pb-0'>
-              {tabs.map(t => (
-                <button
-                  key={t.key}
-                  onClick={() => setTab(t.key)}
-                  className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors',
-                    tab === t.key
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  )}
-                >
-                  <t.icon className='w-4 h-4' />
-                  {t.label}
-                </button>
-              ))}
+              {tabs.map(t => {
+                const IconComponent = t.icon;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setTab(t.key)}
+                    className={cn(
+                      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors',
+                      tab === t.key
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    )}
+                  >
+                    <IconComponent className='w-4 h-4' />
+                    {t.label}
+                  </button>
+                );
+              })}
             </nav>
           </div>
 
