@@ -50,6 +50,7 @@ let deckUpdateQueued = false
 let lastDeckRenderAt = 0
 const TARGET_FRAME_MS = 1000 / 60
 let fleetNodes: readonly FleetNode[] = []
+const mutableFleetNodes: FleetNode[] = []
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value) && typeof value === 'object'
@@ -115,6 +116,47 @@ function buildDeckLayers() {
 
     return [iconLayer, scatterplotLayer]
 }
+
+  function updateFleetNodes(
+    fleet: ReadonlyArray<{
+      id: string
+      latitude: number
+      longitude: number
+      heading: number
+      tempC: number
+      status: string
+    }>
+  ): void {
+    const targetSize = fleet.length
+
+    for (let index = 0; index < targetSize; index += 1) {
+      const truck = fleet[index]
+      const existingNode = mutableFleetNodes[index]
+      const hotspot = truck.status === 'warning' || truck.tempC > -1
+
+      if (existingNode) {
+        existingNode.id = truck.id
+        existingNode.latitude = truck.latitude
+        existingNode.longitude = truck.longitude
+        existingNode.heading = truck.heading
+        existingNode.tempC = truck.tempC
+        existingNode.hotspot = hotspot
+        continue
+      }
+
+      mutableFleetNodes[index] = {
+        id: truck.id,
+        latitude: truck.latitude,
+        longitude: truck.longitude,
+        heading: truck.heading,
+        tempC: truck.tempC,
+        hotspot,
+      }
+    }
+
+    mutableFleetNodes.length = targetSize
+    fleetNodes = mutableFleetNodes
+  }
 
 function updateDeckScene(): void {
   if (!deckInstance) return
@@ -228,14 +270,7 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
     applyTelemetry(data.payload)
 
     if (Array.isArray(data.payload.fleet)) {
-      fleetNodes = data.payload.fleet.map(truck => ({
-        id: truck.id,
-        latitude: truck.latitude,
-        longitude: truck.longitude,
-        heading: truck.heading,
-        tempC: truck.tempC,
-        hotspot: truck.status === 'warning' || truck.tempC > -1,
-      }))
+      updateFleetNodes(data.payload.fleet)
     }
 
     scheduleDeckSceneUpdate()
