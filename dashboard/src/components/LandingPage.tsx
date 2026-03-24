@@ -33,6 +33,7 @@ import HeroBackground from '@/components/landing/HeroBackground'
 import GlassPanel from '@/components/landing/GlassPanel'
 import ScrollTruckStory from '@/components/landing/ScrollTruckStory'
 import { useTransitionStore } from '@/stores/transitionStore'
+import { useFleetTelemetryStore } from '@/stores/fleetTelemetryStore'
 
 const EASE_STANDARD: [number, number, number, number] = [0.22, 1, 0.36, 1]
 const EASE_OUTRO: [number, number, number, number] = [0.68, 0, 0.12, 1]
@@ -111,6 +112,9 @@ export default function LandingPage() {
   const setProgress = useTransitionStore(s => s.setProgress)
   const transitionProgress = useMotionValue(0)
   const latestScrollRef = React.useRef(0)
+  const lastTelemetryAt = useFleetTelemetryStore(state => state.updatedAt)
+  const [telemetryClock, setTelemetryClock] = React.useState(() => Date.now())
+  const isLiveFlowing = telemetryClock - lastTelemetryAt < 1800
 
   const navigateToDashboard = React.useCallback(() => {
     try {
@@ -150,6 +154,16 @@ export default function LandingPage() {
   React.useEffect(() => {
     router.prefetch('/dashboard')
   }, [router])
+
+  React.useEffect(() => {
+    const timer = globalThis.setInterval(() => {
+      setTelemetryClock(Date.now())
+    }, 280)
+
+    return () => {
+      globalThis.clearInterval(timer)
+    }
+  }, [])
 
   React.useEffect(() => {
     if (!isTransitioning || phase !== 'outro') {
@@ -270,6 +284,25 @@ export default function LandingPage() {
               >
                 <Globe className='mr-1 h-3 w-3' /> Command Grid Online &middot;
                 Live Fleet Telemetry
+                <motion.span
+                  aria-live='polite'
+                  role='status'
+                  className='ml-2 inline-flex items-center gap-1 rounded-full border border-emerald-200/40 bg-emerald-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-100 transform-gpu'
+                  style={{ willChange: 'opacity, transform' }}
+                  animate={
+                    isLiveFlowing
+                      ? { opacity: [0.55, 1, 0.55], scale: [0.98, 1.04, 0.98], y: [0, -1, 0] }
+                      : { opacity: 0.42, scale: 1, y: 0 }
+                  }
+                  transition={
+                    isLiveFlowing
+                      ? { duration: 1.2, ease: 'easeInOut', repeat: Number.POSITIVE_INFINITY }
+                      : { duration: 0.2, ease: EASE_STANDARD }
+                  }
+                >
+                  <span className='h-1.5 w-1.5 rounded-full bg-emerald-300' />
+                  <span>Live</span>
+                </motion.span>
               </Badge>
             </motion.div>
 

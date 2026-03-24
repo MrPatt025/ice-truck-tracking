@@ -20,6 +20,11 @@ type Position = [number, number];
 interface TruckRenderPoint {
     id: string;
     position: Position;
+    startPosition: Position;
+    targetPosition: Position;
+    lerpStartAt: number;
+    lerpDurationMs: number;
+    lastPacketAt: number;
     speed: number;
     temperature: number;
     driverName: string;
@@ -41,6 +46,10 @@ const TEMP_HIGH_LIMIT = -2;
 const TEMP_LOW_LIMIT = -25;
 const SPEED_WARNING_LIMIT = 95;
 const UPDATE_INTERVAL_MS = 32;
+const LERP_BASE_DURATION_MS = 170;
+const LERP_MIN_DURATION_MS = 80;
+const LERP_MAX_DURATION_MS = 260;
+const POSITION_EPSILON = 0.000001;
 
 function resolveMapStyle(theme: Theme): string {
     if (!MAPBOX_TOKEN) return OPEN_STYLE_URL;
@@ -78,6 +87,7 @@ export class ImperativeMapLayer {
     private lastSyncAt = 0;
     private dataVersion = 0;
     private readonly renderData: TruckRenderPoint[] = [];
+    private readonly renderPointById = new Map<string, TruckRenderPoint>();
     private overlayDisabled = false;
 
     get ready(): boolean {
@@ -196,12 +206,51 @@ export class ImperativeMapLayer {
 
     private syncFromTransientStore(): void {
         const trucks = getTruckMap();
-        this.renderData.length = 0;
+        const now = performance.now();
+        const seen = new Set<string>();
 
         trucks.forEach((truck) => {
-            this.renderData.push({
+            seen.add(truck.id);
+            const existingPoint = this.renderPointById.get(truck.id);
+            const nextPosition: Position = [truck.lng, truck.lat];
+
+            if (existingPoint) {
+                const [targetLng, targetLat] = existingPoint.targetPosition;
+                const moved =
+                    Math.abs(targetLng - nextPosition[0]) > POSITION_EPSILON
+                    || Math.abs(targetLat - nextPosition[1]) > POSITION_EPSILON;
+
+                if (moved) {
+                    existingPoint.startPosition = [...existingPoint.position] as Position;
+                    existingPoint.targetPosition = nextPosition;
+                    existingPoint.lerpStartAt = now;
+                    existingPoint.lerpDurationMs = Math.min(
+                        LERP_MAX_DURATION_MS,
+                        Math.max(
+                            LERP_MIN_DURATION_MS,
+                            (now - existingPoint.lastPacketAt) * 0.9 || LERP_BASE_DURATION_MS,
+                        ),
+                    );
+                }
+
+                existingPoint.lastPacketAt = now;
+                existingPoint.speed = truck.speed;
+                existingPoint.temperature = truck.temperature;
+                existingPoint.driverName = truck.driverName;
+                existingPoint.status = truck.status;
+                existingPoint.color = getTruckColor(truck);
+                existingPoint.radius = getTruckRadius(truck.speed);
+                return;
+            }
+
+            this.renderPointById.set(truck.id, {
                 id: truck.id,
-                position: [truck.lng, truck.lat],
+                position: [...nextPosition] as Position,
+                startPosition: [...nextPosition] as Position,
+                targetPosition: [...nextPosition] as Position,
+                lerpStartAt: now,
+                lerpDurationMs: LERP_BASE_DURATION_MS,
+                lastPacketAt: now,
                 speed: truck.speed,
                 temperature: truck.temperature,
                 driverName: truck.driverName,
@@ -210,6 +259,33 @@ export class ImperativeMapLayer {
                 radius: getTruckRadius(truck.speed),
             });
         });
+
+        for (const [truckId] of this.renderPointById) {
+            if (seen.has(truckId)) continue;
+            this.renderPointById.delete(truckId);
+        }
+
+        this.renderData.length = 0;
+        this.renderData.push(...this.renderPointById.values());
+
+        for (const point of this.renderData) {
+            const elapsed = now - point.lerpStartAt;
+            if (elapsed <= 0) continue;
+
+            if (elapsed >= point.lerpDurationMs) {
+                point.position[0] = point.targetPosition[0];
+                point.position[1] = point.targetPosition[1];
+                continue;
+            }
+
+            const progress = elapsed / point.lerpDurationMs;
+            point.position[0] =
+                point.startPosition[0]
+                + (point.targetPosition[0] - point.startPosition[0]) * progress;
+            point.position[1] =
+                point.startPosition[1]
+                + (point.targetPosition[1] - point.startPosition[1]) * progress;
+        }
 
         this.dataVersion += 1;
     }

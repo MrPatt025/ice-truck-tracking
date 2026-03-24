@@ -19,8 +19,15 @@ import {
 
 type FleetNode = {
   id: string
-  longitude: number
-  latitude: number
+  renderLongitude: number
+  renderLatitude: number
+  startLongitude: number
+  startLatitude: number
+  targetLongitude: number
+  targetLatitude: number
+  lerpStartAt: number
+  lerpDurationMs: number
+  lastPacketAt: number
   heading: number
   tempC: number
   hotspot: boolean
@@ -51,6 +58,12 @@ let lastDeckRenderAt = 0
 const TARGET_FRAME_MS = 1000 / 60
 let fleetNodes: readonly FleetNode[] = []
 const mutableFleetNodes: FleetNode[] = []
+const fleetNodeById = new Map<string, FleetNode>()
+const BASE_LERP_DURATION_MS = 180
+const MIN_LERP_DURATION_MS = 90
+const MAX_LERP_DURATION_MS = 280
+const MIN_MOVEMENT_DELTA = 0.000001
+let interpolationLoopActive = false
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value) && typeof value === 'object'
@@ -80,7 +93,7 @@ function buildDeckLayers() {
       sizeScale: 10,
       billboard: true,
       alphaCutoff: 0.02,
-      getPosition: node => [node.longitude, node.latitude],
+      getPosition: node => [node.renderLongitude, node.renderLatitude],
       getSize: node => (node.hotspot ? 3.2 : 2.5),
       getAngle: node => node.heading,
       getIcon: () => TRUCK_ICON,
@@ -97,7 +110,7 @@ function buildDeckLayers() {
       radiusUnits: 'meters',
       radiusMinPixels: 2,
       radiusMaxPixels: 22,
-      getPosition: node => [node.longitude, node.latitude],
+        getPosition: node => [node.renderLongitude, node.renderLatitude],
       getRadius: node =>
           node.tempC >= thermalLimit
               ? 140 + Math.max(0, node.tempC + 10) * 11
@@ -117,6 +130,87 @@ function buildDeckLayers() {
     return [iconLayer, scatterplotLayer]
 }
 
+function hasMeaningfulMovement(
+  fromLongitude: number,
+  fromLatitude: number,
+  toLongitude: number,
+  toLatitude: number
+): boolean {
+  return (
+    Math.abs(fromLongitude - toLongitude) > MIN_MOVEMENT_DELTA ||
+    Math.abs(fromLatitude - toLatitude) > MIN_MOVEMENT_DELTA
+  )
+}
+
+function getLerpDurationMs(now: number, previousPacketAt: number): number {
+  if (!Number.isFinite(previousPacketAt) || previousPacketAt <= 0) {
+    return BASE_LERP_DURATION_MS
+  }
+
+  const packetGap = Math.max(0, now - previousPacketAt)
+  return Math.min(
+    MAX_LERP_DURATION_MS,
+    Math.max(MIN_LERP_DURATION_MS, packetGap * 0.9)
+  )
+}
+
+function advanceFleetInterpolation(now: number): boolean {
+  let hasActiveInterpolation = false
+
+  for (const node of mutableFleetNodes) {
+    const elapsed = now - node.lerpStartAt
+    if (elapsed <= 0) {
+      hasActiveInterpolation = true
+      continue
+    }
+
+    if (elapsed >= node.lerpDurationMs) {
+      node.renderLongitude = node.targetLongitude
+      node.renderLatitude = node.targetLatitude
+      continue
+    }
+
+    hasActiveInterpolation = true
+    const progress = elapsed / node.lerpDurationMs
+    node.renderLongitude =
+      node.startLongitude + (node.targetLongitude - node.startLongitude) * progress
+    node.renderLatitude =
+      node.startLatitude + (node.targetLatitude - node.startLatitude) * progress
+  }
+
+  return hasActiveInterpolation
+}
+
+function runInterpolationLoop(): void {
+  if (interpolationLoopActive) return
+  interpolationLoopActive = true
+
+  const tick = () => {
+    if (!deckInstance) {
+      interpolationLoopActive = false
+      return
+    }
+
+    const now = performance.now()
+    const hasActiveInterpolation = advanceFleetInterpolation(now)
+    updateDeckScene()
+
+    if (!hasActiveInterpolation) {
+      interpolationLoopActive = false
+      return
+    }
+
+    if (typeof globalThis.requestAnimationFrame === 'function') {
+      globalThis.requestAnimationFrame(() => tick())
+      return
+    }
+
+    globalThis.setTimeout(() => tick(), TARGET_FRAME_MS)
+  }
+
+  tick()
+}
+
   function updateFleetNodes(
     fleet: ReadonlyArray<{
       id: string
@@ -127,34 +221,73 @@ function buildDeckLayers() {
       status: string
     }>
   ): void {
-    const targetSize = fleet.length
+    const now = performance.now()
+    const seenIds = new Set<string>()
 
-    for (let index = 0; index < targetSize; index += 1) {
-      const truck = fleet[index]
-      const existingNode = mutableFleetNodes[index]
+    for (const truck of fleet) {
+      seenIds.add(truck.id)
+
       const hotspot = truck.status === 'warning' || truck.tempC > -1
+      const existingNode = fleetNodeById.get(truck.id)
 
       if (existingNode) {
-        existingNode.id = truck.id
-        existingNode.latitude = truck.latitude
-        existingNode.longitude = truck.longitude
+        const nextLongitude = truck.longitude
+        const nextLatitude = truck.latitude
+
+        if (
+          hasMeaningfulMovement(
+            existingNode.targetLongitude,
+            existingNode.targetLatitude,
+            nextLongitude,
+            nextLatitude
+          )
+        ) {
+          existingNode.startLongitude = existingNode.renderLongitude
+          existingNode.startLatitude = existingNode.renderLatitude
+          existingNode.targetLongitude = nextLongitude
+          existingNode.targetLatitude = nextLatitude
+          existingNode.lerpStartAt = now
+          existingNode.lerpDurationMs = getLerpDurationMs(
+            now,
+            existingNode.lastPacketAt
+          )
+        }
+
+        existingNode.lastPacketAt = now
         existingNode.heading = truck.heading
         existingNode.tempC = truck.tempC
         existingNode.hotspot = hotspot
         continue
       }
 
-      mutableFleetNodes[index] = {
+      const nextNode: FleetNode = {
         id: truck.id,
-        latitude: truck.latitude,
-        longitude: truck.longitude,
+        renderLongitude: truck.longitude,
+        renderLatitude: truck.latitude,
+        startLongitude: truck.longitude,
+        startLatitude: truck.latitude,
+        targetLongitude: truck.longitude,
+        targetLatitude: truck.latitude,
+        lerpStartAt: now,
+        lerpDurationMs: BASE_LERP_DURATION_MS,
+        lastPacketAt: now,
         heading: truck.heading,
         tempC: truck.tempC,
         hotspot,
       }
+
+      mutableFleetNodes.push(nextNode)
+      fleetNodeById.set(nextNode.id, nextNode)
     }
 
-    mutableFleetNodes.length = targetSize
+    for (let index = mutableFleetNodes.length - 1; index >= 0; index -= 1) {
+      const node = mutableFleetNodes[index]
+      if (seenIds.has(node.id)) continue
+
+      mutableFleetNodes.splice(index, 1)
+      fleetNodeById.delete(node.id)
+    }
+
     fleetNodes = mutableFleetNodes
   }
 
@@ -271,6 +404,7 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
 
     if (Array.isArray(data.payload.fleet)) {
       updateFleetNodes(data.payload.fleet)
+      runInterpolationLoop()
     }
 
     scheduleDeckSceneUpdate()
