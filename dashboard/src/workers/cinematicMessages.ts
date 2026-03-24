@@ -1,7 +1,17 @@
+export interface CinematicFleetTruckPayload {
+  id: string
+  latitude: number
+  longitude: number
+  heading: number
+  tempC: number
+  status: 'active' | 'idle' | 'warning'
+}
+
 export interface CinematicTelemetryPayload {
   temperatureC: number
   fogDensity: number
   fogTint: number
+  fleet?: readonly CinematicFleetTruckPayload[]
 }
 
 export interface CinematicViewportPayload {
@@ -56,6 +66,24 @@ function isTransitionPhase(value: unknown): value is CinematicTransitionPhase {
 
 function isTelemetryPayload(value: unknown): value is CinematicTelemetryPayload {
     if (!isRecord(value)) return false
+    const fleet = value.fleet
+
+    if (fleet !== undefined) {
+      if (!Array.isArray(fleet)) return false
+
+      const hasInvalidNode = fleet.some(node => {
+        if (!isRecord(node)) return true
+        if (typeof node.id !== 'string' || node.id.length === 0) return true
+        if (!isFiniteNumber(node.latitude) || !isFiniteNumber(node.longitude)) return true
+        if (!isFiniteNumber(node.heading) || !isFiniteNumber(node.tempC)) return true
+        return (
+          node.status !== 'active' && node.status !== 'idle' && node.status !== 'warning'
+        )
+      })
+
+      if (hasInvalidNode) return false
+    }
+
     return (
         isFiniteNumber(value.temperatureC) &&
         isFiniteNumber(value.fogDensity) &&

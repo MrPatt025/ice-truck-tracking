@@ -20,10 +20,10 @@ import {
 type FleetNode = {
   id: string
   longitude: number
-    latitude: number
+  latitude: number
   heading: number
-    tempC: number
-    hotspot: boolean
+  tempC: number
+  hotspot: boolean
 }
 
 type OffscreenInitPayload = {
@@ -49,26 +49,7 @@ let deckInstance: Deck | null = null
 let deckUpdateQueued = false
 let lastDeckRenderAt = 0
 const TARGET_FRAME_MS = 1000 / 60
-const fleetNodes: readonly FleetNode[] = createMockFleet(140)
-
-function createMockFleet(count: number): readonly FleetNode[] {
-    return Array.from({ length: count }, (_, index) => {
-        const ring = 0.018 + (index % 12) * 0.0022
-        const angle = (index / count) * Math.PI * 6
-        const longitude = 100.5018 + Math.cos(angle) * ring
-        const latitude = 13.7563 + Math.sin(angle) * (ring * 0.72)
-        const tempC = -8 + Math.sin(index * 0.37) * 9
-
-        return {
-          id: `truck-${index + 1}`,
-          longitude,
-          latitude,
-          heading: (index * 17) % 360,
-          tempC,
-          hotspot: tempC > -1,
-      }
-  })
-}
+let fleetNodes: readonly FleetNode[] = []
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value) && typeof value === 'object'
@@ -244,8 +225,20 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
   }
 
   if (data.type === 'cinematic:telemetry') {
-      applyTelemetry(data.payload)
-      scheduleDeckSceneUpdate()
+    applyTelemetry(data.payload)
+
+    if (Array.isArray(data.payload.fleet)) {
+      fleetNodes = data.payload.fleet.map(truck => ({
+        id: truck.id,
+        latitude: truck.latitude,
+        longitude: truck.longitude,
+        heading: truck.heading,
+        tempC: truck.tempC,
+        hotspot: truck.status === 'warning' || truck.tempC > -1,
+      }))
+    }
+
+    scheduleDeckSceneUpdate()
     return
   }
 

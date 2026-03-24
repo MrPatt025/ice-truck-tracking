@@ -2,6 +2,7 @@
 
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
+import type { FleetLiveTruckPatch } from '@/lib/schemas/telemetry'
 
 export type FleetStatus = 'active' | 'idle' | 'warning'
 
@@ -16,82 +17,104 @@ export interface FleetTruck {
 
 interface FleetTelemetryState {
   trucks: readonly FleetTruck[]
-  tick: number
-  generatedAt: number
+  updatedAt: number
   setTrucks: (trucks: readonly FleetTruck[]) => void
-  tickFleet: () => void
+  applyLivePatches: (
+    patches: readonly FleetLiveTruckPatch[],
+    mode?: 'upsert' | 'replace'
+  ) => void
 }
-
-const BASE_LAT = 13.7563
-const BASE_LON = 100.5018
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
 
-function createMockFleet(count = 180): readonly FleetTruck[] {
-  return Array.from({ length: count }, (_, index) => {
-    const arc = (index / count) * Math.PI * 2.8
-    const spread = 0.015 + (index % 17) * 0.0015
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
 
-    return {
-      id: `fleet-${String(index + 1).padStart(4, '0')}`,
-      lat: BASE_LAT + Math.sin(arc) * spread,
-      lon: BASE_LON + Math.cos(arc) * spread,
-      tempC: Number((-9 + Math.sin(index * 0.19) * 6).toFixed(2)),
-      heading: (index * 29) % 360,
-      status: index % 11 === 0 ? 'warning' : index % 5 === 0 ? 'idle' : 'active',
-    }
-  })
+function normalizeStatus(
+  status: FleetLiveTruckPatch['status'],
+  tempC: number
+): FleetStatus {
+  if (status === 'active') return 'active'
+  if (status === 'idle') return 'idle'
+  if (status === 'warning') return 'warning'
+  if (status === 'maintenance' || status === 'offline') return 'idle'
+  if (status === 'alert') return 'warning'
+  if (tempC > 2) return 'warning'
+  if (tempC > -1) return 'idle'
+  return 'active'
+}
+
+function mergeTruckPatch(
+  previous: FleetTruck | undefined,
+  patch: FleetLiveTruckPatch
+): FleetTruck | null {
+  const lat = patch.lat ?? previous?.lat
+  const lon = patch.lon ?? previous?.lon
+
+  if (!isFiniteNumber(lat) || !isFiniteNumber(lon)) {
+    return null
+  }
+
+  const nextTemp = clamp(patch.tempC ?? previous?.tempC ?? -12, -30, 15)
+  const headingBase = patch.heading ?? previous?.heading ?? 0
+
+  return {
+    id: patch.id,
+    lat,
+    lon,
+    tempC: Number(nextTemp.toFixed(2)),
+    heading: ((headingBase % 360) + 360) % 360,
+    status: normalizeStatus(patch.status, nextTemp),
+  }
 }
 
 export const useFleetTelemetryStore = create<FleetTelemetryState>()(
-  subscribeWithSelector((set, get) => ({
-    trucks: createMockFleet(),
-    tick: 0,
-    generatedAt: Date.now(),
+  subscribeWithSelector(set => ({
+    trucks: [],
+    updatedAt: Date.now(),
     setTrucks: trucks =>
       set({
         trucks,
-        generatedAt: Date.now(),
+        updatedAt: Date.now(),
       }),
-    tickFleet: () => {
-      const nextTick = get().tick + 1
-      const nextTrucks = get().trucks.map((truck, index) => {
-        const drift = Math.sin(nextTick * 0.07 + index * 0.09) * 0.00022
-        const sway = Math.cos(nextTick * 0.05 + index * 0.12) * 0.00018
-        const headingDelta = 0.8 + ((index + nextTick) % 3) * 0.55
-        const temperatureWave = Math.sin(nextTick * 0.11 + index * 0.21) * 0.42
+    applyLivePatches: (patches, mode = 'upsert') =>
+      set(state => {
+        if (patches.length === 0) {
+          return { updatedAt: Date.now() }
+        }
 
-        const nextTemp = clamp(truck.tempC + temperatureWave, -24, 8)
-        const nextStatus: FleetStatus =
-          nextTemp > 2 ? 'warning' : nextTemp > -1 ? 'idle' : 'active'
+        const currentById = new Map(state.trucks.map(truck => [truck.id, truck]))
+
+        if (mode === 'replace') {
+          const nextTrucks: FleetTruck[] = []
+
+          for (const patch of patches) {
+            const nextTruck = mergeTruckPatch(currentById.get(patch.id), patch)
+            if (nextTruck) {
+              nextTrucks.push(nextTruck)
+            }
+          }
+
+          return {
+            trucks: nextTrucks,
+            updatedAt: Date.now(),
+          }
+        }
+
+        for (const patch of patches) {
+          const nextTruck = mergeTruckPatch(currentById.get(patch.id), patch)
+          if (nextTruck) {
+            currentById.set(nextTruck.id, nextTruck)
+          }
+        }
 
         return {
-          ...truck,
-          lat: truck.lat + drift,
-          lon: truck.lon + sway,
-          tempC: Number(nextTemp.toFixed(2)),
-          heading: (truck.heading + headingDelta) % 360,
-          status: nextStatus,
+          trucks: Array.from(currentById.values()),
+          updatedAt: Date.now(),
         }
-      })
-
-      set({
-        trucks: nextTrucks,
-        tick: nextTick,
-        generatedAt: Date.now(),
-      })
-    },
+      }),
   }))
 )
-
-export function startFleetTelemetrySimulation(intervalMs = 420): () => void {
-  const id = globalThis.setInterval(() => {
-    useFleetTelemetryStore.getState().tickFleet()
-  }, intervalMs)
-
-  return () => {
-    globalThis.clearInterval(id)
-  }
-}

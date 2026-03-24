@@ -9,10 +9,10 @@ import {
   type MotionValue,
 } from 'framer-motion'
 import {
-  startFleetTelemetrySimulation,
   useFleetTelemetryStore,
   type FleetTruck,
 } from '@/stores/fleetTelemetryStore'
+import { parseFleetLivePacket } from '@/lib/schemas/telemetry'
 import type {
   CinematicTransitionPhase,
   CinematicWorkerMessage,
@@ -49,6 +49,29 @@ function summarizeFleetTelemetry(trucks: readonly FleetTruck[]): {
   return { temperatureC, fogDensity, fogTint }
 }
 
+function resolveWebSocketUrl(): string {
+  const configuredWs = process.env.NEXT_PUBLIC_WS_URL?.trim()
+  if (configuredWs) {
+    return configuredWs.replace(/^http/i, 'ws')
+  }
+
+  const apiRoot = process.env.NEXT_PUBLIC_API_URL?.trim()
+  if (apiRoot) {
+    return apiRoot.replace(/^http/i, 'ws').replace(/\/+$/, '')
+  }
+
+  if (globalThis.window === undefined) {
+    return 'ws://localhost:5000'
+  }
+
+  if (/^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)) {
+    return 'ws://localhost:5000'
+  }
+
+  const protocol = globalThis.window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${globalThis.window.location.host}`
+}
+
 export default function HeroBackground({
   scrollProgress,
   transitionProgress,
@@ -57,6 +80,9 @@ export default function HeroBackground({
 }: Readonly<HeroBackgroundProps>) {
   const [worker, setWorker] = React.useState<Worker | null>(null)
   const workerRef = React.useRef<Worker | null>(null)
+  const socketRef = React.useRef<WebSocket | null>(null)
+  const reconnectTimerRef = React.useRef<number | null>(null)
+  const reconnectAttemptRef = React.useRef(0)
   const latestScrollRef = React.useRef(0)
   const { scrollYProgress: localScrollProgress } = useScroll()
   const activeScrollProgress = scrollProgress ?? localScrollProgress
@@ -97,8 +123,6 @@ export default function HeroBackground({
   }, [])
 
   React.useEffect(() => {
-    const stopSimulation = startFleetTelemetrySimulation()
-
     const pushTelemetry = (trucks: readonly FleetTruck[]) => {
       if (!workerRef.current) return
 
@@ -110,6 +134,14 @@ export default function HeroBackground({
           temperatureC,
           fogDensity,
           fogTint,
+          fleet: trucks.map(truck => ({
+            id: truck.id,
+            latitude: truck.lat,
+            longitude: truck.lon,
+            heading: truck.heading,
+            tempC: truck.tempC,
+            status: truck.status,
+          })),
         },
       }
 
@@ -126,7 +158,85 @@ export default function HeroBackground({
 
     return () => {
       unsubscribe()
-      stopSimulation()
+    }
+  }, [])
+
+  React.useEffect(() => {
+    if (globalThis.window === undefined) return
+
+    let closedByCleanup = false
+
+    const clearReconnectTimer = () => {
+      if (reconnectTimerRef.current !== null) {
+        globalThis.clearTimeout(reconnectTimerRef.current)
+        reconnectTimerRef.current = null
+      }
+    }
+
+    const scheduleReconnect = () => {
+      if (closedByCleanup) return
+
+      clearReconnectTimer()
+
+      const backoff = Math.min(10000, 1000 * 2 ** reconnectAttemptRef.current)
+      const jitter = Math.floor(Math.random() * 250)
+      reconnectAttemptRef.current += 1
+
+      reconnectTimerRef.current = globalThis.setTimeout(() => {
+        connect()
+      }, backoff + jitter)
+    }
+
+    const connect = () => {
+      if (closedByCleanup) return
+
+      try {
+        socketRef.current?.close()
+        const ws = new WebSocket(resolveWebSocketUrl())
+        socketRef.current = ws
+
+        ws.onopen = () => {
+          reconnectAttemptRef.current = 0
+        }
+
+        ws.onmessage = event => {
+          let rawPayload: unknown = event.data
+
+          if (typeof rawPayload === 'string') {
+            try {
+              rawPayload = JSON.parse(rawPayload)
+            } catch {
+              return
+            }
+          }
+
+          const parsed = parseFleetLivePacket(rawPayload)
+          if (!parsed) return
+
+          useFleetTelemetryStore
+            .getState()
+            .applyLivePatches(parsed.trucks, parsed.mode)
+        }
+
+        ws.onerror = () => {
+          ws.close()
+        }
+
+        ws.onclose = () => {
+          scheduleReconnect()
+        }
+      } catch {
+        scheduleReconnect()
+      }
+    }
+
+    connect()
+
+    return () => {
+      closedByCleanup = true
+      clearReconnectTimer()
+      socketRef.current?.close()
+      socketRef.current = null
     }
   }, [])
 
