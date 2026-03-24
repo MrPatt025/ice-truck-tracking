@@ -86,7 +86,7 @@
     "node": ">=22.0.0",
     "pnpm": ">=10.0.0"
   },
-  "packageManager": "pnpm@10.32.1+sha512.a706938f0e89ac1456b6563eab4edf1d1faf3368d1191fc5c59790e96dc918e4456ab2e67d613de1043d2e8c81f87303e6b40d4ffeca9df15ef1ad567348f2be",
+  "packageManager": "pnpm@10.32.1",
   "keywords": [
     "monorepo",
     "ice-truck",
@@ -124,13 +124,20 @@
       "axios": "^1.13.5",
       "fast-xml-parser": "^5.5.7",
       "minimatch@<3.1.3": "^3.1.3",
+      "minimatch@>=9.0.0 <9.0.7": "^9.0.7",
       "glob@<10.3.0": "^10.3.0",
       "js-yaml@<4.1.0": "^4.1.0",
       "lodash@<4.17.21": "^4.17.21",
       "qs@<6.11.2": "^6.11.2",
       "semver@<7.5.4": "^7.5.4",
       "tar@<6.2.1": "^6.2.1",
-      "undici@<5.28.4": "^5.28.4"
+      "tar@>=7.0.0 <7.5.11": "^7.5.11",
+      "undici@<5.28.4": "^5.28.4",
+      "undici@>=6.0.0 <6.24.0": "^6.24.0",
+      "serialize-javascript": "^7.0.3",
+      "underscore": "^1.13.8",
+      "flatted": "^3.4.2",
+      "socket.io-parser": "^4.2.6"
     },
     "ignoredBuiltDependencies": [
       "@scarf/scarf",

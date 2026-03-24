@@ -81,7 +81,7 @@ export default function HeroBackground({
   const [worker, setWorker] = React.useState<Worker | null>(null)
   const workerRef = React.useRef<Worker | null>(null)
   const socketRef = React.useRef<WebSocket | null>(null)
-  const reconnectTimerRef = React.useRef<number | null>(null)
+  const reconnectTimerRef = React.useRef<ReturnType<typeof globalThis.setTimeout> | null>(null)
   const reconnectAttemptRef = React.useRef(0)
   const latestScrollRef = React.useRef(0)
   const { scrollYProgress: localScrollProgress } = useScroll()

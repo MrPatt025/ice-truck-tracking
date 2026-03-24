@@ -37,6 +37,20 @@
       "cache": true
     },
     "lint": {
+      "env": [
+        "VERCEL",
+        "VERCEL_ENV",
+        "VERCEL_URL",
+        "VERCEL_BRANCH_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL",
+        "NEXT_PUBLIC_API_URL",
+        "NEXT_PUBLIC_WS_URL",
+        "NEXT_PUBLIC_MAPBOX_TOKEN",
+        "VERCEL_TOKEN",
+        "VERCEL_ORG_ID",
+        "VERCEL_PROJECT_ID",
+        "RENDER_DEPLOY_HOOK_URL"
+      ],
       "outputs": [".eslintcache"],
       "cache": true
     },
@@ -53,6 +67,20 @@
       "cache": true
     },
     "type-check": {
+      "env": [
+        "VERCEL",
+        "VERCEL_ENV",
+        "VERCEL_URL",
+        "VERCEL_BRANCH_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL",
+        "NEXT_PUBLIC_API_URL",
+        "NEXT_PUBLIC_WS_URL",
+        "NEXT_PUBLIC_MAPBOX_TOKEN",
+        "VERCEL_TOKEN",
+        "VERCEL_ORG_ID",
+        "VERCEL_PROJECT_ID",
+        "RENDER_DEPLOY_HOOK_URL"
+      ],
       "outputs": [],
       "cache": true
     },
