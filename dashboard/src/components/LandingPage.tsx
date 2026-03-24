@@ -109,6 +109,14 @@ export default function LandingPage() {
   const transitionProgress = useMotionValue(0)
   const latestScrollRef = React.useRef(0)
 
+  const navigateToDashboard = React.useCallback(() => {
+    try {
+      router.push('/dashboard')
+    } catch {
+      globalThis.location.href = '/dashboard'
+    }
+  }, [router])
+
   const { scrollYProgress } = useScroll()
   const heroY = useTransform(scrollYProgress, [0, 0.25], ['0%', '12%'])
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.55])
@@ -128,12 +136,17 @@ export default function LandingPage() {
     (e?: React.MouseEvent<HTMLAnchorElement>) => {
       if (e) e.preventDefault()
       if (isTransitioning) return
+      router.prefetch('/dashboard')
       transitionProgress.set(0.04)
       startTransition()
       setProgress(0.04)
     },
-    [isTransitioning, setProgress, startTransition, transitionProgress]
+    [isTransitioning, router, setProgress, startTransition, transitionProgress]
   )
+
+  React.useEffect(() => {
+    router.prefetch('/dashboard')
+  }, [router])
 
   React.useEffect(() => {
     if (!isTransitioning || phase !== 'outro') {
@@ -148,14 +161,14 @@ export default function LandingPage() {
         setProgress(latest)
       },
       onComplete: () => {
-        router.push('/dashboard')
+        navigateToDashboard()
       },
     })
 
     return () => {
       controls.stop()
     }
-  }, [isTransitioning, phase, router, setProgress, transitionProgress])
+  }, [isTransitioning, navigateToDashboard, phase, setProgress, transitionProgress])
 
   return (
     <motion.div

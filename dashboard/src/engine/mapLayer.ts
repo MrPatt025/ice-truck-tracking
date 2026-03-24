@@ -78,6 +78,7 @@ export class ImperativeMapLayer {
     private lastSyncAt = 0;
     private dataVersion = 0;
     private readonly renderData: TruckRenderPoint[] = [];
+    private overlayDisabled = false;
 
     get ready(): boolean {
         return this._ready;
@@ -86,6 +87,7 @@ export class ImperativeMapLayer {
     /** Mount the map into a DOM element */
     init(container: HTMLElement, style: Theme = 'dark'): void {
         if (this._destroyed) return;
+        if (globalThis.window === undefined) return;
         this.container = container;
 
         if (MAPBOX_TOKEN) {
@@ -119,14 +121,25 @@ export class ImperativeMapLayer {
     }
 
     private installDeckOverlay(): void {
-        if (!this.map) return;
+        if (!this.map || this.overlayDisabled) return;
         if (this.overlay) {
             this.map.removeControl(this.overlay);
             this.overlay.finalize();
             this.overlay = null;
         }
-        this.overlay = new MapboxOverlay({ interleaved: true, layers: [] });
-        this.map.addControl(this.overlay);
+        try {
+            this.overlay = new MapboxOverlay({ interleaved: true, layers: [] });
+            this.map.addControl(this.overlay);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            if (message.toLowerCase().includes('touchaction')) {
+                this.overlayDisabled = true;
+                this.overlay = null;
+                console.warn('Deck overlay disabled due to TouchAction runtime mismatch.');
+                return;
+            }
+            throw error;
+        }
     }
 
     private buildLayer(): ScatterplotLayer<TruckRenderPoint> {
