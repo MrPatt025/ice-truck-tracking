@@ -34,13 +34,16 @@ import GlassPanel from '@/components/landing/GlassPanel'
 import ScrollTruckStory from '@/components/landing/ScrollTruckStory'
 import { useTransitionStore } from '@/stores/transitionStore'
 
+const EASE_STANDARD: [number, number, number, number] = [0.22, 1, 0.36, 1]
+const EASE_OUTRO: [number, number, number, number] = [0.68, 0, 0.12, 1]
+
 /* ───────────────────── Animation variants ───────────────────── */
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.44, ease: [0.22, 1, 0.36, 1] },
+    transition: { delay: i * 0.09, duration: 0.52, ease: EASE_STANDARD },
   }),
 }
 
@@ -155,8 +158,8 @@ export default function LandingPage() {
     }
 
     const controls = animate(transitionProgress, 1, {
-      duration: 0.74,
-      ease: [0.88, 0, 0.13, 1],
+      duration: 0.84,
+      ease: EASE_OUTRO,
       onUpdate: latest => {
         setProgress(latest)
       },
@@ -188,7 +191,7 @@ export default function LandingPage() {
       <motion.nav
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.45, ease: EASE_STANDARD }}
         className='glass-panel sticky top-0 z-50 border-b border-cyan-200/20 bg-slate-950/65 backdrop-blur-2xl shadow-[0_20px_70px_-35px_rgba(34,211,238,0.5)] transform-gpu'
       >
         <div className='mx-auto flex h-16 max-w-7xl items-center justify-between px-6'>

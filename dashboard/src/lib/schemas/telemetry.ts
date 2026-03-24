@@ -8,14 +8,16 @@ export const truckStatusSchema = z.enum([
   'alert',
 ])
 
-const withFiniteConstraint = (schema: z.ZodNumber): z.ZodNumber =>
+type FiniteNumberSchema = z.ZodEffects<z.ZodNumber, number, number>
+
+const withFiniteConstraint = (schema: z.ZodNumber): FiniteNumberSchema =>
   schema.refine(Number.isFinite, {
     message: 'Expected a finite number',
   })
 
-const finiteNumber = (): z.ZodNumber => withFiniteConstraint(z.number())
+const finiteNumber = (): FiniteNumberSchema => withFiniteConstraint(z.number())
 
-const finiteRangedNumber = (min: number, max?: number): z.ZodNumber => {
+const finiteRangedNumber = (min: number, max?: number): FiniteNumberSchema => {
   const base = max === undefined ? z.number().min(min) : z.number().min(min).max(max)
   return withFiniteConstraint(base)
 }

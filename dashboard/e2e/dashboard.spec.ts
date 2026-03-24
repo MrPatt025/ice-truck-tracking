@@ -73,17 +73,17 @@ test.describe('Dashboard — Header', () => {
         await expect(header).toBeVisible({ timeout: HYDRATION_TIMEOUT });
     });
 
-    test('should show "Ultra-Modern Console" title', async ({ page }) => {
+    test('should show "Cryogenic Mission Console" title', async ({ page }) => {
         await expect(
-            page.getByRole('heading', { name: /Ultra-Modern Console/i }),
+            page.getByRole('heading', { name: /Cryogenic Mission Console/i }),
         ).toBeVisible({ timeout: HYDRATION_TIMEOUT });
     });
 
-    test('should show "Professional Fleet Management" subtitle', async ({
+    test('should show "Fleet Sentinel Grid" subtitle', async ({
         page,
     }) => {
         await expect(
-            page.getByText(/Professional Fleet Management/i),
+            page.getByText(/Fleet Sentinel Grid/i),
         ).toBeVisible({ timeout: HYDRATION_TIMEOUT });
     });
 

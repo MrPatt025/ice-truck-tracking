@@ -38,9 +38,9 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'pnpm run build && (node .next/standalone/dashboard/server.js || node .next/standalone/server.js)',
+        command: `node -e "try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}" && pnpm run build && (node .next/standalone/dashboard/server.js || node .next/standalone/server.js)`,
         url: 'http://localhost:3000',
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: false,
         timeout: 600_000,
         env: { E2E_LIGHT: 'true', PORT: '3000' },
     },

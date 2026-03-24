@@ -150,6 +150,8 @@ const CHART_CONFIGS = {
   },
 }
 
+const EASE_CINEMATIC_INTRO: [number, number, number, number] = [0.2, 0.88, 0.25, 1]
+
 /* ============== UI Helpers (ternary extractors) ============ */
 const INTENT_CLS: Record<string, string> = {
   ok: 'bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/50 shadow-[0_0_24px_-6px_rgba(16,185,129,.7)]',
@@ -554,6 +556,7 @@ export default function Dashboard() {
   const introProgress = useMotionValue(1)
   const introOpacity = useTransform(introProgress, [0, 1], [0, 1])
   const introScale = useTransform(introProgress, [0, 1], [1.03, 1])
+  const introLift = useTransform(introProgress, [0, 1], ['14px', '0px'])
 
   // ── Imperative layer refs ────────────────────────────────────
   const threeContainerRef = useRef<HTMLDivElement>(null)
@@ -599,8 +602,8 @@ export default function Dashboard() {
     setTransitionProgress(0)
 
     const controls = animate(introProgress, 1, {
-      duration: 0.92,
-      ease: [0.76, 0, 0.24, 1],
+      duration: 0.96,
+      ease: EASE_CINEMATIC_INTRO,
       onUpdate: latest => {
         setTransitionProgress(latest)
       },
@@ -751,6 +754,7 @@ export default function Dashboard() {
       style={{
         opacity: introOpacity,
         scale: introScale,
+        y: introLift,
         willChange: 'opacity, transform',
         contain: 'layout paint style',
       }}

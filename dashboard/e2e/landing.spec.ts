@@ -88,25 +88,25 @@ test.describe('Hero Section', () => {
     test('should display the main heading (h1)', async ({ page }) => {
         const h1 = page.getByRole('heading', { level: 1 });
         await expect(h1).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-        await expect(h1).toContainText('Cold-Chain Logistics');
+        await expect(h1).toContainText('Cold-Chain Mission Control');
     });
 
-    test('should show gradient-highlighted text "Real-Time Visibility"', async ({
+    test('should show gradient-highlighted text "Real-Time Fleet Command"', async ({
         page,
     }) => {
-        await expect(page.getByText('Real-Time Visibility')).toBeVisible({
+        await expect(page.getByText('Real-Time Fleet Command')).toBeVisible({
             timeout: HYDRATION_TIMEOUT,
         });
     });
 
     test('should display the hero subtitle', async ({ page }) => {
         await expect(
-            page.getByText(/Monitor temperature, GPS coordinates/),
+            page.getByText(/Track truck temperature, GPS, route health/i),
         ).toBeVisible({ timeout: HYDRATION_TIMEOUT });
     });
 
-    test('should show the Open-Source badge', async ({ page }) => {
-        await expect(page.getByText(/Open Source/)).toBeVisible({
+    test('should show the mission telemetry badge', async ({ page }) => {
+        await expect(page.getByText(/Command Grid Online/i)).toBeVisible({
             timeout: HYDRATION_TIMEOUT,
         });
     });
@@ -121,13 +121,14 @@ test.describe('Hero Section', () => {
         await expect(heroLink).toHaveAttribute('href', '/dashboard');
     });
 
-    test('should have a "GitHub Repo" link opening in new tab', async ({
+    test('should have a visible "Login" CTA linking to /dashboard', async ({
         page,
     }) => {
-        const ghLink = page.getByRole('link', { name: /GitHub Repo/ });
-        await expect(ghLink).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-        await expect(ghLink).toHaveAttribute('target', '_blank');
-        await expect(ghLink).toHaveAttribute('rel', /noopener/);
+        const loginLink = page
+            .locator('section')
+            .getByRole('link', { name: /^Login$/ });
+        await expect(loginLink).toBeVisible({ timeout: HYDRATION_TIMEOUT });
+        await expect(loginLink).toHaveAttribute('href', '/dashboard');
     });
 });
 
