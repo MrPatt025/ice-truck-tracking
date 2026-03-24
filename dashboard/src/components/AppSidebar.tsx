@@ -8,6 +8,7 @@ import {
   LayoutDashboard, Truck, BarChart3, Bell, Settings,
   ChevronLeft, ChevronRight, LogOut, User, Shield,
   Menu, X, Snowflake,
+  type LucideIcon,
 } from 'lucide-react';
 import { useAuthStore, hasPermission } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
@@ -15,7 +16,7 @@ import { cn } from '@/lib/utils';
 interface NavItem {
   label: string;
   href: string;
-  icon: React.ElementType;
+  icon: LucideIcon;
   permission: string;
   badge?: number;
 }

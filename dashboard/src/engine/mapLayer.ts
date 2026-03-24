@@ -145,9 +145,6 @@ export class ImperativeMapLayer {
             getRadius: (d) => d.radius,
             radiusMinPixels: 4,
             radiusMaxPixels: 14,
-            parameters: {
-                depthTest: false,
-            },
             updateTriggers: {
                 getPosition: this.dataVersion,
                 getFillColor: this.dataVersion,

@@ -37,7 +37,16 @@ const TRUCK_ICON_URI = `data:image/svg+xml;utf8,${encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="8" y="22" width="34" height="18" rx="6" fill="#38bdf8"/><rect x="40" y="26" width="14" height="14" rx="3" fill="#60a5fa"/><circle cx="20" cy="44" r="6" fill="#0f172a"/><circle cx="46" cy="44" r="6" fill="#0f172a"/></svg>'
 )}`
 
+const TRUCK_ICON = {
+  url: TRUCK_ICON_URI,
+  width: 64,
+  height: 64,
+  anchorY: 56,
+  mask: false,
+} as const
+
 let deckInstance: Deck | null = null
+let deckUpdateQueued = false
 const fleetNodes: readonly FleetNode[] = createMockFleet(140)
 
 function createMockFleet(count: number): readonly FleetNode[] {
@@ -79,7 +88,6 @@ function isOffscreenInitMessage(
 
 function buildDeckLayers() {
     const thermalLimit = Math.max(-3, runtimeState.telemetry.temperatureC - 1)
-    const hotspotData = fleetNodes.filter(node => node.tempC >= thermalLimit)
 
     const iconLayer = new IconLayer<FleetNode>({
         id: 'cinematic-fleet-icons',
@@ -91,13 +99,7 @@ function buildDeckLayers() {
       getPosition: node => [node.longitude, node.latitude],
       getSize: node => (node.hotspot ? 3.2 : 2.5),
       getAngle: node => node.heading,
-      getIcon: () => ({
-        url: TRUCK_ICON_URI,
-        width: 64,
-        height: 64,
-          anchorY: 56,
-          mask: false,
-      }),
+      getIcon: () => TRUCK_ICON,
       updateTriggers: {
           getSize: runtimeState.scroll,
       },
@@ -105,14 +107,17 @@ function buildDeckLayers() {
 
     const scatterplotLayer = new ScatterplotLayer<FleetNode>({
         id: 'cinematic-thermal-hotspots',
-      data: hotspotData,
+      data: fleetNodes,
       pickable: false,
       stroked: false,
       radiusUnits: 'meters',
       radiusMinPixels: 2,
       radiusMaxPixels: 22,
       getPosition: node => [node.longitude, node.latitude],
-      getRadius: node => 140 + Math.max(0, node.tempC + 10) * 11,
+      getRadius: node =>
+          node.tempC >= thermalLimit
+              ? 140 + Math.max(0, node.tempC + 10) * 11
+              : 0,
       getFillColor: node => {
           if (node.tempC > 2) return [255, 84, 84, 165]
           if (node.tempC > -1) return [245, 158, 11, 140]
@@ -121,6 +126,7 @@ function buildDeckLayers() {
       updateTriggers: {
           getRadius: runtimeState.scroll,
           getFillColor: runtimeState.telemetry.temperatureC,
+          getPosition: runtimeState.telemetry.fogDensity,
       },
   })
 
@@ -139,6 +145,15 @@ function updateDeckScene(): void {
   })
 }
 
+    function scheduleDeckSceneUpdate(): void {
+      if (deckUpdateQueued) return
+      deckUpdateQueued = true
+      globalThis.setTimeout(() => {
+        deckUpdateQueued = false
+        updateDeckScene()
+      }, 16)
+    }
+
 function syncCamera(progress: number): void {
     const clamped = Math.min(1, Math.max(0, progress))
     const fov = 48 + clamped * 8
@@ -148,7 +163,7 @@ function syncCamera(progress: number): void {
 
     applyCameraFov(fov)
     applyDeckViewState({ pitch, zoom, bearing })
-    updateDeckScene()
+    scheduleDeckSceneUpdate()
 }
 
 function initializeDeck(payload: OffscreenInitPayload): void {
@@ -182,6 +197,8 @@ function initializeDeck(payload: OffscreenInitPayload): void {
       // Keep worker resilient when GPU drivers are unstable.
     },
   })
+
+  scheduleDeckSceneUpdate()
 }
 
 // OffscreenCanvas communication is same-origin and guarded by origin verification.
@@ -208,7 +225,7 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
 
   if (data.type === 'cinematic:telemetry') {
       applyTelemetry(data.payload)
-      updateDeckScene()
+      scheduleDeckSceneUpdate()
     return
   }
 
@@ -218,7 +235,7 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
   }
 
     applyViewport(data.payload)
-    updateDeckScene()
+    scheduleDeckSceneUpdate()
 })
 
 render(React.createElement(CinematicRig))

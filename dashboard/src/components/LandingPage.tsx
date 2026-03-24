@@ -40,7 +40,7 @@ const fadeUp = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.12, duration: 0.5, ease: 'easeOut' },
+    transition: { delay: i * 0.1, duration: 0.44, ease: [0.22, 1, 0.36, 1] },
   }),
 }
 
@@ -164,6 +164,7 @@ export default function LandingPage() {
         scale: pageScale,
         y: pageLift,
         willChange: 'opacity, transform',
+        contain: 'layout paint style',
       }}
       className='mission-control-shell min-h-screen overflow-hidden text-white'
     >
@@ -174,8 +175,8 @@ export default function LandingPage() {
       <motion.nav
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className='sticky top-0 z-50 border-b border-cyan-200/20 bg-slate-950/65 backdrop-blur-2xl shadow-[0_20px_70px_-35px_rgba(34,211,238,0.5)]'
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        className='glass-panel sticky top-0 z-50 border-b border-cyan-200/20 bg-slate-950/65 backdrop-blur-2xl shadow-[0_20px_70px_-35px_rgba(34,211,238,0.5)] transform-gpu'
       >
         <div className='mx-auto flex h-16 max-w-7xl items-center justify-between px-6'>
           <div className='flex items-center gap-2'>
@@ -221,7 +222,7 @@ export default function LandingPage() {
       {/* ── Hero ────────────────────────────────────────────── */}
       <motion.section
         style={{ y: heroY, opacity: heroOpacity, scale: heroScale }}
-        className='relative mx-auto flex min-h-[92vh] max-w-7xl items-center px-6 pb-16 pt-24 text-center'
+        className='relative mx-auto flex min-h-[92vh] max-w-7xl items-center px-6 pb-16 pt-24 text-center transform-gpu'
       >
         <HeroBackground
           scrollProgress={scrollYProgress}
@@ -232,7 +233,7 @@ export default function LandingPage() {
 
         {/* Animated gradient orb */}
         <motion.div
-          className='absolute left-1/2 top-0 -z-10 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-blue-500/20 blur-[120px]'
+          className='absolute left-1/2 top-0 -z-10 h-[600px] w-[600px] -translate-x-1/2 rounded-full bg-blue-500/20 blur-[120px] transform-gpu will-change-transform'
           animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
           transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
         />
@@ -359,7 +360,7 @@ export default function LandingPage() {
               viewport={{ once: true, amount: 0.3 }}
               variants={fadeUp}
             >
-              <Card className='h-full border-white/15 bg-white/[0.04] backdrop-blur-2xl transition hover:border-cyan-300/55 hover:shadow-xl hover:shadow-cyan-500/20'>
+              <Card className='glass-panel h-full border-white/20 bg-white/[0.06] backdrop-blur-2xl transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-300/55 hover:shadow-xl hover:shadow-cyan-500/20'>
                 <CardHeader>
                   <feature.icon className={`h-8 w-8 ${feature.color}`} />
                   <CardTitle className='mt-2 text-lg text-white'>

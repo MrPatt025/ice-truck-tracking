@@ -14,7 +14,7 @@ import {
   Vector3,
   PerspectiveCamera,
 } from 'three'
-import { Bloom, DepthOfField, EffectComposer } from '@react-three/postprocessing'
+import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { runtimeState } from './cinematicRuntimeState'
 
 const tmpCameraPos = new Vector3()
@@ -188,10 +188,11 @@ function RouteAndGround() {
 function ColdFogParticles() {
   const pointsRef = React.useRef<Points>(null)
   const shaderRef = React.useRef<ShaderMaterial | null>(null)
+  const tintRef = React.useRef(new Color('#67e8f9'))
 
   const geometry = React.useMemo(() => {
     const g = new BufferGeometry()
-    const count = 640
+    const count = 420
     const positions = new Float32Array(count * 3)
     const seeds = new Float32Array(count)
 
@@ -280,8 +281,8 @@ function ColdFogParticles() {
     shaderRef.current.uniforms.uTemp.value = telemetry.temperatureC
 
     const hueMix = Math.min(1, Math.max(0, telemetry.fogTint))
-    const color = new Color().setHSL(0.54 + (1 - hueMix) * 0.08, 0.88, 0.65)
-    shaderRef.current.uniforms.uTint.value = color
+    tintRef.current.setHSL(0.54 + (1 - hueMix) * 0.08, 0.88, 0.65)
+    shaderRef.current.uniforms.uTint.value.copy(tintRef.current)
   })
 
   return (
@@ -292,23 +293,22 @@ function ColdFogParticles() {
 }
 
 export default function CinematicRig() {
-  const bloomIntensity = 0.45 + runtimeState.scroll * 1.1
-  const dofFocusDistance = 0.02 + (1 - runtimeState.scroll) * 0.035
-  const dofBokeh = 1.6 + runtimeState.scroll * 3.8
+  const bloomIntensity = 0.32 + runtimeState.scroll * 0.45
   const transitionActive =
     runtimeState.transition.phase !== 'idle' ||
     runtimeState.transition.progress > 0.02
   const heavyScrollTransition =
     runtimeState.scroll > 0.1 && runtimeState.scroll < 0.92
-  const shouldEnablePostFx = !(transitionActive || heavyScrollTransition)
+  const highDpr = runtimeState.viewport.dpr > 1.4
+  const shouldEnablePostFx = !(transitionActive || heavyScrollTransition || highDpr)
 
   return (
     <>
       <color attach='background' args={['#020617']} />
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 6, 3]} intensity={1.2} color='#bae6fd' />
-      <pointLight position={[0, 1.2, 0]} intensity={2.4} color='#22d3ee' />
-      <pointLight position={[4.8, 1.6, -2.6]} intensity={0.9} color='#2563eb' />
+      <ambientLight intensity={0.54} />
+      <directionalLight position={[5, 6, 3]} intensity={1.05} color='#bae6fd' />
+      <pointLight position={[0, 1.2, 0]} intensity={1.85} color='#22d3ee' />
+      <pointLight position={[4.8, 1.6, -2.6]} intensity={0.72} color='#2563eb' />
 
       <RouteAndGround />
       <TruckModel />
@@ -321,12 +321,6 @@ export default function CinematicRig() {
             luminanceThreshold={0.28}
             luminanceSmoothing={0.35}
             mipmapBlur
-          />
-          <DepthOfField
-            focusDistance={dofFocusDistance}
-            focalLength={0.025}
-            bokehScale={dofBokeh}
-            height={700}
           />
         </EffectComposer>
       ) : null}

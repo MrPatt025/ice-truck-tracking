@@ -321,10 +321,10 @@ const GlassCard = memo(
   }>) => {
     const inner = (
       <div
-        className={`group relative rounded-3xl p-[1.5px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02]`}
+        className={`group glass-panel relative rounded-3xl p-[1.5px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02] will-change-transform`}
       >
         <div
-          className={`relative rounded-3xl bg-slate-900/70 backdrop-blur-2xl ring-1 ring-white/10 ${className}`}
+          className={`relative rounded-3xl bg-slate-900/66 backdrop-blur-2xl ring-1 ring-white/15 ${className}`}
         >
           <div className='pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.2),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.18),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]' />
           <div className='pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.1),transparent)] bg-[length:200%_100%] animate-shimmer' />
@@ -752,6 +752,7 @@ export default function Dashboard() {
         opacity: introOpacity,
         scale: introScale,
         willChange: 'opacity, transform',
+        contain: 'layout paint style',
       }}
       className='mission-control-shell relative min-h-screen overflow-x-hidden text-white selection:bg-cyan-500/30 selection:text-white'
     >
@@ -786,7 +787,7 @@ export default function Dashboard() {
       )}
 
       {/* ── Sticky Header ── */}
-      <header className='sticky top-0 z-50 bg-slate-950/50 backdrop-blur-2xl ring-1 ring-cyan-200/20 shadow-[0_24px_90px_-45px_rgba(34,211,238,0.6)]'>
+      <header className='glass-panel sticky top-0 z-50 bg-slate-950/50 backdrop-blur-2xl ring-1 ring-cyan-200/20 shadow-[0_24px_90px_-45px_rgba(34,211,238,0.6)]'>
         <div className='mx-auto max-w-[120rem] px-4 sm:px-6'>
           <div className='flex items-center justify-between py-4'>
             {/* Logo + Title */}

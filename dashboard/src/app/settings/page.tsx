@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import {
   Settings, User, Shield, Key, Bell, Palette,
   Save, Camera, Loader2, CheckCircle, Moon, Sun, Monitor,
+  type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AppSidebar from '@/components/AppSidebar';
@@ -60,7 +61,7 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   }, [tab, profile, updateProfile]);
 
-  const tabs: { key: SettingsTab; label: string; icon: React.ElementType }[] = [
+  const tabs: { key: SettingsTab; label: string; icon: LucideIcon }[] = [
     { key: 'profile', label: 'Profile', icon: User },
     { key: 'security', label: 'Security', icon: Shield },
     { key: 'api-keys', label: 'API Keys', icon: Key },
