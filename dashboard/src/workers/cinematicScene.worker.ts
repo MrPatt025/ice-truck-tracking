@@ -47,6 +47,8 @@ const TRUCK_ICON = {
 
 let deckInstance: Deck | null = null
 let deckUpdateQueued = false
+let lastDeckRenderAt = 0
+const TARGET_FRAME_MS = 1000 / 60
 const fleetNodes: readonly FleetNode[] = createMockFleet(140)
 
 function createMockFleet(count: number): readonly FleetNode[] {
@@ -145,14 +147,31 @@ function updateDeckScene(): void {
   })
 }
 
-    function scheduleDeckSceneUpdate(): void {
-      if (deckUpdateQueued) return
-      deckUpdateQueued = true
-      globalThis.setTimeout(() => {
-        deckUpdateQueued = false
-        updateDeckScene()
-      }, 16)
+function scheduleDeckSceneUpdate(): void {
+  if (deckUpdateQueued) return
+  deckUpdateQueued = true
+
+  const flush = () => {
+    const now = performance.now()
+    const elapsed = now - lastDeckRenderAt
+
+    if (elapsed < TARGET_FRAME_MS) {
+      globalThis.setTimeout(flush, Math.max(1, TARGET_FRAME_MS - elapsed))
+      return
     }
+
+    lastDeckRenderAt = now
+    deckUpdateQueued = false
+    updateDeckScene()
+  }
+
+  if (typeof globalThis.requestAnimationFrame === 'function') {
+    globalThis.requestAnimationFrame(() => flush())
+    return
+  }
+
+  globalThis.setTimeout(flush, TARGET_FRAME_MS)
+}
 
 function syncCamera(progress: number): void {
     const clamped = Math.min(1, Math.max(0, progress))
@@ -188,6 +207,7 @@ function initializeDeck(payload: OffscreenInitPayload): void {
       canvas: payload.drawingSurface as unknown as HTMLCanvasElement,
       gl,
       controller: false,
+    _animate: false,
     width: runtimeState.viewport.width,
     height: runtimeState.viewport.height,
     useDevicePixels: runtimeState.viewport.dpr,

@@ -202,7 +202,10 @@ export default function LandingPage() {
             >
               <Truck className='h-7 w-7 text-blue-400' />
             </motion.div>
-            <span data-display-font='true' className='text-lg font-bold tracking-[0.14em] uppercase'>
+            <span
+              data-display-font='true'
+              className='text-lg font-bold tracking-[0.14em] uppercase'
+            >
               Ice Truck <span className='text-blue-400'>Tracking</span>
             </span>
           </div>
@@ -332,7 +335,10 @@ export default function LandingPage() {
       </motion.section>
 
       {/* ── Stats ───────────────────────────────────────────── */}
-      <section id='stats' className='border-y border-cyan-100/10 bg-slate-900/45 py-12'>
+      <section
+        id='stats'
+        className='border-y border-cyan-100/10 bg-slate-900/45 py-12'
+      >
         <div className='mx-auto grid max-w-5xl grid-cols-2 gap-8 px-6 md:grid-cols-4'>
           {stats.map((stat, i) => (
             <motion.div
@@ -376,7 +382,7 @@ export default function LandingPage() {
               viewport={{ once: true, amount: 0.3 }}
               variants={fadeUp}
             >
-              <Card className='glass-panel h-full border-white/20 bg-white/[0.06] backdrop-blur-2xl transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-300/55 hover:shadow-xl hover:shadow-cyan-500/20'>
+              <Card className='glass-panel h-full border-cyan-100/20 bg-white/[0.06] backdrop-blur-2xl saturate-150 ring-1 ring-cyan-100/10 transition-transform duration-300 hover:-translate-y-1 hover:border-cyan-300/55 hover:shadow-xl hover:shadow-cyan-500/20 transform-gpu'>
                 <CardHeader>
                   <feature.icon className={`h-8 w-8 ${feature.color}`} />
                   <CardTitle className='mt-2 text-lg text-white'>

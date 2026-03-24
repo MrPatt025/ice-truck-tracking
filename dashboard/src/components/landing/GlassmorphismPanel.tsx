@@ -51,15 +51,17 @@ export function GlassmorphismPanel({
         backgroundColor: `rgba(15, 23, 42, ${opacity})`,
       }}
       className={clsx(
-        'relative rounded-2xl border',
-        'border-white/25 bg-white/10',
+        'relative rounded-2xl border transform-gpu',
+        'border-cyan-100/25 bg-white/10 ring-1 ring-cyan-100/15',
         blurClass,
-        'shadow-[0_12px_48px_-12px_rgba(34,211,238,0.24)]',
+        'saturate-150 shadow-[0_12px_48px_-12px_rgba(34,211,238,0.24)]',
         className
       )}
     >
+      <div className='absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_18%_16%,rgba(186,230,253,0.2),transparent_46%)] pointer-events-none' />
       {/* Inner glow effect */}
       <div className='absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-400/5 via-transparent to-blue-400/5 pointer-events-none' />
+      <div className='absolute inset-x-0 top-0 h-px bg-cyan-100/65 pointer-events-none' />
 
       {/* Content */}
       <div className='relative z-10'>{children}</div>
