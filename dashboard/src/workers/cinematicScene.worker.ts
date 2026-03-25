@@ -80,10 +80,6 @@ let smoothedFrameMs = TARGET_FRAME_MS
 let lowFpsSampleCount = 0
 let recoverySampleCount = 0
 
-function clampUnit(value: number): number {
-  return Math.max(0, Math.min(1, value))
-}
-
 function resolveStaleFactor(ageMs: number): number {
   if (ageMs <= STALE_PACKET_THRESHOLD_MS) return 0
   return clampUnit((ageMs - STALE_PACKET_THRESHOLD_MS) / STALE_FADE_DURATION_MS)
@@ -254,10 +250,10 @@ function disposeDeck(): void {
   try {
     // Dispose layers first (they may have GPU buffers)
     const layers = deckInstance.props.layers ?? []
+    type DisposableLayer = { dispose?: () => void }
     for (const layer of layers) {
-      if (typeof (layer as any)?.dispose === 'function') {
-        (layer as any).dispose()
-      }
+      const disposableLayer = layer as DisposableLayer
+      disposableLayer.dispose?.()
     }
 
     // Dispose the Deck instance (finalize WebGL state)
@@ -322,6 +318,107 @@ function advanceFleetInterpolation(now: number): boolean {
   return hasActiveInterpolation
 }
 
+const OVERVIEW_CAMERA = {
+  longitude: 100.5018,
+  latitude: 13.7563,
+  zoom: 12,
+  pitch: 34,
+  bearing: 0,
+} as const
+
+const TRACKING_CAMERA = {
+  zoom: 15.5,
+  pitch: 45,
+  bearing: 0,
+} as const
+
+function hasFlyToTarget(): boolean {
+  const flyTo = runtimeState.cameraFlyTo
+  return flyTo.targetLatitude !== null && flyTo.targetLongitude !== null
+}
+
+function applyTrackingCameraAtTarget(): void {
+  const flyTo = runtimeState.cameraFlyTo
+  if (!hasFlyToTarget()) return
+
+  applyDeckViewState({
+    longitude: flyTo.targetLongitude!,
+    latitude: flyTo.targetLatitude!,
+    zoom: TRACKING_CAMERA.zoom,
+    pitch: TRACKING_CAMERA.pitch,
+    bearing: TRACKING_CAMERA.bearing,
+  })
+}
+
+function applyCompletedFlyToState(): void {
+  const flyTo = runtimeState.cameraFlyTo
+  flyTo.isAnimating = false
+
+  if (flyTo.truckId === null) {
+    applyDeckViewState(OVERVIEW_CAMERA)
+    return
+  }
+
+  applyTrackingCameraAtTarget()
+}
+
+function resolveAnimatedLongitude(eased: number): number | null {
+  const flyTo = runtimeState.cameraFlyTo
+  if (flyTo.startLongitude === null) return null
+  if (flyTo.truckId === null) {
+    return lerp(flyTo.startLongitude, OVERVIEW_CAMERA.longitude, eased)
+  }
+  if (flyTo.targetLongitude === null) return flyTo.startLongitude
+  return lerp(flyTo.startLongitude, flyTo.targetLongitude, eased)
+}
+
+function resolveAnimatedLatitude(eased: number): number | null {
+  const flyTo = runtimeState.cameraFlyTo
+  if (flyTo.startLatitude === null) return null
+  if (flyTo.truckId === null) {
+    return lerp(flyTo.startLatitude, OVERVIEW_CAMERA.latitude, eased)
+  }
+  if (flyTo.targetLatitude === null) return flyTo.startLatitude
+  return lerp(flyTo.startLatitude, flyTo.targetLatitude, eased)
+}
+
+function resolveAnimatedZoom(eased: number): number | null {
+  const flyTo = runtimeState.cameraFlyTo
+  if (flyTo.startZoom === null) return null
+  const targetZoom = flyTo.truckId === null ? OVERVIEW_CAMERA.zoom : TRACKING_CAMERA.zoom
+  return lerp(flyTo.startZoom, targetZoom, eased)
+}
+
+function resolveAnimatedPitch(eased: number): number | null {
+  const flyTo = runtimeState.cameraFlyTo
+  if (flyTo.startPitch === null) return null
+  const targetPitch = flyTo.truckId === null ? OVERVIEW_CAMERA.pitch : TRACKING_CAMERA.pitch
+  return lerp(flyTo.startPitch, targetPitch, eased)
+}
+
+function applyAnimatedFlyToState(eased: number): void {
+  const nextLongitude = resolveAnimatedLongitude(eased)
+  const nextLatitude = resolveAnimatedLatitude(eased)
+  const nextZoom = resolveAnimatedZoom(eased)
+  const nextPitch = resolveAnimatedPitch(eased)
+
+  if (
+    nextLongitude === null ||
+    nextLatitude === null ||
+    nextZoom === null ||
+    nextPitch === null
+  ) {
+    return
+  }
+
+  applyDeckViewState({
+    longitude: nextLongitude,
+    latitude: nextLatitude,
+    zoom: nextZoom,
+    pitch: nextPitch,
+  })
+}
+
 /**
  * Advance camera fly-to animation.
  * Returns true if animation is still in progress.
@@ -330,14 +427,8 @@ function advanceCameraFlyTo(now: number): boolean {
   const flyTo = runtimeState.cameraFlyTo
   if (!flyTo.isAnimating || !flyTo.startedAt) {
     // If a truck is selected but not animating, track its position
-    if (flyTo.truckId !== null && flyTo.targetLatitude !== null && flyTo.targetLongitude !== null) {
-      applyDeckViewState({
-        longitude: flyTo.targetLongitude,
-        latitude: flyTo.targetLatitude,
-        zoom: 15.5,
-        pitch: 45,
-        bearing: 0,
-      })
+    if (flyTo.truckId !== null && hasFlyToTarget()) {
+      applyTrackingCameraAtTarget()
       scheduleDeckSceneUpdate()
     }
     return false
@@ -345,74 +436,14 @@ function advanceCameraFlyTo(now: number): boolean {
 
   const elapsed = now - flyTo.startedAt
   if (elapsed >= flyTo.durationMs) {
-    // Animation complete
-    flyTo.isAnimating = false
-
-    if (flyTo.truckId === null) {
-      // Returning to overview - set default camera position
-      applyDeckViewState({
-        longitude: 100.5018,
-        latitude: 13.7563,
-        zoom: 12,
-        pitch: 34,
-        bearing: 0,
-      })
-    } else {
-      // Truck selected - lock camera on target coordinates
-      if (flyTo.targetLatitude !== null && flyTo.targetLongitude !== null) {
-        applyDeckViewState({
-          longitude: flyTo.targetLongitude,
-          latitude: flyTo.targetLatitude,
-          zoom: 15.5, // Closer zoom for tracking single truck
-          pitch: 45, // Slightly higher pitch for better viewing angle
-          bearing: 0,
-        })
-      }
-    }
+    applyCompletedFlyToState()
     return false
   }
 
   // Animation in progress - interpolate camera position
   const progress = clampUnit(elapsed / flyTo.durationMs)
   const eased = easeInOutCubic(progress)
-
-  if (
-    flyTo.startLatitude !== null &&
-    flyTo.startLongitude !== null &&
-    flyTo.startZoom !== null &&
-    flyTo.startPitch !== null
-  ) {
-    const nextLongitude =
-      flyTo.truckId === null
-        ? lerp(flyTo.startLongitude, 100.5018, eased)
-        : flyTo.targetLongitude !== null
-          ? lerp(flyTo.startLongitude, flyTo.targetLongitude, eased)
-          : flyTo.startLongitude
-
-    const nextLatitude =
-      flyTo.truckId === null
-        ? lerp(flyTo.startLatitude, 13.7563, eased)
-        : flyTo.targetLatitude !== null
-          ? lerp(flyTo.startLatitude, flyTo.targetLatitude, eased)
-          : flyTo.startLatitude
-
-    const nextZoom =
-      flyTo.truckId === null
-        ? lerp(flyTo.startZoom, 12, eased)
-        : lerp(flyTo.startZoom, 15.5, eased)
-
-    const nextPitch =
-      flyTo.truckId === null
-        ? lerp(flyTo.startPitch, 34, eased)
-        : lerp(flyTo.startPitch, 45, eased)
-
-    applyDeckViewState({
-      longitude: nextLongitude,
-      latitude: nextLatitude,
-      zoom: nextZoom,
-      pitch: nextPitch,
-    })
-  }
+  applyAnimatedFlyToState(eased)
 
   return true
 }
@@ -617,6 +648,58 @@ function initializeDeck(payload: OffscreenInitPayload): void {
   scheduleDeckSceneUpdate()
 }
 
+function handleCleanupMessage(): void {
+  disposeDeck()
+  mutableFleetNodes.length = 0
+  fleetNodeById.clear()
+  fleetNodes = []
+}
+
+function handleWorkerMessage(data: CinematicWorkerMessage): void {
+  switch (data.type) {
+    case 'cinematic:scroll': {
+      applyScrollProgress(data.payload.progress)
+      syncCamera(data.payload.progress)
+      return
+    }
+
+    case 'cinematic:telemetry': {
+      applyTelemetry(data.payload)
+
+      if (Array.isArray(data.payload.fleet)) {
+        updateFleetNodes(data.payload.fleet)
+        runInterpolationLoop()
+      }
+
+      scheduleDeckSceneUpdate()
+      return
+    }
+
+    case 'cinematic:transition': {
+      applyTransition(data.payload)
+      return
+    }
+
+    case 'cinematic:camera-flyto': {
+      applyCameraFlyTo(data.payload)
+      runInterpolationLoop()
+      return
+    }
+
+    case 'cinematic:viewport': {
+      applyViewport(data.payload)
+      baseViewportDpr = runtimeState.viewport.dpr
+      adaptiveViewportDpr = Math.min(adaptiveViewportDpr, baseViewportDpr)
+      scheduleDeckSceneUpdate()
+      return
+    }
+
+    default: {
+      return
+    }
+  }
+}
+
 // OffscreenCanvas communication is same-origin and guarded by origin verification.
 self.addEventListener('message', (event: MessageEvent<unknown>) => {
     const messageOrigin = event.origin || self.location.origin
@@ -630,52 +713,13 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
   }
 
   if (!isCinematicWorkerMessage(event.data)) {
-    // Handle special cleanup message
     if (event.data === 'cinematic:cleanup') {
-      disposeDeck()
-      mutableFleetNodes.length = 0
-      fleetNodeById.clear()
-      fleetNodes = []
-      return
+      handleCleanupMessage()
     }
     return
   }
 
-  const data: CinematicWorkerMessage = event.data
-
-  if (data.type === 'cinematic:scroll') {
-      applyScrollProgress(data.payload.progress)
-      syncCamera(data.payload.progress)
-    return
-  }
-
-  if (data.type === 'cinematic:telemetry') {
-    applyTelemetry(data.payload)
-
-    if (Array.isArray(data.payload.fleet)) {
-      updateFleetNodes(data.payload.fleet)
-      runInterpolationLoop()
-    }
-
-    scheduleDeckSceneUpdate()
-    return
-  }
-
-  if (data.type === 'cinematic:transition') {
-      applyTransition(data.payload)
-    return
-  }
-
-  if (data.type === 'cinematic:camera-flyto') {
-    applyCameraFlyTo(data.payload)
-    runInterpolationLoop()
-    return
-  }
-
-    applyViewport(data.payload)
-    baseViewportDpr = runtimeState.viewport.dpr
-    adaptiveViewportDpr = Math.min(adaptiveViewportDpr, baseViewportDpr)
-    scheduleDeckSceneUpdate()
+  handleWorkerMessage(event.data)
 })
 
 /**

@@ -11,6 +11,7 @@ import {
   InstancedMesh,
   Object3D,
   Mesh,
+  Material,
   Points,
   ShaderMaterial,
   Vector3,
@@ -29,6 +30,32 @@ function isPerspectiveCamera(camera: unknown): camera is PerspectiveCamera {
   if (!camera || typeof camera !== 'object') return false
   const candidate = camera as { isPerspectiveCamera?: unknown }
   return candidate.isPerspectiveCamera === true
+}
+
+type TraversableNode = Object3D & {
+  geometry?: { dispose?: () => void }
+  material?: Material | Material[]
+}
+
+function disposeMaterial(material: Material | Material[] | undefined): void {
+  if (!material) return
+  if (Array.isArray(material)) {
+    for (const item of material) {
+      item.dispose?.()
+    }
+    return
+  }
+  material.dispose?.()
+}
+
+function disposeObjectTree(node: Object3D | null): void {
+  if (!node) return
+  const current = node as TraversableNode
+  current.geometry?.dispose?.()
+  disposeMaterial(current.material)
+  for (const child of node.children) {
+    disposeObjectTree(child)
+  }
 }
 
 function TruckModel() {
@@ -70,41 +97,26 @@ function TruckModel() {
    * are mounted/unmounted (e.g., page navigation).
    */
   React.useEffect(() => {
+    const rootNode = root.current
+    const frontWheelsNode = frontWheels.current
+    const rearWheelsNode = rearWheels.current
+
     return () => {
-      // Dispose materials in a reusable helper
-      const disposeMaterial = (material: any) => {
-        if (Array.isArray(material)) {
-          material.forEach(m => m.dispose?.())
-        } else {
-          material.dispose?.()
-        }
-      }
-
-      // Traverse and dispose all geometries and materials
-      const traverse = (node: any) => {
-        if (!node) return
-        if (node.geometry?.dispose) node.geometry.dispose()
-        if (node.material) disposeMaterial(node.material)
-        if (node.children) node.children.forEach(traverse)
-      }
-
-      if (root.current) {
-        traverse(root.current)
-      }
+      disposeObjectTree(rootNode)
 
       // Explicitly dispose instanced meshes
-      if (frontWheels.current?.geometry) {
-        frontWheels.current.geometry.dispose()
+      if (frontWheelsNode?.geometry) {
+        frontWheelsNode.geometry.dispose()
       }
-      if (frontWheels.current?.material) {
-        disposeMaterial(frontWheels.current.material)
+      if (frontWheelsNode?.material) {
+        disposeMaterial(frontWheelsNode.material)
       }
 
-      if (rearWheels.current?.geometry) {
-        rearWheels.current.geometry.dispose()
+      if (rearWheelsNode?.geometry) {
+        rearWheelsNode.geometry.dispose()
       }
-      if (rearWheels.current?.material) {
-        disposeMaterial(rearWheels.current.material)
+      if (rearWheelsNode?.material) {
+        disposeMaterial(rearWheelsNode.material)
       }
     }
   }, [])
@@ -135,7 +147,10 @@ function TruckModel() {
 
     tmpCameraPos.set(0.8 + p * 2.8, 1.65 - p * 0.66, 7.4 - p * 3.55)
     camera.position.lerp(tmpCameraPos, 0.08)
-    if (isPerspectiveCamera(camera) && Math.abs(camera.fov - targetFov) > 0.01) {
+    if (
+      isPerspectiveCamera(camera) &&
+      Math.abs(camera.fov - targetFov) > 0.01
+    ) {
       camera.fov += (targetFov - camera.fov) * 0.14
       camera.updateProjectionMatrix()
     }
@@ -206,20 +221,12 @@ function TruckModel() {
 
       <instancedMesh ref={frontWheels} args={[undefined, undefined, 2]}>
         <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
-        <meshStandardMaterial
-          color='#0f172a'
-          roughness={0.8}
-          metalness={0.1}
-        />
+        <meshStandardMaterial color='#0f172a' roughness={0.8} metalness={0.1} />
       </instancedMesh>
 
       <instancedMesh ref={rearWheels} args={[undefined, undefined, 2]}>
         <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
-        <meshStandardMaterial
-          color='#0f172a'
-          roughness={0.8}
-          metalness={0.1}
-        />
+        <meshStandardMaterial color='#0f172a' roughness={0.8} metalness={0.1} />
       </instancedMesh>
     </group>
   )
@@ -371,10 +378,43 @@ export default function CinematicRig() {
     runtimeState.scroll > 0.1 && runtimeState.scroll < 0.92
   const fastThermalSwing = runtimeState.telemetry.temperatureC > 2.5
   const highDpr = runtimeState.viewport.dpr > 1.4
-  const shouldEnablePostFx =
-    !(transitionActive || heavyScrollTransition || highDpr || fastThermalSwing)
+  const shouldEnablePostFx = !(
+    transitionActive ||
+    heavyScrollTransition ||
+    highDpr ||
+    fastThermalSwing
+  )
   const shouldEnableDepthOfField =
-    shouldEnablePostFx && runtimeState.scroll < 0.84 && runtimeState.viewport.dpr <= 1.25
+    shouldEnablePostFx &&
+    runtimeState.scroll < 0.84 &&
+    runtimeState.viewport.dpr <= 1.25
+
+  const renderPostFx = () => {
+    if (!shouldEnablePostFx) {
+      return <></>
+    }
+
+    return (
+      <EffectComposer multisampling={0}>
+        <Bloom
+          intensity={bloomIntensity}
+          luminanceThreshold={0.31}
+          luminanceSmoothing={0.4}
+          mipmapBlur
+        />
+        {shouldEnableDepthOfField ? (
+          <DepthOfField
+            focusDistance={0.018}
+            focalLength={0.016}
+            bokehScale={0.62}
+            height={360}
+          />
+        ) : (
+          <></>
+        )}
+      </EffectComposer>
+    )
+  }
 
   return (
     <>
@@ -382,30 +422,17 @@ export default function CinematicRig() {
       <ambientLight intensity={0.54} />
       <directionalLight position={[5, 6, 3]} intensity={1.05} color='#bae6fd' />
       <pointLight position={[0, 1.2, 0]} intensity={1.85} color='#22d3ee' />
-      <pointLight position={[4.8, 1.6, -2.6]} intensity={0.72} color='#2563eb' />
+      <pointLight
+        position={[4.8, 1.6, -2.6]}
+        intensity={0.72}
+        color='#2563eb'
+      />
 
       <RouteAndGround />
       <TruckModel />
       <ColdFogParticles />
 
-      {shouldEnablePostFx && (
-        <EffectComposer multisampling={0}>
-          <Bloom
-            intensity={bloomIntensity}
-            luminanceThreshold={0.31}
-            luminanceSmoothing={0.4}
-            mipmapBlur
-          />
-          {shouldEnableDepthOfField ? (
-            <DepthOfField
-              focusDistance={0.018}
-              focalLength={0.016}
-              bokehScale={0.62}
-              height={360}
-            />
-          ) : null}
-        </EffectComposer>
-      )}
+      {renderPostFx()}
     </>
   )
 }

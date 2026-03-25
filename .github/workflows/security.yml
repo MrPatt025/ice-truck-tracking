@@ -23,7 +23,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@0f8b5ec9eb49a69efb866cf59c32c2f50949b81f
+        uses: gitleaks/gitleaks-action@v2
         with:
           args: detect --source . --config .gitleaks.toml --redact --verbose
         env:
