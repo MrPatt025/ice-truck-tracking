@@ -12,6 +12,7 @@ import { ScatterplotLayer } from '@deck.gl/layers';
 import type { PickingInfo } from '@deck.gl/core';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import type { Theme, TruckTelemetry } from './types';
+import type { CinematicCameraFlyToPayload } from '../workers/cinematicMessages';
 import { getTruckMap } from './store';
 
 type RGBA = [number, number, number, number];
@@ -238,6 +239,8 @@ export class ImperativeMapLayer {
     private readonly renderData: TruckRenderPoint[] = [];
     private readonly renderPointById = new Map<string, TruckRenderPoint>();
     private overlayDisabled = false;
+    private cinematicWorker: Worker | null = null;
+    private selectedTruckId: string | null = null;
 
     get ready(): boolean {
         return this._ready;
@@ -342,6 +345,9 @@ export class ImperativeMapLayer {
             .setLngLat([lng, lat])
             .setDOMContent(createTruckPopupContent(truck))
             .addTo(this.map);
+
+        // Trigger cinematic camera tracking to the selected truck
+        this.selectTruckForCinematicView(truck.id, lat, lng);
     }
 
     private syncFromTransientStore(): void {
@@ -482,6 +488,52 @@ export class ImperativeMapLayer {
             center: [truck.lng, truck.lat],
             zoom: 15,
             duration: 1500,
+        });
+    }
+
+    /** Register the cinematic worker for camera tracking */
+    setCinematicWorker(worker: Worker | null): void {
+        this.cinematicWorker = worker;
+    }
+
+    /** Select a truck for cinematic camera tracking */
+    private selectTruckForCinematicView(truckId: string, latitude: number, longitude: number): void {
+        if (!this.cinematicWorker) return;
+        if (this.selectedTruckId === truckId) return;
+
+        this.selectedTruckId = truckId;
+
+        const payload: CinematicCameraFlyToPayload = {
+            truckId,
+            targetLatitude: latitude,
+            targetLongitude: longitude,
+            durationMs: 1200,
+        };
+
+        this.cinematicWorker.postMessage({
+            type: 'cinematic:camera-flyto',
+            payload,
+        });
+    }
+
+    /** Deselect truck and return camera to overview */
+    deselectTruck(): void {
+        if (!this.cinematicWorker) return;
+        if (this.selectedTruckId === null) return;
+
+        this.selectedTruckId = null;
+        this.popup?.remove();
+
+        const payload: CinematicCameraFlyToPayload = {
+            truckId: null,
+            targetLatitude: null,
+            targetLongitude: null,
+            durationMs: 0,
+        };
+
+        this.cinematicWorker.postMessage({
+            type: 'cinematic:camera-flyto',
+            payload,
         });
     }
 

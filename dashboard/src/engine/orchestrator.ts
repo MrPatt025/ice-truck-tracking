@@ -317,10 +317,13 @@ export function unmount3D(): void {
 }
 
 /** Mount the Mapbox GL map into a container */
-export function mountMap(container: HTMLElement): void {
+export function mountMap(container: HTMLElement, cinematicWorker?: Worker | null): void {
     if (mapLayer) return;
     const theme = useIoTStore.getState().theme;
     mapLayer = new ImperativeMapLayer();
+    if (cinematicWorker) {
+        mapLayer.setCinematicWorker(cinematicWorker);
+    }
     mapLayer.init(container, theme);
     frameScheduler.register('map', (dt) => mapLayer?.update(dt));
 }
@@ -329,6 +332,13 @@ export function unmountMap(): void {
     frameScheduler.unregister('map');
     mapLayer?.destroy();
     mapLayer = null;
+}
+
+/** Register a cinematic worker with the map layer for interactive camera tracking */
+export function registerCinematicWorkerWithMap(cinematicWorker: Worker | null): void {
+    if (mapLayer) {
+        mapLayer.setCinematicWorker(cinematicWorker);
+    }
 }
 
 /** Register an imperative chart canvas */

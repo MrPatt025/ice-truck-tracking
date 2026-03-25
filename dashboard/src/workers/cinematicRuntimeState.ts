@@ -157,3 +157,54 @@ export function applyCameraFlyTo(payload: CinematicCameraFlyToPayload): void {
     }
   }
 }
+
+/**
+ * Update camera fly-to animation progress
+ * Called each render frame to animate camera to target truck or back to overview
+ * Uses easeInOutCubic for smooth acceleration/deceleration (60 FPS safe)
+ *
+ * @param now Current timestamp in milliseconds
+ */
+export function updateCameraFlyToProgress(
+  now: number,
+  easeFunction: (t: number) => number
+): void {
+  const { cameraFlyTo } = runtimeState
+  if (!cameraFlyTo.isAnimating || cameraFlyTo.startedAt === null) return
+
+  const elapsed = now - cameraFlyTo.startedAt
+  const progress = clamp(elapsed / cameraFlyTo.durationMs, 0, 1)
+  const eased = easeFunction(progress)
+
+  // Determine target zoom and pitch based on whether we're tracking a truck or returning to overview
+  const isTrackingTruck = cameraFlyTo.truckId !== null
+  const targetZoom = isTrackingTruck ? 16 : 12 // Close zoom for truck, wide for overview
+  const targetPitch = isTrackingTruck ? 50 : 34 // Higher pitch for truck view
+
+  // Interpolate camera position smoothly
+  const nextLatitude =
+    cameraFlyTo.startLatitude! +
+    (cameraFlyTo.targetLatitude! - cameraFlyTo.startLatitude!) * eased
+  const nextLongitude =
+    cameraFlyTo.startLongitude! +
+    (cameraFlyTo.targetLongitude! - cameraFlyTo.startLongitude!) * eased
+  const nextZoom =
+    cameraFlyTo.startZoom! +
+    (targetZoom - cameraFlyTo.startZoom!) * eased
+  const nextPitch =
+    cameraFlyTo.startPitch! +
+    (targetPitch - cameraFlyTo.startPitch!) * eased
+
+  applyDeckViewState({
+    latitude: nextLatitude,
+    longitude: nextLongitude,
+    zoom: nextZoom,
+    pitch: nextPitch,
+  })
+
+  // Mark animation as complete
+  if (progress >= 1) {
+    cameraFlyTo.isAnimating = false
+    cameraFlyTo.startedAt = null
+  }
+}

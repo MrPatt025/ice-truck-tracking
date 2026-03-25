@@ -15,6 +15,7 @@ import {
 import { useCameraSelectionStore } from '@/stores/cameraSelectionStore'
 import { dispatchWsHealthEvent } from '@/lib/healthEvents'
 import { parseFleetLivePacket } from '@/lib/schemas/telemetry'
+import { registerCinematicWorkerWithMap } from '@/engine/orchestrator'
 import type {
   CinematicTransitionPhase,
   CinematicWorkerMessage,
@@ -103,6 +104,9 @@ function HeroBackground({
     workerRef.current = worker
     setWorker(worker)
 
+    // Register worker with map layer for interactive camera tracking
+    registerCinematicWorkerWithMap(worker)
+
     const sendViewport = () => {
       const msg: CinematicWorkerMessage = {
         type: 'cinematic:viewport',
@@ -129,6 +133,7 @@ function HeroBackground({
       worker.terminate()
       workerRef.current = null
       setWorker(null)
+      registerCinematicWorkerWithMap(null)
     }
   }, [])
 
