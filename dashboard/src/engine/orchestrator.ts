@@ -39,6 +39,7 @@ import { PerformanceOverlay } from './perfOverlay';
 import { AdaptiveController } from './adaptive';
 import { PerceptionEngine } from './perception';
 import { SpatialIndex, EntityMap } from './dataViz/spatialIndex';
+import { dispatchWsHealthEvent } from '@/lib/healthEvents';
 
 // ─── Craft Layer Imports ───────────────────────────────────────
 import { LightDirector } from './craft/lightSystem';
@@ -486,9 +487,21 @@ function handleWorkerMessage(msg: WorkerOutbound): void {
             break;
         }
 
-        case 'connection-status':
+        case 'connection-status': {
             store.getState().setConnectionStatus(msg.payload);
+            let wsStatus: 'connected' | 'reconnecting' | 'offline' = 'offline';
+            if (msg.payload === 'connected') {
+                wsStatus = 'connected';
+            } else if (msg.payload === 'reconnecting') {
+                wsStatus = 'reconnecting';
+            }
+            dispatchWsHealthEvent({
+                status: wsStatus,
+                source: 'telemetry-worker',
+                reason: `worker-${msg.payload}`,
+            });
             break;
+        }
     }
 }
 

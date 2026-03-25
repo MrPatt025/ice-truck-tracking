@@ -1,1 +1,5 @@
-npx lint-staged
+#!/bin/sh
+set -e
+
+# Avoid lint-staged stash/apply backup flow, which can fail on some Windows git setups.
+npx lint-staged --no-stash

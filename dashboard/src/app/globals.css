@@ -252,3 +252,15 @@
     transform: translateY(6px);
   }
 }
+
+.truck-popup-glass .mapboxgl-popup-content {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  box-shadow: none;
+}
+
+.truck-popup-glass .mapboxgl-popup-tip {
+  border-top-color: rgba(30, 41, 59, 0.82);
+  border-bottom-color: rgba(30, 41, 59, 0.82);
+}

@@ -44,6 +44,7 @@ export function GlassmorphismPanel({
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay, ease: 'easeOut' }}
+      viewport={{ once: true, amount: 0.2 }}
       style={{
         opacity: panelOpacity,
         y: panelY,
@@ -61,6 +62,7 @@ export function GlassmorphismPanel({
       <div className='absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_18%_16%,rgba(186,230,253,0.2),transparent_46%)] pointer-events-none' />
       {/* Inner glow effect */}
       <div className='absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-400/5 via-transparent to-blue-400/5 pointer-events-none' />
+      <div className='absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_82%_20%,rgba(224,242,254,0.16),transparent_38%)] pointer-events-none' />
       <div className='absolute inset-x-0 top-0 h-px bg-cyan-100/65 pointer-events-none' />
 
       {/* Content */}

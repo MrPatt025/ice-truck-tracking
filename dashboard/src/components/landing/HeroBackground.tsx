@@ -12,6 +12,7 @@ import {
   useFleetTelemetryStore,
   type FleetTruck,
 } from '@/stores/fleetTelemetryStore'
+import { dispatchWsHealthEvent } from '@/lib/healthEvents'
 import { parseFleetLivePacket } from '@/lib/schemas/telemetry'
 import type {
   CinematicTransitionPhase,
@@ -72,7 +73,7 @@ function resolveWebSocketUrl(): string {
   return `${protocol}//${globalThis.window.location.host}`
 }
 
-export default function HeroBackground({
+function HeroBackground({
   scrollProgress,
   transitionProgress,
   transitionPhase = 'idle',
@@ -81,7 +82,9 @@ export default function HeroBackground({
   const [worker, setWorker] = React.useState<Worker | null>(null)
   const workerRef = React.useRef<Worker | null>(null)
   const socketRef = React.useRef<WebSocket | null>(null)
-  const reconnectTimerRef = React.useRef<ReturnType<typeof globalThis.setTimeout> | null>(null)
+  const reconnectTimerRef = React.useRef<ReturnType<
+    typeof globalThis.setTimeout
+  > | null>(null)
   const reconnectAttemptRef = React.useRef(0)
   const latestScrollRef = React.useRef(0)
   const { scrollYProgress: localScrollProgress } = useScroll()
@@ -105,7 +108,7 @@ export default function HeroBackground({
         payload: {
           width: Math.max(1, globalThis.innerWidth),
           height: Math.max(1, globalThis.innerHeight),
-          dpr: Math.min(2, globalThis.devicePixelRatio || 1),
+          dpr: Math.min(1.75, globalThis.devicePixelRatio || 1),
         },
       }
       worker.postMessage(msg)
@@ -180,7 +183,15 @@ export default function HeroBackground({
 
       const backoff = Math.min(10000, 1000 * 2 ** reconnectAttemptRef.current)
       const jitter = Math.floor(Math.random() * 250)
-      reconnectAttemptRef.current += 1
+      const nextAttempt = reconnectAttemptRef.current + 1
+      reconnectAttemptRef.current = nextAttempt
+
+      dispatchWsHealthEvent({
+        status: 'reconnecting',
+        source: 'landing-hero-websocket',
+        attempt: nextAttempt,
+        reason: 'socket-closed',
+      })
 
       reconnectTimerRef.current = globalThis.setTimeout(() => {
         connect()
@@ -197,6 +208,10 @@ export default function HeroBackground({
 
         ws.onopen = () => {
           reconnectAttemptRef.current = 0
+          dispatchWsHealthEvent({
+            status: 'connected',
+            source: 'landing-hero-websocket',
+          })
         }
 
         ws.onmessage = event => {
@@ -219,13 +234,28 @@ export default function HeroBackground({
         }
 
         ws.onerror = () => {
+          dispatchWsHealthEvent({
+            status: 'offline',
+            source: 'landing-hero-websocket',
+            reason: 'socket-error',
+          })
           ws.close()
         }
 
         ws.onclose = () => {
+          dispatchWsHealthEvent({
+            status: 'offline',
+            source: 'landing-hero-websocket',
+            reason: 'socket-closed',
+          })
           scheduleReconnect()
         }
       } catch {
+        dispatchWsHealthEvent({
+          status: 'offline',
+          source: 'landing-hero-websocket',
+          reason: 'socket-create-failed',
+        })
         scheduleReconnect()
       }
     }
@@ -237,6 +267,11 @@ export default function HeroBackground({
       clearReconnectTimer()
       socketRef.current?.close()
       socketRef.current = null
+      dispatchWsHealthEvent({
+        status: 'offline',
+        source: 'landing-hero-websocket',
+        reason: 'cleanup',
+      })
     }
   }, [])
 
@@ -309,3 +344,5 @@ export default function HeroBackground({
     </div>
   )
 }
+
+export default React.memo(HeroBackground)

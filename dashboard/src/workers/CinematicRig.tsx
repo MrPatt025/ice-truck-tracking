@@ -8,6 +8,8 @@ import {
   BufferGeometry,
   Color,
   Group,
+  InstancedMesh,
+  Object3D,
   Mesh,
   Points,
   ShaderMaterial,
@@ -34,6 +36,33 @@ function TruckModel() {
   const leftHull = React.useRef<Mesh>(null)
   const rightHull = React.useRef<Mesh>(null)
   const sensorGroup = React.useRef<Group>(null)
+  const frontWheels = React.useRef<InstancedMesh>(null)
+  const rearWheels = React.useRef<InstancedMesh>(null)
+
+  React.useEffect(() => {
+    const front = frontWheels.current
+    const rear = rearWheels.current
+    if (!front || !rear) return
+
+    const dummy = new Object3D()
+    const wheelX = [-1.05, 1.05] as const
+
+    wheelX.forEach((x, index) => {
+      dummy.position.set(x, -0.1, 0.64)
+      dummy.rotation.set(Math.PI / 2, 0, 0)
+      dummy.updateMatrix()
+      front.setMatrixAt(index, dummy.matrix)
+    })
+    front.instanceMatrix.needsUpdate = true
+
+    wheelX.forEach((x, index) => {
+      dummy.position.set(x, -0.1, -0.64)
+      dummy.rotation.set(Math.PI / 2, 0, 0)
+      dummy.updateMatrix()
+      rear.setMatrixAt(index, dummy.matrix)
+    })
+    rear.instanceMatrix.needsUpdate = true
+  }, [])
 
   useFrame(({ clock, camera }, delta) => {
     const p = runtimeState.scroll
@@ -130,35 +159,23 @@ function TruckModel() {
         </mesh>
       </group>
 
-      {[-1.05, 1.05].map(x => (
-        <mesh
-          key={`front-wheel-${x}`}
-          position={[x, -0.1, 0.64]}
-          rotation={[Math.PI / 2, 0, 0]}
-        >
-          <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
-          <meshStandardMaterial
-            color='#0f172a'
-            roughness={0.8}
-            metalness={0.1}
-          />
-        </mesh>
-      ))}
+      <instancedMesh ref={frontWheels} args={[undefined, undefined, 2]}>
+        <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
+        <meshStandardMaterial
+          color='#0f172a'
+          roughness={0.8}
+          metalness={0.1}
+        />
+      </instancedMesh>
 
-      {[-1.05, 1.05].map(x => (
-        <mesh
-          key={`rear-wheel-${x}`}
-          position={[x, -0.1, -0.64]}
-          rotation={[Math.PI / 2, 0, 0]}
-        >
-          <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
-          <meshStandardMaterial
-            color='#0f172a'
-            roughness={0.8}
-            metalness={0.1}
-          />
-        </mesh>
-      ))}
+      <instancedMesh ref={rearWheels} args={[undefined, undefined, 2]}>
+        <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
+        <meshStandardMaterial
+          color='#0f172a'
+          roughness={0.8}
+          metalness={0.1}
+        />
+      </instancedMesh>
     </group>
   )
 }

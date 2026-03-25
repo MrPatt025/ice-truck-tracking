@@ -462,10 +462,10 @@ export default function AlertsPage() {
             <AnimatePresence>
               {showRuleForm && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className='overflow-hidden'
+                  initial={{ opacity: 0, scaleY: 0.92, y: -6 }}
+                  animate={{ opacity: 1, scaleY: 1, y: 0 }}
+                  exit={{ opacity: 0, scaleY: 0.92, y: -6 }}
+                  className='overflow-hidden origin-top'
                 >
                   <div className='bg-card rounded-xl border border-border p-6 space-y-4'>
                     <div className='flex items-center justify-between'>
@@ -526,7 +526,12 @@ export default function AlertsPage() {
                         </select>
                       </div>
                       <div className='space-y-1'>
-                        <label htmlFor='rule-condition' className='text-sm font-medium'>Condition</label>
+                        <label
+                          htmlFor='rule-condition'
+                          className='text-sm font-medium'
+                        >
+                          Condition
+                        </label>
                         <select
                           id='rule-condition'
                           value={newRule.condition}
@@ -546,7 +551,12 @@ export default function AlertsPage() {
                         </select>
                       </div>
                       <div className='space-y-1'>
-                        <label htmlFor='rule-threshold' className='text-sm font-medium'>Threshold</label>
+                        <label
+                          htmlFor='rule-threshold'
+                          className='text-sm font-medium'
+                        >
+                          Threshold
+                        </label>
                         <input
                           id='rule-threshold'
                           type='number'
@@ -561,7 +571,12 @@ export default function AlertsPage() {
                         />
                       </div>
                       <div className='space-y-1'>
-                        <label htmlFor='rule-severity' className='text-sm font-medium'>Severity</label>
+                        <label
+                          htmlFor='rule-severity'
+                          className='text-sm font-medium'
+                        >
+                          Severity
+                        </label>
                         <select
                           id='rule-severity'
                           value={newRule.severity}

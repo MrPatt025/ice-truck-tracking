@@ -8,7 +8,7 @@ const pool = new Pool({
   max: config.DB_POOL_MAX,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
-  ssl: config.isProduction ? { rejectUnauthorized: false } : false,
+  ssl: config.DB_SSL ? { rejectUnauthorized: false } : false,
 });
 
 pool.on('connect', () => logger.debug('New PostgreSQL client connected'));

@@ -11,15 +11,13 @@ const signToken = (id, role) => {
 
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user.id, user.role);
-
-  // Remove password from output
-  user.password = undefined;
+  const safeUser = { ...user, password: undefined };
 
   res.status(statusCode).json({
     status: 'success',
     token,
     data: {
-      user,
+      user: safeUser,
     },
   });
 };

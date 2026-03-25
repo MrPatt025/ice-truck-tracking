@@ -6,6 +6,6 @@ const { generalLimiter } = require('../../middleware/rateLimiter');
 const router = express.Router();
 
 router.post('/login', generalLimiter, validate(schemas.login), login);
-router.post('/register', generalLimiter, validate(schemas.login), register);
+router.post('/register', generalLimiter, validate(schemas.register), register);
 
 module.exports = router;

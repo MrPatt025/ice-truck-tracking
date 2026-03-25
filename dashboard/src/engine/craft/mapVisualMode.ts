@@ -16,6 +16,10 @@
 import type { Theme } from '../types';
 import type { TimeSegment } from './temporalBehavior';
 
+const OPEN_STYLE_URL = 'https://demotiles.maplibre.org/style.json';
+const HAS_MAPBOX_TOKEN =
+  (process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim() ?? '').length > 0;
+
 // ─── Types ─────────────────────────────────────────────────────
 
 export interface TruckMarkerVisuals {
@@ -186,6 +190,10 @@ export class MapVisualController {
 
   /** Get Mapbox GL style URL appropriate for current time/theme */
   getMapStyle(): string {
+    if (!HAS_MAPBOX_TOKEN) {
+      return OPEN_STYLE_URL;
+    }
+
     if (this._config.nightMode || this._theme === 'dark') {
       return 'mapbox://styles/mapbox/dark-v11';
     }

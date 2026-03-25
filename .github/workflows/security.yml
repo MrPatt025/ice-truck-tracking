@@ -22,16 +22,13 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
-      - name: Install Gitleaks
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/gitleaks/gitleaks/master/install.sh | sh -s -- -b /usr/local/bin
       - name: Run Gitleaks
-        run: |
-          gitleaks detect \
-            --source . \
-            --config .gitleaks.toml \
-            --redact \
-            --verbose
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . --config .gitleaks.toml --redact --verbose
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
 
   # ── Trivy Filesystem Scan (Backend) ──────────────────────
   trivy-backend:

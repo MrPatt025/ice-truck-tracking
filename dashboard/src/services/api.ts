@@ -3,6 +3,11 @@
  * Provides typed methods for all backend endpoints.
  */
 
+import {
+  dispatchBackendHealthEvent,
+  type BackendHealthStatus,
+} from '@/lib/healthEvents';
+
 const API_BASE = (() => {
   const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim();
   if (configuredApiRoot) {
@@ -20,6 +25,26 @@ const API_BASE = (() => {
 
   return 'http://localhost:5000/api/v1';
 })();
+
+let latestBackendHealthStatus: BackendHealthStatus | null = null;
+
+function notifyBackendHealth(
+  status: BackendHealthStatus,
+  statusCode?: number,
+  reason?: string
+): void {
+  if (latestBackendHealthStatus === status && statusCode === undefined && !reason) {
+    return;
+  }
+
+  latestBackendHealthStatus = status;
+  dispatchBackendHealthEvent({
+    status,
+    source: 'dashboard-api-service',
+    statusCode,
+    reason,
+  });
+}
 
 // ── Request Helpers ────────────────────────────────────────
 async function getAuthToken(): Promise<string | null> {
@@ -42,11 +67,23 @@ async function apiRequest<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-    credentials: 'include',
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+      credentials: 'include',
+    });
+  } catch {
+    notifyBackendHealth('degraded', undefined, 'network-error');
+    throw new ApiError(0, 'Network request failed');
+  }
+
+  if (res.status >= 500) {
+    notifyBackendHealth('degraded', res.status, 'server-error');
+  } else if (res.ok) {
+    notifyBackendHealth('healthy');
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Request failed' }));

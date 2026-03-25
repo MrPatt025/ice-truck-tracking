@@ -99,6 +99,8 @@ import FpsTargetMonitor from '@/components/FpsTargetMonitor'
 import PremiumSystemStatusBanner, {
   type StatusIssue,
 } from '@/components/common/PremiumSystemStatusBanner'
+import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
+import { dispatchBackendHealthEvent } from '@/lib/healthEvents'
 
 // ─── Types ─────────────────────────────────────────────────────
 type Trend = 'up' | 'down' | 'stable'
@@ -153,7 +155,9 @@ const CHART_CONFIGS = {
   },
 }
 
-const EASE_CINEMATIC_INTRO: [number, number, number, number] = [0.2, 0.88, 0.25, 1]
+const EASE_CINEMATIC_INTRO: [number, number, number, number] = [
+  0.2, 0.88, 0.25, 1,
+]
 
 /* ============== UI Helpers (ternary extractors) ============ */
 const INTENT_CLS: Record<string, string> = {
@@ -544,10 +548,9 @@ export default function Dashboard() {
   const connectionStatus = useIoTStore(s => s.connectionStatus)
   const metrics = useIoTStore(s => s.metrics)
   const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
+  const { backendStatus } = useAppHealthEvents()
 
   // ── Local React state (UI-only, not telemetry) ───────────────
-  const [apiHealthy, setApiHealthy] = useState<boolean | null>(null)
-  const [apiServerError, setApiServerError] = useState(false)
   const [browserOffline, setBrowserOffline] = useState(false)
   const [fullscreen, setFullscreen] = useState<Fullscreen>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
@@ -647,12 +650,29 @@ export default function Dashboard() {
         const response = await fetch(`${API_BASE}/health`, {
           signal: AbortSignal.timeout(5000),
         })
-        setApiHealthy(response.ok)
-        setApiServerError(response.status >= 500)
+        if (response.status >= 500) {
+          dispatchBackendHealthEvent({
+            status: 'degraded',
+            source: 'dashboard-health-probe',
+            statusCode: response.status,
+            reason: 'probe-5xx',
+          })
+        } else if (response.ok) {
+          dispatchBackendHealthEvent({
+            status: 'healthy',
+            source: 'dashboard-health-probe',
+          })
+        }
         retryCount = 0
       } catch {
         retryCount++
-        if (retryCount >= maxRetries) setApiHealthy(false)
+        if (retryCount >= maxRetries) {
+          dispatchBackendHealthEvent({
+            status: 'degraded',
+            source: 'dashboard-health-probe',
+            reason: 'probe-network-error',
+          })
+        }
       }
     }
     checkHealth()
@@ -720,6 +740,12 @@ export default function Dashboard() {
 
   // ── Build metric cards from Zustand metrics (re-renders ~2x/sec max) ──
   const metricCards = buildMetrics(metrics, unacknowledgedAlerts)
+  let apiHealthy: boolean | null = null
+  if (backendStatus === 'healthy') {
+    apiHealthy = true
+  } else if (backendStatus === 'degraded') {
+    apiHealthy = false
+  }
 
   // ── Alert panel data (read from mutable store imperatively) ──
   const alertList = mounted ? getAlerts() : []
@@ -783,7 +809,7 @@ export default function Dashboard() {
       })
     }
 
-    if (apiServerError) {
+    if (backendStatus === 'degraded') {
       issues.push({
         id: 'api-5xx',
         kind: 'api',
@@ -809,7 +835,7 @@ export default function Dashboard() {
     }
 
     return issues
-  }, [apiServerError, browserOffline, connectionStatus, mounted])
+  }, [backendStatus, browserOffline, connectionStatus, mounted])
 
   /* ================================================================
    *  RENDER — React only renders the UI shell, panels, controls.

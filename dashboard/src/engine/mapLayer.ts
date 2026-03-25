@@ -61,6 +61,21 @@ function resolveMapStyle(theme: Theme): string {
     return MAPBOX_STYLES[theme] ?? MAPBOX_STYLES.dark;
 }
 
+function createMapInstance(container: HTMLElement, style: string): mapboxgl.Map {
+    return new mapboxgl.Map({
+        container,
+        style,
+        center: [100.5018, 13.7563],
+        zoom: 10,
+        antialias: true,
+        maxZoom: 18,
+        minZoom: 3,
+        attributionControl: false,
+        fadeDuration: 0,
+        trackResize: true,
+    });
+}
+
 function getTruckColor(truck: TruckTelemetry): RGBA {
     if (truck.temperature > TEMP_HIGH_LIMIT || truck.temperature < TEMP_LOW_LIMIT) {
         return [239, 68, 68, 230];
@@ -112,6 +127,105 @@ function resolveTelemetryTimestampMs(truck: TruckTelemetry, fallback: number): n
     return fallback;
 }
 
+function formatStatusLabel(status: string): string {
+    if (!status) return 'Unknown';
+    return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function statusPillStyles(status: string): string {
+    switch (status) {
+        case 'offline':
+            return 'background: rgba(239, 68, 68, 0.18); color: rgba(254, 202, 202, 0.98); border: 1px solid rgba(248, 113, 113, 0.4);';
+        case 'maintenance':
+            return 'background: rgba(139, 92, 246, 0.2); color: rgba(221, 214, 254, 0.98); border: 1px solid rgba(167, 139, 250, 0.45);';
+        default:
+            return 'background: rgba(16, 185, 129, 0.2); color: rgba(167, 243, 208, 0.98); border: 1px solid rgba(52, 211, 153, 0.45);';
+    }
+}
+
+function appendMetricRow(root: HTMLElement, label: string, value: string): void {
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.alignItems = 'center';
+    row.style.gap = '10px';
+
+    const key = document.createElement('span');
+    key.textContent = label;
+    key.style.fontSize = '11px';
+    key.style.textTransform = 'uppercase';
+    key.style.letterSpacing = '0.08em';
+    key.style.color = 'rgba(148, 163, 184, 0.95)';
+
+    const val = document.createElement('span');
+    val.textContent = value;
+    val.style.fontSize = '13px';
+    val.style.fontWeight = '600';
+    val.style.color = 'rgba(226, 232, 240, 0.98)';
+
+    row.append(key, val);
+    root.appendChild(row);
+}
+
+function createTruckPopupContent(truck: TruckRenderPoint): HTMLElement {
+    const card = document.createElement('div');
+    card.style.width = '250px';
+    card.style.padding = '12px';
+    card.style.borderRadius = '14px';
+    card.style.color = 'rgba(241, 245, 249, 0.98)';
+    card.style.background = 'linear-gradient(145deg, rgba(15, 23, 42, 0.86), rgba(30, 41, 59, 0.7))';
+    card.style.border = '1px solid rgba(148, 163, 184, 0.32)';
+    card.style.boxShadow = '0 18px 40px rgba(2, 6, 23, 0.45)';
+    card.style.backdropFilter = 'blur(12px)';
+    card.style.webkitBackdropFilter = 'blur(12px)';
+    card.style.display = 'flex';
+    card.style.flexDirection = 'column';
+    card.style.gap = '10px';
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(8px) scale(0.985)';
+    card.style.willChange = 'transform, opacity';
+    card.style.transition = 'opacity 170ms ease-out, transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1)';
+
+    const header = document.createElement('div');
+    header.style.display = 'flex';
+    header.style.justifyContent = 'space-between';
+    header.style.alignItems = 'center';
+    header.style.gap = '8px';
+
+    const truckId = document.createElement('strong');
+    truckId.textContent = truck.id;
+    truckId.style.fontSize = '14px';
+    truckId.style.letterSpacing = '0.03em';
+
+    const status = document.createElement('span');
+    status.textContent = formatStatusLabel(truck.status);
+    status.style.fontSize = '11px';
+    status.style.fontWeight = '700';
+    status.style.padding = '3px 8px';
+    status.style.borderRadius = '999px';
+    status.style.cssText += statusPillStyles(truck.status);
+
+    header.append(truckId, status);
+
+    const metrics = document.createElement('div');
+    metrics.style.display = 'flex';
+    metrics.style.flexDirection = 'column';
+    metrics.style.gap = '7px';
+
+    appendMetricRow(metrics, 'Driver', truck.driverName || 'N/A');
+    appendMetricRow(metrics, 'Speed', `${truck.speed.toFixed(0)} km/h`);
+    appendMetricRow(metrics, 'Temp', `${truck.temperature.toFixed(1)}°C`);
+
+    card.append(header, metrics);
+
+    requestAnimationFrame(() => {
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0) scale(1)';
+    });
+
+    return card;
+}
+
 export class ImperativeMapLayer {
     private map: mapboxgl.Map | null = null;
     private container: HTMLElement | null = null;
@@ -141,18 +255,17 @@ export class ImperativeMapLayer {
             console.warn('NEXT_PUBLIC_MAPBOX_TOKEN missing. Using public open style fallback.');
         }
 
-        this.map = new mapboxgl.Map({
-            container,
-            style: resolveMapStyle(style),
-            center: [100.5018, 13.7563],
-            zoom: 10,
-            antialias: true,
-            maxZoom: 18,
-            minZoom: 3,
-            attributionControl: false,
-            fadeDuration: 0,
-            trackResize: true,
-        });
+        const resolvedStyle = resolveMapStyle(style);
+
+        try {
+            this.map = createMapInstance(container, resolvedStyle);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            const needsTokenFallback = message.toLowerCase().includes('access token');
+            if (!needsTokenFallback) throw error;
+
+            this.map = createMapInstance(container, OPEN_STYLE_URL);
+        }
 
         this.map.addControl(new mapboxgl.NavigationControl(), 'top-right');
         this.map.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
@@ -225,17 +338,9 @@ export class ImperativeMapLayer {
         const truck = info.object;
         this.popup?.remove();
 
-        this.popup = new mapboxgl.Popup({ closeOnClick: true, maxWidth: '300px' })
+        this.popup = new mapboxgl.Popup({ closeOnClick: true, maxWidth: '300px', className: 'truck-popup-glass' })
             .setLngLat([lng, lat])
-            .setHTML(
-                `<div class="p-2 text-sm">`
-                + `<strong>${truck.id}</strong><br/>`
-                + `Driver: ${truck.driverName || 'N/A'}<br/>`
-                + `Speed: ${truck.speed.toFixed(0)} km/h<br/>`
-                + `Temp: ${truck.temperature.toFixed(1)}°C<br/>`
-                + `Status: <span class="font-semibold">${truck.status}</span>`
-                + `</div>`,
-            )
+            .setDOMContent(createTruckPopupContent(truck))
             .addTo(this.map);
     }
 
@@ -361,7 +466,8 @@ export class ImperativeMapLayer {
     /** Change map style */
     setStyle(style: Theme): void {
         if (!this.map) return;
-        this.map.setStyle(resolveMapStyle(style));
+        const nextStyle = resolveMapStyle(style);
+        this.map.setStyle(nextStyle);
         this.map.once('style.load', () => {
             this.installDeckOverlay();
             this.refreshDeckLayer();

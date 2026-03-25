@@ -77,8 +77,8 @@ function LoginContent() {
         <form onSubmit={handleSubmit} className='space-y-4'>
           {error && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
               className='flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm'
               role='alert'
             >

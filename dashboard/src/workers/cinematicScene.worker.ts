@@ -56,6 +56,12 @@ let deckInstance: Deck | null = null
 let deckUpdateQueued = false
 let lastDeckRenderAt = 0
 const TARGET_FRAME_MS = 1000 / 60
+const FPS_DROP_THRESHOLD = 55
+const FPS_RECOVER_THRESHOLD = 58
+const MIN_ADAPTIVE_DPR = 0.75
+const DPR_ADJUST_STEP = 0.08
+const LOW_FPS_SAMPLE_COUNT = 18
+const RECOVERY_SAMPLE_COUNT = 48
 let fleetNodes: readonly FleetNode[] = []
 const mutableFleetNodes: FleetNode[] = []
 const fleetNodeById = new Map<string, FleetNode>()
@@ -66,6 +72,11 @@ const MIN_MOVEMENT_DELTA = 0.000001
 const STALE_PACKET_THRESHOLD_MS = 5 * 60 * 1000
 const STALE_FADE_DURATION_MS = 90 * 1000
 let interpolationLoopActive = false
+let baseViewportDpr = 1
+let adaptiveViewportDpr = 1
+let smoothedFrameMs = TARGET_FRAME_MS
+let lowFpsSampleCount = 0
+let recoverySampleCount = 0
 
 function clampUnit(value: number): number {
   return Math.max(0, Math.min(1, value))
@@ -96,6 +107,48 @@ function isOffscreenInitMessage(
         'drawingSurface' in payload && payload.drawingSurface instanceof OffscreenCanvas
 
     return hasCanvas
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value))
+}
+
+function updateAdaptiveDpr(nextDpr: number): void {
+  const boundedDpr = clamp(nextDpr, MIN_ADAPTIVE_DPR, baseViewportDpr)
+  if (Math.abs(boundedDpr - adaptiveViewportDpr) < 0.01) return
+
+  adaptiveViewportDpr = boundedDpr
+  applyViewport({
+    ...runtimeState.viewport,
+    dpr: adaptiveViewportDpr,
+  })
+}
+
+function observeFramePacing(elapsedMs: number): void {
+  smoothedFrameMs = smoothedFrameMs * 0.88 + elapsedMs * 0.12
+  const smoothedFps = 1000 / Math.max(1, smoothedFrameMs)
+
+  if (smoothedFps < FPS_DROP_THRESHOLD) {
+    lowFpsSampleCount += 1
+    recoverySampleCount = 0
+    if (lowFpsSampleCount >= LOW_FPS_SAMPLE_COUNT) {
+      updateAdaptiveDpr(adaptiveViewportDpr - DPR_ADJUST_STEP)
+      lowFpsSampleCount = 0
+    }
+    return
+  }
+
+  lowFpsSampleCount = 0
+  if (smoothedFps > FPS_RECOVER_THRESHOLD && adaptiveViewportDpr < baseViewportDpr) {
+    recoverySampleCount += 1
+    if (recoverySampleCount >= RECOVERY_SAMPLE_COUNT) {
+      updateAdaptiveDpr(adaptiveViewportDpr + DPR_ADJUST_STEP)
+      recoverySampleCount = 0
+    }
+    return
+  }
+
+  recoverySampleCount = 0
 }
 
 function buildDeckLayers() {
@@ -356,7 +409,7 @@ function updateDeckScene(): void {
   deckInstance.setProps({
     width: runtimeState.viewport.width,
     height: runtimeState.viewport.height,
-    useDevicePixels: runtimeState.viewport.dpr,
+    useDevicePixels: adaptiveViewportDpr,
       viewState: runtimeState.deckViewState,
       layers: buildDeckLayers(),
   })
@@ -375,6 +428,7 @@ function scheduleDeckSceneUpdate(): void {
       return
     }
 
+  observeFramePacing(elapsed)
     lastDeckRenderAt = now
     deckUpdateQueued = false
     updateDeckScene()
@@ -416,6 +470,8 @@ function initializeDeck(payload: OffscreenInitPayload): void {
         height: payload.height ?? runtimeState.viewport.height,
         dpr: payload.pixelRatio ?? runtimeState.viewport.dpr,
     })
+  baseViewportDpr = runtimeState.viewport.dpr
+  adaptiveViewportDpr = baseViewportDpr
 
   deckInstance = new Deck({
       id: 'cinematic-deck-dual-renderer',
@@ -476,6 +532,8 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
   }
 
     applyViewport(data.payload)
+    baseViewportDpr = runtimeState.viewport.dpr
+    adaptiveViewportDpr = Math.min(adaptiveViewportDpr, baseViewportDpr)
     scheduleDeckSceneUpdate()
 })
 

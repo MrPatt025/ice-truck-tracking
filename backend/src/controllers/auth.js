@@ -33,9 +33,27 @@ const login = async (req, res, next) => {
 
 const register = async (req, res, next) => {
   try {
-    const { username, password, role = 'driver' } = req.body;
-    const newUser = await userService.register({ username, password, role });
-    logger.info(`New user registered: ${username}`);
+    const {
+      username,
+      email,
+      name,
+      full_name,
+      phone,
+      company,
+      password,
+      role = 'driver',
+    } = req.body;
+    const newUser = await userService.register({
+      username,
+      email,
+      name,
+      full_name,
+      phone,
+      company,
+      password,
+      role,
+    });
+    logger.info(`New user registered: ${newUser?.username || username || email}`);
     createSendToken(newUser, 201, res);
   } catch (error) {
     logger.error('Registration error:', error);
