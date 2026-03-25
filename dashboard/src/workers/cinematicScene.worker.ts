@@ -242,6 +242,33 @@ function buildDeckLayers() {
     return [auraLayer, iconLayer, scatterplotLayer]
 }
 
+/**
+ * Dispose Deck.gl instance and release GPU resources.
+ * Critical for long-running sessions to prevent memory leaks.
+ */
+function disposeDeck(): void {
+  if (!deckInstance) return
+
+  try {
+    // Dispose layers first (they may have GPU buffers)
+    const layers = deckInstance.props.layers ?? []
+    for (const layer of layers) {
+      if (typeof (layer as any)?.dispose === 'function') {
+        (layer as any).dispose()
+      }
+    }
+
+    // Dispose the Deck instance (finalize WebGL state)
+    if (typeof deckInstance.finalize === 'function') {
+      deckInstance.finalize()
+    }
+  } catch {
+    // Gracefully ignore disposal errors in edge cases
+  }
+
+  deckInstance = null
+}
+
 function hasMeaningfulMovement(
   fromLongitude: number,
   fromLatitude: number,
@@ -504,7 +531,17 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
     return
   }
 
-  if (!isCinematicWorkerMessage(event.data)) return
+  if (!isCinematicWorkerMessage(event.data)) {
+    // Handle special cleanup message
+    if (event.data === 'cinematic:cleanup') {
+      disposeDeck()
+      mutableFleetNodes.length = 0
+      fleetNodeById.clear()
+      fleetNodes = []
+      return
+    }
+    return
+  }
 
   const data: CinematicWorkerMessage = event.data
 
@@ -537,4 +574,8 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
     scheduleDeckSceneUpdate()
 })
 
+/**
+ * Initialize R3F rendering in worker — handles CinematicRig geometry and material lifecycle.
+ * Calling render() registers the effect cleanup automatically with the React lifecycle.
+ */
 render(React.createElement(CinematicRig))

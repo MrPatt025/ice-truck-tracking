@@ -64,6 +64,51 @@ function TruckModel() {
     rear.instanceMatrix.needsUpdate = true
   }, [])
 
+  /**
+   * Geometry and material disposal on unmount.
+   * Prevents GPU memory leaks during long sessions where components
+   * are mounted/unmounted (e.g., page navigation).
+   */
+  React.useEffect(() => {
+    return () => {
+      // Dispose materials in a reusable helper
+      const disposeMaterial = (material: any) => {
+        if (Array.isArray(material)) {
+          material.forEach(m => m.dispose?.())
+        } else {
+          material.dispose?.()
+        }
+      }
+
+      // Traverse and dispose all geometries and materials
+      const traverse = (node: any) => {
+        if (!node) return
+        if (node.geometry?.dispose) node.geometry.dispose()
+        if (node.material) disposeMaterial(node.material)
+        if (node.children) node.children.forEach(traverse)
+      }
+
+      if (root.current) {
+        traverse(root.current)
+      }
+
+      // Explicitly dispose instanced meshes
+      if (frontWheels.current?.geometry) {
+        frontWheels.current.geometry.dispose()
+      }
+      if (frontWheels.current?.material) {
+        disposeMaterial(frontWheels.current.material)
+      }
+
+      if (rearWheels.current?.geometry) {
+        rearWheels.current.geometry.dispose()
+      }
+      if (rearWheels.current?.material) {
+        disposeMaterial(rearWheels.current.material)
+      }
+    }
+  }, [])
+
   useFrame(({ clock, camera }, delta) => {
     const p = runtimeState.scroll
     const exploded = 1 - p
@@ -210,6 +255,7 @@ function ColdFogParticles() {
   const pointsRef = React.useRef<Points>(null)
   const shaderRef = React.useRef<ShaderMaterial | null>(null)
   const tintRef = React.useRef(new Color('#67e8f9'))
+  const geometryRef = React.useRef<BufferGeometry | null>(null)
 
   const geometry = React.useMemo(() => {
     const g = new BufferGeometry()
@@ -286,11 +332,14 @@ function ColdFogParticles() {
   }, [])
 
   React.useEffect(() => {
+    geometryRef.current = geometry
     shaderRef.current = ColdFogShaderMaterial
     return () => {
+      // Dispose geometry on unmount
+      geometry.dispose()
       ColdFogShaderMaterial.dispose()
     }
-  }, [ColdFogShaderMaterial])
+  }, [geometry, ColdFogShaderMaterial])
 
   useFrame(({ clock }, delta) => {
     if (!pointsRef.current || !shaderRef.current) return

@@ -119,6 +119,12 @@ function HeroBackground({
 
     return () => {
       globalThis.removeEventListener('resize', sendViewport)
+      // Send cleanup message to worker to dispose GPU resources
+      try {
+        worker.postMessage('cinematic:cleanup')
+      } catch {
+        // Ignore if worker is already terminating
+      }
       worker.terminate()
       workerRef.current = null
       setWorker(null)
