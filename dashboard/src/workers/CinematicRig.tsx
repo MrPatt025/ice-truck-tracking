@@ -388,7 +388,7 @@ export default function CinematicRig() {
       <TruckModel />
       <ColdFogParticles />
 
-      {shouldEnablePostFx ? (
+      {shouldEnablePostFx && (
         <EffectComposer multisampling={0}>
           <Bloom
             intensity={bloomIntensity}
@@ -405,7 +405,7 @@ export default function CinematicRig() {
             />
           ) : null}
         </EffectComposer>
-      ) : null}
+      )}
     </>
   )
 }

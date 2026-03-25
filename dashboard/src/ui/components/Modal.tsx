@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '../utils'
 import { useFocusTrap } from '../hooks/useA11y'
@@ -14,7 +14,11 @@ interface ModalProps {
   className?: string
 }
 
-export function Modal({
+/**
+ * Modal — Memoized to prevent re-renders from parent prop changes.
+ * Only re-renders when isOpen, title, or size actually change.
+ */
+export const Modal = memo(function Modal({
   isOpen,
   onClose,
   title,
@@ -62,7 +66,7 @@ export function Modal({
       aria-labelledby={title ? 'modal-title' : undefined}
     >
       <div
-        ref={(containerRef as React.Ref<HTMLDivElement>)}
+        ref={containerRef as React.Ref<HTMLDivElement>}
         className={cn(
           'relative w-full bg-white rounded-lg shadow-xl',
           sizes[size],
@@ -102,6 +106,8 @@ export function Modal({
     </div>,
     document.body
   )
-}
+})
+
+Modal.displayName = 'Modal'
 
 

@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { memo } from 'react'
 import { AlertTriangle, ServerCrash, WifiOff } from 'lucide-react'
 
 type StatusIssueKind = 'network' | 'websocket' | 'api'
@@ -35,7 +35,11 @@ function resolveIssuePalette(kind: StatusIssueKind): string {
   return 'border-amber-300/40 bg-amber-500/10 text-amber-100 shadow-[0_14px_40px_-24px_rgba(245,158,11,0.95)]'
 }
 
-export default function PremiumSystemStatusBanner({
+/**
+ * PremiumSystemStatusBanner — Memoized status banner for connectivity issues.
+ * Displays readonly status issues without re-rendering from parent changes.
+ */
+const PremiumSystemStatusBanner = memo(function PremiumSystemStatusBanner({
   issues,
   className = '',
 }: Readonly<PremiumSystemStatusBannerProps>) {
@@ -73,4 +77,8 @@ export default function PremiumSystemStatusBanner({
       ))}
     </aside>
   )
-}
+})
+
+PremiumSystemStatusBanner.displayName = 'PremiumSystemStatusBanner'
+
+export default PremiumSystemStatusBanner

@@ -14,8 +14,10 @@ import {
     applyTelemetry,
     applyTransition,
     applyViewport,
+    applyCameraFlyTo,
     runtimeState,
 } from './cinematicRuntimeState'
+import { easeInOutCubic, lerp, clampUnit } from './easingFunctions'
 
 type FleetNode = {
   id: string
@@ -320,6 +322,101 @@ function advanceFleetInterpolation(now: number): boolean {
   return hasActiveInterpolation
 }
 
+/**
+ * Advance camera fly-to animation.
+ * Returns true if animation is still in progress.
+ */
+function advanceCameraFlyTo(now: number): boolean {
+  const flyTo = runtimeState.cameraFlyTo
+  if (!flyTo.isAnimating || !flyTo.startedAt) {
+    // If a truck is selected but not animating, track its position
+    if (flyTo.truckId !== null && flyTo.targetLatitude !== null && flyTo.targetLongitude !== null) {
+      applyDeckViewState({
+        longitude: flyTo.targetLongitude,
+        latitude: flyTo.targetLatitude,
+        zoom: 15.5,
+        pitch: 45,
+        bearing: 0,
+      })
+      scheduleDeckSceneUpdate()
+    }
+    return false
+  }
+
+  const elapsed = now - flyTo.startedAt
+  if (elapsed >= flyTo.durationMs) {
+    // Animation complete
+    flyTo.isAnimating = false
+
+    if (flyTo.truckId === null) {
+      // Returning to overview - set default camera position
+      applyDeckViewState({
+        longitude: 100.5018,
+        latitude: 13.7563,
+        zoom: 12,
+        pitch: 34,
+        bearing: 0,
+      })
+    } else {
+      // Truck selected - lock camera on target coordinates
+      if (flyTo.targetLatitude !== null && flyTo.targetLongitude !== null) {
+        applyDeckViewState({
+          longitude: flyTo.targetLongitude,
+          latitude: flyTo.targetLatitude,
+          zoom: 15.5, // Closer zoom for tracking single truck
+          pitch: 45, // Slightly higher pitch for better viewing angle
+          bearing: 0,
+        })
+      }
+    }
+    return false
+  }
+
+  // Animation in progress - interpolate camera position
+  const progress = clampUnit(elapsed / flyTo.durationMs)
+  const eased = easeInOutCubic(progress)
+
+  if (
+    flyTo.startLatitude !== null &&
+    flyTo.startLongitude !== null &&
+    flyTo.startZoom !== null &&
+    flyTo.startPitch !== null
+  ) {
+    const nextLongitude =
+      flyTo.truckId === null
+        ? lerp(flyTo.startLongitude, 100.5018, eased)
+        : flyTo.targetLongitude !== null
+          ? lerp(flyTo.startLongitude, flyTo.targetLongitude, eased)
+          : flyTo.startLongitude
+
+    const nextLatitude =
+      flyTo.truckId === null
+        ? lerp(flyTo.startLatitude, 13.7563, eased)
+        : flyTo.targetLatitude !== null
+          ? lerp(flyTo.startLatitude, flyTo.targetLatitude, eased)
+          : flyTo.startLatitude
+
+    const nextZoom =
+      flyTo.truckId === null
+        ? lerp(flyTo.startZoom, 12, eased)
+        : lerp(flyTo.startZoom, 15.5, eased)
+
+    const nextPitch =
+      flyTo.truckId === null
+        ? lerp(flyTo.startPitch, 34, eased)
+        : lerp(flyTo.startPitch, 45, eased)
+
+    applyDeckViewState({
+      longitude: nextLongitude,
+      latitude: nextLatitude,
+      zoom: nextZoom,
+      pitch: nextPitch,
+    })
+  }
+
+  return true
+}
+
 function runInterpolationLoop(): void {
   if (interpolationLoopActive) return
   interpolationLoopActive = true
@@ -331,10 +428,11 @@ function runInterpolationLoop(): void {
     }
 
     const now = performance.now()
-    const hasActiveInterpolation = advanceFleetInterpolation(now)
+    const hasActiveFleetInterpolation = advanceFleetInterpolation(now)
+    const hasActiveCameraAnimation = advanceCameraFlyTo(now)
     updateDeckScene()
 
-    if (!hasActiveInterpolation) {
+    if (!hasActiveFleetInterpolation && !hasActiveCameraAnimation) {
       interpolationLoopActive = false
       return
     }
@@ -565,6 +663,12 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
 
   if (data.type === 'cinematic:transition') {
       applyTransition(data.payload)
+    return
+  }
+
+  if (data.type === 'cinematic:camera-flyto') {
+    applyCameraFlyTo(data.payload)
+    runInterpolationLoop()
     return
   }
 

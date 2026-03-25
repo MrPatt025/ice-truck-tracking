@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { memo } from 'react'
 import {
   motion,
   type MotionValue,
@@ -15,7 +15,11 @@ type GlassPanelProps = {
   parallaxRange?: [number, number]
 }
 
-export default function GlassPanel({
+/**
+ * GlassPanel — Memoized glass panel with parallax scrolling effects.
+ * Prevents re-renders from parent prop changes using frozen MotionValues.
+ */
+const GlassPanel = memo(function GlassPanel({
   children,
   className = '',
   scrollProgress,
@@ -23,11 +27,7 @@ export default function GlassPanel({
 }: Readonly<GlassPanelProps>) {
   const fallbackProgress = useMotionValue(0)
   const progress = scrollProgress ?? fallbackProgress
-  const panelOpacity = useTransform(
-    progress,
-    parallaxRange,
-    [1, 0.88]
-  )
+  const panelOpacity = useTransform(progress, parallaxRange, [1, 0.88])
   const panelLift = useTransform(progress, parallaxRange, ['0px', '-22px'])
 
   return (
@@ -47,4 +47,8 @@ export default function GlassPanel({
       <div className='relative z-10'>{children}</div>
     </motion.div>
   )
-}
+})
+
+GlassPanel.displayName = 'GlassPanel'
+
+export default GlassPanel

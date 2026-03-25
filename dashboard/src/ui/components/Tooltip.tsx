@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { memo, useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '../utils'
 
@@ -12,7 +12,11 @@ interface TooltipProps {
   className?: string
 }
 
-export function Tooltip({
+/**
+ * Tooltip — Memoized to prevent re-renders from parent prop changes.
+ * Only re-renders when content, position, or delay props change.
+ */
+export const Tooltip = memo(function Tooltip({
   content,
   children,
   position = 'top',
@@ -127,6 +131,8 @@ export function Tooltip({
         )}
     </>
   )
-}
+})
+
+Tooltip.displayName = 'Tooltip'
 
 

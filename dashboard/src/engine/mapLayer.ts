@@ -177,7 +177,7 @@ function createTruckPopupContent(truck: TruckRenderPoint): HTMLElement {
     card.style.border = '1px solid rgba(148, 163, 184, 0.32)';
     card.style.boxShadow = '0 18px 40px rgba(2, 6, 23, 0.45)';
     card.style.backdropFilter = 'blur(12px)';
-    card.style.webkitBackdropFilter = 'blur(12px)';
+    (card.style as unknown as Record<string, string>).webkitBackdropFilter = 'blur(12px)';
     card.style.display = 'flex';
     card.style.flexDirection = 'column';
     card.style.gap = '10px';

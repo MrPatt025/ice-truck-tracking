@@ -1,4 +1,3 @@
- 
 'use strict';
 
 process.env.USE_FAKE_DB = 'false';

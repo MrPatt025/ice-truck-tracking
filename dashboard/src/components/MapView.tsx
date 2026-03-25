@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useCameraSelectionStore } from '@/stores/cameraSelectionStore'
 import { Button } from '../ui/components/Button'
 import { Card, CardContent } from '../ui/components/Card'
 import { Tooltip } from '../ui/components/Tooltip'
@@ -43,6 +44,8 @@ export function MapView({
   className,
 }: Readonly<MapViewProps>) {
   const { startRender, endRender } = usePerformanceMonitor('MapView')
+  const selectTruck = useCameraSelectionStore(s => s.selectTruck)
+  const deselectTruck = useCameraSelectionStore(s => s.deselectTruck)
   const mapRef = useRef<HTMLDivElement>(null)
   const [mapStyle, setMapStyle] = useState<MapStyle>('streets')
   const [showClusters, setShowClusters] = useState(true)
@@ -60,6 +63,18 @@ export function MapView({
     const timer = setTimeout(() => endRender(), 0)
     return () => clearTimeout(timer)
   })
+
+  // Handle truck selection with camera tracking
+  const handleTruckSelect = (truck: Truck) => {
+    // Toggle selection: if clicking same truck, deselect
+    if (selectedTruck === truck.id) {
+      onSelectTruck(null)
+      deselectTruck()
+    } else {
+      onSelectTruck(truck.id)
+      selectTruck(truck.id, truck.latitude, truck.longitude)
+    }
+  }
 
   // Clustering algorithm
   const clusters = useMemo(() => {
@@ -258,7 +273,7 @@ export function MapView({
                   top: `${y}%`,
                 }} /* NOSONAR — GPS-derived position */
                 aria-label={`Truck ${truck.id}, driver ${truck.driver_name}, status ${truck.status}`}
-                onClick={() => onSelectTruck(truck.id)}
+                onClick={() => handleTruckSelect(truck)}
               >
                 <div
                   className={`w-6 h-6 rounded-full border-2 ${getStatusColor(truck.status)} ${

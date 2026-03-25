@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { cn } from '../utils'
 
 interface ConnectionStatusProps {
@@ -8,7 +8,11 @@ interface ConnectionStatusProps {
   showQueueCount?: boolean
 }
 
-export function ConnectionStatus({
+/**
+ * ConnectionStatus — Memoized to prevent re-renders from parent prop changes.
+ * Component manages its own online/offline state independently.
+ */
+export const ConnectionStatus = memo(function ConnectionStatus({
   className,
   showQueueCount = true,
 }: ConnectionStatusProps) {
@@ -106,6 +110,8 @@ export function ConnectionStatus({
       </span>
     </div>
   )
-}
+})
+
+ConnectionStatus.displayName = 'ConnectionStatus'
 
 

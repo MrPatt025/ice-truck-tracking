@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { memo } from 'react'
 import {
   motion,
   type MotionValue,
@@ -19,7 +19,11 @@ interface GlassmorphismPanelProps {
   readonly parallaxRange?: [number, number]
 }
 
-export function GlassmorphismPanel({
+/**
+ * GlassmorphismPanel — Memoized glassmorphism panel with parallax effects.
+ * Prevents re-renders from parent prop changes using froze MotionValues.
+ */
+export const GlassmorphismPanel = memo(function GlassmorphismPanel({
   className,
   children,
   blur = 'md',
@@ -69,4 +73,6 @@ export function GlassmorphismPanel({
       <div className='relative z-10'>{children}</div>
     </motion.div>
   )
-}
+})
+
+GlassmorphismPanel.displayName = 'GlassmorphismPanel'

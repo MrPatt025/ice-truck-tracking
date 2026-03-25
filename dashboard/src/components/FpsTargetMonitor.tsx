@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { memo, useEffect, useRef } from 'react'
 
 const TARGET_FPS = 60
 const UPDATE_INTERVAL_MS = 300
@@ -17,7 +17,11 @@ function resolveDotClass(fps: number): string {
   return 'bg-rose-400'
 }
 
-export default function FpsTargetMonitor() {
+/**
+ * FpsTargetMonitor — Memoized FPS monitoring component.
+ * Measures real-time animation performance using requestAnimationFrame.
+ */
+const FpsTargetMonitor = memo(function FpsTargetMonitor() {
   const rootRef = useRef<HTMLDivElement | null>(null)
   const valueRef = useRef<HTMLSpanElement | null>(null)
   const targetRef = useRef<HTMLSpanElement | null>(null)
@@ -30,12 +34,18 @@ export default function FpsTargetMonitor() {
     let fps = TARGET_FPS
 
     const updateUi = () => {
-      if (!rootRef.current || !valueRef.current || !targetRef.current || !dotRef.current) {
+      if (
+        !rootRef.current ||
+        !valueRef.current ||
+        !targetRef.current ||
+        !dotRef.current
+      ) {
         return
       }
 
       valueRef.current.textContent = `${fps.toFixed(0)} FPS`
-      targetRef.current.textContent = fps >= 58 ? 'Target 60 FPS: Stable' : 'Target 60 FPS: Degraded'
+      targetRef.current.textContent =
+        fps >= 58 ? 'Target 60 FPS: Stable' : 'Target 60 FPS: Degraded'
 
       valueRef.current.className = `font-semibold ${resolveTextClass(fps)}`
       targetRef.current.className = `hidden sm:inline text-[11px] ${resolveTextClass(fps)}`
@@ -72,9 +82,23 @@ export default function FpsTargetMonitor() {
       aria-label='Real-time FPS monitor'
       title='Animation loop FPS monitor'
     >
-      <span ref={dotRef} className='h-2 w-2 rounded-full bg-emerald-400 animate-pulse' />
-      <span ref={valueRef} className='font-semibold text-emerald-300'>60 FPS</span>
-      <span ref={targetRef} className='hidden sm:inline text-[11px] text-emerald-300'>Target 60 FPS: Stable</span>
+      <span
+        ref={dotRef}
+        className='h-2 w-2 rounded-full bg-emerald-400 animate-pulse'
+      />
+      <span ref={valueRef} className='font-semibold text-emerald-300'>
+        60 FPS
+      </span>
+      <span
+        ref={targetRef}
+        className='hidden sm:inline text-[11px] text-emerald-300'
+      >
+        Target 60 FPS: Stable
+      </span>
     </div>
   )
-}
+})
+
+FpsTargetMonitor.displayName = 'FpsTargetMonitor'
+
+export default FpsTargetMonitor

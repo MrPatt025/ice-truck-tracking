@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useEffect } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { Button } from './Button'
 
 interface UserPreferences {
@@ -47,7 +47,11 @@ interface PreferencesPanelProps {
   onPreferencesChange: (preferences: UserPreferences) => void
 }
 
-export function PreferencesPanel({
+/**
+ * PreferencesPanel — Memoized to prevent re-renders from parent prop changes.
+ * Uses internal state for preference management.
+ */
+export const PreferencesPanel = memo(function PreferencesPanel({
   isOpen,
   onClose,
   onPreferencesChange,
@@ -361,6 +365,8 @@ export function PreferencesPanel({
       </div>
     </div>
   )
-}
+})
+
+PreferencesPanel.displayName = 'PreferencesPanel'
 
 

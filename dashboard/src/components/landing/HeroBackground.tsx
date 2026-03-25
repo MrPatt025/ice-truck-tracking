@@ -12,6 +12,7 @@ import {
   useFleetTelemetryStore,
   type FleetTruck,
 } from '@/stores/fleetTelemetryStore'
+import { useCameraSelectionStore } from '@/stores/cameraSelectionStore'
 import { dispatchWsHealthEvent } from '@/lib/healthEvents'
 import { parseFleetLivePacket } from '@/lib/schemas/telemetry'
 import type {
@@ -155,6 +156,15 @@ function HeroBackground({
       }
 
       workerRef.current.postMessage(msg)
+
+      // Update camera target if a truck is selected
+      const selectedTruckId = useCameraSelectionStore.getState().selectedTruckId
+      if (selectedTruckId) {
+        const selectedTruck = trucks.find(t => t.id === selectedTruckId)
+        if (selectedTruck) {
+          useCameraSelectionStore.getState().updateCameraTarget(selectedTruck.lat, selectedTruck.lon)
+        }
+      }
     }
 
     const unsubscribe = useFleetTelemetryStore.subscribe(
@@ -164,6 +174,33 @@ function HeroBackground({
 
     const initial = useFleetTelemetryStore.getState()
     pushTelemetry(initial.trucks)
+
+    return () => {
+      unsubscribe()
+    }
+  }, [])
+
+  // Handle camera fly-to when truck selection changes
+  React.useEffect(() => {
+    const sendCameraFlyTo = (target: ReturnType<typeof useCameraSelectionStore.getState>['cameraTarget']) => {
+      if (!workerRef.current) return
+
+      const msg: CinematicWorkerMessage = {
+        type: 'cinematic:camera-flyto',
+        payload: {
+          truckId: target.truckId,
+          targetLatitude: target.latitude,
+          targetLongitude: target.longitude,
+          durationMs: target.truckId === null ? 800 : 1200,
+        },
+      }
+      workerRef.current.postMessage(msg)
+    }
+
+    const unsubscribe = useCameraSelectionStore.subscribe(
+      s => s.cameraTarget,
+      sendCameraFlyTo
+    )
 
     return () => {
       unsubscribe()

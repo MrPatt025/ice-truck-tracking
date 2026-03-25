@@ -3,6 +3,7 @@ import type {
   CinematicTransitionPayload,
   CinematicTransitionPhase,
   CinematicViewportPayload,
+  CinematicCameraFlyToPayload,
 } from './cinematicMessages'
 
 export interface DeckViewState {
@@ -19,6 +20,19 @@ export interface CinematicTransitionState {
     isActive: boolean
 }
 
+export interface CinematicCameraFlyToState {
+  truckId: string | null
+  targetLatitude: number | null
+  targetLongitude: number | null
+  startLatitude: number | null
+  startLongitude: number | null
+  startZoom: number | null
+  startPitch: number | null
+  durationMs: number
+  startedAt: number | null
+  isAnimating: boolean
+}
+
 export type CinematicRuntimeState = {
   scroll: number
     cameraFov: number
@@ -26,6 +40,7 @@ export type CinematicRuntimeState = {
   viewport: CinematicViewportPayload
     deckViewState: DeckViewState
   transition: CinematicTransitionState
+  cameraFlyTo: CinematicCameraFlyToState
 }
 
 const clamp = (value: number, min: number, max: number): number =>
@@ -57,6 +72,18 @@ export const runtimeState: CinematicRuntimeState = {
     phase: 'idle',
     progress: 0,
       isActive: false,
+  },
+  cameraFlyTo: {
+    truckId: null,
+    targetLatitude: null,
+    targetLongitude: null,
+    startLatitude: null,
+    startLongitude: null,
+    startZoom: null,
+    startPitch: null,
+    durationMs: 0,
+    startedAt: null,
+    isAnimating: false,
   },
 }
 
@@ -96,5 +123,37 @@ export function applyDeckViewState(next: Partial<DeckViewState>): void {
     runtimeState.deckViewState = {
         ...runtimeState.deckViewState,
         ...next,
+  }
+}
+
+export function applyCameraFlyTo(payload: CinematicCameraFlyToPayload): void {
+  if (payload.truckId === null) {
+    // Deselecting truck - set initial state for return to overview
+    runtimeState.cameraFlyTo = {
+      truckId: null,
+      targetLatitude: null,
+      targetLongitude: null,
+      startLatitude: runtimeState.deckViewState.latitude,
+      startLongitude: runtimeState.deckViewState.longitude,
+      startZoom: runtimeState.deckViewState.zoom,
+      startPitch: runtimeState.deckViewState.pitch,
+      durationMs: 800, // Return to overview takes slightly longer
+      startedAt: performance.now(),
+      isAnimating: true,
+    }
+  } else {
+    // Selecting truck - set initial state for fly-to
+    runtimeState.cameraFlyTo = {
+      truckId: payload.truckId,
+      targetLatitude: payload.targetLatitude,
+      targetLongitude: payload.targetLongitude,
+      startLatitude: runtimeState.deckViewState.latitude,
+      startLongitude: runtimeState.deckViewState.longitude,
+      startZoom: runtimeState.deckViewState.zoom,
+      startPitch: runtimeState.deckViewState.pitch,
+      durationMs: payload.durationMs,
+      startedAt: performance.now(),
+      isAnimating: true,
+    }
   }
 }

@@ -36,11 +36,19 @@ export interface CinematicTransitionPayload {
     isActive: boolean
 }
 
+export interface CinematicCameraFlyToPayload {
+  truckId: string | null
+  targetLatitude: number | null
+  targetLongitude: number | null
+  durationMs: number
+}
+
 export type CinematicWorkerMessage =
   | { type: 'cinematic:telemetry'; payload: CinematicTelemetryPayload }
   | { type: 'cinematic:viewport'; payload: CinematicViewportPayload }
   | { type: 'cinematic:scroll'; payload: CinematicScrollPayload }
   | { type: 'cinematic:transition'; payload: CinematicTransitionPayload }
+  | { type: 'cinematic:camera-flyto'; payload: CinematicCameraFlyToPayload }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value) && typeof value === 'object'
@@ -114,6 +122,30 @@ function isTransitionPayload(value: unknown): value is CinematicTransitionPayloa
     )
 }
 
+function isCameraFlyToPayload(value: unknown): value is CinematicCameraFlyToPayload {
+    if (!isRecord(value)) return false
+    
+    const truckId = value.truckId
+    const latitude = value.targetLatitude
+    const longitude = value.targetLongitude
+    const durationMs = value.durationMs
+
+    // If deselecting (truckId is null), latitude, longitude, and durationMs should be null
+    if (truckId === null) {
+        return latitude === null && longitude === null && durationMs === 0
+    }
+
+    // If selecting, all fields must be valid
+    return (
+        typeof truckId === 'string' &&
+        truckId.length > 0 &&
+        isFiniteNumber(latitude) &&
+        isFiniteNumber(longitude) &&
+        isFiniteNumber(durationMs) &&
+        durationMs > 0
+    )
+}
+
 export function isCinematicWorkerMessage(
   value: unknown
 ): value is CinematicWorkerMessage {
@@ -126,6 +158,7 @@ export function isCinematicWorkerMessage(
     if (type === 'cinematic:viewport') return isViewportPayload(payload)
     if (type === 'cinematic:scroll') return isScrollPayload(payload)
     if (type === 'cinematic:transition') return isTransitionPayload(payload)
+    if (type === 'cinematic:camera-flyto') return isCameraFlyToPayload(payload)
 
     return false
 }

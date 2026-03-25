@@ -1,9 +1,23 @@
 ﻿'use client'
-import React from 'react'
+import React, { memo } from 'react'
 
-type Item = { id: number; left: number; top: number; delay: number; duration: number }
+type Item = {
+  id: number
+  left: number
+  top: number
+  delay: number
+  duration: number
+}
 
-export default function AnimatedPings({ count = 12 }: { count?: number }) {
+/**
+ * AnimatedPings — Memoized animated ping elements for visual feedback.
+ * Prevents re-renders from parent prop changes.
+ */
+const AnimatedPings = memo(function AnimatedPings({
+  count = 12,
+}: {
+  count?: number
+}) {
   // Generate once on client to avoid SSR mismatch
   const [items] = React.useState<Item[]>(() =>
     Array.from({ length: count }).map((_, i) => ({
@@ -16,11 +30,11 @@ export default function AnimatedPings({ count = 12 }: { count?: number }) {
   )
 
   return (
-    <div className="absolute inset-0 opacity-60" suppressHydrationWarning>
-      {items.map((it) => (
+    <div className='absolute inset-0 opacity-60' suppressHydrationWarning>
+      {items.map(it => (
         <React.Fragment key={it.id}>
-          <div id={`ping-${it.id}`} className="absolute animate-ping">
-            <div className="h-3 w-3 rounded-full bg-cyan-400" />
+          <div id={`ping-${it.id}`} className='absolute animate-ping'>
+            <div className='h-3 w-3 rounded-full bg-cyan-400' />
           </div>
           <style jsx>{`
             #ping-${it.id} {
@@ -34,6 +48,10 @@ export default function AnimatedPings({ count = 12 }: { count?: number }) {
       ))}
     </div>
   )
-}
+})
+
+AnimatedPings.displayName = 'AnimatedPings'
+
+export default AnimatedPings
 
 
