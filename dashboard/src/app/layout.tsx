@@ -1,4 +1,5 @@
 ﻿import './globals.css'
+import 'mapbox-gl/dist/mapbox-gl.css'
 import { Orbitron, Space_Grotesk } from 'next/font/google'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import TransitionLayoutGroup from '@/components/TransitionLayoutGroup'

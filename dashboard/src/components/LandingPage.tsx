@@ -33,10 +33,10 @@ import HeroBackground from '@/components/landing/HeroBackground'
 import GlassPanel from '@/components/landing/GlassPanel'
 import ScrollTruckStory from '@/components/landing/ScrollTruckStory'
 import { useTransitionStore } from '@/stores/transitionStore'
-import { useFleetTelemetryStore } from '@/stores/fleetTelemetryStore'
 import PremiumSystemStatusBanner, {
   type StatusIssue,
 } from '@/components/common/PremiumSystemStatusBanner'
+import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
 
 const EASE_STANDARD: [number, number, number, number] = [0.22, 1, 0.36, 1]
 const EASE_OUTRO: [number, number, number, number] = [0.68, 0, 0.12, 1]
@@ -115,20 +115,32 @@ export default function LandingPage() {
   const setProgress = useTransitionStore(s => s.setProgress)
   const transitionProgress = useMotionValue(0)
   const latestScrollRef = React.useRef(0)
-  const lastTelemetryAt = useFleetTelemetryStore(state => state.updatedAt)
-  const [telemetryClock, setTelemetryClock] = React.useState(() => Date.now())
+  const routeFallbackTimerRef = React.useRef<number | null>(null)
+  const { wsStatus, backendStatus } = useAppHealthEvents()
   const [browserOffline, setBrowserOffline] = React.useState(false)
-  const [apiServerError, setApiServerError] = React.useState(false)
-  const isLiveFlowing = telemetryClock - lastTelemetryAt < 1800
-  const telemetryStalled = telemetryClock - lastTelemetryAt > 10000
+  const isLiveFlowing = wsStatus === 'connected'
+
+  const clearRouteFallbackTimer = React.useCallback(() => {
+    if (routeFallbackTimerRef.current !== null) {
+      globalThis.clearTimeout(routeFallbackTimerRef.current)
+      routeFallbackTimerRef.current = null
+    }
+  }, [])
 
   const navigateToDashboard = React.useCallback(() => {
+    clearRouteFallbackTimer()
+
+    routeFallbackTimerRef.current = globalThis.setTimeout(() => {
+      globalThis.location.assign('/dashboard')
+    }, 3500)
+
     try {
       router.push('/dashboard')
     } catch {
-      globalThis.location.href = '/dashboard'
+      clearRouteFallbackTimer()
+      globalThis.location.assign('/dashboard')
     }
-  }, [router])
+  }, [clearRouteFallbackTimer, router])
 
   const { scrollYProgress } = useScroll()
   const heroY = useTransform(scrollYProgress, [0, 0.25], ['0%', '12%'])
@@ -138,8 +150,16 @@ export default function LandingPage() {
   const pageScale = useTransform(transitionProgress, [0, 1], [1, 0.94])
   const pageLift = useTransform(transitionProgress, [0, 1], ['0px', '-18px'])
   const veilOpacity = useTransform(transitionProgress, [0, 1], [0, 1])
-  const veilBloomOpacity = useTransform(transitionProgress, [0, 0.65, 1], [0, 0.75, 1])
-  const veilSolidOpacity = useTransform(transitionProgress, [0, 0.55, 1], [0, 0.22, 1])
+  const veilBloomOpacity = useTransform(
+    transitionProgress,
+    [0, 0.65, 1],
+    [0, 0.75, 1]
+  )
+  const veilSolidOpacity = useTransform(
+    transitionProgress,
+    [0, 0.55, 1],
+    [0, 0.22, 1]
+  )
 
   useMotionValueEvent(scrollYProgress, 'change', latest => {
     latestScrollRef.current = Math.min(1, Math.max(0, latest))
@@ -162,14 +182,10 @@ export default function LandingPage() {
   }, [router])
 
   React.useEffect(() => {
-    const timer = globalThis.setInterval(() => {
-      setTelemetryClock(Date.now())
-    }, 280)
-
     return () => {
-      globalThis.clearInterval(timer)
+      clearRouteFallbackTimer()
     }
-  }, [])
+  }, [clearRouteFallbackTimer])
 
   React.useEffect(() => {
     if (globalThis.window === undefined) return
@@ -188,35 +204,6 @@ export default function LandingPage() {
     }
   }, [])
 
-  React.useEffect(() => {
-    if (globalThis.window === undefined) return
-
-    let cancelled = false
-
-    const checkApiHealth = async () => {
-      try {
-        const response = await fetch('/api/v1/health', {
-          signal: AbortSignal.timeout(5000),
-        })
-        if (!cancelled) {
-          setApiServerError(response.status >= 500)
-        }
-      } catch {
-        if (!cancelled) {
-          setApiServerError(false)
-        }
-      }
-    }
-
-    checkApiHealth()
-    const interval = globalThis.setInterval(checkApiHealth, 30000)
-
-    return () => {
-      cancelled = true
-      globalThis.clearInterval(interval)
-    }
-  }, [])
-
   const statusIssues = React.useMemo<StatusIssue[]>(() => {
     const issues: StatusIssue[] = []
 
@@ -230,7 +217,7 @@ export default function LandingPage() {
       })
     }
 
-    if (apiServerError) {
+    if (backendStatus === 'degraded') {
       issues.push({
         id: 'landing-api-5xx',
         kind: 'api',
@@ -240,18 +227,23 @@ export default function LandingPage() {
       })
     }
 
-    if (telemetryStalled) {
+    if (wsStatus !== 'connected') {
       issues.push({
-        id: 'landing-telemetry-stalled',
+        id: 'landing-telemetry-ws',
         kind: 'websocket',
-        title: 'Live telemetry stream stalled',
+        title:
+          wsStatus === 'reconnecting'
+            ? 'Live telemetry reconnecting'
+            : 'Live telemetry offline',
         detail:
-          'No fresh fleet packets were detected recently. Dashboard launch remains available with graceful fallback behavior.',
+          wsStatus === 'reconnecting'
+            ? 'The realtime socket is renegotiating. Visuals stay responsive while packets catch up.'
+            : 'The realtime socket is offline. Dashboard launch remains available with graceful fallback behavior.',
       })
     }
 
     return issues
-  }, [apiServerError, browserOffline, telemetryStalled])
+  }, [backendStatus, browserOffline, wsStatus])
 
   React.useEffect(() => {
     if (!isTransitioning || phase !== 'outro') {
@@ -273,7 +265,13 @@ export default function LandingPage() {
     return () => {
       controls.stop()
     }
-  }, [isTransitioning, navigateToDashboard, phase, setProgress, transitionProgress])
+  }, [
+    isTransitioning,
+    navigateToDashboard,
+    phase,
+    setProgress,
+    transitionProgress,
+  ])
 
   return (
     <motion.div
@@ -381,12 +379,20 @@ export default function LandingPage() {
                   style={{ willChange: 'opacity, transform' }}
                   animate={
                     isLiveFlowing
-                      ? { opacity: [0.55, 1, 0.55], scale: [0.98, 1.04, 0.98], y: [0, -1, 0] }
+                      ? {
+                          opacity: [0.55, 1, 0.55],
+                          scale: [0.98, 1.04, 0.98],
+                          y: [0, -1, 0],
+                        }
                       : { opacity: 0.42, scale: 1, y: 0 }
                   }
                   transition={
                     isLiveFlowing
-                      ? { duration: 1.2, ease: 'easeInOut', repeat: Number.POSITIVE_INFINITY }
+                      ? {
+                          duration: 1.2,
+                          ease: 'easeInOut',
+                          repeat: Number.POSITIVE_INFINITY,
+                        }
                       : { duration: 0.2, ease: EASE_STANDARD }
                   }
                 >

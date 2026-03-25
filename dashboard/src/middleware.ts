@@ -25,6 +25,7 @@ export function middleware(request: NextRequest) {
         "'self'",
         'https://*.tile.openstreetmap.org',
         'https://*.basemaps.cartocdn.com',
+        'https://demotiles.maplibre.org',
     ];
 
     if (apiOrigin) {
