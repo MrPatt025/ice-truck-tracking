@@ -79,9 +79,9 @@ export function FeatureFlags({ isAdmin = false }: Readonly<FeatureFlagsProps>) {
       <div className='animate-pulse'>
         <div className='h-4 bg-gray-200 rounded w-1/4 mb-4'></div>
         <div className='space-y-3'>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={`skeleton-loader-${i}`} className='h-16 bg-gray-200 rounded'></div>
-          ))}
+          <div key='skeleton-0' className='h-16 bg-gray-200 rounded'></div>
+          <div key='skeleton-1' className='h-16 bg-gray-200 rounded'></div>
+          <div key='skeleton-2' className='h-16 bg-gray-200 rounded'></div>
         </div>
       </div>
     )
@@ -150,9 +150,13 @@ export function FeatureFlags({ isAdmin = false }: Readonly<FeatureFlagsProps>) {
 
               {isAdmin && flag.enabled && (
                 <div className='flex items-center space-x-2'>
-                  <label className='text-gray-500'>Rollout:</label>
+                  <label htmlFor={`rollout-label-${flag.key}`} className='text-gray-500'>
+                    Rollout:
+                  </label>
                   <div className='flex items-center space-x-2'>
-                    <label htmlFor={`rollout-${flag.key}`} className='sr-only'>Rollout percentage</label>
+                    <label htmlFor={`rollout-${flag.key}`} className='sr-only'>
+                      Rollout percentage
+                    </label>
                     <input
                       id={`rollout-${flag.key}`}
                       type='range'

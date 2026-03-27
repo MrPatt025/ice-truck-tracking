@@ -49,6 +49,7 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
+    # sonarqube:disable S6418 (false positive: this references a K8s TLS secret, not a hardcoded value)
     - secretName: ice-truck-api-tls
       hosts:
         - api.ice-truck.example.com
