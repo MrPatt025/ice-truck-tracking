@@ -115,7 +115,7 @@ export default function LandingPage() {
   const setProgress = useTransitionStore(s => s.setProgress)
   const transitionProgress = useMotionValue(0)
   const latestScrollRef = React.useRef(0)
-  const routeFallbackTimerRef = React.useRef<NodeJS.Timeout | null>(null)
+  const routeFallbackTimerRef = React.useRef<number | null>(null)
   const { wsStatus, backendStatus } = useAppHealthEvents()
   const [browserOffline, setBrowserOffline] = React.useState(false)
   const isLiveFlowing = wsStatus === 'connected'
@@ -140,12 +140,11 @@ export default function LandingPage() {
     const browserWindow = resolveBrowserWindow()
     clearRouteFallbackTimer()
 
-    const timeoutId = setTimeout(() => {
-      if (browserWindow) {
+    if (browserWindow) {
+      routeFallbackTimerRef.current = browserWindow.setTimeout(() => {
         browserWindow.location.assign('/dashboard')
-      }
-    }, 3500)
-    routeFallbackTimerRef.current = timeoutId
+      }, 3500)
+    }
 
     try {
       router.push('/dashboard')
