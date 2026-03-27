@@ -35,7 +35,9 @@ function SettingItem({
         <Ionicons name={icon} size={24} color='#2196F3' />
         <View style={styles.settingText}>
           <Text style={styles.settingTitle}>{title}</Text>
-          {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
+          {Boolean(subtitle) && (
+            <Text style={styles.settingSubtitle}>{subtitle}</Text>
+          )}
         </View>
       </View>
       {rightElement || (
@@ -54,7 +56,7 @@ export function SettingsScreen() {
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: () => { logout() } },
+      { text: 'Sign Out', style: 'destructive', onPress: () => { void logout() } },
     ])
   }
 
