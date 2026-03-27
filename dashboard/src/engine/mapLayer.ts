@@ -8,12 +8,14 @@
  * ================================================================ */
 
 import mapboxgl from 'mapbox-gl';
+import { HeatmapLayer } from '@deck.gl/aggregation-layers';
 import { ScatterplotLayer } from '@deck.gl/layers';
 import type { PickingInfo } from '@deck.gl/core';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import type { Theme, TruckTelemetry } from './types';
 import type { CinematicCameraFlyToPayload } from '../workers/cinematicMessages';
-import { getTruckMap } from './store';
+import { readFleetSnapshot, writeFleetSnapshot } from './offlineFleetCache';
+import { getTruckMap, useIoTStore } from './store';
 import { useCameraSelectionStore } from '../stores/cameraSelectionStore';
 
 type RGBA = [number, number, number, number];
@@ -34,6 +36,12 @@ interface TruckRenderPoint {
     baseColor: RGBA;
     color: RGBA;
     radius: number;
+}
+
+interface HeatmapPoint {
+    position: Position;
+    weight: number;
+    at: number;
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim() ?? '';
@@ -58,6 +66,21 @@ const STALE_FADE_DURATION_MS = 90 * 1000;
 const STALE_TARGET_ALPHA = 128;
 const STALE_COLOR_TARGET: readonly [number, number, number] = [148, 163, 184];
 const GLOW_COLOR: readonly [number, number, number] = [56, 189, 248];
+const HEATMAP_HISTORY_LIMIT = 7_500;
+const HEATMAP_POINT_TTL_MS = 8 * 60 * 1000;
+const HEATMAP_ALPHA_EPSILON = 0.02;
+const HEATMAP_FADE_FACTOR = 0.16;
+const CACHE_PERSIST_INTERVAL_MS = 5_000;
+
+const HEATMAP_BASE_COLOR_RANGE: readonly RGBA[] = [
+    [14, 116, 144, 8],
+    [6, 182, 212, 36],
+    [45, 212, 191, 72],
+    [132, 204, 22, 112],
+    [250, 204, 21, 162],
+    [249, 115, 22, 204],
+    [239, 68, 68, 236],
+];
 
 function resolveMapStyle(theme: Theme): string {
     if (!MAPBOX_TOKEN) return OPEN_STYLE_URL;
@@ -98,6 +121,27 @@ function getTruckColor(truck: TruckTelemetry): RGBA {
 function getTruckRadius(speed: number): number {
     const clampedSpeed = Math.max(0, Math.min(speed, 130));
     return 5 + (clampedSpeed / 130) * 4;
+}
+
+function resolveHeatmapWeight(speed: number, temperature: number, status: string): number {
+    const speedFactor = clampUnit(speed / 120);
+    const thermalFactor = clampUnit(Math.abs(temperature + 12) / 20);
+    let statusBoost = 0;
+    if (status === 'alert') {
+        statusBoost = 0.4;
+    } else if (status === 'maintenance') {
+        statusBoost = 0.2;
+    }
+    return 0.35 + speedFactor * 0.45 + thermalFactor * 0.45 + statusBoost;
+}
+
+function resolveHeatmapColorRange(alphaScale: number): RGBA[] {
+    return HEATMAP_BASE_COLOR_RANGE.map(([r, g, b, a]) => [
+        r,
+        g,
+        b,
+        Math.max(0, Math.min(255, Math.round(a * alphaScale))),
+    ]);
 }
 
 function clampUnit(value: number): number {
@@ -243,6 +287,11 @@ export class ImperativeMapLayer {
     private overlayDisabled = false;
     private cinematicWorker: Worker | null = null;
     private selectedTruckId: string | null = null;
+    private readonly heatmapTrail: HeatmapPoint[] = [];
+    private heatmapVisibility = 0;
+    private cacheHydrationRequested = false;
+    private readonly cachedTruckMap = new Map<string, TruckTelemetry>();
+    private lastCachePersistAt = 0;
 
     get ready(): boolean {
         return this._ready;
@@ -371,6 +420,105 @@ export class ImperativeMapLayer {
         });
     }
 
+    private buildHeatmapLayer(): HeatmapLayer<HeatmapPoint> | null {
+        if (this.heatmapTrail.length === 0) return null;
+        if (this.heatmapVisibility < HEATMAP_ALPHA_EPSILON) return null;
+
+        return new HeatmapLayer<HeatmapPoint>({
+            id: 'trucks-heatmap',
+            data: this.heatmapTrail,
+            pickable: false,
+            aggregation: 'SUM',
+            getPosition: (point) => point.position,
+            getWeight: (point) => point.weight,
+            radiusPixels: 44,
+            intensity: 1,
+            threshold: 0.04,
+            colorRange: resolveHeatmapColorRange(this.heatmapVisibility),
+            updateTriggers: {
+                getWeight: this.dataVersion,
+                colorRange: Math.round(this.heatmapVisibility * 100),
+            },
+        });
+    }
+
+    private loadCachedFleetIfNeeded(): void {
+        if (this.cacheHydrationRequested) return;
+        this.cacheHydrationRequested = true;
+
+        void readFleetSnapshot().then((cached) => {
+            this.cacheHydrationRequested = false;
+            if (cached.length === 0) return;
+
+            const liveTrucks = getTruckMap();
+            const { connectionStatus } = useIoTStore.getState();
+            const browserOffline = globalThis.navigator.onLine === false;
+            if (liveTrucks.size > 0 || (connectionStatus === 'connected' && !browserOffline)) {
+                return;
+            }
+
+            this.cachedTruckMap.clear();
+            for (const truck of cached) {
+                this.cachedTruckMap.set(truck.id, truck);
+            }
+            this.refreshDeckLayer();
+        });
+    }
+
+    private persistLiveFleetSnapshot(liveTrucks: ReadonlyMap<string, TruckTelemetry>, now: number): void {
+        if (liveTrucks.size === 0) return;
+        if (now - this.lastCachePersistAt < CACHE_PERSIST_INTERVAL_MS) return;
+
+        this.lastCachePersistAt = now;
+        const snapshot = Array.from(liveTrucks.values());
+        void writeFleetSnapshot(snapshot);
+    }
+
+    private trimHeatmapTrail(now: number): void {
+        while (this.heatmapTrail.length > 0) {
+            const head = this.heatmapTrail[0];
+            if (now - head.at <= HEATMAP_POINT_TTL_MS && this.heatmapTrail.length <= HEATMAP_HISTORY_LIMIT) {
+                break;
+            }
+            this.heatmapTrail.shift();
+        }
+    }
+
+    private pushHeatmapPoint(position: Position, weight: number, now: number): void {
+        this.heatmapTrail.push({
+            position: [position[0], position[1]],
+            weight,
+            at: now,
+        });
+    }
+
+    private resolveTruckSource(): ReadonlyMap<string, TruckTelemetry> {
+        const liveTrucks = getTruckMap();
+        if (liveTrucks.size > 0) {
+            this.cachedTruckMap.clear();
+            return liveTrucks;
+        }
+
+        const { connectionStatus } = useIoTStore.getState();
+        const browserOffline = globalThis.navigator.onLine === false;
+        const disconnected = connectionStatus !== 'connected' || browserOffline;
+
+        if (disconnected && this.cachedTruckMap.size === 0) {
+            this.loadCachedFleetIfNeeded();
+        }
+
+        return disconnected ? this.cachedTruckMap : liveTrucks;
+    }
+
+    private updateHeatmapFade(): void {
+        const showHeatmap = useIoTStore.getState().showHeatmap;
+        const target = showHeatmap ? 1 : 0;
+        this.heatmapVisibility += (target - this.heatmapVisibility) * HEATMAP_FADE_FACTOR;
+        if (Math.abs(target - this.heatmapVisibility) < 0.005) {
+            this.heatmapVisibility = target;
+        }
+    }
+
     private showTruckPopup(info: PickingInfo<TruckRenderPoint>): void {
         if (!this.map || !info.object || !info.coordinate) return;
 
@@ -388,9 +536,11 @@ export class ImperativeMapLayer {
     }
 
     private syncFromTransientStore(): void {
-        const trucks = getTruckMap();
+        const trucks = this.resolveTruckSource();
         const now = performance.now();
         const seen = new Set<string>();
+
+        this.persistLiveFleetSnapshot(getTruckMap(), now);
 
         trucks.forEach((truck) => {
             seen.add(truck.id);
@@ -428,6 +578,7 @@ export class ImperativeMapLayer {
                 existingPoint.driverName = truck.driverName;
                 existingPoint.status = truck.status;
                 existingPoint.baseColor = nextBaseColor;
+                this.pushHeatmapPoint(nextPosition, resolveHeatmapWeight(truck.speed, truck.temperature, truck.status), now);
 
                 const staleFactor = resolveStaleFactor(now - existingPoint.lastPacketAt);
                 existingPoint.color = applyStaleVisual(nextBaseColor, staleFactor);
@@ -454,6 +605,8 @@ export class ImperativeMapLayer {
                 color: applyStaleVisual(nextBaseColor, initialStaleFactor),
                 radius: getTruckRadius(truck.speed),
             });
+
+            this.pushHeatmapPoint(nextPosition, resolveHeatmapWeight(truck.speed, truck.temperature, truck.status), now);
         });
 
         for (const [truckId] of this.renderPointById) {
@@ -486,6 +639,8 @@ export class ImperativeMapLayer {
             point.radius = getTruckRadius(point.speed) * (1 - staleFactor * 0.08);
         }
 
+        this.trimHeatmapTrail(now);
+        this.updateHeatmapFade();
         this.dataVersion += 1;
     }
 
@@ -494,6 +649,10 @@ export class ImperativeMapLayer {
         this.syncFromTransientStore();
         if (!this.overlay) return;
         const layers = [this.buildLayer()];
+        const heatmapLayer = this.buildHeatmapLayer();
+        if (heatmapLayer) {
+            layers.unshift(heatmapLayer);
+        }
         const glowLayer = this.buildSelectedGlowLayer(now);
         if (glowLayer) {
             layers.push(glowLayer);
@@ -600,6 +759,9 @@ export class ImperativeMapLayer {
     destroy(): void {
         this._destroyed = true;
         this._ready = false;
+        this.heatmapTrail.length = 0;
+        this.cachedTruckMap.clear();
+        this.cacheHydrationRequested = false;
         this.popup?.remove();
         if (this.map && this.overlay) {
             this.map.removeControl(this.overlay);

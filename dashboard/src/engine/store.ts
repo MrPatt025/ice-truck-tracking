@@ -85,6 +85,7 @@ export interface IoTStoreState {
     showGrid: boolean;
     show3D: boolean;
     showMap: boolean;
+    showHeatmap: boolean;
     showAlerts: boolean;
     timeRange: '1h' | '24h' | '7d' | '30d' | '90d';
     refreshSpeed: 'fast' | 'normal' | 'slow';
@@ -101,6 +102,7 @@ export interface IoTStoreState {
     toggleGrid: () => void;
     toggle3D: () => void;
     toggleMap: () => void;
+    toggleHeatmap: () => void;
     toggleAlerts: () => void;
     setTimeRange: (r: '1h' | '24h' | '7d' | '30d' | '90d') => void;
     setRefreshSpeed: (s: 'fast' | 'normal' | 'slow') => void;
@@ -139,6 +141,7 @@ export const useIoTStore = create<IoTStoreState>()(
         showGrid: true,
         show3D: true,
         showMap: true,
+        showHeatmap: false,
         showAlerts: false,
         timeRange: '7d',
         refreshSpeed: 'normal',
@@ -153,6 +156,7 @@ export const useIoTStore = create<IoTStoreState>()(
         toggleGrid: () => set((s) => ({ showGrid: !s.showGrid })),
         toggle3D: () => set((s) => ({ show3D: !s.show3D })),
         toggleMap: () => set((s) => ({ showMap: !s.showMap })),
+        toggleHeatmap: () => set((s) => ({ showHeatmap: !s.showHeatmap })),
         toggleAlerts: () => set((s) => ({ showAlerts: !s.showAlerts })),
         setTimeRange: (r) => set({ timeRange: r }),
         setRefreshSpeed: (s) => set({ refreshSpeed: s }),

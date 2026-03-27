@@ -16,6 +16,7 @@ import {
   ShaderMaterial,
   Vector3,
   PerspectiveCamera,
+  RingGeometry,
 } from 'three'
 import {
   Bloom,
@@ -375,6 +376,7 @@ function SelectionPulseHalo() {
     state => state.selectedTruckId !== null
   )
   const haloMaterialRef = React.useRef<ShaderMaterial | null>(null)
+  const haloGeometryRef = React.useRef<RingGeometry | null>(null)
 
   const haloMaterial = React.useMemo(
     () =>
@@ -416,7 +418,9 @@ function SelectionPulseHalo() {
 
   React.useEffect(() => {
     haloMaterialRef.current = haloMaterial
+    const haloGeometry = haloGeometryRef.current
     return () => {
+      haloGeometry?.dispose()
       haloMaterial.dispose()
     }
   }, [haloMaterial])
@@ -436,7 +440,7 @@ function SelectionPulseHalo() {
       position={[0, -0.315, 0]}
       frustumCulled={false}
     >
-      <ringGeometry args={[1.25, 2.15, 96]} />
+      <ringGeometry ref={haloGeometryRef} args={[1.25, 2.15, 96]} />
       <primitive attach='material' object={haloMaterial} />
     </mesh>
   )

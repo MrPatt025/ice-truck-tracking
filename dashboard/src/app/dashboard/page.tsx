@@ -537,6 +537,8 @@ export default function Dashboard() {
   const show3D = useIoTStore(s => s.show3D)
   const toggle3D = useIoTStore(s => s.toggle3D)
   const showMap = useIoTStore(s => s.showMap)
+  const showHeatmap = useIoTStore(s => s.showHeatmap)
+  const toggleHeatmap = useIoTStore(s => s.toggleHeatmap)
   const showAlerts = useIoTStore(s => s.showAlerts)
   const toggleAlerts = useIoTStore(s => s.toggleAlerts)
   const timeRange = useIoTStore(s => s.timeRange)
@@ -938,6 +940,13 @@ export default function Dashboard() {
                   className={`rounded-xl p-2.5 ring-1 transition-all ${show3D ? 'bg-cyan-500/20 ring-cyan-500/50 text-cyan-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
                 >
                   <Layers className='h-4 w-4' />
+                </button>
+                <button
+                  onClick={toggleHeatmap}
+                  title='Toggle Fleet Heatmap'
+                  className={`rounded-xl p-2.5 ring-1 transition-all ${showHeatmap ? 'bg-rose-500/20 ring-rose-500/50 text-rose-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
+                >
+                  <ThermometerSun className='h-4 w-4' />
                 </button>
                 <button
                   onClick={togglePause}

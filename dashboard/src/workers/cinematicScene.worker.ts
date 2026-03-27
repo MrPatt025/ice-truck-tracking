@@ -79,6 +79,10 @@ let adaptiveViewportDpr = 1
 let smoothedFrameMs = TARGET_FRAME_MS
 let lowFpsSampleCount = 0
 let recoverySampleCount = 0
+let interpolationRafHandle: number | null = null
+let interpolationTimeoutHandle: number | null = null
+let deckFlushRafHandle: number | null = null
+let deckFlushTimeoutHandle: number | null = null
 
 function resolveStaleFactor(ageMs: number): number {
   if (ageMs <= STALE_PACKET_THRESHOLD_MS) return 0
@@ -265,6 +269,32 @@ function disposeDeck(): void {
   }
 
   deckInstance = null
+}
+
+function cancelScheduledWork(): void {
+  if (
+    interpolationRafHandle !== null &&
+    typeof globalThis.cancelAnimationFrame === 'function'
+  ) {
+    globalThis.cancelAnimationFrame(interpolationRafHandle)
+  }
+  if (interpolationTimeoutHandle !== null) {
+    globalThis.clearTimeout(interpolationTimeoutHandle)
+  }
+  if (
+    deckFlushRafHandle !== null &&
+    typeof globalThis.cancelAnimationFrame === 'function'
+  ) {
+    globalThis.cancelAnimationFrame(deckFlushRafHandle)
+  }
+  if (deckFlushTimeoutHandle !== null) {
+    globalThis.clearTimeout(deckFlushTimeoutHandle)
+  }
+
+  interpolationRafHandle = null
+  interpolationTimeoutHandle = null
+  deckFlushRafHandle = null
+  deckFlushTimeoutHandle = null
 }
 
 function hasMeaningfulMovement(
@@ -469,11 +499,17 @@ function runInterpolationLoop(): void {
     }
 
     if (typeof globalThis.requestAnimationFrame === 'function') {
-      globalThis.requestAnimationFrame(() => tick())
+      interpolationRafHandle = globalThis.requestAnimationFrame(() => {
+        interpolationRafHandle = null
+        tick()
+      })
       return
     }
 
-    globalThis.setTimeout(() => tick(), TARGET_FRAME_MS)
+    interpolationTimeoutHandle = globalThis.setTimeout(() => {
+      interpolationTimeoutHandle = null
+      tick()
+    }, TARGET_FRAME_MS)
   }
 
   tick()
@@ -580,7 +616,10 @@ function scheduleDeckSceneUpdate(): void {
     const elapsed = now - lastDeckRenderAt
 
     if (elapsed < TARGET_FRAME_MS) {
-      globalThis.setTimeout(flush, Math.max(1, TARGET_FRAME_MS - elapsed))
+      deckFlushTimeoutHandle = globalThis.setTimeout(() => {
+        deckFlushTimeoutHandle = null
+        flush()
+      }, Math.max(1, TARGET_FRAME_MS - elapsed))
       return
     }
 
@@ -591,11 +630,17 @@ function scheduleDeckSceneUpdate(): void {
   }
 
   if (typeof globalThis.requestAnimationFrame === 'function') {
-    globalThis.requestAnimationFrame(() => flush())
+    deckFlushRafHandle = globalThis.requestAnimationFrame(() => {
+      deckFlushRafHandle = null
+      flush()
+    })
     return
   }
 
-  globalThis.setTimeout(flush, TARGET_FRAME_MS)
+  deckFlushTimeoutHandle = globalThis.setTimeout(() => {
+    deckFlushTimeoutHandle = null
+    flush()
+  }, TARGET_FRAME_MS)
 }
 
 function syncCamera(progress: number): void {
@@ -649,6 +694,12 @@ function initializeDeck(payload: OffscreenInitPayload): void {
 }
 
 function handleCleanupMessage(): void {
+  cancelScheduledWork()
+  deckUpdateQueued = false
+  interpolationLoopActive = false
+  lowFpsSampleCount = 0
+  recoverySampleCount = 0
+  smoothedFrameMs = TARGET_FRAME_MS
   disposeDeck()
   mutableFleetNodes.length = 0
   fleetNodeById.clear()
