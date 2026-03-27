@@ -49,10 +49,10 @@ export interface FleetDistributionDatum {
 
 interface ReportsChartsProps {
   activeTab: ReportsTab;
-  temperatureData: readonly TemperatureDatum[];
-  deliveryData: readonly DeliveryDatum[];
-  fuelData: readonly FuelDatum[];
-  fleetDistribution: readonly FleetDistributionDatum[];
+  temperatureData: TemperatureDatum[];
+  deliveryData: DeliveryDatum[];
+  fuelData: FuelDatum[];
+  fleetDistribution: FleetDistributionDatum[];
 }
 
 export function ReportsCharts({

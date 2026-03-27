@@ -449,15 +449,10 @@ function SelectionPulseHalo() {
 
 function MapModeTransitionVeil() {
   const materialRef = React.useRef<MeshBasicMaterial | null>(null)
-  const opacityRef = React.useRef(0)
 
-  useFrame((_, delta) => {
-    const targetOpacity = runtimeState.mapMode.blend * 0.42
-    opacityRef.current +=
-      (targetOpacity - opacityRef.current) * Math.min(1, delta * 7.5)
-
+  useFrame(() => {
     if (materialRef.current) {
-      materialRef.current.opacity = opacityRef.current
+      materialRef.current.opacity = runtimeState.mapMode.blend * 0.42
     }
   })
 

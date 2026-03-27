@@ -3,6 +3,11 @@
   "tasks": {
     "build": {
       "env": [
+        "PORT",
+        "POSTGRES_*",
+        "MQTT_*",
+        "OIDC_*",
+        "REDIS_*",
         "VERCEL",
         "VERCEL_ENV",
         "VERCEL_URL",
@@ -52,6 +57,11 @@
     },
     "lint": {
       "env": [
+        "PORT",
+        "POSTGRES_*",
+        "MQTT_*",
+        "OIDC_*",
+        "REDIS_*",
         "VERCEL",
         "VERCEL_ENV",
         "VERCEL_URL",
@@ -82,6 +92,11 @@
     },
     "type-check": {
       "env": [
+        "PORT",
+        "POSTGRES_*",
+        "MQTT_*",
+        "OIDC_*",
+        "REDIS_*",
         "VERCEL",
         "VERCEL_ENV",
         "VERCEL_URL",
@@ -135,11 +150,20 @@
   "globalEnv": [
     "NODE_ENV",
     "CI",
+    "PORT",
+    "POSTGRES_*",
+    "MQTT_*",
+    "OIDC_*",
+    "REDIS_*",
     "VERCEL",
+    "VERCEL_TOKEN",
+    "VERCEL_ORG_ID",
+    "VERCEL_PROJECT_ID",
     "TURBO_TEAM",
     "TURBO_TOKEN",
     "JWT_SECRET",
-    "DATABASE_URL"
+    "DATABASE_URL",
+    "RENDER_DEPLOY_HOOK_URL"
   ],
   "remoteCache": {
     "enabled": true
