@@ -121,7 +121,7 @@ export default function LandingPage() {
   const isLiveFlowing = wsStatus === 'connected'
 
   const resolveBrowserWindow = React.useCallback((): Window | null => {
-    return typeof globalThis.window === 'undefined' ? null : globalThis.window
+    return globalThis.window ?? null
   }, [])
 
   const clearRouteFallbackTimer = React.useCallback(() => {

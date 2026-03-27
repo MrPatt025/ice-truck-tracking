@@ -185,8 +185,8 @@ export class MotionCalibrationLab {
   private _globalScale = 1;
 
   constructor() {
-    if (typeof globalThis.window !== 'undefined') {
-      const mq = globalThis.window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (typeof globalThis.matchMedia === 'function') {
+      const mq = globalThis.matchMedia('(prefers-reduced-motion: reduce)');
       this._reducedMotion = mq.matches;
       mq.addEventListener('change', (e) => { this._reducedMotion = e.matches; });
     }

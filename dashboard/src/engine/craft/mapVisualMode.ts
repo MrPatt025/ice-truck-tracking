@@ -70,7 +70,7 @@ const DEFAULT_CONFIG: MapVisualConfig = {
 // ─── Map Visual Controller ────────────────────────────────────
 
 export class MapVisualController {
-  private _config: MapVisualConfig;
+  private readonly _config: MapVisualConfig;
   private _theme: Theme = 'dark';
   private _timeSegment: TimeSegment = 'afternoon';
   private _styleEl: HTMLStyleElement | null = null;
@@ -206,7 +206,7 @@ export class MapVisualController {
     if (typeof document === 'undefined') return;
 
     this._styleEl = document.createElement('style');
-    this._styleEl.setAttribute('data-craft', 'map-visuals');
+    this._styleEl.dataset.craft = 'map-visuals';
     this._updateStyles();
     document.head.appendChild(this._styleEl);
   }

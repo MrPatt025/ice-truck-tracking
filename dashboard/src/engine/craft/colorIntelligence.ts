@@ -99,13 +99,14 @@ export function oklchToCSS(color: OKLCHColor): string {
 
 /** Parse CSS oklch() string to OKLCHColor */
 export function parseOKLCH(css: string): OKLCHColor | null {
-  const match = css.match(/oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\s*\)/);
+  const oklchExpression = /oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)(?:\s*\/\s*([\d.]+))?\s*\)/;
+  const match = oklchExpression.exec(css);
   if (!match) return null;
   return {
-    l: parseFloat(match[1]),
-    c: parseFloat(match[2]),
-    h: parseFloat(match[3]),
-    a: match[4] ? parseFloat(match[4]) : 1,
+    l: Number.parseFloat(match[1]),
+    c: Number.parseFloat(match[2]),
+    h: Number.parseFloat(match[3]),
+    a: match[4] ? Number.parseFloat(match[4]) : 1,
   };
 }
 
@@ -138,7 +139,7 @@ export function clampForContrast(color: OKLCHColor, bgLightness: number, minRati
 // ─── Color Intelligence Engine ────────────────────────────────
 
 export class ColorIntelligenceEngine {
-  private _config: ColorIntelligenceConfig;
+  private readonly _config: ColorIntelligenceConfig;
   private _temperature: ColorTemperature;
   private _theme: Theme = 'dark';
   private _alertLevel: AlertLevel | null = null;
@@ -148,7 +149,7 @@ export class ColorIntelligenceEngine {
   constructor(config?: Partial<ColorIntelligenceConfig>) {
     this._config = {
       baseTemperature: 5500,
-      saturationScale: 1.0,
+      saturationScale: 1,
       luminanceMin: 0.15,
       luminanceMax: 0.95,
       contrastTarget: 4.5,
@@ -230,7 +231,7 @@ export class ColorIntelligenceEngine {
   metricColor(value: number): OKLCHColor {
     // Green (good) → Yellow (caution) → Red (danger)
     const good: OKLCHColor     = { l: 0.75, c: 0.18, h: 145, a: 1 };
-    const caution: OKLCHColor  = { l: 0.80, c: 0.20, h: 80, a: 1 };
+    const caution: OKLCHColor  = { l: 0.8, c: 0.2, h: 80, a: 1 };
     const danger: OKLCHColor   = { l: 0.65, c: 0.25, h: 25, a: 1 };
 
     let color: OKLCHColor;
@@ -251,7 +252,7 @@ export class ColorIntelligenceEngine {
     // Temperature-derived accent colors
     const accent = this.process({ l: 0.75, c: 0.15, h: 250, a: 1 }, this._alertLevel || undefined);
     const surface = this.process({ l: 0.18, c: 0.02, h: 260, a: 1 });
-    const text = this.process({ l: 0.90, c: 0.02, h: 250, a: 1 });
+    const text = this.process({ l: 0.9, c: 0.02, h: 250, a: 1 });
     const muted = this.process({ l: 0.55, c: 0.04, h: 250, a: 1 });
 
     root.style.setProperty('--ci-accent', oklchToCSS(accent));
@@ -263,7 +264,13 @@ export class ColorIntelligenceEngine {
 
     // Alert-specific colors
     if (this._alertLevel) {
-      const alertColor = this.process({ l: 0.70, c: 0.22, h: this._alertLevel === 'critical' ? 25 : this._alertLevel === 'warning' ? 70 : 220, a: 1 }, this._alertLevel);
+      let alertHue = 220;
+      if (this._alertLevel === 'critical') {
+        alertHue = 25;
+      } else if (this._alertLevel === 'warning') {
+        alertHue = 70;
+      }
+      const alertColor = this.process({ l: 0.7, c: 0.22, h: alertHue, a: 1 }, this._alertLevel);
       root.style.setProperty('--ci-alert', oklchToCSS(alertColor));
     }
 
@@ -299,7 +306,7 @@ export class ColorIntelligenceEngine {
     `;
 
     this._styleEl = document.createElement('style');
-    this._styleEl.setAttribute('data-craft', 'color-intelligence');
+    this._styleEl.dataset.craft = 'color-intelligence';
     this._styleEl.textContent = css;
     document.head.appendChild(this._styleEl);
   }

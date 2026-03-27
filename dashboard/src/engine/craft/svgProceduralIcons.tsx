@@ -62,10 +62,62 @@ const STATE_COLORS: Record<IconState, string> = {
 const STATE_STROKE: Record<IconState, number> = {
   idle: 1.5,
   active: 1.8,
-  alert: 2.0,
+  alert: 2,
   disabled: 1.2,
   loading: 1.5,
 };
+
+const LEADING_NUMBER_PATTERN = /^-?\d+\.?\d*/;
+
+type SvgInteractionHandlers = Pick<
+  React.SVGProps<SVGSVGElement>,
+  'onMouseEnter' | 'onMouseLeave' | 'onMouseDown' | 'onMouseUp'
+>;
+
+function createElasticHandlers(enabled: boolean): SvgInteractionHandlers {
+  if (!enabled) {
+    return {};
+  }
+
+  return {
+    onMouseEnter: (e) => {
+      (e.currentTarget as SVGElement).style.transform = 'scale(1.12)';
+    },
+    onMouseLeave: (e) => {
+      (e.currentTarget as SVGElement).style.transform = 'scale(1)';
+    },
+    onMouseDown: (e) => {
+      (e.currentTarget as SVGElement).style.transform = 'scale(0.92)';
+    },
+    onMouseUp: (e) => {
+      (e.currentTarget as SVGElement).style.transform = 'scale(1.12)';
+    },
+  };
+}
+
+function getLoadingStyle(state: IconState): React.CSSProperties {
+  if (state === 'loading') {
+    return { animation: 'craft-icon-spin 1.2s linear infinite' };
+  }
+  return {};
+}
+
+function getA11yProps(
+  label: string | undefined,
+  titleId: string | undefined,
+): Record<string, string | boolean | undefined> {
+  if (label && titleId) {
+    return {
+      'aria-hidden': undefined,
+      'aria-labelledby': titleId,
+    };
+  }
+
+  return {
+    'aria-hidden': true,
+    'aria-labelledby': undefined,
+  };
+}
 
 // ─── Path Interpolation ───────────────────────────────────────
 
@@ -92,7 +144,7 @@ function interpolatePaths(from: string, to: string, t: number): string {
       result += letters[letterIdx++];
     } else if (/[-\d.]/.test(char)) {
       // Find the full number
-      const numMatch = from.slice(i).match(/^-?\d+\.?\d*/);
+      const numMatch = LEADING_NUMBER_PATTERN.exec(from.slice(i));
       if (numMatch && numIdx < interpolated.length) {
         result += interpolated[numIdx++].toFixed(2);
         i += numMatch[0].length - 1;
@@ -123,6 +175,10 @@ export const ProceduralIcon: React.FC<ProceduralIconProps> = ({
 }) => {
   const pathRef = useRef<SVGPathElement>(null);
   const animRef = useRef<Animation | null>(null);
+  const titleId = useMemo(
+    () => (label ? `craft-icon-title-${Math.random().toString(36).slice(2, 10)}` : undefined),
+    [label],
+  );
 
   // Morph interpolation
   const currentPath = useMemo(() => {
@@ -133,10 +189,13 @@ export const ProceduralIcon: React.FC<ProceduralIconProps> = ({
   // Stroke width based on state
   const sw = strokeWidth ?? STATE_STROKE[state];
   const iconColor = color ?? STATE_COLORS[state];
+  const loadingStyle = useMemo(() => getLoadingStyle(state), [state]);
+  const elasticHandlers = useMemo(() => createElasticHandlers(elastic), [elastic]);
+  const a11yProps = useMemo(() => getA11yProps(label, titleId), [label, titleId]);
 
   // Draw-in animation on mount
   useEffect(() => {
-    if (!drawIn || !pathRef.current || typeof window === 'undefined') return;
+    if (!drawIn || !pathRef.current || globalThis.window === undefined) return;
 
     const pathEl = pathRef.current;
     const length = pathEl.getTotalLength();
@@ -159,11 +218,6 @@ export const ProceduralIcon: React.FC<ProceduralIconProps> = ({
     return () => anim.cancel();
   }, [drawIn]);
 
-  // Loading rotation
-  const loadingStyle: React.CSSProperties = state === 'loading'
-    ? { animation: 'craft-icon-spin 1.2s linear infinite' }
-    : {};
-
   return (
     <svg
       width={size}
@@ -180,23 +234,13 @@ export const ProceduralIcon: React.FC<ProceduralIconProps> = ({
         willChange: 'transform',
         ...loadingStyle,
       }}
-      role="img"
-      aria-label={label}
+      aria-hidden={a11yProps['aria-hidden'] as boolean | undefined}
+      aria-labelledby={a11yProps['aria-labelledby'] as string | undefined}
       data-craft-icon=""
       data-state={state}
-      onMouseEnter={elastic ? (e) => {
-        (e.currentTarget as SVGElement).style.transform = 'scale(1.12)';
-      } : undefined}
-      onMouseLeave={elastic ? (e) => {
-        (e.currentTarget as SVGElement).style.transform = 'scale(1)';
-      } : undefined}
-      onMouseDown={elastic ? (e) => {
-        (e.currentTarget as SVGElement).style.transform = 'scale(0.92)';
-      } : undefined}
-      onMouseUp={elastic ? (e) => {
-        (e.currentTarget as SVGElement).style.transform = 'scale(1.12)';
-      } : undefined}
+      {...elasticHandlers}
     >
+      {label ? <title id={titleId}>{label}</title> : null}
       <path
         ref={pathRef}
         d={currentPath}
@@ -242,7 +286,7 @@ if (typeof document !== 'undefined') {
   const existingStyle = document.querySelector('[data-craft="icon-keyframes"]');
   if (!existingStyle) {
     const style = document.createElement('style');
-    style.setAttribute('data-craft', 'icon-keyframes');
+    style.dataset.craft = 'icon-keyframes';
     style.textContent = `
       @keyframes craft-icon-spin {
         from { transform: rotate(0deg); }

@@ -88,7 +88,7 @@ const DENSITY_PRESETS: Record<DensityMode, DensityConfig> = {
     headerHeight: '80px',
     sidebarWidth: '0px',
     showDecorations: true,
-    animationIntensity: 1.0,
+    animationIntensity: 1,
   },
   analyst: {
     spacingUnit: 4,
@@ -131,7 +131,8 @@ export class LayoutDensityController {
     this._applyDensityVars();
 
     // Auto-detect density based on viewport
-    if (this._autoDetect && typeof window !== 'undefined') {
+    const browserWindow = globalThis.window;
+    if (this._autoDetect && browserWindow !== undefined) {
       this._resizeObserver = new ResizeObserver(() => {
         this._autoAdjust();
       });
@@ -173,10 +174,11 @@ export class LayoutDensityController {
   /* ── Internal ──────────────────────────────────────────────── */
 
   private _autoAdjust(): void {
-    if (typeof window === 'undefined' || !this._autoDetect) return;
+    const browserWindow = globalThis.window;
+    if (browserWindow === undefined || !this._autoDetect) return;
 
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    const w = browserWindow.innerWidth;
+    const h = browserWindow.innerHeight;
     const aspect = w / h;
 
     let suggested: DensityMode;
@@ -224,7 +226,7 @@ export class LayoutDensityController {
 
   private _setDataAttribute(mode: DensityMode): void {
     if (typeof document === 'undefined') return;
-    document.documentElement.setAttribute('data-density', mode);
+    document.documentElement.dataset.density = mode;
   }
 
   private _injectStyles(): void {
@@ -289,7 +291,7 @@ export class LayoutDensityController {
     `;
 
     this._styleEl = document.createElement('style');
-    this._styleEl.setAttribute('data-craft', 'layout-density');
+    this._styleEl.dataset.craft = 'layout-density';
     this._styleEl.textContent = css;
     document.head.appendChild(this._styleEl);
   }

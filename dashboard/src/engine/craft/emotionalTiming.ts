@@ -81,11 +81,11 @@ const TONE_SEQUENCES: Record<EmotionalTone, EmotionalSequence> = {
 export class EmotionalTimingEngine {
   private _reducedMotion = false;
   private _timeScale = 1;
-  private _activeAnimations = new Map<string, { raf: number; startTime: number }>();
+  private readonly _activeAnimations = new Map<string, { raf: number; startTime: number }>();
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (globalThis.window !== undefined) {
+      const mq = globalThis.matchMedia('(prefers-reduced-motion: reduce)');
       this._reducedMotion = mq.matches;
       mq.addEventListener('change', (e) => { this._reducedMotion = e.matches; });
     }
@@ -147,7 +147,7 @@ export class EmotionalTimingEngine {
         this._activeAnimations.set(id, { raf, startTime });
       } else {
         // Final state
-        const final = phases[phases.length - 1];
+        const final = phases.at(-1) ?? seq.settling;
         el.style.transform = final.transform;
         el.style.opacity = String(final.opacity ?? 1);
         this._activeAnimations.delete(id);
@@ -241,7 +241,7 @@ export class EmotionalTimingEngine {
 let _engine: EmotionalTimingEngine | null = null;
 
 export function getEmotionalEngine(): EmotionalTimingEngine {
-  if (!_engine) _engine = new EmotionalTimingEngine();
+  _engine ??= new EmotionalTimingEngine();
   return _engine;
 }
 

@@ -88,8 +88,8 @@ export class VisualSilenceController {
     if (this._idleTimer) clearTimeout(this._idleTimer);
 
     if (typeof document !== 'undefined') {
-      document.documentElement.removeAttribute('data-silence');
-      document.documentElement.removeAttribute('data-silence-idle');
+      delete document.documentElement.dataset.silence;
+      delete document.documentElement.dataset.silenceIdle;
     }
   }
 
@@ -107,12 +107,12 @@ export class VisualSilenceController {
 
   /** Mark an element as non-essential chrome (fades on idle) */
   markAsChrome(el: HTMLElement): void {
-    el.setAttribute('data-silence-chrome', '');
+    el.dataset.silenceChrome = 'true';
   }
 
   /** Mark an element as essential (never fades) */
   markAsEssential(el: HTMLElement): void {
-    el.setAttribute('data-silence-essential', '');
+    el.dataset.silenceEssential = 'true';
   }
 
   /** Force idle state (useful for demo/testing) */
@@ -120,9 +120,9 @@ export class VisualSilenceController {
     this._isIdle = idle;
     if (typeof document !== 'undefined') {
       if (idle) {
-        document.documentElement.setAttribute('data-silence-idle', '');
+        document.documentElement.dataset.silenceIdle = 'true';
       } else {
-        document.documentElement.removeAttribute('data-silence-idle');
+        delete document.documentElement.dataset.silenceIdle;
       }
     }
   }
@@ -146,14 +146,14 @@ export class VisualSilenceController {
     root.style.setProperty('--silence-space-xl', `${40 * m}px`);
     root.style.setProperty('--silence-space-2xl', `${64 * m}px`);
 
-    root.setAttribute('data-silence', this._config.level);
+    root.dataset.silence = this._config.level;
   }
 
   private _injectStyles(): void {
     if (typeof document === 'undefined') return;
 
     this._styleEl = document.createElement('style');
-    this._styleEl.setAttribute('data-craft', 'visual-silence');
+    this._styleEl.dataset.craft = 'visual-silence';
     this._updateStyles();
     document.head.appendChild(this._styleEl);
   }
@@ -240,7 +240,8 @@ export class VisualSilenceController {
   }
 
   private _setupIdleDetection(): void {
-    if (typeof window === 'undefined') return;
+    const browserWindow = globalThis.window;
+    if (browserWindow === undefined) return;
 
     const resetIdle = () => {
       if (this._isIdle) {
@@ -250,9 +251,9 @@ export class VisualSilenceController {
       this._idleTimer = setTimeout(() => this.setIdle(true), 30_000);
     };
 
-    window.addEventListener('mousemove', resetIdle, { passive: true });
-    window.addEventListener('keydown', resetIdle, { passive: true });
-    window.addEventListener('scroll', resetIdle, { passive: true });
+    browserWindow.addEventListener('mousemove', resetIdle, { passive: true });
+    browserWindow.addEventListener('keydown', resetIdle, { passive: true });
+    browserWindow.addEventListener('scroll', resetIdle, { passive: true });
 
     // Start initial timer
     this._idleTimer = setTimeout(() => this.setIdle(true), 30_000);

@@ -73,14 +73,14 @@ const DEFAULT_CONFIG: ParticleConfig = {
 // ─── Particle System ──────────────────────────────────────────
 
 export class ParticleMicroSystem {
-  private _config: ParticleConfig;
+  private readonly _config: ParticleConfig;
   private _canvas: HTMLCanvasElement | null = null;
   private _ctx: CanvasRenderingContext2D | null = null;
   private _particles: Particle[] = [];
   private _mounted = false;
   private _raf = 0;
   private _lastTime = 0;
-  private _fpsHistory: number[] = [];
+  private readonly _fpsHistory: number[] = [];
   private _targetCount: number;
   private _currentScale = 1;
 
@@ -96,7 +96,7 @@ export class ParticleMicroSystem {
     this._mounted = true;
 
     this._canvas = document.createElement('canvas');
-    this._canvas.setAttribute('data-craft', 'particles');
+    this._canvas.dataset.craft = 'particles';
     Object.assign(this._canvas.style, {
       position: 'fixed',
       inset: '0',
@@ -111,7 +111,7 @@ export class ParticleMicroSystem {
     this._ctx = this._canvas.getContext('2d');
 
     this._resize();
-    window.addEventListener('resize', this._onResize, { passive: true });
+    globalThis.window.addEventListener('resize', this._onResize, { passive: true });
 
     // Seed initial particles
     this._seedAmbient();
@@ -124,8 +124,8 @@ export class ParticleMicroSystem {
   destroy(): void {
     this._mounted = false;
     cancelAnimationFrame(this._raf);
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('resize', this._onResize);
+    if (globalThis.window !== undefined) {
+      globalThis.window.removeEventListener('resize', this._onResize);
     }
     this._canvas?.remove();
     this._canvas = null;
@@ -191,7 +191,7 @@ export class ParticleMicroSystem {
 
   /* ── Internal ──────────────────────────────────────────────── */
 
-  private _loop = (): void => {
+  private readonly _loop = (): void => {
     if (!this._mounted) return;
 
     const now = performance.now();
@@ -215,35 +215,16 @@ export class ParticleMicroSystem {
     for (let i = this._particles.length - 1; i >= 0; i--) {
       const p = this._particles[i];
 
-      // Physics
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
+      this._applyParticleMotion(p, dt);
+      this._applyParticleDecay(p, dt);
 
-      // Life decay
-      p.life -= dt / p.maxLife;
-      p.opacity = Math.max(0, p.life * (p.type === 'ambient' ? 0.15 : 0.6));
-
-      // Remove dead particles
-      if (p.life <= 0) {
+      if (this._isParticleDead(p)) {
         this._particles.splice(i, 1);
         continue;
       }
 
-      // Wrap ambient particles around viewport
-      if (p.type === 'ambient' || p.type === 'dust') {
-        const w = this._canvas?.width || 1920;
-        const h = this._canvas?.height || 1080;
-        if (p.x < -20) p.x = w + 20;
-        if (p.x > w + 20) p.x = -20;
-        if (p.y < -20) p.y = h + 20;
-        if (p.y > h + 20) p.y = -20;
-      }
-
-      // Gravity for sparks
-      if (p.type === 'spark') {
-        p.vy += 120 * dt; // gravity
-        p.vx *= 0.98;     // air resistance
-      }
+      this._applyViewportWrap(p);
+      this._applySparkPhysics(p, dt);
     }
 
     // Respawn ambient particles to maintain count
@@ -252,6 +233,37 @@ export class ParticleMicroSystem {
     if (ambientCount < targetAmbient) {
       this._spawnAmbient(1);
     }
+  }
+
+  private _applyParticleMotion(particle: Particle, dt: number): void {
+    particle.x += particle.vx * dt;
+    particle.y += particle.vy * dt;
+  }
+
+  private _applyParticleDecay(particle: Particle, dt: number): void {
+    particle.life -= dt / particle.maxLife;
+    particle.opacity = Math.max(0, particle.life * (particle.type === 'ambient' ? 0.15 : 0.6));
+  }
+
+  private _isParticleDead(particle: Particle): boolean {
+    return particle.life <= 0;
+  }
+
+  private _applyViewportWrap(particle: Particle): void {
+    if (particle.type !== 'ambient' && particle.type !== 'dust') return;
+
+    const w = this._canvas?.width || 1920;
+    const h = this._canvas?.height || 1080;
+    if (particle.x < -20) particle.x = w + 20;
+    if (particle.x > w + 20) particle.x = -20;
+    if (particle.y < -20) particle.y = h + 20;
+    if (particle.y > h + 20) particle.y = -20;
+  }
+
+  private _applySparkPhysics(particle: Particle, dt: number): void {
+    if (particle.type !== 'spark') return;
+    particle.vy += 120 * dt;
+    particle.vx *= 0.98;
   }
 
   private _render(): void {
@@ -328,13 +340,15 @@ export class ParticleMicroSystem {
 
   private _resize(): void {
     if (!this._canvas) return;
-    const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1;
-    this._canvas.width = window.innerWidth * dpr;
-    this._canvas.height = window.innerHeight * dpr;
+    const viewportWindow = globalThis.window;
+    if (viewportWindow === undefined) return;
+    const dpr = Math.min(viewportWindow.devicePixelRatio, 2);
+    this._canvas.width = viewportWindow.innerWidth * dpr;
+    this._canvas.height = viewportWindow.innerHeight * dpr;
     this._ctx?.scale(dpr, dpr);
   }
 
-  private _onResize = (): void => {
+  private readonly _onResize = (): void => {
     this._resize();
   };
 }

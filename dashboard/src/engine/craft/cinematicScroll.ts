@@ -54,8 +54,8 @@ const DEFAULT_CONFIG: ScrollConfig = {
 // ─── Cinematic Scroll Engine ──────────────────────────────────
 
 export class CinematicScrollEngine {
-  private _config: ScrollConfig;
-  private _state: ScrollState;
+  private readonly _config: ScrollConfig;
+  private readonly _state: ScrollState;
   private _sections: ScrollSection[] = [];
   private _mounted = false;
   private _raf = 0;
@@ -82,15 +82,16 @@ export class CinematicScrollEngine {
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || typeof window === 'undefined') return;
+    const browserWindow = globalThis.window;
+    if (this._mounted || browserWindow === undefined) return;
     this._mounted = true;
 
     this._injectStyles();
 
-    window.addEventListener('scroll', this._onScroll, { passive: true });
-    window.addEventListener('resize', this._onResize, { passive: true });
+    browserWindow.addEventListener('scroll', this._onScroll, { passive: true });
+    browserWindow.addEventListener('resize', this._onResize, { passive: true });
 
-    this._lastY = window.scrollY;
+    this._lastY = browserWindow.scrollY;
     this._lastTime = performance.now();
     this._loop();
   }
@@ -99,9 +100,10 @@ export class CinematicScrollEngine {
     this._mounted = false;
     cancelAnimationFrame(this._raf);
 
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('scroll', this._onScroll);
-      window.removeEventListener('resize', this._onResize);
+    const browserWindow = globalThis.window;
+    if (browserWindow !== undefined) {
+      browserWindow.removeEventListener('scroll', this._onScroll);
+      browserWindow.removeEventListener('resize', this._onResize);
     }
 
     this._styleEl?.remove();
@@ -149,9 +151,10 @@ export class CinematicScrollEngine {
 
   snapTo(sectionId: string): void {
     const section = this._sections.find((s) => s.id === sectionId);
-    if (!section || typeof window === 'undefined') return;
+    const browserWindow = globalThis.window;
+    if (!section || browserWindow === undefined) return;
 
-    window.scrollTo({
+    browserWindow.scrollTo({
       top: section.snapPoint,
       behavior: 'smooth',
     });
@@ -169,7 +172,7 @@ export class CinematicScrollEngine {
 
   /* ── Internal Loop ─────────────────────────────────────────── */
 
-  private _loop = (): void => {
+  private readonly _loop = (): void => {
     if (!this._mounted) return;
 
     const now = performance.now();
@@ -184,9 +187,10 @@ export class CinematicScrollEngine {
   };
 
   private _updateState(dt: number): void {
-    if (typeof window === 'undefined') return;
+    const browserWindow = globalThis.window;
+    if (browserWindow === undefined) return;
 
-    const currentY = window.scrollY;
+    const currentY = browserWindow.scrollY;
     const rawVelocity = (currentY - this._lastY) / Math.max(dt, 0.001);
     this._lastY = currentY;
 
@@ -207,7 +211,7 @@ export class CinematicScrollEngine {
     }
 
     // Global progress
-    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const maxScroll = document.documentElement.scrollHeight - browserWindow.innerHeight;
     this._state.progress = maxScroll > 0 ? currentY / maxScroll : 0;
 
     // Set CSS variable for scroll-driven animations
@@ -216,8 +220,9 @@ export class CinematicScrollEngine {
   }
 
   private _updateSections(): void {
-    if (typeof window === 'undefined') return;
-    const viewportH = window.innerHeight;
+    const browserWindow = globalThis.window;
+    if (browserWindow === undefined) return;
+    const viewportH = browserWindow.innerHeight;
     const scrollY = this._state.position;
     let newActiveSection = this._state.activeSection;
 
@@ -259,13 +264,14 @@ export class CinematicScrollEngine {
   }
 
   private _checkSnap(): void {
-    if (typeof window === 'undefined') return;
-    const scrollY = window.scrollY;
+    const browserWindow = globalThis.window;
+    if (browserWindow === undefined) return;
+    const scrollY = browserWindow.scrollY;
 
     for (const section of this._sections) {
       const dist = Math.abs(scrollY - section.snapPoint);
       if (dist < this._config.snapThreshold && dist > 5) {
-        window.scrollTo({ top: section.snapPoint, behavior: 'smooth' });
+        browserWindow.scrollTo({ top: section.snapPoint, behavior: 'smooth' });
         break;
       }
     }
@@ -281,13 +287,13 @@ export class CinematicScrollEngine {
 
   /* ── Event Handlers ────────────────────────────────────────── */
 
-  private _onScroll = (): void => {
+  private readonly _onScroll = (): void => {
     // Handled in animation loop for smoothness
   };
 
-  private _onResize = (): void => {
+  private readonly _onResize = (): void => {
     // Recalculate snap points
-    if (typeof window === 'undefined') return;
+    if (globalThis.window === undefined) return;
     for (const section of this._sections) {
       section.snapPoint = section.el.offsetTop;
     }
@@ -339,7 +345,7 @@ export class CinematicScrollEngine {
     `;
 
     this._styleEl = document.createElement('style');
-    this._styleEl.setAttribute('data-craft', 'cinematic-scroll');
+    this._styleEl.dataset.craft = 'cinematic-scroll';
     this._styleEl.textContent = css;
     document.head.appendChild(this._styleEl);
   }
@@ -348,10 +354,10 @@ export class CinematicScrollEngine {
 // ─── Utility: Parallax Attribute Helper ─────────────────────────
 
 export function setParallaxSpeed(el: HTMLElement, speed: number): void {
-  el.setAttribute('data-craft-parallax', '');
+  el.dataset.craftParallax = 'true';
   el.style.setProperty('--craft-parallax-speed', String(speed));
 }
 
 export function setScrollReveal(el: HTMLElement): void {
-  el.setAttribute('data-craft-scroll-reveal', '');
+  el.dataset.craftScrollReveal = 'true';
 }

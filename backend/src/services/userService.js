@@ -24,11 +24,7 @@ function extractUsername(username, email) {
   if (normalized) return normalized;
 
   const emailStr = normalizeString(email);
-  if (emailStr && emailStr.includes('@')) {
-    return emailStr.split('@')[0];
-  }
-
-  return '';
+  return emailStr?.includes('@') ? emailStr.split('@')[0] : '';
 }
 
 /**

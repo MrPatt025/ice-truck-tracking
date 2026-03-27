@@ -48,26 +48,26 @@ const LIGHT_NARRATIVES: Record<Theme, LightNarrative> = {
   dark: {
     keyLight:    { type: 'key',     angle: 315, intensity: 0.85, color: 'oklch(0.85 0.03 220)', spread: 120, elevation: 5 },
     ambientFill: { type: 'ambient', angle: 0,   intensity: 0.15, color: 'oklch(0.25 0.02 260)', spread: 400, elevation: 0 },
-    accentRim:   { type: 'rim',     angle: 135, intensity: 0.40, color: 'oklch(0.70 0.12 250)', spread: 2,   elevation: 2 },
-    alertPulse:  { type: 'pulse',   angle: 0,   intensity: 0.00, color: 'oklch(0.65 0.25 25)',  spread: 200, elevation: 0 },
+    accentRim:   { type: 'rim',     angle: 135, intensity: 0.4, color: 'oklch(0.70 0.12 250)', spread: 2,   elevation: 2 },
+    alertPulse:  { type: 'pulse',   angle: 0,   intensity: 0, color: 'oklch(0.65 0.25 25)',  spread: 200, elevation: 0 },
   },
   neon: {
-    keyLight:    { type: 'key',     angle: 300, intensity: 0.90, color: 'oklch(0.90 0.15 180)', spread: 100, elevation: 6 },
-    ambientFill: { type: 'ambient', angle: 0,   intensity: 0.20, color: 'oklch(0.20 0.08 300)', spread: 500, elevation: 0 },
+    keyLight:    { type: 'key',     angle: 300, intensity: 0.9, color: 'oklch(0.90 0.15 180)', spread: 100, elevation: 6 },
+    ambientFill: { type: 'ambient', angle: 0,   intensity: 0.2, color: 'oklch(0.20 0.08 300)', spread: 500, elevation: 0 },
     accentRim:   { type: 'rim',     angle: 120, intensity: 0.55, color: 'oklch(0.80 0.20 330)', spread: 3,   elevation: 3 },
-    alertPulse:  { type: 'pulse',   angle: 0,   intensity: 0.00, color: 'oklch(0.70 0.30 30)',  spread: 250, elevation: 0 },
+    alertPulse:  { type: 'pulse',   angle: 0,   intensity: 0, color: 'oklch(0.70 0.30 30)',  spread: 250, elevation: 0 },
   },
   ocean: {
     keyLight:    { type: 'key',     angle: 330, intensity: 0.75, color: 'oklch(0.80 0.08 200)', spread: 140, elevation: 4 },
     ambientFill: { type: 'ambient', angle: 0,   intensity: 0.18, color: 'oklch(0.22 0.04 220)', spread: 450, elevation: 0 },
     accentRim:   { type: 'rim',     angle: 150, intensity: 0.35, color: 'oklch(0.65 0.10 190)', spread: 2,   elevation: 2 },
-    alertPulse:  { type: 'pulse',   angle: 0,   intensity: 0.00, color: 'oklch(0.60 0.22 30)',  spread: 180, elevation: 0 },
+    alertPulse:  { type: 'pulse',   angle: 0,   intensity: 0, color: 'oklch(0.60 0.22 30)',  spread: 180, elevation: 0 },
   },
   forest: {
-    keyLight:    { type: 'key',     angle: 320, intensity: 0.70, color: 'oklch(0.78 0.06 140)', spread: 130, elevation: 4 },
+    keyLight:    { type: 'key',     angle: 320, intensity: 0.7, color: 'oklch(0.78 0.06 140)', spread: 130, elevation: 4 },
     ambientFill: { type: 'ambient', angle: 0,   intensity: 0.16, color: 'oklch(0.20 0.03 150)', spread: 420, elevation: 0 },
-    accentRim:   { type: 'rim',     angle: 140, intensity: 0.30, color: 'oklch(0.60 0.08 120)', spread: 2,   elevation: 2 },
-    alertPulse:  { type: 'pulse',   angle: 0,   intensity: 0.00, color: 'oklch(0.55 0.20 25)',  spread: 160, elevation: 0 },
+    accentRim:   { type: 'rim',     angle: 140, intensity: 0.3, color: 'oklch(0.60 0.08 120)', spread: 2,   elevation: 2 },
+    alertPulse:  { type: 'pulse',   angle: 0,   intensity: 0, color: 'oklch(0.55 0.20 25)',  spread: 160, elevation: 0 },
   },
 };
 
@@ -83,7 +83,7 @@ const NIGHT_DIMMING = 0.15;
 
 export class KeyLight {
   private _el: HTMLDivElement | null = null;
-  private _current: LightSource;
+  private readonly _current: LightSource;
   private _targetIntensity = 0.85;
 
   constructor(source: LightSource) {
@@ -92,7 +92,7 @@ export class KeyLight {
 
   mount(parent: HTMLElement): void {
     this._el = document.createElement('div');
-    this._el.setAttribute('data-craft', 'key-light');
+    this._el.dataset.craft = 'key-light';
     Object.assign(this._el.style, {
       position: 'fixed',
       inset: '0',
@@ -122,7 +122,7 @@ export class KeyLight {
   }
 
   tick(_dt: number): void {
-    const currentOp = parseFloat(this._el?.style.opacity || '0');
+    const currentOp = Number.parseFloat(this._el?.style.opacity || '0');
     const diff = this._targetIntensity - currentOp;
     if (Math.abs(diff) > 0.005 && this._el) {
       this._el.style.opacity = String(currentOp + diff * 0.08);
@@ -145,7 +145,7 @@ export class KeyLight {
 
 export class AmbientFill {
   private _el: HTMLDivElement | null = null;
-  private _current: LightSource;
+  private readonly _current: LightSource;
 
   constructor(source: LightSource) {
     this._current = { ...source };
@@ -153,7 +153,7 @@ export class AmbientFill {
 
   mount(parent: HTMLElement): void {
     this._el = document.createElement('div');
-    this._el.setAttribute('data-craft', 'ambient-fill');
+    this._el.dataset.craft = 'ambient-fill';
     Object.assign(this._el.style, {
       position: 'fixed',
       inset: '0',
@@ -197,7 +197,7 @@ export class AmbientFill {
 
 export class AccentRim {
   private _el: HTMLDivElement | null = null;
-  private _current: LightSource;
+  private readonly _current: LightSource;
 
   constructor(source: LightSource) {
     this._current = { ...source };
@@ -205,7 +205,7 @@ export class AccentRim {
 
   mount(parent: HTMLElement): void {
     this._el = document.createElement('div');
-    this._el.setAttribute('data-craft', 'accent-rim');
+    this._el.dataset.craft = 'accent-rim';
     Object.assign(this._el.style, {
       position: 'fixed',
       inset: '0',
@@ -248,7 +248,7 @@ export class AccentRim {
 
 export class AlertPulse {
   private _el: HTMLDivElement | null = null;
-  private _current: LightSource;
+  private readonly _current: LightSource;
   private _phase = 0;
   private _active = false;
 
@@ -258,7 +258,7 @@ export class AlertPulse {
 
   mount(parent: HTMLElement): void {
     this._el = document.createElement('div');
-    this._el.setAttribute('data-craft', 'alert-pulse');
+    this._el.dataset.craft = 'alert-pulse';
     Object.assign(this._el.style, {
       position: 'fixed',
       inset: '0',
@@ -316,12 +316,12 @@ export class AlertPulse {
 // ─── Light Director (orchestrates all sources) ────────────────
 
 export class LightDirector {
-  private _key: KeyLight;
-  private _ambient: AmbientFill;
-  private _rim: AccentRim;
-  private _pulse: AlertPulse;
+  private readonly _key: KeyLight;
+  private readonly _ambient: AmbientFill;
+  private readonly _rim: AccentRim;
+  private readonly _pulse: AlertPulse;
   private _mounted = false;
-  private _config: LightConfig;
+  private readonly _config: LightConfig;
 
   constructor(config?: Partial<LightConfig>) {
     this._config = {

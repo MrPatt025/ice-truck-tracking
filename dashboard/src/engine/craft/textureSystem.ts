@@ -44,9 +44,9 @@ const TEXTURE_PRESETS: Record<Theme, TextureConfig> = {
     fabric:       { weaveScale: 2, threadOpacity: 0.02 },
   },
   neon: {
-    microGrain:   { frequency: 0.50, octaves: 3, opacity: 0.035 },
+    microGrain:   { frequency: 0.5, octaves: 3, opacity: 0.035 },
     brushedMetal: { angle: 120, streakCount: 150, opacity: 0.025 },
-    dustGrain:    { density: 0.3, size: 1.0, opacity: 0.02 },
+    dustGrain:    { density: 0.3, size: 1, opacity: 0.02 },
     fabric:       { weaveScale: 3, threadOpacity: 0.015 },
   },
   ocean: {
@@ -56,7 +56,7 @@ const TEXTURE_PRESETS: Record<Theme, TextureConfig> = {
     fabric:       { weaveScale: 2.5, threadOpacity: 0.018 },
   },
   forest: {
-    microGrain:   { frequency: 0.60, octaves: 5, opacity: 0.05 },
+    microGrain:   { frequency: 0.6, octaves: 5, opacity: 0.05 },
     brushedMetal: { angle: 145, streakCount: 160, opacity: 0.022 },
     dustGrain:    { density: 0.45, size: 1.3, opacity: 0.03 },
     fabric:       { weaveScale: 1.8, threadOpacity: 0.025 },
@@ -65,7 +65,7 @@ const TEXTURE_PRESETS: Record<Theme, TextureConfig> = {
 
 // DPR-based quality scaling
 const TIER_OPACITY_SCALE: Record<DeviceTier, number> = {
-  'high-end': 1.0,
+  'high-end': 1,
   'mid-range': 0.7,
   'low-end': 0.3,
   'potato': 0,     // textures disabled
@@ -84,7 +84,7 @@ function createSVGFilter(id: string, inner: string): string {
 export class MicroTexture {
   private _svgEl: HTMLDivElement | null = null;
   private _el: HTMLDivElement | null = null;
-  private _seed = Math.floor(Math.random() * 1000);
+  private readonly _seed = Math.floor(Math.random() * 1000);
 
   mount(parent: HTMLElement, config: TextureConfig['microGrain']): void {
     if (typeof document === 'undefined') return;
@@ -109,7 +109,7 @@ export class MicroTexture {
     parent.appendChild(this._svgEl);
 
     this._el = document.createElement('div');
-    this._el.setAttribute('data-craft', 'micro-texture');
+    this._el.dataset.craft = 'micro-texture';
     Object.assign(this._el.style, {
       position: 'fixed',
       inset: '0',
@@ -124,7 +124,8 @@ export class MicroTexture {
   }
 
   update(config: Partial<TextureConfig['microGrain']>): void {
-    if (this._el && config.opacity !== undefined) {
+    if (!this._el || config.opacity === undefined) return;
+    if (Number.isFinite(config.opacity)) {
       this._el.style.opacity = String(config.opacity);
     }
   }
@@ -170,7 +171,7 @@ export class BrushedMetal {
 
     // Apply as repeating background
     this._el = document.createElement('div');
-    this._el.setAttribute('data-craft', 'brushed-metal');
+    this._el.dataset.craft = 'brushed-metal';
     Object.assign(this._el.style, {
       position: 'fixed',
       inset: '0',
@@ -186,9 +187,8 @@ export class BrushedMetal {
   }
 
   update(config: Partial<TextureConfig['brushedMetal']>): void {
-    if (this._el && config.opacity !== undefined) {
-      this._el.style.opacity = String(config.opacity);
-    }
+    if (!this._el || config.opacity === undefined) return;
+    this._el.style.opacity = String(Math.max(0, config.opacity));
   }
 
   destroy(): void {
@@ -229,7 +229,7 @@ export class SoftDustGrain {
     parent.appendChild(this._svgEl);
 
     this._el = document.createElement('div');
-    this._el.setAttribute('data-craft', 'dust-grain');
+    this._el.dataset.craft = 'dust-grain';
     Object.assign(this._el.style, {
       position: 'fixed',
       inset: '0',
@@ -261,6 +261,8 @@ export class SoftDustGrain {
     this._el?.remove();
     this._svgEl = null;
     this._el = null;
+    this._animated = false;
+    this._time = 0;
   }
 }
 
@@ -302,7 +304,7 @@ export class FabricBackground {
     }
 
     this._el = document.createElement('div');
-    this._el.setAttribute('data-craft', 'fabric-bg');
+    this._el.dataset.craft = 'fabric-bg';
     Object.assign(this._el.style, {
       position: 'fixed',
       inset: '0',
@@ -319,6 +321,10 @@ export class FabricBackground {
 
   destroy(): void {
     this._el?.remove();
+    if (this._canvas) {
+      this._canvas.width = 0;
+      this._canvas.height = 0;
+    }
     this._el = null;
     this._canvas = null;
   }
@@ -327,10 +333,10 @@ export class FabricBackground {
 // ─── Texture Compositor ───────────────────────────────────────
 
 export class TextureCompositor {
-  private _micro = new MicroTexture();
-  private _metal = new BrushedMetal();
-  private _dust = new SoftDustGrain();
-  private _fabric = new FabricBackground();
+  private readonly _micro = new MicroTexture();
+  private readonly _metal = new BrushedMetal();
+  private readonly _dust = new SoftDustGrain();
+  private readonly _fabric = new FabricBackground();
   private _mounted = false;
   private _tier: DeviceTier = 'high-end';
 

@@ -136,6 +136,7 @@ erDiagram
 ## TimescaleDB-Specific Features
 
 ### Hypertables
+
 | Table     | Partition Column | Chunk Interval | Compression After | Retention |
 | --------- | ---------------- | -------------- | ----------------- | --------- |
 | telemetry | time             | 1 day          | 7 days            | 90 days   |
@@ -143,12 +144,14 @@ erDiagram
 | audit_log | time             | 30 days        | 90 days           | 730 days  |
 
 ### Continuous Aggregates
+
 | Aggregate        | Source    | Bucket | Refresh Policy       |
 | ---------------- | --------- | ------ | -------------------- |
 | telemetry_hourly | telemetry | 1 hour | Every 30 min, lag 2h |
 | alerts_daily     | alerts    | 1 day  | Every 1 hour, lag 2h |
 
 ### Indexes
+
 | Table     | Index                        | Type   | Purpose                        |
 | --------- | ---------------------------- | ------ | ------------------------------ |
 | telemetry | (truck_id, time DESC)        | B-tree | Fast per-truck time queries    |

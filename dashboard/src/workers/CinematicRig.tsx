@@ -23,6 +23,7 @@ import {
   EffectComposer,
 } from '@react-three/postprocessing'
 import { runtimeState } from './cinematicRuntimeState'
+import { useCameraSelectionStore } from '../stores/cameraSelectionStore'
 
 const tmpCameraPos = new Vector3()
 
@@ -369,6 +370,78 @@ function ColdFogParticles() {
   )
 }
 
+function SelectionPulseHalo() {
+  const isTruckSelected = useCameraSelectionStore(
+    state => state.selectedTruckId !== null
+  )
+  const haloMaterialRef = React.useRef<ShaderMaterial | null>(null)
+
+  const haloMaterial = React.useMemo(
+    () =>
+      new ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        blending: AdditiveBlending,
+        uniforms: {
+          uTime: { value: 0 },
+          uIntensity: { value: 0 },
+          uColor: { value: new Color('#38bdf8') },
+        },
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform float uTime;
+          uniform float uIntensity;
+          uniform vec3 uColor;
+          varying vec2 vUv;
+
+          void main() {
+            vec2 centered = vUv - vec2(0.5);
+            float radius = length(centered);
+            float ring = smoothstep(0.34, 0.28, abs(radius - 0.31));
+            float pulse = 0.55 + 0.45 * sin(uTime * 4.2);
+            float alpha = ring * pulse * uIntensity;
+            if (alpha < 0.003) discard;
+            gl_FragColor = vec4(uColor, alpha * 0.65);
+          }
+        `,
+      }),
+    []
+  )
+
+  React.useEffect(() => {
+    haloMaterialRef.current = haloMaterial
+    return () => {
+      haloMaterial.dispose()
+    }
+  }, [haloMaterial])
+
+  useFrame(({ clock }, delta) => {
+    if (!haloMaterialRef.current) return
+    haloMaterialRef.current.uniforms.uTime.value = clock.elapsedTime
+    const target = isTruckSelected ? 1 : 0
+    const current = haloMaterialRef.current.uniforms.uIntensity.value
+    haloMaterialRef.current.uniforms.uIntensity.value =
+      current + (target - current) * Math.min(1, delta * 6)
+  })
+
+  return (
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0, -0.315, 0]}
+      frustumCulled={false}
+    >
+      <ringGeometry args={[1.25, 2.15, 96]} />
+      <primitive attach='material' object={haloMaterial} />
+    </mesh>
+  )
+}
+
 export default function CinematicRig() {
   const bloomIntensity = 0.26 + runtimeState.scroll * 0.34
   const transitionActive =
@@ -431,6 +504,7 @@ export default function CinematicRig() {
       <RouteAndGround />
       <TruckModel />
       <ColdFogParticles />
+      <SelectionPulseHalo />
 
       {renderPostFx()}
     </>

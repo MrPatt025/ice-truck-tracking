@@ -39,12 +39,12 @@ export const ConnectionStatus = memo(function ConnectionStatus({
     // Check initial status
     setIsOnline(navigator.onLine)
 
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
+    globalThis.addEventListener('online', handleOnline)
+    globalThis.addEventListener('offline', handleOffline)
 
     return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
+      globalThis.removeEventListener('online', handleOnline)
+      globalThis.removeEventListener('offline', handleOffline)
     }
   }, [queuedActions])
 
@@ -68,6 +68,11 @@ export const ConnectionStatus = memo(function ConnectionStatus({
     if (minutes === 1) return '1 minute ago'
     return `${minutes} minutes ago`
   }
+
+  const offlineAnnouncement =
+    queuedActions > 0
+      ? `Application is offline with ${queuedActions} actions queued`
+      : 'Application is offline'
 
   return (
     <div
@@ -104,9 +109,7 @@ export const ConnectionStatus = memo(function ConnectionStatus({
       )}
 
       <span className='sr-only'>
-        {isOnline
-          ? 'Application is online and connected'
-          : `Application is offline${queuedActions > 0 ? ` with ${queuedActions} actions queued` : ''}`}
+        {isOnline ? 'Application is online and connected' : offlineAnnouncement}
       </span>
     </div>
   )

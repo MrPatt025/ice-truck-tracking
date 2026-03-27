@@ -47,15 +47,15 @@ const DEFAULT_CONFIG: PredictiveConfig = {
 // ─── Predictive Rendering Engine ──────────────────────────────
 
 export class PredictiveRenderer {
-  private _config: PredictiveConfig;
-  private _targets = new Map<string, PredictionTarget>();
+  private readonly _config: PredictiveConfig;
+  private readonly _targets = new Map<string, PredictionTarget>();
   private _loadingCount = 0;
-  private _hoverTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private readonly _hoverTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private _observer: IntersectionObserver | null = null;
   private _idleCallbackId: number | null = null;
   private _mounted = false;
-  private _navigationHistory: string[] = [];
-  private _navigationPatterns = new Map<string, Map<string, number>>();
+  private readonly _navigationHistory: string[] = [];
+  private readonly _navigationPatterns = new Map<string, Map<string, number>>();
 
   constructor(config?: Partial<PredictiveConfig>) {
     this._config = { ...DEFAULT_CONFIG, ...config };
@@ -64,7 +64,7 @@ export class PredictiveRenderer {
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || typeof window === 'undefined') return;
+    if (this._mounted || globalThis.window === undefined) return;
     this._mounted = true;
 
     // Intersection observer for viewport proximity prediction
@@ -81,7 +81,7 @@ export class PredictiveRenderer {
     );
 
     // Idle prefetching
-    if (this._config.prefetchOnIdle && 'requestIdleCallback' in window) {
+    if (this._config.prefetchOnIdle && 'requestIdleCallback' in globalThis) {
       this._scheduleIdlePrefetch();
     }
   }
@@ -147,7 +147,7 @@ export class PredictiveRenderer {
 
   /** Record a navigation event for pattern learning */
   recordNavigation(routeId: string): void {
-    const prev = this._navigationHistory[this._navigationHistory.length - 1];
+    const prev = this._navigationHistory.at(-1);
     this._navigationHistory.push(routeId);
     if (this._navigationHistory.length > 50) {
       this._navigationHistory.shift();
@@ -158,7 +158,10 @@ export class PredictiveRenderer {
       if (!this._navigationPatterns.has(prev)) {
         this._navigationPatterns.set(prev, new Map());
       }
-      const transitions = this._navigationPatterns.get(prev)!;
+      const transitions = this._navigationPatterns.get(prev);
+      if (!transitions) {
+        return;
+      }
       transitions.set(routeId, (transitions.get(routeId) || 0) + 1);
     }
 

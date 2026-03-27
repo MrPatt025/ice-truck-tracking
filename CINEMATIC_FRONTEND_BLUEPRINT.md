@@ -137,7 +137,7 @@ useMotionValueEvent(scrollY, 'change', (latest) => {
 // ✅ Good Pattern (CSS transform only)
 const heroScale = useTransform(scrollYProgress, [0, 0.35], [1, 0.92])
 // Result: GPU-accelerated transform (no reflow)
-````
+```
 
 **Audit Result:** Landing page appears to use Framer Motion's `useTransform`, which is memory-mapped (no re-renders). ✅ Good baseline.
 
@@ -147,7 +147,7 @@ const heroScale = useTransform(scrollYProgress, [0, 0.35], [1, 0.92])
 
 **Current Worst-Case Frame:**
 
-```
+```text
 Landing Page (no telemetry):
   ├─ Framer Motion useScroll + useTransform: ~1ms
   ├─ Hero background (OffscreenCanvas msg dispatch): ~0.2ms
@@ -274,7 +274,7 @@ dashboard/src/workers/shaders/
 
 #### Layer Stack (Bottom to Top)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  Z-LAYER ARCHITECTURE (Logical + Visual)                        │
 ├─────────────────────────────────────────────────────────────────┤
@@ -329,7 +329,7 @@ dashboard/src/workers/shaders/
 
 #### Data Flow Diagram
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │  LANDING PAGE SCROLL-DRIVEN CHOREOGRAPHY                        │
 └─────────────────────────────────────────────────────────────────┘
@@ -447,7 +447,7 @@ export function LandingPage() {
 
 #### Transition Flow (Landing → Dashboard)
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │ PHASE 0: LANDING PAGE (Idle)                                    │
 ├─────────────────────────────────────────────────────────────────┤
@@ -662,8 +662,9 @@ export function TransitionLayoutGroup({ children }) {
 
 ---
 
-**Blueprint Version:** 1.0  
-**Generated:** 2026-03-21  
-**Tech Stack Verified:** ✅ Production-Ready  
-**Bottlenecks Identified:** ❌ None Critical (baseline healthy)  
+**Blueprint Version:** 1.0
+**Generated:** 2026-03-21
+**Tech Stack Verified:** ✅ Production-Ready
+**Bottlenecks Identified:** ❌ None Critical (baseline healthy)
 **Recommendation:** ✅ Proceed to Phase 4 Implementation
+````

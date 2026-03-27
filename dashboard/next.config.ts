@@ -38,12 +38,14 @@ const nextConfig: NextConfig = {
       const existingSplitChunks = (config.optimization?.splitChunks as unknown) as {
         cacheGroups?: Record<string, unknown>
       } | undefined
+      const existingCacheGroups = existingSplitChunks?.cacheGroups ?? {}
       
       config.optimization = {
         ...config.optimization,
         splitChunks: {
-          ...(existingSplitChunks || {}),
+          ...existingSplitChunks,
           cacheGroups: {
+            ...existingCacheGroups,
             // Separate React/R3F into vendor chunk for better caching
             react: {
               test: /[\\/]node_modules[\\/](react|react-dom|@react-three)[\\/]/,

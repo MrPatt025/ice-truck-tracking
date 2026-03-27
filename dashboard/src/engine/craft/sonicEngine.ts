@@ -42,9 +42,9 @@ const DEFAULT_CONFIG: SonicConfig = {
 const SOUNDS: Record<SonicEvent, { freq: number; duration: number; type: OscillatorType; gain: number; ramp?: number[] }> = {
   click:   { freq: 800, duration: 0.03, type: 'sine',     gain: 0.08 },
   hover:   { freq: 600, duration: 0.02, type: 'sine',     gain: 0.04 },
-  success: { freq: 880, duration: 0.10, type: 'sine',     gain: 0.10, ramp: [880, 1100] },
+  success: { freq: 880, duration: 0.1, type: 'sine',     gain: 0.1, ramp: [880, 1100] },
   error:   { freq: 80,  duration: 0.15, type: 'triangle', gain: 0.12 },
-  alert:   { freq: 440, duration: 0.20, type: 'sine',     gain: 0.15, ramp: [440, 660, 440] },
+  alert:   { freq: 440, duration: 0.2, type: 'sine',     gain: 0.15, ramp: [440, 660, 440] },
   dismiss: { freq: 500, duration: 0.04, type: 'sine',     gain: 0.06, ramp: [500, 350] },
   notification: { freq: 660, duration: 0.08, type: 'sine', gain: 0.08, ramp: [660, 880] },
 };
@@ -61,7 +61,7 @@ const ALERT_PAN: Record<AlertLevel, number> = {
 export class SonicEngine {
   private _ctx: AudioContext | null = null;
   private _masterGain: GainNode | null = null;
-  private _config: SonicConfig;
+  private readonly _config: SonicConfig;
   private _initialized = false;
 
   constructor(config?: Partial<SonicConfig>) {
@@ -72,7 +72,7 @@ export class SonicEngine {
 
   /** Initialize audio context (must be called from user gesture) */
   init(): void {
-    if (this._initialized || typeof window === 'undefined') return;
+    if (this._initialized || globalThis.window === undefined) return;
     try {
       this._ctx = new AudioContext();
       this._masterGain = this._ctx.createGain();

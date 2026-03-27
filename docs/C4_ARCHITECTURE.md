@@ -2,7 +2,7 @@
 
 ## Level 1: System Context Diagram
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────┐
 │                          External Actors                            │
 │                                                                     │
@@ -14,7 +14,7 @@
 │  ┌──────────────────────────────────────────────────────────────┐   │
 │  │                  Ice Truck Tracking Platform                 │   │
 │  │                                                              │   │
-│  │  Real-time GPS tracking, temperature monitoring, route       │   │ 
+│  │  Real-time GPS tracking, temperature monitoring, route       │   │
 │  │  optimization, and delivery management for ice trucks        │   │
 │  └──────────────────────┬───────────────────────────────────────┘   │
 │                         │                                           │
@@ -29,7 +29,7 @@
 
 ## Level 2: Container Diagram
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                    Ice Truck Tracking Platform                          │
 │                                                                         │
@@ -104,7 +104,7 @@
 
 ## Level 3: Component Diagram — Backend API
 
-```
+```text
 ┌──────────────────────────────────────────────────────────┐
 │                   Backend API (Express.js)               │
 │                                                          │
@@ -145,7 +145,7 @@
 
 ## Data Flow: Telemetry Ingestion
 
-```
+```text
 IoT Device ──MQTT/TLS──▶ Mosquitto ──ACL Check──▶ Backend (MQTT subscriber)
                                                          │
                                                          ▼
@@ -170,7 +170,7 @@ IoT Device ──MQTT/TLS──▶ Mosquitto ──ACL Check──▶ Backend (M
 
 ## Deployment Topology
 
-```
+```text
 ┌──────────────── Kubernetes Cluster ─────────────────────┐
 │                                                         │
 │  ┌─────────── Zone A ──────────┐  ┌──── Zone B ──────┐  │

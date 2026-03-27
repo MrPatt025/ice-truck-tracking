@@ -46,13 +46,12 @@ export function easeOutExpo(t: number): number {
  * @returns Eased value from 0 to 1
  */
 export function easeInOutExpo(t: number): number {
-  return t === 0
-    ? 0
-    : t === 1
-      ? 1
-      : t < 0.5
-        ? Math.pow(2, 20 * t - 10) / 2
-        : (2 - Math.pow(2, -20 * t + 10)) / 2
+  if (t === 0) return 0
+  if (t === 1) return 1
+  if (t < 0.5) {
+    return Math.pow(2, 20 * t - 10) / 2
+  }
+  return (2 - Math.pow(2, -20 * t + 10)) / 2
 }
 
 /**

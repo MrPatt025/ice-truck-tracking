@@ -183,17 +183,17 @@ export function updateCameraFlyToProgress(
 
   // Interpolate camera position smoothly
   const nextLatitude =
-    cameraFlyTo.startLatitude! +
-    (cameraFlyTo.targetLatitude! - cameraFlyTo.startLatitude!) * eased
+    cameraFlyTo.startLatitude +
+    (cameraFlyTo.targetLatitude - cameraFlyTo.startLatitude) * eased
   const nextLongitude =
-    cameraFlyTo.startLongitude! +
-    (cameraFlyTo.targetLongitude! - cameraFlyTo.startLongitude!) * eased
+    cameraFlyTo.startLongitude +
+    (cameraFlyTo.targetLongitude - cameraFlyTo.startLongitude) * eased
   const nextZoom =
-    cameraFlyTo.startZoom! +
-    (targetZoom - cameraFlyTo.startZoom!) * eased
+    cameraFlyTo.startZoom +
+    (targetZoom - cameraFlyTo.startZoom) * eased
   const nextPitch =
-    cameraFlyTo.startPitch! +
-    (targetPitch - cameraFlyTo.startPitch!) * eased
+    cameraFlyTo.startPitch +
+    (targetPitch - cameraFlyTo.startPitch) * eased
 
   applyDeckViewState({
     latitude: nextLatitude,

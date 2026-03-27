@@ -110,7 +110,7 @@ export class AnimationBudgetGovernor {
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || typeof globalThis.window === 'undefined') return;
+    if (this._mounted || globalThis.window === undefined) return;
     this._mounted = true;
     this._lastFrameTime = performance.now();
     this._monitor();

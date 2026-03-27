@@ -65,9 +65,9 @@ const DOM_Z_STEP = 100;
 // ─── Scene Graph Controller ──────────────────────────────────
 
 export class SceneGraphController {
-  private _config: SceneGraphConfig;
-  private _nodes = new Map<string, SceneNode>();
-  private _camera: CameraState = { x: 0, y: 0, zoom: 1, fov: 60, bearing: 0, pitch: 0 };
+  private readonly _config: SceneGraphConfig;
+  private readonly _nodes = new Map<string, SceneNode>();
+  private readonly _camera: CameraState = { x: 0, y: 0, zoom: 1, fov: 60, bearing: 0, pitch: 0 };
   private _theme: Theme = 'dark';
   private _mounted = false;
 

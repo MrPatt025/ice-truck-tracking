@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { memo, useState, useRef, useEffect } from 'react'
+import { memo, useState, useRef, useEffect, useId } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '../utils'
 
@@ -25,8 +25,9 @@ export const Tooltip = memo(function Tooltip({
 }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
-  const triggerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout>()
+  const tooltipId = useId()
 
   const showTooltip = () => {
     timeoutRef.current = setTimeout(() => {
@@ -68,6 +69,20 @@ export const Tooltip = memo(function Tooltip({
     setIsVisible(false)
   }
 
+  const handleTriggerKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      if (isVisible) {
+        hideTooltip()
+      } else {
+        showTooltip()
+      }
+    }
+    if (e.key === 'Escape') {
+      hideTooltip()
+    }
+  }
+
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -94,20 +109,26 @@ export const Tooltip = memo(function Tooltip({
 
   return (
     <>
-      <div
+      <button
+        type='button'
         ref={triggerRef}
         onMouseEnter={showTooltip}
         onMouseLeave={hideTooltip}
         onFocus={showTooltip}
         onBlur={hideTooltip}
-        className='inline-block'
+        onTouchStart={showTooltip}
+        onTouchEnd={hideTooltip}
+        onKeyDown={handleTriggerKeyDown}
+        className='inline-block border-0 bg-transparent p-0 text-inherit'
+        aria-describedby={isVisible ? tooltipId : undefined}
       >
         {children}
-      </div>
+      </button>
 
       {isVisible &&
         createPortal(
           <div
+            id={tooltipId}
             className={cn(
               'absolute z-50 px-2 py-1 text-sm text-white bg-gray-900 rounded shadow-lg pointer-events-none',
               positionClasses[position],

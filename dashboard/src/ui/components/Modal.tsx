@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { memo, useEffect, useRef } from 'react'
+import { memo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '../utils'
 import { useFocusTrap } from '../hooks/useA11y'
@@ -27,7 +27,6 @@ export const Modal = memo(function Modal({
   className,
 }: ModalProps) {
   const containerRef = useFocusTrap(isOpen)
-  const overlayRef = useRef<HTMLDivElement>(null)
 
   const sizes = {
     sm: 'max-w-md',
@@ -48,31 +47,29 @@ export const Modal = memo(function Modal({
     }
   }, [isOpen])
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === overlayRef.current) {
-      onClose()
-    }
-  }
-
   if (!isOpen) return null
 
   return createPortal(
-    <div
-      ref={overlayRef}
-      className='fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4'
-      onClick={handleOverlayClick}
-      role='dialog'
-      aria-modal='true'
-      aria-labelledby={title ? 'modal-title' : undefined}
-    >
-      <div
-        ref={containerRef as React.Ref<HTMLDivElement>}
+    <div className='fixed inset-0 z-50 p-4'>
+      <button
+        type='button'
+        className='absolute inset-0 h-full w-full bg-black/50'
+        onClick={onClose}
+        aria-label='Close modal backdrop'
+      />
+      <dialog
+        ref={containerRef as React.Ref<HTMLDialogElement>}
+        open
         className={cn(
-          'relative w-full bg-white rounded-lg shadow-xl',
+          'relative mx-auto my-auto w-full rounded-lg border-0 bg-white shadow-xl',
           sizes[size],
           className
         )}
-        onClick={e => e.stopPropagation()}
+        onCancel={e => {
+          e.preventDefault()
+          onClose()
+        }}
+        aria-labelledby={title ? 'modal-title' : undefined}
       >
         {title && (
           <div className='flex items-center justify-between p-6 border-b'>
@@ -102,7 +99,7 @@ export const Modal = memo(function Modal({
           </div>
         )}
         <div className='p-6'>{children}</div>
-      </div>
+      </dialog>
     </div>,
     document.body
   )

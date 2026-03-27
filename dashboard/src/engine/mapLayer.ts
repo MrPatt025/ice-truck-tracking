@@ -14,6 +14,7 @@ import { MapboxOverlay } from '@deck.gl/mapbox';
 import type { Theme, TruckTelemetry } from './types';
 import type { CinematicCameraFlyToPayload } from '../workers/cinematicMessages';
 import { getTruckMap } from './store';
+import { useCameraSelectionStore } from '../stores/cameraSelectionStore';
 
 type RGBA = [number, number, number, number];
 type Position = [number, number];
@@ -56,6 +57,7 @@ const STALE_PACKET_THRESHOLD_MS = 5 * 60 * 1000;
 const STALE_FADE_DURATION_MS = 90 * 1000;
 const STALE_TARGET_ALPHA = 128;
 const STALE_COLOR_TARGET: readonly [number, number, number] = [148, 163, 184];
+const GLOW_COLOR: readonly [number, number, number] = [56, 189, 248];
 
 function resolveMapStyle(theme: Theme): string {
     if (!MAPBOX_TOKEN) return OPEN_STYLE_URL;
@@ -334,6 +336,41 @@ export class ImperativeMapLayer {
         });
     }
 
+    private buildSelectedGlowLayer(nowMs: number): ScatterplotLayer<TruckRenderPoint> | null {
+        const storeSelectionId = useCameraSelectionStore.getState().selectedTruckId;
+        const selectedId = storeSelectionId ?? this.selectedTruckId;
+        if (!selectedId) return null;
+
+        const selected = this.renderPointById.get(selectedId);
+        if (!selected) return null;
+
+        const pulse = 0.5 + 0.5 * Math.sin(nowMs * 0.008);
+        const haloRadius = selected.radius + 5 + pulse * 5;
+        const haloAlpha = Math.round(110 + pulse * 110);
+
+        return new ScatterplotLayer<TruckRenderPoint>({
+            id: 'trucks-selected-glow',
+            data: [selected],
+            pickable: false,
+            stroked: true,
+            filled: false,
+            radiusUnits: 'pixels',
+            lineWidthUnits: 'pixels',
+            lineWidthMinPixels: 2,
+            lineWidthMaxPixels: 4,
+            radiusMinPixels: 10,
+            radiusMaxPixels: 28,
+            getPosition: (d) => d.position,
+            getRadius: () => haloRadius,
+            getLineColor: () => [GLOW_COLOR[0], GLOW_COLOR[1], GLOW_COLOR[2], haloAlpha],
+            updateTriggers: {
+                getPosition: this.dataVersion,
+                getRadius: [this.dataVersion, haloRadius],
+                getLineColor: [this.dataVersion, haloAlpha],
+            },
+        });
+    }
+
     private showTruckPopup(info: PickingInfo<TruckRenderPoint>): void {
         if (!this.map || !info.object || !info.coordinate) return;
 
@@ -453,10 +490,16 @@ export class ImperativeMapLayer {
     }
 
     private refreshDeckLayer(): void {
+        const now = performance.now();
         this.syncFromTransientStore();
         if (!this.overlay) return;
+        const layers = [this.buildLayer()];
+        const glowLayer = this.buildSelectedGlowLayer(now);
+        if (glowLayer) {
+            layers.push(glowLayer);
+        }
         this.overlay.setProps({
-            layers: [this.buildLayer()],
+            layers,
         });
     }
 
@@ -498,6 +541,7 @@ export class ImperativeMapLayer {
 
     /** Select a truck for cinematic camera tracking */
     private selectTruckForCinematicView(truckId: string, latitude: number, longitude: number): void {
+        useCameraSelectionStore.getState().selectTruck(truckId, latitude, longitude);
         if (!this.cinematicWorker) return;
         if (this.selectedTruckId === truckId) return;
 
@@ -518,6 +562,7 @@ export class ImperativeMapLayer {
 
     /** Deselect truck and return camera to overview */
     deselectTruck(): void {
+        useCameraSelectionStore.getState().deselectTruck();
         if (!this.cinematicWorker) return;
         if (this.selectedTruckId === null) return;
 

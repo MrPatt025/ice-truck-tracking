@@ -126,11 +126,11 @@ function triggerHaptic(duration: number): void {
 // ─── Micro-Interaction Controller ─────────────────────────────
 
 export class MicroInteractionController {
-  private _config: MicroInteractionConfig;
+  private readonly _config: MicroInteractionConfig;
   private _styleEl: HTMLStyleElement | null = null;
   private _mounted = false;
-  private _targets = new Set<HTMLElement>();
-  private _boundHandlers = new WeakMap<HTMLElement, Record<string, EventListener>>();
+  private readonly _targets = new Set<HTMLElement>();
+  private readonly _boundHandlers = new WeakMap<HTMLElement, Record<string, EventListener>>();
 
   constructor(config?: Partial<MicroInteractionConfig>) {
     this._config = { ...DEFAULT_CONFIG, ...config };
@@ -159,7 +159,7 @@ export class MicroInteractionController {
     if (this._targets.has(el)) return;
     this._targets.add(el);
 
-    el.setAttribute('data-craft-interactive', '');
+    el.dataset.craftInteractive = 'true';
     el.style.willChange = 'transform';
 
     const handlers: Record<string, EventListener> = {
@@ -193,7 +193,7 @@ export class MicroInteractionController {
       }
       this._boundHandlers.delete(el);
     }
-    el.removeAttribute('data-craft-interactive');
+    delete el.dataset.craftInteractive;
     this._targets.delete(el);
   }
 
@@ -259,7 +259,7 @@ export class MicroInteractionController {
     `;
 
     this._styleEl = document.createElement('style');
-    this._styleEl.setAttribute('data-craft', 'micro-interactions');
+    this._styleEl.dataset.craft = 'micro-interactions';
     this._styleEl.textContent = css;
     document.head.appendChild(this._styleEl);
   }

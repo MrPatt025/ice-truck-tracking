@@ -5,6 +5,7 @@
 ---
 
 ## 🚀 Features
+
 - Real-time truck location and status
 - Push notifications (Expo)
 - Secure authentication (JWT)
@@ -18,7 +19,7 @@
 
 ## 🏗️ Project Structure
 
-```
+```text
 apps/mobile-app/
 ├─ src/
 │  ├─ components/
@@ -37,28 +38,34 @@ apps/mobile-app/
 ## ⚡️ Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - npm 9+
 - Expo CLI (`npm install -g expo-cli`)
 - Android/iOS device or emulator
 
 ### 1. Install dependencies
+
 ```bash
 cd apps/mobile-app
 npm install
 ```
 
 ### 2. Configure Environment
+
 Create `.env` file:
-```
+
+```env
 API_BASE_URL=https://api.icetrucktracking.com
 MAPBOX_ACCESS_TOKEN=your_mapbox_token
 ```
 
 ### 3. Start the App
+
 ```bash
 npx expo start
 ```
+
 - Scan QR code with Expo Go (iOS/Android)
 - Or run on emulator: `npx expo run:android` / `npx expo run:ios`
 
@@ -66,24 +73,25 @@ npx expo start
 
 ## 🧪 Testing
 
-| Type      | Command                |
-|-----------|------------------------|
-| Unit      | `npm test`             |
-| E2E (Detox) | `detox test`         |
+| Type        | Command      |
+| ----------- | ------------ |
+| Unit        | `npm test`   |
+| E2E (Detox) | `detox test` |
 
 ---
 
 ## 🚀 Deployment
 
-| Platform   | Build Command                                      |
-|------------|----------------------------------------------------|
-| iOS        | `eas build --profile production --platform ios`    |
-| Android    | `eas build --profile production --platform android`|
-| OTA Update | `eas update --branch production --message "..."`   |
+| Platform   | Build Command                                       |
+| ---------- | --------------------------------------------------- |
+| iOS        | `eas build --profile production --platform ios`     |
+| Android    | `eas build --profile production --platform android` |
+| OTA Update | `eas update --branch production --message "..."`    |
 
 ---
 
 ## 🔒 Security
+
 - JWT token authentication
 - Secure token storage (Expo SecureStore)
 - API request encryption
@@ -92,16 +100,18 @@ npx expo start
 ---
 
 ## 🛠️ Troubleshooting
-| Issue                  | Solution                                 |
-|------------------------|------------------------------------------|
-| API not reachable      | Check `API_BASE_URL` in `.env`           |
-| Push notifications fail| Check Expo credentials & permissions     |
-| Map not loading        | Check `MAPBOX_ACCESS_TOKEN`              |
-| App crashes            | Run `npm install`, clear cache, restart  |
+
+| Issue                   | Solution                                |
+| ----------------------- | --------------------------------------- |
+| API not reachable       | Check `API_BASE_URL` in `.env`          |
+| Push notifications fail | Check Expo credentials & permissions    |
+| Map not loading         | Check `MAPBOX_ACCESS_TOKEN`             |
+| App crashes             | Run `npm install`, clear cache, restart |
 
 ---
 
 ## 🤝 Contributing
+
 - Fork the repository
 - Create a feature branch
 - Make changes and add tests
@@ -111,6 +121,7 @@ npx expo start
 ---
 
 ## 📄 License
+
 MIT License - see [LICENSE](../../LICENSE) for details.
 
 ---
