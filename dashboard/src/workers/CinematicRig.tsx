@@ -12,6 +12,7 @@ import {
   Object3D,
   Mesh,
   Material,
+  MeshBasicMaterial,
   Points,
   ShaderMaterial,
   Vector3,
@@ -446,6 +447,39 @@ function SelectionPulseHalo() {
   )
 }
 
+function MapModeTransitionVeil() {
+  const materialRef = React.useRef<MeshBasicMaterial | null>(null)
+  const opacityRef = React.useRef(0)
+
+  useFrame((_, delta) => {
+    const targetOpacity = runtimeState.mapMode.blend * 0.42
+    opacityRef.current +=
+      (targetOpacity - opacityRef.current) * Math.min(1, delta * 7.5)
+
+    if (materialRef.current) {
+      materialRef.current.opacity = opacityRef.current
+    }
+  })
+
+  return (
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[0.8, -0.28, -0.2]}
+      frustumCulled={false}
+    >
+      <ringGeometry args={[1.8, 8.6, 96]} />
+      <meshBasicMaterial
+        ref={materialRef}
+        color='#f97316'
+        transparent
+        opacity={0}
+        depthWrite={false}
+        blending={AdditiveBlending}
+      />
+    </mesh>
+  )
+}
+
 export default function CinematicRig() {
   const bloomIntensity = 0.26 + runtimeState.scroll * 0.34
   const transitionActive =
@@ -509,6 +543,7 @@ export default function CinematicRig() {
       <TruckModel />
       <ColdFogParticles />
       <SelectionPulseHalo />
+      <MapModeTransitionVeil />
 
       {renderPostFx()}
     </>

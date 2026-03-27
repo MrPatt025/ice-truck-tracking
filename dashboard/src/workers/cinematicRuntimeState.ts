@@ -4,6 +4,7 @@ import type {
   CinematicTransitionPhase,
   CinematicViewportPayload,
   CinematicCameraFlyToPayload,
+  CinematicMapModePayload,
 } from './cinematicMessages'
 
 export interface DeckViewState {
@@ -33,6 +34,11 @@ export interface CinematicCameraFlyToState {
   isAnimating: boolean
 }
 
+export interface CinematicMapModeState {
+  mode: 'live' | 'historical'
+  blend: number
+}
+
 export type CinematicRuntimeState = {
   scroll: number
     cameraFov: number
@@ -41,6 +47,7 @@ export type CinematicRuntimeState = {
     deckViewState: DeckViewState
   transition: CinematicTransitionState
   cameraFlyTo: CinematicCameraFlyToState
+  mapMode: CinematicMapModeState
 }
 
 const clamp = (value: number, min: number, max: number): number =>
@@ -85,6 +92,10 @@ export const runtimeState: CinematicRuntimeState = {
     startedAt: null,
     isAnimating: false,
   },
+  mapMode: {
+    mode: 'live',
+    blend: 0,
+  },
 }
 
 export function applyScrollProgress(progress: number): void {
@@ -123,6 +134,13 @@ export function applyDeckViewState(next: Partial<DeckViewState>): void {
     runtimeState.deckViewState = {
         ...runtimeState.deckViewState,
         ...next,
+  }
+}
+
+export function applyMapMode(payload: CinematicMapModePayload): void {
+  runtimeState.mapMode = {
+    mode: payload.mode,
+    blend: clamp(payload.blend, 0, 1),
   }
 }
 

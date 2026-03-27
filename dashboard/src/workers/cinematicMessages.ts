@@ -43,12 +43,18 @@ export interface CinematicCameraFlyToPayload {
   durationMs: number
 }
 
+export interface CinematicMapModePayload {
+  mode: 'live' | 'historical'
+  blend: number
+}
+
 export type CinematicWorkerMessage =
   | { type: 'cinematic:telemetry'; payload: CinematicTelemetryPayload }
   | { type: 'cinematic:viewport'; payload: CinematicViewportPayload }
   | { type: 'cinematic:scroll'; payload: CinematicScrollPayload }
   | { type: 'cinematic:transition'; payload: CinematicTransitionPayload }
   | { type: 'cinematic:camera-flyto'; payload: CinematicCameraFlyToPayload }
+  | { type: 'cinematic:map-mode'; payload: CinematicMapModePayload }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value) && typeof value === 'object'
@@ -146,6 +152,18 @@ function isCameraFlyToPayload(value: unknown): value is CinematicCameraFlyToPayl
     )
 }
 
+function isMapModePayload(value: unknown): value is CinematicMapModePayload {
+  if (!isRecord(value)) return false
+  const mode = value.mode
+  const blend = value.blend
+  return (
+    (mode === 'live' || mode === 'historical')
+    && isFiniteNumber(blend)
+    && blend >= 0
+    && blend <= 1
+  )
+}
+
 export function isCinematicWorkerMessage(
   value: unknown
 ): value is CinematicWorkerMessage {
@@ -159,6 +177,7 @@ export function isCinematicWorkerMessage(
     if (type === 'cinematic:scroll') return isScrollPayload(payload)
     if (type === 'cinematic:transition') return isTransitionPayload(payload)
     if (type === 'cinematic:camera-flyto') return isCameraFlyToPayload(payload)
+    if (type === 'cinematic:map-mode') return isMapModePayload(payload)
 
     return false
 }

@@ -14,6 +14,7 @@ import {
     applyTransition,
     applyViewport,
     applyCameraFlyTo,
+    applyMapMode,
     runtimeState,
 } from './cinematicRuntimeState'
 import { easeInOutCubic, lerp, clampUnit } from './easingFunctions'
@@ -756,6 +757,12 @@ function handleWorkerMessage(data: CinematicWorkerMessage): void {
       applyViewport(data.payload)
       baseViewportDpr = runtimeState.viewport.dpr
       adaptiveViewportDpr = Math.min(adaptiveViewportDpr, baseViewportDpr)
+      scheduleDeckSceneUpdate()
+      return
+    }
+
+    case 'cinematic:map-mode': {
+      applyMapMode(data.payload)
       scheduleDeckSceneUpdate()
       return
     }

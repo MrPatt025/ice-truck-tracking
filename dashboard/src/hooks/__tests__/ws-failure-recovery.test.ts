@@ -14,7 +14,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 type WSListener = (event: unknown) => void;
 
 class MockWebSocket {
-    static instances: MockWebSocket[] = [];
+    public static readonly instances: MockWebSocket[] = [];
   static readonly CONNECTING = 0;
   static readonly OPEN = 1;
   static readonly CLOSING = 2;
@@ -79,7 +79,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-    MockWebSocket.instances = [];
+    MockWebSocket.instances.length = 0;
     mockFetch.mockReset();
     jest.useFakeTimers();
 });

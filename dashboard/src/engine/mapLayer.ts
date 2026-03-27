@@ -13,7 +13,10 @@ import { ScatterplotLayer } from '@deck.gl/layers';
 import type { PickingInfo } from '@deck.gl/core';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import type { Theme, TruckTelemetry } from './types';
-import type { CinematicCameraFlyToPayload } from '../workers/cinematicMessages';
+import type {
+    CinematicCameraFlyToPayload,
+    CinematicMapModePayload,
+} from '../workers/cinematicMessages';
 import { readFleetSnapshot, writeFleetSnapshot } from './offlineFleetCache';
 import { getTruckMap, useIoTStore } from './store';
 import { useCameraSelectionStore } from '../stores/cameraSelectionStore';
@@ -69,7 +72,8 @@ const GLOW_COLOR: readonly [number, number, number] = [56, 189, 248];
 const HEATMAP_HISTORY_LIMIT = 7_500;
 const HEATMAP_POINT_TTL_MS = 8 * 60 * 1000;
 const HEATMAP_ALPHA_EPSILON = 0.02;
-const HEATMAP_FADE_FACTOR = 0.16;
+const MODE_TRANSITION_DURATION_MS = 500;
+const OPACITY_EPSILON = 0.01;
 const CACHE_PERSIST_INTERVAL_MS = 5_000;
 
 const HEATMAP_BASE_COLOR_RANGE: readonly RGBA[] = [
@@ -288,7 +292,15 @@ export class ImperativeMapLayer {
     private cinematicWorker: Worker | null = null;
     private selectedTruckId: string | null = null;
     private readonly heatmapTrail: HeatmapPoint[] = [];
-    private heatmapVisibility = 0;
+    private modeBlend = useIoTStore.getState().showHeatmap ? 1 : 0;
+    private heatmapVisibility = this.modeBlend;
+    private liveVisibility = 1 - this.modeBlend;
+    private modeTransitionStartedAt = 0;
+    private modeTransitionFrom = this.modeBlend;
+    private modeTransitionTo = this.modeBlend;
+    private lastSentModeBlend = -1;
+    private lastSentModeTarget: 'live' | 'historical' =
+        this.modeBlend >= 0.5 ? 'historical' : 'live';
     private cacheHydrationRequested = false;
     private readonly cachedTruckMap = new Map<string, TruckTelemetry>();
     private lastCachePersistAt = 0;
@@ -355,6 +367,8 @@ export class ImperativeMapLayer {
     }
 
     private buildLayer(): ScatterplotLayer<TruckRenderPoint> {
+        const liveAlphaScale = this.liveVisibility;
+
         return new ScatterplotLayer<TruckRenderPoint>({
             id: 'trucks-scatter',
             data: this.renderData,
@@ -363,7 +377,12 @@ export class ImperativeMapLayer {
             filled: true,
             radiusUnits: 'pixels',
             getPosition: (d) => d.position,
-            getFillColor: (d) => d.color,
+            getFillColor: (d) => [
+                d.color[0],
+                d.color[1],
+                d.color[2],
+                Math.round(d.color[3] * liveAlphaScale),
+            ],
             getLineColor: [255, 255, 255, 180],
             getLineWidth: 1,
             lineWidthUnits: 'pixels',
@@ -372,7 +391,7 @@ export class ImperativeMapLayer {
             radiusMaxPixels: 14,
             updateTriggers: {
                 getPosition: this.dataVersion,
-                getFillColor: this.dataVersion,
+                getFillColor: [this.dataVersion, Math.round(liveAlphaScale * 100)],
                 getRadius: this.dataVersion,
             },
             onClick: (info: PickingInfo<TruckRenderPoint>) => {
@@ -395,7 +414,7 @@ export class ImperativeMapLayer {
 
         const pulse = 0.5 + 0.5 * Math.sin(nowMs * 0.008);
         const haloRadius = selected.radius + 5 + pulse * 5;
-        const haloAlpha = Math.round(110 + pulse * 110);
+        const haloAlpha = Math.round((110 + pulse * 110) * this.liveVisibility);
 
         return new ScatterplotLayer<TruckRenderPoint>({
             id: 'trucks-selected-glow',
@@ -511,12 +530,53 @@ export class ImperativeMapLayer {
     }
 
     private updateHeatmapFade(): void {
-        const showHeatmap = useIoTStore.getState().showHeatmap;
-        const target = showHeatmap ? 1 : 0;
-        this.heatmapVisibility += (target - this.heatmapVisibility) * HEATMAP_FADE_FACTOR;
-        if (Math.abs(target - this.heatmapVisibility) < 0.005) {
-            this.heatmapVisibility = target;
+        const now = performance.now();
+        const targetBlend = useIoTStore.getState().showHeatmap ? 1 : 0;
+
+        if (targetBlend !== this.modeTransitionTo) {
+            this.modeTransitionFrom = this.modeBlend;
+            this.modeTransitionTo = targetBlend;
+            this.modeTransitionStartedAt = now;
         }
+
+        if (this.modeBlend !== this.modeTransitionTo) {
+            const elapsed = now - this.modeTransitionStartedAt;
+            const rawProgress = Math.max(0, Math.min(1, elapsed / MODE_TRANSITION_DURATION_MS));
+            const easedProgress = rawProgress * rawProgress * (3 - 2 * rawProgress);
+            this.modeBlend = this.modeTransitionFrom
+                + (this.modeTransitionTo - this.modeTransitionFrom) * easedProgress;
+
+            if (rawProgress >= 1) {
+                this.modeBlend = this.modeTransitionTo;
+            }
+        }
+
+        this.heatmapVisibility = this.modeBlend;
+        this.liveVisibility = 1 - this.modeBlend;
+        this.syncCinematicModeBlend();
+    }
+
+    private syncCinematicModeBlend(): void {
+        if (!this.cinematicWorker) return;
+
+        const targetMode: 'live' | 'historical' = this.modeTransitionTo >= 0.5 ? 'historical' : 'live';
+        const blendDelta = Math.abs(this.modeBlend - this.lastSentModeBlend);
+        const modeChanged = targetMode !== this.lastSentModeTarget;
+
+        if (!modeChanged && blendDelta < 0.03) return;
+
+        const payload: CinematicMapModePayload = {
+            mode: targetMode,
+            blend: this.modeBlend,
+        };
+
+        this.cinematicWorker.postMessage({
+            type: 'cinematic:map-mode',
+            payload,
+        });
+
+        this.lastSentModeBlend = this.modeBlend;
+        this.lastSentModeTarget = targetMode;
     }
 
     private showTruckPopup(info: PickingInfo<TruckRenderPoint>): void {
@@ -648,10 +708,9 @@ export class ImperativeMapLayer {
         const now = performance.now();
         this.syncFromTransientStore();
         if (!this.overlay) return;
-        const showHeatmap = useIoTStore.getState().showHeatmap;
         const layers: Array<ScatterplotLayer<TruckRenderPoint> | HeatmapLayer<HeatmapPoint>> = [];
 
-        if (!showHeatmap) {
+        if (this.liveVisibility > OPACITY_EPSILON) {
             layers.push(this.buildLayer());
         }
 
@@ -661,7 +720,7 @@ export class ImperativeMapLayer {
         }
 
         const glowLayer = this.buildSelectedGlowLayer(now);
-        if (glowLayer && !showHeatmap) {
+        if (glowLayer && this.liveVisibility > OPACITY_EPSILON) {
             layers.push(glowLayer);
         }
         this.overlay.setProps({

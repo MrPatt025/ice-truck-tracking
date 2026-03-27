@@ -280,6 +280,71 @@ function resolveConnectionLabel(status: string): string {
   return 'Simulation Mode'
 }
 
+function resolveApiHealthy(
+  backendStatus: 'healthy' | 'degraded' | 'unknown'
+): boolean | null {
+  if (backendStatus === 'healthy') {
+    return true
+  }
+  if (backendStatus === 'degraded') {
+    return false
+  }
+  return null
+}
+
+function buildStatusIssues({
+  backendStatus,
+  browserOffline,
+  connectionStatus,
+  mounted,
+}: Readonly<{
+  backendStatus: 'healthy' | 'degraded' | 'unknown'
+  browserOffline: boolean
+  connectionStatus: 'connected' | 'reconnecting' | 'offline'
+  mounted: boolean
+}>): StatusIssue[] {
+  if (!mounted) return []
+
+  const issues: StatusIssue[] = []
+
+  if (browserOffline) {
+    issues.push({
+      id: 'network-offline',
+      kind: 'network',
+      title: 'Offline mode enabled',
+      detail:
+        'Network access is unavailable. Telemetry and map sync will resume automatically once connectivity is restored.',
+    })
+  }
+
+  if (backendStatus === 'degraded') {
+    issues.push({
+      id: 'api-5xx',
+      kind: 'api',
+      title: 'Backend service degraded (5xx)',
+      detail:
+        'The API health endpoint returned a server fault. Dashboard visuals stay active while retries continue in the background.',
+    })
+  }
+
+  if (connectionStatus !== 'connected') {
+    issues.push({
+      id: 'ws-state',
+      kind: 'websocket',
+      title:
+        connectionStatus === 'reconnecting'
+          ? 'Realtime stream reconnecting'
+          : 'Realtime stream offline',
+      detail:
+        connectionStatus === 'reconnecting'
+          ? 'Live socket is renegotiating. Fresh telemetry may arrive with slight delay.'
+          : 'Live socket is not connected. The dashboard remains in graceful fallback mode.',
+    })
+  }
+
+  return issues
+}
+
 function resolveStatusText(paused: boolean, lastUpdate: Date | null): string {
   if (paused) return 'Simulation paused'
   if (lastUpdate) return `Last updated ${lastUpdate.toLocaleTimeString()}`
@@ -815,12 +880,7 @@ export default function Dashboard() {
 
   // ── Build metric cards from Zustand metrics (re-renders ~2x/sec max) ──
   const metricCards = buildMetrics(metrics, unacknowledgedAlerts)
-  let apiHealthy: boolean | null = null
-  if (backendStatus === 'healthy') {
-    apiHealthy = true
-  } else if (backendStatus === 'degraded') {
-    apiHealthy = false
-  }
+  const apiHealthy = resolveApiHealthy(backendStatus)
 
   // ── Alert panel data (read from mutable store imperatively) ──
   const alertList = mounted ? getAlerts() : []
@@ -880,48 +940,16 @@ export default function Dashboard() {
   )
   const isLiveMode = showHeatmap === false
 
-  const statusIssues = useMemo<StatusIssue[]>(() => {
-    if (!mounted) return []
-
-    const issues: StatusIssue[] = []
-
-    if (browserOffline) {
-      issues.push({
-        id: 'network-offline',
-        kind: 'network',
-        title: 'Offline mode enabled',
-        detail:
-          'Network access is unavailable. Telemetry and map sync will resume automatically once connectivity is restored.',
-      })
-    }
-
-    if (backendStatus === 'degraded') {
-      issues.push({
-        id: 'api-5xx',
-        kind: 'api',
-        title: 'Backend service degraded (5xx)',
-        detail:
-          'The API health endpoint returned a server fault. Dashboard visuals stay active while retries continue in the background.',
-      })
-    }
-
-    if (connectionStatus !== 'connected') {
-      issues.push({
-        id: 'ws-state',
-        kind: 'websocket',
-        title:
-          connectionStatus === 'reconnecting'
-            ? 'Realtime stream reconnecting'
-            : 'Realtime stream offline',
-        detail:
-          connectionStatus === 'reconnecting'
-            ? 'Live socket is renegotiating. Fresh telemetry may arrive with slight delay.'
-            : 'Live socket is not connected. The dashboard remains in graceful fallback mode.',
-      })
-    }
-
-    return issues
-  }, [backendStatus, browserOffline, connectionStatus, mounted])
+  const statusIssues = useMemo<StatusIssue[]>(
+    () =>
+      buildStatusIssues({
+        backendStatus,
+        browserOffline,
+        connectionStatus,
+        mounted,
+      }),
+    [backendStatus, browserOffline, connectionStatus, mounted]
+  )
 
   /* ================================================================
    *  RENDER — React only renders the UI shell, panels, controls.
