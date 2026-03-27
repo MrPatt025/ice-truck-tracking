@@ -24,6 +24,18 @@ const displayFont = Orbitron({
 export const metadata: Metadata = {
   title: 'Ice Truck Tracking Dashboard',
   description: 'Real-time ice truck monitoring and analytics platform',
+  manifest: '/manifest.json',
+  applicationName: 'Ice Truck Tracking',
+  themeColor: '#020617',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Ice Truck Tracking',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({

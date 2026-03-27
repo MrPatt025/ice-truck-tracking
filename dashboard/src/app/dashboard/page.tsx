@@ -120,6 +120,145 @@ const PremiumSystemStatusBanner = dynamic(
 // ─── Types ─────────────────────────────────────────────────────
 type Trend = 'up' | 'down' | 'stable'
 type Fullscreen = null | 'revenue' | 'fleet' | 'temp' | 'alerts' | 'performance'
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
+}
+
+type PwaInstallPromptState = Readonly<{
+  canInstallApp: boolean
+  installingApp: boolean
+  installApp: () => Promise<void>
+}>
+
+type MapModeControls = Readonly<{
+  isLiveMode: boolean
+  setMapMode: (mode: 'live' | 'historical') => void
+}>
+
+const usePwaInstallPrompt = (mounted: boolean): PwaInstallPromptState => {
+  const [deferredInstallPrompt, setDeferredInstallPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null)
+  const [isStandalone, setIsStandalone] = useState(false)
+  const [installingApp, setInstallingApp] = useState(false)
+
+  useEffect(() => {
+    if (!mounted || globalThis.window === undefined) return
+
+    const mediaQuery = globalThis.window.matchMedia('(display-mode: standalone)')
+    const updateStandaloneState = () => {
+      const navigatorStandalone =
+        (globalThis.navigator as Navigator & { standalone?: boolean }).standalone ===
+        true
+      setIsStandalone(mediaQuery.matches || navigatorStandalone)
+    }
+
+    const onBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault()
+      setDeferredInstallPrompt(event as BeforeInstallPromptEvent)
+    }
+
+    updateStandaloneState()
+    globalThis.window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+    mediaQuery.addEventListener('change', updateStandaloneState)
+
+    return () => {
+      globalThis.window.removeEventListener(
+        'beforeinstallprompt',
+        onBeforeInstallPrompt
+      )
+      mediaQuery.removeEventListener('change', updateStandaloneState)
+    }
+  }, [mounted])
+
+  const installApp = useCallback(async () => {
+    if (!deferredInstallPrompt || installingApp) return
+
+    try {
+      setInstallingApp(true)
+      await deferredInstallPrompt.prompt()
+      const choice = await deferredInstallPrompt.userChoice
+      if (choice.outcome === 'accepted') {
+        setDeferredInstallPrompt(null)
+      }
+    } finally {
+      setInstallingApp(false)
+    }
+  }, [deferredInstallPrompt, installingApp])
+
+  return {
+    canInstallApp: mounted && !isStandalone && deferredInstallPrompt !== null,
+    installingApp,
+    installApp,
+  }
+}
+
+const useMapModeControls = (
+  showHeatmap: boolean,
+  toggleHeatmap: () => void
+): MapModeControls => {
+  const setMapMode = useCallback(
+    (mode: 'live' | 'historical') => {
+      const shouldShowHeatmap = mode === 'historical'
+      if (useIoTStore.getState().showHeatmap === shouldShowHeatmap) return
+      toggleHeatmap()
+    },
+    [toggleHeatmap]
+  )
+
+  return {
+    isLiveMode: showHeatmap === false,
+    setMapMode,
+  }
+}
+
+const useIntroTransitionSync = (
+  isTransitioning: boolean,
+  phase: string,
+  startIntro: () => void,
+  introProgress: ReturnType<typeof useMotionValue<number>>,
+  setTransitionProgress: (progress: number) => void,
+  finishTransition: () => void
+): void => {
+  useEffect(() => {
+    if (!isTransitioning) {
+      introProgress.set(1)
+      return
+    }
+
+    if (phase === 'outro') {
+      startIntro()
+      return
+    }
+
+    if (phase !== 'intro') return
+
+    introProgress.set(0)
+    setTransitionProgress(0)
+
+    const controls = animate(introProgress, 1, {
+      duration: 0.96,
+      ease: EASE_CINEMATIC_INTRO,
+      onUpdate: latest => {
+        setTransitionProgress(latest)
+      },
+      onComplete: () => {
+        finishTransition()
+      },
+    })
+
+    return () => {
+      controls.stop()
+    }
+  }, [
+    finishTransition,
+    introProgress,
+    isTransitioning,
+    phase,
+    setTransitionProgress,
+    startIntro,
+  ])
+}
 
 /* ============== Constants ============== */
 const THEME_COLORS: Record<Theme, { gradient: string }> = {
@@ -460,24 +599,28 @@ const GlassCard = memo(
     accent = 'from-violet-400/30 via-purple-400/20 to-cyan-400/30',
     className = '',
     onClick,
+    layoutId,
   }: Readonly<{
     children: React.ReactNode
     accent?: string
     className?: string
     onClick?: () => void
+    layoutId?: string
   }>) => {
     const inner = (
-      <div
-        className={`group glass-panel relative rounded-3xl p-[1.5px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02] will-change-transform`}
-      >
+      <motion.div layout layoutId={layoutId} transition={{ type: 'spring', damping: 30, stiffness: 230 }}>
         <div
-          className={`relative rounded-3xl bg-slate-900/66 backdrop-blur-2xl ring-1 ring-white/15 ${className}`}
+          className={`group glass-panel relative rounded-3xl p-[1.5px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02] will-change-transform`}
         >
-          <div className='pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.2),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.18),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]' />
-          <div className='pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.1),transparent)] bg-[length:200%_100%] animate-shimmer' />
-          <div className='relative'>{children}</div>
+          <div
+            className={`relative rounded-3xl bg-slate-900/66 backdrop-blur-2xl ring-1 ring-white/15 ${className}`}
+          >
+            <div className='pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.2),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.18),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]' />
+            <div className='pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.1),transparent)] bg-[length:200%_100%] animate-shimmer' />
+            <div className='relative'>{children}</div>
+          </div>
         </div>
-      </div>
+      </motion.div>
     )
     if (onClick) {
       return (
@@ -664,6 +807,7 @@ function buildMetrics(m: FleetMetrics, unack: number): MetricItem[] {
 }
 
 /* ============== Main Dashboard ============== */
+// NOSONAR - This orchestrator component intentionally composes UI shell and imperative engine wiring.
 export default function Dashboard() {
   // ── Zustand selectors (only these trigger React re-renders) ──
   const theme = useIoTStore(s => s.theme)
@@ -710,6 +854,21 @@ export default function Dashboard() {
   const threeContainerRef = useRef<HTMLDivElement>(null)
   const mapContainerRef = useRef<HTMLDivElement>(null)
 
+  const { canInstallApp, installingApp, installApp } =
+    usePwaInstallPrompt(mounted)
+  const { isLiveMode, setMapMode } = useMapModeControls(
+    showHeatmap,
+    toggleHeatmap
+  )
+  useIntroTransitionSync(
+    isTransitioning,
+    phase,
+    startIntro,
+    introProgress,
+    setTransitionProgress,
+    finishTransition
+  )
+
   // ── Boot IoT engine on mount ─────────────────────────────────
   useEffect(() => {
     setMounted(true)
@@ -731,46 +890,6 @@ export default function Dashboard() {
       unmount3D()
     }
   }, [mounted, show3D])
-
-  // ── Intro synchronization from login transition ───────────────
-  useEffect(() => {
-    if (!isTransitioning) {
-      introProgress.set(1)
-      return
-    }
-
-    if (phase === 'outro') {
-      startIntro()
-      return
-    }
-
-    if (phase !== 'intro') return
-
-    introProgress.set(0)
-    setTransitionProgress(0)
-
-    const controls = animate(introProgress, 1, {
-      duration: 0.96,
-      ease: EASE_CINEMATIC_INTRO,
-      onUpdate: latest => {
-        setTransitionProgress(latest)
-      },
-      onComplete: () => {
-        finishTransition()
-      },
-    })
-
-    return () => {
-      controls.stop()
-    }
-  }, [
-    finishTransition,
-    introProgress,
-    isTransitioning,
-    phase,
-    setTransitionProgress,
-    startIntro,
-  ])
 
   // ── Mount imperative Map layer ───────────────────────────────
   useEffect(() => {
@@ -928,17 +1047,6 @@ export default function Dashboard() {
   const togglePerf = useCallback(() => {
     getPerfOverlay()?.toggle()
   }, [])
-
-  const setMapMode = useCallback(
-    (mode: 'live' | 'historical') => {
-      const shouldShowHeatmap = mode === 'historical'
-      if (useIoTStore.getState().showHeatmap !== shouldShowHeatmap) {
-        toggleHeatmap()
-      }
-    },
-    [toggleHeatmap]
-  )
-  const isLiveMode = showHeatmap === false
 
   const statusIssues = useMemo<StatusIssue[]>(
     () =>
@@ -1109,6 +1217,19 @@ export default function Dashboard() {
                 >
                   <Zap aria-hidden='true' className='h-4 w-4' />
                 </MagneticButton>
+                {canInstallApp && (
+                  <MagneticButton
+                    onClick={installApp}
+                    title='Install App'
+                    ariaLabel='Install dashboard app'
+                    className='hidden md:inline-flex rounded-xl px-3 py-2 ring-1 ring-cyan-300/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 transition-all'
+                  >
+                    <Download aria-hidden='true' className='h-4 w-4' />
+                    <span className='text-xs font-semibold tracking-wide uppercase'>
+                      {installingApp ? 'Installing...' : 'Install App'}
+                    </span>
+                  </MagneticButton>
+                )}
               </div>
 
               {/* API Status */}
@@ -1246,7 +1367,7 @@ export default function Dashboard() {
         {/* ── Chart Sections (Imperative Canvas — zero React renders per frame) ── */}
         <section className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
           {/* Revenue Trend Analysis */}
-          <GlassCard>
+          <GlassCard layoutId='panel-system-health'>
             <div className='rounded-3xl p-6'>
               <div className='mb-4 flex items-center justify-between'>
                 <h3 className='text-lg font-bold flex items-center gap-2'>
@@ -1482,7 +1603,10 @@ export default function Dashboard() {
           </GlassCard>
 
           {/* Live Fleet Map (Imperative Mapbox GL — no React rendering) */}
-          <GlassCard accent='from-indigo-400/30 via-blue-400/20 to-cyan-400/30'>
+          <GlassCard
+            layoutId='panel-live-map'
+            accent='from-indigo-400/30 via-blue-400/20 to-cyan-400/30'
+          >
             <div className='rounded-3xl p-6'>
               <h3 className='mb-6 text-lg font-bold flex items-center gap-2'>
                 <MapPin className='h-5 w-5 text-indigo-400' />
@@ -1490,32 +1614,56 @@ export default function Dashboard() {
               </h3>
               <fieldset className='mb-4 inline-flex items-center rounded-xl bg-white/5 p-1 ring-1 ring-cyan-200/20'>
                 <legend className='sr-only'>Map visualization mode</legend>
-                <MagneticButton
-                  onClick={() => setMapMode('live')}
-                  ariaLabel='Switch to live fleet mode'
-                  ariaPressed={isLiveMode}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                    isLiveMode
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
-                      : 'text-slate-300 hover:bg-white/10'
-                  }`}
-                >
-                  Live Fleet
-                </MagneticButton>
-                <MagneticButton
-                  onClick={() => setMapMode('historical')}
-                  ariaLabel='Switch to historical heatmap mode'
-                  ariaPressed={showHeatmap}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                    showHeatmap
-                      ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-lg'
-                      : 'text-slate-300 hover:bg-white/10'
-                  }`}
-                >
-                  Historical Heatmap
-                </MagneticButton>
+                <div className='relative'>
+                  {isLiveMode && (
+                    <motion.span
+                      layoutId='map-mode-pill'
+                      className='absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 shadow-lg'
+                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                    />
+                  )}
+                  <MagneticButton
+                    onClick={() => setMapMode('live')}
+                    ariaLabel='Switch to live fleet mode'
+                    ariaPressed={isLiveMode}
+                    className={`relative z-10 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                      isLiveMode
+                        ? 'text-white'
+                        : 'text-slate-300 hover:bg-white/10'
+                    }`}
+                  >
+                    Live Fleet
+                  </MagneticButton>
+                </div>
+                <div className='relative'>
+                  {showHeatmap && (
+                    <motion.span
+                      layoutId='map-mode-pill'
+                      className='absolute inset-0 rounded-lg bg-gradient-to-r from-rose-500 to-orange-500 shadow-lg'
+                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+                    />
+                  )}
+                  <MagneticButton
+                    onClick={() => setMapMode('historical')}
+                    ariaLabel='Switch to historical heatmap mode'
+                    ariaPressed={showHeatmap}
+                    className={`relative z-10 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                      showHeatmap
+                        ? 'text-white'
+                        : 'text-slate-300 hover:bg-white/10'
+                    }`}
+                  >
+                    Historical Heatmap
+                  </MagneticButton>
+                </div>
               </fieldset>
-              <div className='bloom-edge vignette-strong h-[400px] rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative'>
+              <motion.div
+                layout
+                layoutId='map-viewport-shell'
+                transition={{ type: 'spring', stiffness: 220, damping: 28 }}
+                animate={{ height: isLiveMode ? 400 : 430 }}
+                className='bloom-edge vignette-strong rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative'
+              >
                 {showMap ? (
                   <div ref={mapContainerRef} className='absolute inset-0' />
                 ) : (
@@ -1544,7 +1692,7 @@ export default function Dashboard() {
                 <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(34,211,238,0.18),transparent_55%)] mix-blend-screen' />
                 <div className='pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0)_0%,rgba(34,211,238,0.12)_48%,rgba(255,255,255,0)_100%)] animate-[pulse_3.8s_ease-in-out_infinite]' />
                 <div className='pointer-events-none absolute inset-0 scanline-overlay opacity-30' />
-              </div>
+              </motion.div>
             </div>
           </GlassCard>
         </section>

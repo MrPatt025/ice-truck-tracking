@@ -479,11 +479,10 @@ export default function CinematicRig() {
   const isTruckSelected = useCameraSelectionStore(
     state => state.selectedTruckId !== null
   )
-  // Cinematic Bloom: scroll-based + selection boost for neon glow aesthetic
-  const baseBloom = 0.26 + runtimeState.scroll * 0.34
-  const selectionBoost = isTruckSelected ? 0.28 : 0
-  const bloomIntensity = baseBloom + selectionBoost
-  
+  const scrollBloom = 0.12 + runtimeState.scroll * 0.16
+  const neonSelectionBoost = isTruckSelected ? 0.2 : 0
+  const bloomIntensity = Math.min(0.5, scrollBloom + neonSelectionBoost)
+
   const transitionActive =
     runtimeState.transition.phase !== 'idle' ||
     runtimeState.transition.progress > 0.02
@@ -501,6 +500,14 @@ export default function CinematicRig() {
     shouldEnablePostFx &&
     runtimeState.scroll < 0.84 &&
     runtimeState.viewport.dpr <= 1.25
+  let resolutionScale = 1
+  if (highDpr) {
+    resolutionScale = 0.56
+  } else if (runtimeState.viewport.dpr > 1.15) {
+    resolutionScale = 0.72
+  }
+  const luminanceThreshold = isTruckSelected ? 0.3 : 0.36
+  const luminanceSmoothing = isTruckSelected ? 0.22 : 0.32
 
   const renderPostFx = () => {
     if (!shouldEnablePostFx) {
@@ -508,11 +515,11 @@ export default function CinematicRig() {
     }
 
     return (
-      <EffectComposer multisampling={0}>
+      <EffectComposer multisampling={0} resolutionScale={resolutionScale}>
         <Bloom
           intensity={bloomIntensity}
-          luminanceThreshold={0.24}
-          luminanceSmoothing={0.28}
+          luminanceThreshold={luminanceThreshold}
+          luminanceSmoothing={luminanceSmoothing}
           mipmapBlur
         />
         {shouldEnableDepthOfField ? (

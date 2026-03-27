@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
+import withPWAInit from 'next-pwa'
 
 const isProduction = process.env.NODE_ENV === 'production'
+const withPWA = withPWAInit({
+  dest: 'public',
+  disable: !isProduction,
+  register: true,
+  skipWaiting: true,
+  reloadOnOnline: true,
+  buildExcludes: [/middleware-manifest\.json$/],
+})
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -136,4 +145,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);
