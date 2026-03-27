@@ -127,7 +127,7 @@ function txPromise<T>(request: IDBRequest<T>): Promise<T> {
                 reject(reason);
                 return;
             }
-            reject(new Error(reason?.message ?? 'IndexedDB request failed'));
+            reject(new Error('IndexedDB request failed'));
         };
     });
 }

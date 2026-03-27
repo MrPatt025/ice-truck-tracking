@@ -41,6 +41,7 @@ const API_BASE = (() => {
 })()
 
 import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
+import dynamic from 'next/dynamic'
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion'
 import {
   Truck,
@@ -95,12 +96,26 @@ import {
   getAdaptiveController,
 } from '@/engine'
 import { useTransitionStore } from '@/stores/transitionStore'
-import FpsTargetMonitor from '@/components/FpsTargetMonitor'
-import PremiumSystemStatusBanner, {
-  type StatusIssue,
-} from '@/components/common/PremiumSystemStatusBanner'
+import type { StatusIssue } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
 import { dispatchBackendHealthEvent } from '@/lib/healthEvents'
+
+const GlassPulseFallback = () => (
+  <div className='h-9 w-28 animate-pulse rounded-xl border border-white/20 bg-white/10 shadow-[0_16px_38px_-20px_rgba(56,189,248,0.85)]' />
+)
+
+const FpsTargetMonitor = dynamic(() => import('@/components/FpsTargetMonitor'), {
+  ssr: false,
+  loading: GlassPulseFallback,
+})
+
+const PremiumSystemStatusBanner = dynamic(
+  () => import('@/components/common/PremiumSystemStatusBanner'),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+)
 
 // ─── Types ─────────────────────────────────────────────────────
 type Trend = 'up' | 'down' | 'stable'
@@ -158,6 +173,64 @@ const CHART_CONFIGS = {
 const EASE_CINEMATIC_INTRO: [number, number, number, number] = [
   0.2, 0.88, 0.25, 1,
 ]
+
+type MagneticButtonProps = Readonly<{
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+  title?: string
+  ariaLabel?: string
+  ariaPressed?: boolean
+  type?: 'button' | 'submit' | 'reset'
+}>
+
+const MagneticButton = memo(function MagneticButton({
+  children,
+  className = '',
+  onClick,
+  title,
+  ariaLabel,
+  ariaPressed,
+  type = 'button',
+}: MagneticButtonProps) {
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+
+  const onMove = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      const rect = event.currentTarget.getBoundingClientRect()
+      const offsetX = event.clientX - (rect.left + rect.width / 2)
+      const offsetY = event.clientY - (rect.top + rect.height / 2)
+      x.set(offsetX * 0.12)
+      y.set(offsetY * 0.12)
+    },
+    [x, y]
+  )
+
+  const reset = useCallback(() => {
+    x.set(0)
+    y.set(0)
+  }, [x, y])
+
+  return (
+    <motion.button
+      type={type}
+      title={title}
+      aria-label={ariaLabel}
+      aria-pressed={ariaPressed}
+      onClick={onClick}
+      onMouseMove={onMove}
+      onMouseLeave={reset}
+      style={{ x, y, willChange: 'transform' }}
+      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 26, mass: 0.42 }}
+      className={className}
+    >
+      {children}
+    </motion.button>
+  )
+})
 
 /* ============== UI Helpers (ternary extractors) ============ */
 const INTENT_CLS: Record<string, string> = {
@@ -796,6 +869,17 @@ export default function Dashboard() {
     getPerfOverlay()?.toggle()
   }, [])
 
+  const setMapMode = useCallback(
+    (mode: 'live' | 'historical') => {
+      const shouldShowHeatmap = mode === 'historical'
+      if (useIoTStore.getState().showHeatmap !== shouldShowHeatmap) {
+        toggleHeatmap()
+      }
+    },
+    [toggleHeatmap]
+  )
+  const isLiveMode = showHeatmap === false
+
   const statusIssues = useMemo<StatusIssue[]>(() => {
     if (!mounted) return []
 
@@ -927,64 +1011,76 @@ export default function Dashboard() {
 
               {/* Quick actions */}
               <div className='flex items-center gap-1.5'>
-                <button
+                <MagneticButton
                   onClick={toggleGrid}
                   title='Toggle Grid'
+                  ariaLabel='Toggle dashboard grid overlay'
+                  ariaPressed={showGrid}
                   className={`rounded-xl p-2.5 ring-1 transition-all ${showGrid ? 'bg-violet-500/20 ring-violet-500/50 text-violet-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
                 >
-                  <Grid3X3 className='h-4 w-4' />
-                </button>
-                <button
+                  <Grid3X3 aria-hidden='true' className='h-4 w-4' />
+                </MagneticButton>
+                <MagneticButton
                   onClick={toggle3D}
                   title='Toggle 3D Background'
+                  ariaLabel='Toggle cinematic 3D background'
+                  ariaPressed={show3D}
                   className={`rounded-xl p-2.5 ring-1 transition-all ${show3D ? 'bg-cyan-500/20 ring-cyan-500/50 text-cyan-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
                 >
-                  <Layers className='h-4 w-4' />
-                </button>
-                <button
+                  <Layers aria-hidden='true' className='h-4 w-4' />
+                </MagneticButton>
+                <MagneticButton
                   onClick={toggleHeatmap}
                   title='Toggle Fleet Heatmap'
+                  ariaLabel='Toggle fleet heatmap overlay'
+                  ariaPressed={showHeatmap}
                   className={`rounded-xl p-2.5 ring-1 transition-all ${showHeatmap ? 'bg-rose-500/20 ring-rose-500/50 text-rose-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
                 >
-                  <ThermometerSun className='h-4 w-4' />
-                </button>
-                <button
+                  <ThermometerSun aria-hidden='true' className='h-4 w-4' />
+                </MagneticButton>
+                <MagneticButton
                   onClick={togglePause}
                   title={paused ? 'Resume' : 'Pause'}
+                  ariaLabel={paused ? 'Resume telemetry updates' : 'Pause telemetry updates'}
+                  ariaPressed={paused}
                   className={`rounded-xl p-2.5 ring-1 transition-all ${paused ? 'bg-amber-500/20 ring-amber-500/50 text-amber-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
                 >
                   {paused ? (
-                    <Play className='h-4 w-4' />
+                    <Play aria-hidden='true' className='h-4 w-4' />
                   ) : (
-                    <Pause className='h-4 w-4' />
+                    <Pause aria-hidden='true' className='h-4 w-4' />
                   )}
-                </button>
-                <button
+                </MagneticButton>
+                <MagneticButton
                   onClick={toggleAlerts}
                   title='Toggle Alerts Panel'
+                  ariaLabel='Toggle alerts panel'
+                  ariaPressed={showAlerts}
                   className='relative rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
                 >
-                  <Bell className='h-4 w-4' />
+                  <Bell aria-hidden='true' className='h-4 w-4' />
                   {unacknowledgedAlerts > 0 && (
                     <span className='absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold animate-pulse'>
                       {unacknowledgedAlerts > 9 ? '9+' : unacknowledgedAlerts}
                     </span>
                   )}
-                </button>
-                <button
+                </MagneticButton>
+                <MagneticButton
                   onClick={downloadReport}
                   title='Download Report'
+                  ariaLabel='Download JSON fleet report'
                   className='rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
                 >
-                  <Download className='h-4 w-4' />
-                </button>
-                <button
+                  <Download aria-hidden='true' className='h-4 w-4' />
+                </MagneticButton>
+                <MagneticButton
                   onClick={togglePerf}
                   title='Toggle Performance Overlay'
+                  ariaLabel='Toggle performance overlay'
                   className='rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
                 >
-                  <Zap className='h-4 w-4' />
-                </button>
+                  <Zap aria-hidden='true' className='h-4 w-4' />
+                </MagneticButton>
               </div>
 
               {/* API Status */}
@@ -1364,6 +1460,33 @@ export default function Dashboard() {
                 <MapPin className='h-5 w-5 text-indigo-400' />
                 Live Fleet Map
               </h3>
+              <fieldset className='mb-4 inline-flex items-center rounded-xl bg-white/5 p-1 ring-1 ring-cyan-200/20'>
+                <legend className='sr-only'>Map visualization mode</legend>
+                <MagneticButton
+                  onClick={() => setMapMode('live')}
+                  ariaLabel='Switch to live fleet mode'
+                  ariaPressed={isLiveMode}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                    isLiveMode
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
+                      : 'text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  Live Fleet
+                </MagneticButton>
+                <MagneticButton
+                  onClick={() => setMapMode('historical')}
+                  ariaLabel='Switch to historical heatmap mode'
+                  ariaPressed={showHeatmap}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                    showHeatmap
+                      ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-lg'
+                      : 'text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  Historical Heatmap
+                </MagneticButton>
+              </fieldset>
               <div className='bloom-edge vignette-strong h-[400px] rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative'>
                 {showMap ? (
                   <div ref={mapContainerRef} className='absolute inset-0' />
@@ -1379,12 +1502,12 @@ export default function Dashboard() {
                         <p className='text-sm text-slate-400'>
                           Real-time GPS tracking
                         </p>
-                        <button
+                        <MagneticButton
                           onClick={() => useIoTStore.getState().toggleMap()}
                           className='mt-4 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 font-semibold shadow-lg transition-all'
                         >
                           Open Full Map
-                        </button>
+                        </MagneticButton>
                       </div>
                     </div>
                   </>

@@ -1,5 +1,27 @@
 import type { NextConfig } from "next";
 
+const isProduction = process.env.NODE_ENV === 'production'
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  "style-src 'self' 'unsafe-inline' https://api.mapbox.com",
+  "img-src 'self' data: blob: https://*.mapbox.com https://api.mapbox.com https://events.mapbox.com https://demotiles.maplibre.org",
+  "font-src 'self' data:",
+  "connect-src 'self' ws: wss: http://localhost:5000 https://api.mapbox.com https://events.mapbox.com",
+  "worker-src 'self' blob:",
+  "media-src 'self' blob:",
+  "frame-src 'none'",
+  "manifest-src 'self'",
+  isProduction ? 'upgrade-insecure-requests' : '',
+]
+  .filter(Boolean)
+  .join('; ')
+
 const nextConfig: NextConfig = {
   output: 'standalone',
   allowedDevOrigins: ["http://localhost:3000", "http://192.168.56.1:3000"],
@@ -78,6 +100,37 @@ const nextConfig: NextConfig = {
       {
         source: '/api/:path*',
         destination: 'http://localhost:5000/api/:path*',
+      },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Content-Security-Policy',
+            value: contentSecurityPolicy,
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: isProduction
+              ? 'max-age=31536000; includeSubDomains; preload'
+              : 'max-age=0',
+          },
+        ],
       },
     ];
   },

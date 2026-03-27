@@ -2,7 +2,6 @@ import React from 'react'
 import { Deck } from '@deck.gl/core'
 import { IconLayer, ScatterplotLayer } from '@deck.gl/layers'
 import { render } from '@react-three/offscreen'
-import CinematicRig from './CinematicRig'
 import {
   isCinematicWorkerMessage,
   type CinematicWorkerMessage,
@@ -83,6 +82,22 @@ let interpolationRafHandle: number | null = null
 let interpolationTimeoutHandle: number | null = null
 let deckFlushRafHandle: number | null = null
 let deckFlushTimeoutHandle: number | null = null
+let cinematicRigLoadPromise: Promise<void> | null = null
+
+function ensureCinematicRigMounted(): Promise<void> {
+  if (cinematicRigLoadPromise) {
+    return cinematicRigLoadPromise
+  }
+
+  cinematicRigLoadPromise = (async () => {
+    const { default: CinematicRig } = await import('./CinematicRig')
+    render(React.createElement(CinematicRig))
+  })().catch((error) => {
+    console.error('[Cinematic Worker] Failed to load CinematicRig:', error)
+  })
+
+  return cinematicRigLoadPromise
+}
 
 function resolveStaleFactor(ageMs: number): number {
   if (ageMs <= STALE_PACKET_THRESHOLD_MS) return 0
@@ -777,4 +792,4 @@ self.addEventListener('message', (event: MessageEvent<unknown>) => {
  * Initialize R3F rendering in worker — handles CinematicRig geometry and material lifecycle.
  * Calling render() registers the effect cleanup automatically with the React lifecycle.
  */
-render(React.createElement(CinematicRig))
+void ensureCinematicRigMounted()

@@ -33,7 +33,6 @@ import {
 } from './store';
 import { frameScheduler } from './frameScheduler';
 import { ImperativeThreeLayer } from './threeLayer';
-import { ImperativeMapLayer } from './mapLayer';
 import { ImperativeChart } from './chartEngine';
 import { PerformanceOverlay } from './perfOverlay';
 import { AdaptiveController } from './adaptive';
@@ -56,11 +55,14 @@ import { VisualSilenceController } from './craft/visualSilence';
 import { AnimationBudgetGovernor } from './craft/animationBudget';
 import { ColorIntelligenceEngine } from './craft/colorIntelligence';
 import { LayoutDensityController } from './craft/layoutDensity';
+import type { ImperativeMapLayer } from './mapLayer';
 
 // ─── Singleton instances ───────────────────────────────────────
 let worker: Worker | null = null;
 let threeLayer: ImperativeThreeLayer | null = null;
 let mapLayer: ImperativeMapLayer | null = null;
+let mapLayerLoadPromise: Promise<void> | null = null;
+let mapLayerMountNonce = 0;
 let perfOverlay: PerformanceOverlay | null = null;
 const charts = new Map<string, ImperativeChart>();
 
@@ -318,17 +320,30 @@ export function unmount3D(): void {
 
 /** Mount the Mapbox GL map into a container */
 export function mountMap(container: HTMLElement, cinematicWorker?: Worker | null): void {
-    if (mapLayer) return;
+    if (mapLayer || mapLayerLoadPromise) return;
     const theme = useIoTStore.getState().theme;
-    mapLayer = new ImperativeMapLayer();
-    if (cinematicWorker) {
-        mapLayer.setCinematicWorker(cinematicWorker);
-    }
-    mapLayer.init(container, theme);
-    frameScheduler.register('map', (dt) => mapLayer?.update(dt));
+    const mountNonce = ++mapLayerMountNonce;
+
+    mapLayerLoadPromise = (async () => {
+        const { ImperativeMapLayer } = await import('./mapLayer');
+        if (mountNonce !== mapLayerMountNonce || mapLayer) return;
+
+        const instance = new ImperativeMapLayer();
+        if (cinematicWorker) {
+            instance.setCinematicWorker(cinematicWorker);
+        }
+        instance.init(container, theme);
+        mapLayer = instance;
+        frameScheduler.register('map', (dt) => mapLayer?.update(dt));
+    })().catch((error) => {
+        console.error('[IoT Engine] Failed to lazy-load map layer:', error);
+    }).finally(() => {
+        mapLayerLoadPromise = null;
+    });
 }
 
 export function unmountMap(): void {
+    mapLayerMountNonce += 1;
     frameScheduler.unregister('map');
     mapLayer?.destroy();
     mapLayer = null;

@@ -14,7 +14,7 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 type WSListener = (event: unknown) => void;
 
 class MockWebSocket {
-  static readonly instances: MockWebSocket[] = [];
+    static instances: MockWebSocket[] = [];
   static readonly CONNECTING = 0;
   static readonly OPEN = 1;
   static readonly CLOSING = 2;
@@ -61,6 +61,14 @@ class MockWebSocket {
 // ─── Mock fetch for fallback polling ───────────────────────────
 
 const mockFetch = jest.fn();
+
+function getLatestSocket(): MockWebSocket {
+    const socket = MockWebSocket.instances.at(-1);
+    if (!socket) {
+        throw new Error('Expected a WebSocket instance to be available');
+    }
+    return socket;
+}
 
 // ─── Setup ─────────────────────────────────────────────────────
 
@@ -111,7 +119,7 @@ describe('WebSocket Failure Recovery', () => {
 
     test('reconnects with exponential backoff after disconnection', async () => {
         const { result } = renderHook(() => useRealTimeData());
-      const ws1 = MockWebSocket.instances.at(-1)!;
+            const ws1 = getLatestSocket();
 
         // Connect then disconnect
         act(() => { ws1.simulateOpen(); });
@@ -125,7 +133,7 @@ describe('WebSocket Failure Recovery', () => {
         expect(MockWebSocket.instances.length).toBeGreaterThanOrEqual(2);
 
         // Second retry after ~2s
-      const ws2 = MockWebSocket.instances.at(-1)!;
+    const ws2 = getLatestSocket();
         act(() => { ws2.simulateClose(1006); });
         act(() => { jest.advanceTimersByTime(2500); });
         expect(MockWebSocket.instances.length).toBeGreaterThanOrEqual(3);
@@ -133,7 +141,7 @@ describe('WebSocket Failure Recovery', () => {
 
     test('processes truck data after reconnection', async () => {
         const { result } = renderHook(() => useRealTimeData());
-      const ws1 = MockWebSocket.instances.at(-1)!;
+            const ws1 = getLatestSocket();
 
         // First connection
         act(() => { ws1.simulateOpen(); });
@@ -150,7 +158,7 @@ describe('WebSocket Failure Recovery', () => {
 
         // Reconnect
         act(() => { jest.advanceTimersByTime(1500); });
-      const ws2 = MockWebSocket.instances.at(-1)!;
+    const ws2 = getLatestSocket();
         act(() => { ws2.simulateOpen(); });
 
         // New data on reconnected socket
@@ -168,7 +176,7 @@ describe('WebSocket Failure Recovery', () => {
 
     test('processes alert data over WebSocket', async () => {
         const { result } = renderHook(() => useRealTimeData());
-      const ws = MockWebSocket.instances.at(-1)!;
+            const ws = getLatestSocket();
 
         act(() => { ws.simulateOpen(); });
         act(() => {
@@ -186,7 +194,7 @@ describe('WebSocket Failure Recovery', () => {
         const { result } = renderHook(() => useRealTimeData());
         // Simulate 5 failures (maxRetry = 5)
         for (let i = 0; i < 6; i++) {
-          const ws = MockWebSocket.instances.at(-1)!;
+                    const ws = getLatestSocket();
             act(() => { ws.simulateOpen(); });
             act(() => { ws.simulateClose(1006); });
             act(() => { jest.advanceTimersByTime(15_000); }); // well past any backoff
@@ -202,7 +210,7 @@ describe('WebSocket Failure Recovery', () => {
 
     test('closes WebSocket on unmount', () => {
         const { unmount } = renderHook(() => useRealTimeData());
-      const ws = MockWebSocket.instances.at(-1)!;
+            const ws = getLatestSocket();
         act(() => { ws.simulateOpen(); });
 
         unmount();
@@ -211,7 +219,7 @@ describe('WebSocket Failure Recovery', () => {
 
     test('handles malformed messages gracefully', async () => {
         const { result } = renderHook(() => useRealTimeData());
-      const ws = MockWebSocket.instances.at(-1)!;
+            const ws = getLatestSocket();
 
         act(() => { ws.simulateOpen(); });
 
@@ -230,13 +238,13 @@ describe('WebSocket Failure Recovery', () => {
         const { result } = renderHook(() => useRealTimeData());
 
         // First connection → disconnect
-      let ws = MockWebSocket.instances.at(-1)!;
+    let ws = getLatestSocket();
         act(() => { ws.simulateOpen(); });
         act(() => { ws.simulateClose(1006); });
 
         // Retry → success
         act(() => { jest.advanceTimersByTime(1500); });
-      ws = MockWebSocket.instances.at(-1)!;
+    ws = getLatestSocket();
         act(() => { ws.simulateOpen(); });
         await waitFor(() => expect(result.current.isConnected).toBe(true));
 

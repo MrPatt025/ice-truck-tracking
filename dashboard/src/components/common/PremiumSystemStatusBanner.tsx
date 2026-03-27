@@ -18,9 +18,9 @@ interface PremiumSystemStatusBannerProps {
 }
 
 function resolveIssueIcon(kind: StatusIssueKind): React.ReactNode {
-  if (kind === 'network') return <WifiOff className='h-4 w-4' />
-  if (kind === 'api') return <ServerCrash className='h-4 w-4' />
-  return <AlertTriangle className='h-4 w-4' />
+  if (kind === 'network') return <WifiOff aria-hidden='true' className='h-4 w-4' />
+  if (kind === 'api') return <ServerCrash aria-hidden='true' className='h-4 w-4' />
+  return <AlertTriangle aria-hidden='true' className='h-4 w-4' />
 }
 
 function resolveIssuePalette(kind: StatusIssueKind): string {
@@ -50,6 +50,8 @@ const PremiumSystemStatusBanner = memo(function PremiumSystemStatusBanner({
   return (
     <aside
       aria-live='polite'
+      aria-atomic='true'
+      role='status'
       className={`fixed right-4 top-20 z-[75] w-[min(92vw,26rem)] space-y-2 ${className}`}
       data-testid='offline-indicator'
     >
