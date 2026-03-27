@@ -27,7 +27,7 @@ export function EnhancedMapView({
   onSelectTruck,
   geofences: _geofences,
 }: Readonly<MapViewProps>) {
-  const mapRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<HTMLButtonElement>(null)
   const [mapStyle, setMapStyle] = useState<MapStyle>('streets')
   const [showClusters, setShowClusters] = useState(true)
   const [showHeatmap, setShowHeatmap] = useState(false)
@@ -143,18 +143,13 @@ export function EnhancedMapView({
       </div>
 
       {/* Map Container — interactive widget with full keyboard support */}
-      <div
+      <button
+        type='button'
         ref={mapRef}
         className={`w-full h-full ${mapStyles[mapStyle]} relative overflow-hidden cursor-crosshair`}
         onClick={handleMapClick}
-        onKeyDown={e => {
-          if (e.key === 'Enter' || e.key === ' ')
-            handleMapClick(e as unknown as React.MouseEvent<HTMLDivElement>)
-        }}
         onContextMenu={handleContextMenu}
-        role='application'
         aria-label='Interactive map showing truck locations'
-        tabIndex={0}
       >
         {/* Trucks */}
         {trucks.map(truck => {
@@ -211,7 +206,7 @@ export function EnhancedMapView({
         {showHeatmap && (
           <div className='absolute inset-0 bg-gradient-radial from-red-500/20 via-yellow-500/10 to-transparent pointer-events-none' />
         )}
-      </div>
+      </button>
 
       {/* Context Menu */}
       {contextMenu && (

@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, ReactNode } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  ReactNode,
+} from 'react'
 import * as Notifications from 'expo-notifications'
 import * as Linking from 'expo-linking'
 
@@ -23,7 +29,9 @@ const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined
 )
 
-export function NotificationProvider({ children }: { children: ReactNode }) {
+type NotificationProviderProps = Readonly<{ children: ReactNode }>
+
+export function NotificationProvider({ children }: NotificationProviderProps) {
   useEffect(() => {
     // Handle notification responses
     const subscription = Notifications.addNotificationResponseReceivedListener(
@@ -76,10 +84,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const value: NotificationContextType = {
-    requestPermissions,
-    scheduleNotification,
-  }
+  const value = useMemo<NotificationContextType>(
+    () => ({
+      requestPermissions,
+      scheduleNotification,
+    }),
+    []
+  )
 
   return (
     <NotificationContext.Provider value={value}>

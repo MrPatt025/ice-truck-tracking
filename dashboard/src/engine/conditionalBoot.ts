@@ -11,14 +11,19 @@
 
 /** Check if 3D/GPU layers should be disabled (E2E light mode) */
 export function is3DDisabled(): boolean {
-    if (typeof globalThis.window === 'undefined') return true;  // SSR
-    return globalThis.window.__E2E_LIGHT__ === true
-        || process.env.NEXT_PUBLIC_E2E_LIGHT === 'true';
+  if (globalThis.window === undefined) {
+    return true // SSR
+  }
+
+  return (
+    globalThis.window.__E2E_LIGHT__ === true ||
+    process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
+  )
 }
 
 // Augment Window for the E2E flag
 declare global {
     interface Window {
-        __E2E_LIGHT__?: boolean;
+      __E2E_LIGHT__?: boolean
     }
 }

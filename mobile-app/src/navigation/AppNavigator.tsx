@@ -13,36 +13,96 @@ import { SettingsScreen } from '../screens/SettingsScreen'
 const Stack = createStackNavigator()
 const Tab = createBottomTabNavigator()
 
+function resolveTabIconName(
+  routeName: string,
+  focused: boolean
+): keyof typeof Ionicons.glyphMap {
+  if (routeName === 'Map') return focused ? 'map' : 'map-outline'
+  if (routeName === 'History') return focused ? 'time' : 'time-outline'
+  if (routeName === 'Alerts') {
+    return focused ? 'notifications' : 'notifications-outline'
+  }
+  if (routeName === 'Settings') {
+    return focused ? 'settings' : 'settings-outline'
+  }
+  return 'help-outline'
+}
+
+type TabIconProps = Readonly<{
+  focused: boolean
+  color: string
+  size: number
+}>
+
+function renderMapIcon({ focused, color, size }: TabIconProps) {
+  return (
+    <Ionicons
+      name={resolveTabIconName('Map', focused)}
+      size={size}
+      color={color}
+    />
+  )
+}
+
+function renderHistoryIcon({ focused, color, size }: TabIconProps) {
+  return (
+    <Ionicons
+      name={resolveTabIconName('History', focused)}
+      size={size}
+      color={color}
+    />
+  )
+}
+
+function renderAlertsIcon({ focused, color, size }: TabIconProps) {
+  return (
+    <Ionicons
+      name={resolveTabIconName('Alerts', focused)}
+      size={size}
+      color={color}
+    />
+  )
+}
+
+function renderSettingsIcon({ focused, color, size }: TabIconProps) {
+  return (
+    <Ionicons
+      name={resolveTabIconName('Settings', focused)}
+      size={size}
+      color={color}
+    />
+  )
+}
+
+const MAIN_TAB_OPTIONS = {
+  tabBarActiveTintColor: '#2196F3',
+  tabBarInactiveTintColor: 'gray',
+  headerShown: false,
+} as const
+
 function MainTabs() {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap
-
-          if (route.name === 'Map') {
-            iconName = focused ? 'map' : 'map-outline'
-          } else if (route.name === 'History') {
-            iconName = focused ? 'time' : 'time-outline'
-          } else if (route.name === 'Alerts') {
-            iconName = focused ? 'notifications' : 'notifications-outline'
-          } else if (route.name === 'Settings') {
-            iconName = focused ? 'settings' : 'settings-outline'
-          } else {
-            iconName = 'help-outline'
-          }
-
-          return <Ionicons name={iconName} size={size} color={color} />
-        },
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: 'gray',
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen name='Map' component={MapScreen} />
-      <Tab.Screen name='History' component={HistoryScreen} />
-      <Tab.Screen name='Alerts' component={AlertsScreen} />
-      <Tab.Screen name='Settings' component={SettingsScreen} />
+    <Tab.Navigator screenOptions={MAIN_TAB_OPTIONS}>
+      <Tab.Screen
+        name='Map'
+        component={MapScreen}
+        options={{ tabBarIcon: renderMapIcon }}
+      />
+      <Tab.Screen
+        name='History'
+        component={HistoryScreen}
+        options={{ tabBarIcon: renderHistoryIcon }}
+      />
+      <Tab.Screen
+        name='Alerts'
+        component={AlertsScreen}
+        options={{ tabBarIcon: renderAlertsIcon }}
+      />
+      <Tab.Screen
+        name='Settings'
+        component={SettingsScreen}
+        options={{ tabBarIcon: renderSettingsIcon }}
+      />
     </Tab.Navigator>
   )
 }

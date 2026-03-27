@@ -128,8 +128,7 @@ describe('Dashboard E2E Tests', () => {
 		cy.window()
 			.its('performance')
 			.then(performance => {
-				const perf = performance as Performance
-				const navigation = perf.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
+				const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
 				expect(
 					navigation.loadEventEnd - navigation.loadEventStart
 				).to.be.lessThan(3000)

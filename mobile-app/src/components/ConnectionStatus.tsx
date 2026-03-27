@@ -10,7 +10,7 @@ interface ConnectionStatusProps {
 export function ConnectionStatus({
   isConnected,
   queueCount = 0,
-}: ConnectionStatusProps) {
+}: Readonly<ConnectionStatusProps>) {
   return (
     <View
       style={[

@@ -121,7 +121,14 @@ function readLocalFallback(maxAgeMs: number): TruckTelemetry[] {
 function txPromise<T>(request: IDBRequest<T>): Promise<T> {
     return new Promise((resolve, reject) => {
         request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onerror = () => {
+            const reason = request.error;
+            if (reason instanceof Error) {
+                reject(reason);
+                return;
+            }
+            reject(new Error(reason?.message ?? 'IndexedDB request failed'));
+        };
     });
 }
 

@@ -14,32 +14,22 @@ import { useAuth } from '../contexts/AuthContext'
 
 type IoniconName = keyof typeof Ionicons.glyphMap
 
-export function SettingsScreen() {
-  const { user, logout } = useAuth()
-  const [notifications, setNotifications] = React.useState(true)
-  const [darkMode, setDarkMode] = React.useState(false)
-  const [offlineSync, setOfflineSync] = React.useState(true)
+type SettingItemProps = Readonly<{
+  icon: IoniconName
+  title: string
+  subtitle?: string
+  onPress?: () => void
+  rightElement?: React.ReactNode
+}>
 
-  const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: logout },
-    ])
-  }
-
-  const SettingItem = ({
-    icon,
-    title,
-    subtitle,
-    onPress,
-    rightElement,
-  }: {
-    icon: IoniconName
-    title: string
-    subtitle?: string
-    onPress?: () => void
-    rightElement?: React.ReactNode
-  }) => (
+function SettingItem({
+  icon,
+  title,
+  subtitle,
+  onPress,
+  rightElement,
+}: SettingItemProps) {
+  return (
     <TouchableOpacity style={styles.settingItem} onPress={onPress}>
       <View style={styles.settingLeft}>
         <Ionicons name={icon} size={24} color='#2196F3' />
@@ -53,6 +43,20 @@ export function SettingsScreen() {
       )}
     </TouchableOpacity>
   )
+}
+
+export function SettingsScreen() {
+  const { user, logout } = useAuth()
+  const [notifications, setNotifications] = React.useState(true)
+  const [darkMode, setDarkMode] = React.useState(false)
+  const [offlineSync, setOfflineSync] = React.useState(true)
+
+  const handleLogout = () => {
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: () => void logout() },
+    ])
+  }
 
   return (
     <SafeAreaView style={styles.container}>

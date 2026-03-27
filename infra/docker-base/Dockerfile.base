@@ -6,10 +6,10 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apk add --no-cache \
-    python3 \
-    make \
     g++ \
     git \
+  make \
+  python3 \
     && rm -rf /var/cache/apk/*
 
 # Copy package files
@@ -36,8 +36,8 @@ RUN npm run build
 FROM node:18-alpine AS production
 
 # Create app user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
+RUN addgroup -g 1001 -S nodejs \
+  && adduser -S nextjs -u 1001
 
 WORKDIR /app
 
@@ -55,4 +55,4 @@ EXPOSE 3000
 ENV NODE_ENV=production
 ENV PORT=3000
 
-CMD ["npm", "start"] 
+CMD ["npm", "start"]

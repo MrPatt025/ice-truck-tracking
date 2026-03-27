@@ -60,9 +60,7 @@ export class SharedCanvasPool {
     private constructor() { }
 
     static getInstance(): SharedCanvasPool {
-        if (!SharedCanvasPool.instance) {
-            SharedCanvasPool.instance = new SharedCanvasPool();
-        }
+      SharedCanvasPool.instance ??= new SharedCanvasPool();
         return SharedCanvasPool.instance;
     }
 
