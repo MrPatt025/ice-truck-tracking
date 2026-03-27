@@ -146,6 +146,14 @@ function observeFramePacing(elapsedMs: number): void {
   smoothedFrameMs = smoothedFrameMs * 0.88 + elapsedMs * 0.12
   const smoothedFps = 1000 / Math.max(1, smoothedFrameMs)
 
+  // Frame profiling: log if FPS drops below 60 (frame > 16.6ms)
+  const TARGET_FRAME_MS_THRESHOLD = 16.6;
+  if (elapsedMs > TARGET_FRAME_MS_THRESHOLD && typeof console.warn === 'function') {
+    console.warn(
+      `[🎬 Frame Drop] Frame took ${elapsedMs.toFixed(2)}ms (${(1000 / elapsedMs).toFixed(1)} FPS) | Smoothed: ${smoothedFps.toFixed(1)} FPS | DPR: ${adaptiveViewportDpr.toFixed(2)}`
+    );
+  }
+
   if (smoothedFps < FPS_DROP_THRESHOLD) {
     lowFpsSampleCount += 1
     recoverySampleCount = 0

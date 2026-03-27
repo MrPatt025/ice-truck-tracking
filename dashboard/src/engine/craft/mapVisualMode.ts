@@ -178,7 +178,7 @@ export class MapVisualController {
       width: `${radius * 2}px`,
       height: `${radius * 2}px`,
       borderRadius: '50%',
-      background: `radial-gradient(circle, 
+      background: `radial-gradient(circle,
         oklch(0.65 ${0.1 + intensity * 0.15} ${25 + (1 - intensity) * 100} / ${0.15 + intensity * 0.2}) 0%,
         transparent 70%)`,
       position: 'absolute',
