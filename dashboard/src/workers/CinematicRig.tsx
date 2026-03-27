@@ -1,12 +1,14 @@
 /* eslint-disable react/no-unknown-property */
 
 import React from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
 import {
   AdditiveBlending,
   BufferAttribute,
   BufferGeometry,
   Color,
+  PCFSoftShadowMap,
+  PMREMGenerator,
   Group,
   InstancedMesh,
   Object3D,
@@ -19,6 +21,7 @@ import {
   PerspectiveCamera,
   RingGeometry,
 } from 'three'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import {
   Bloom,
   DepthOfField,
@@ -61,7 +64,80 @@ function disposeObjectTree(node: Object3D | null): void {
   }
 }
 
-function TruckModel() {
+function isLowEndOrMobileRuntime(): boolean {
+  if (globalThis.navigator === undefined) return false
+
+  const userAgent = globalThis.navigator.userAgent.toLowerCase()
+  const isMobile = /android|iphone|ipad|ipod|mobile/.test(userAgent)
+
+  const navWithHints = globalThis.navigator as Navigator & {
+    deviceMemory?: number
+    hardwareConcurrency?: number
+  }
+
+  const deviceMemory = navWithHints.deviceMemory ?? 8
+  const hardwareConcurrency = navWithHints.hardwareConcurrency ?? 8
+
+  return isMobile || deviceMemory <= 4 || hardwareConcurrency <= 4
+}
+
+function AdaptiveLightingEnvironment({
+  enabled,
+}: Readonly<{ enabled: boolean }>) {
+  const { gl, scene } = useThree()
+
+  React.useEffect(() => {
+    const previousEnvironment = scene.environment
+    const previousEnvIntensity = scene.environmentIntensity
+    const previousPhysicallyCorrect = gl.physicallyCorrectLights
+    const previousShadowEnabled = gl.shadowMap.enabled
+    const previousShadowType = gl.shadowMap.type
+
+    gl.physicallyCorrectLights = true
+
+    if (!enabled) {
+      scene.environment = null
+      scene.environmentIntensity = 0.65
+      gl.shadowMap.enabled = false
+      return () => {
+        scene.environment = previousEnvironment
+        scene.environmentIntensity = previousEnvIntensity
+        gl.physicallyCorrectLights = previousPhysicallyCorrect
+        gl.shadowMap.enabled = previousShadowEnabled
+        gl.shadowMap.type = previousShadowType
+      }
+    }
+
+    const pmremGenerator = new PMREMGenerator(gl)
+    pmremGenerator.compileEquirectangularShader()
+
+    const roomEnvironment = new RoomEnvironment()
+    const environmentRenderTarget = pmremGenerator.fromScene(roomEnvironment, 0.03)
+
+    scene.environment = environmentRenderTarget.texture
+    scene.environmentIntensity = 0.92
+    gl.shadowMap.enabled = true
+    gl.shadowMap.type = PCFSoftShadowMap
+
+    return () => {
+      scene.environment = previousEnvironment
+      scene.environmentIntensity = previousEnvIntensity
+      gl.physicallyCorrectLights = previousPhysicallyCorrect
+      gl.shadowMap.enabled = previousShadowEnabled
+      gl.shadowMap.type = previousShadowType
+      environmentRenderTarget.texture.dispose()
+      environmentRenderTarget.dispose()
+      roomEnvironment.dispose()
+      pmremGenerator.dispose()
+    }
+  }, [enabled, gl, scene])
+
+  return null
+}
+
+function TruckModel({
+  enableSoftShadows,
+}: Readonly<{ enableSoftShadows: boolean }>) {
   const root = React.useRef<Group>(null)
   const leftHull = React.useRef<Mesh>(null)
   const rightHull = React.useRef<Mesh>(null)
@@ -162,16 +238,21 @@ function TruckModel() {
 
   return (
     <group ref={root} position={[0, 0, 0]}>
-      <mesh position={[0, 0.2, 0]}>
+      <mesh position={[0, 0.2, 0]} castShadow={enableSoftShadows}>
         <boxGeometry args={[2.8, 0.24, 1.45]} />
         <meshStandardMaterial
           color='#1d4ed8'
           roughness={0.35}
           metalness={0.5}
+          envMapIntensity={0.9}
         />
       </mesh>
 
-      <mesh ref={leftHull} position={[-0.72, 0.6, 0]}>
+      <mesh
+        ref={leftHull}
+        position={[-0.72, 0.6, 0]}
+        castShadow={enableSoftShadows}
+      >
         <boxGeometry args={[1.25, 0.7, 1.35]} />
         <meshStandardMaterial
           color='#38bdf8'
@@ -179,10 +260,15 @@ function TruckModel() {
           metalness={0.68}
           emissive='#0b2f5e'
           emissiveIntensity={0.18}
+          envMapIntensity={1.25}
         />
       </mesh>
 
-      <mesh ref={rightHull} position={[0.72, 0.6, 0]}>
+      <mesh
+        ref={rightHull}
+        position={[0.72, 0.6, 0]}
+        castShadow={enableSoftShadows}
+      >
         <boxGeometry args={[1.25, 0.7, 1.35]} />
         <meshStandardMaterial
           color='#60a5fa'
@@ -190,11 +276,12 @@ function TruckModel() {
           metalness={0.68}
           emissive='#0b2f5e'
           emissiveIntensity={0.2}
+          envMapIntensity={1.25}
         />
       </mesh>
 
       <group ref={sensorGroup} position={[0, 0.45, 0]}>
-        <mesh position={[0, 0, 0]}>
+        <mesh position={[0, 0, 0]} castShadow={enableSoftShadows}>
           <sphereGeometry args={[0.2, 24, 24]} />
           <meshStandardMaterial
             color='#22d3ee'
@@ -202,32 +289,43 @@ function TruckModel() {
             emissiveIntensity={1.6}
             roughness={0.12}
             metalness={0.4}
+            envMapIntensity={1.1}
           />
         </mesh>
-        <mesh position={[-0.34, 0.08, 0.38]}>
+        <mesh position={[-0.34, 0.08, 0.38]} castShadow={enableSoftShadows}>
           <boxGeometry args={[0.16, 0.16, 0.16]} />
           <meshStandardMaterial
             color='#67e8f9'
             emissive='#67e8f9'
             emissiveIntensity={1.25}
+            envMapIntensity={0.95}
           />
         </mesh>
-        <mesh position={[0.38, -0.04, -0.31]}>
+        <mesh position={[0.38, -0.04, -0.31]} castShadow={enableSoftShadows}>
           <boxGeometry args={[0.14, 0.14, 0.14]} />
           <meshStandardMaterial
             color='#7dd3fc'
             emissive='#7dd3fc'
             emissiveIntensity={1.15}
+            envMapIntensity={0.95}
           />
         </mesh>
       </group>
 
-      <instancedMesh ref={frontWheels} args={[undefined, undefined, 2]}>
+      <instancedMesh
+        ref={frontWheels}
+        args={[undefined, undefined, 2]}
+        castShadow={enableSoftShadows}
+      >
         <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
         <meshStandardMaterial color='#0f172a' roughness={0.8} metalness={0.1} />
       </instancedMesh>
 
-      <instancedMesh ref={rearWheels} args={[undefined, undefined, 2]}>
+      <instancedMesh
+        ref={rearWheels}
+        args={[undefined, undefined, 2]}
+        castShadow={enableSoftShadows}
+      >
         <cylinderGeometry args={[0.22, 0.22, 0.2, 20]} />
         <meshStandardMaterial color='#0f172a' roughness={0.8} metalness={0.1} />
       </instancedMesh>
@@ -235,15 +333,22 @@ function TruckModel() {
   )
 }
 
-function RouteAndGround() {
+function RouteAndGround({
+  enableSoftShadows,
+}: Readonly<{ enableSoftShadows: boolean }>) {
   return (
     <>
-      <mesh position={[0, -0.34, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh
+        position={[0, -0.34, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow={enableSoftShadows}
+      >
         <planeGeometry args={[42, 20]} />
         <meshStandardMaterial
           color='#030712'
           roughness={0.88}
           metalness={0.05}
+          envMapIntensity={0.35}
         />
       </mesh>
 
@@ -489,7 +594,11 @@ export default function CinematicRig() {
   const heavyScrollTransition =
     runtimeState.scroll > 0.1 && runtimeState.scroll < 0.92
   const fastThermalSwing = runtimeState.telemetry.temperatureC > 2.5
+  const lowEndRuntime = isLowEndOrMobileRuntime()
   const highDpr = runtimeState.viewport.dpr > 1.4
+  const disablePremiumLighting = lowEndRuntime || highDpr || transitionActive
+  const enablePremiumLighting = !disablePremiumLighting
+  const enableSoftShadows = enablePremiumLighting && runtimeState.scroll < 0.9
   const shouldEnablePostFx = !(
     transitionActive ||
     heavyScrollTransition ||
@@ -538,18 +647,39 @@ export default function CinematicRig() {
 
   return (
     <>
+      <AdaptiveLightingEnvironment enabled={enablePremiumLighting} />
       <color attach='background' args={['#020617']} />
-      <ambientLight intensity={0.54} />
-      <directionalLight position={[5, 6, 3]} intensity={1.05} color='#bae6fd' />
+      <ambientLight intensity={enablePremiumLighting ? 0.48 : 0.58} />
+      <hemisphereLight
+        skyColor='#c7f0ff'
+        groundColor='#0f172a'
+        intensity={enablePremiumLighting ? 0.62 : 0.35}
+      />
+      <directionalLight
+        position={[5, 6, 3]}
+        intensity={enablePremiumLighting ? 1.18 : 0.92}
+        color='#bae6fd'
+        castShadow={enableSoftShadows}
+        shadow-mapSize-width={enableSoftShadows ? 1024 : 256}
+        shadow-mapSize-height={enableSoftShadows ? 1024 : 256}
+        shadow-camera-near={0.5}
+        shadow-camera-far={26}
+        shadow-camera-left={-6}
+        shadow-camera-right={6}
+        shadow-camera-top={6}
+        shadow-camera-bottom={-6}
+        shadow-bias={-0.0006}
+        shadow-radius={enableSoftShadows ? 5 : 1}
+      />
       <pointLight position={[0, 1.2, 0]} intensity={1.85} color='#22d3ee' />
       <pointLight
         position={[4.8, 1.6, -2.6]}
-        intensity={0.72}
+        intensity={enablePremiumLighting ? 0.86 : 0.72}
         color='#2563eb'
       />
 
-      <RouteAndGround />
-      <TruckModel />
+      <RouteAndGround enableSoftShadows={enableSoftShadows} />
+      <TruckModel enableSoftShadows={enableSoftShadows} />
       <ColdFogParticles />
       <SelectionPulseHalo />
       <MapModeTransitionVeil />

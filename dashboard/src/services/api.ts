@@ -28,6 +28,154 @@ const API_BASE = (() => {
 
 let latestBackendHealthStatus: BackendHealthStatus | null = null;
 
+type MutationMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+type QueuedMutation = Readonly<{
+  id: string;
+  endpoint: string;
+  method: MutationMethod;
+  body: string | null;
+  headers: Readonly<Record<string, string>>;
+  createdAt: number;
+}>;
+
+const OFFLINE_MUTATION_QUEUE_KEY = 'ice-truck:offline-mutation-queue:v1';
+const OFFLINE_SYNC_TAG = 'ice-truck-fleet-sync';
+
+let isQueueFlushRunning = false;
+let onlineListenerAttached = false;
+
+function canUseBrowserStorage(): boolean {
+  return globalThis.window !== undefined;
+}
+
+function isMutationMethod(method: string): method is MutationMethod {
+  return method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE';
+}
+
+function shouldQueueOfflineMutation(endpoint: string, method: string): boolean {
+  if (!isMutationMethod(method)) return false;
+  if (!canUseBrowserStorage()) return false;
+
+  const isTruckMutation = /^\/trucks(\/|$)/.test(endpoint);
+  const isFeatureFlagMutation = /^\/feature-flags(\/|$)/.test(endpoint);
+
+  return isTruckMutation || isFeatureFlagMutation;
+}
+
+function readQueuedMutations(): QueuedMutation[] {
+  if (!canUseBrowserStorage()) return [];
+
+  try {
+    const raw = globalThis.window.localStorage.getItem(OFFLINE_MUTATION_QUEUE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((entry): entry is QueuedMutation => {
+      if (!entry || typeof entry !== 'object') return false;
+      const candidate = entry as Partial<QueuedMutation>;
+      return (
+        typeof candidate.id === 'string'
+        && typeof candidate.endpoint === 'string'
+        && typeof candidate.method === 'string'
+        && isMutationMethod(candidate.method)
+        && typeof candidate.createdAt === 'number'
+      );
+    });
+  } catch {
+    return [];
+  }
+}
+
+function writeQueuedMutations(queue: readonly QueuedMutation[]): void {
+  if (!canUseBrowserStorage()) return;
+  globalThis.window.localStorage.setItem(
+    OFFLINE_MUTATION_QUEUE_KEY,
+    JSON.stringify(queue)
+  );
+}
+
+async function tryRegisterBackgroundSync(): Promise<void> {
+  if (globalThis.window === undefined || globalThis.navigator === undefined) {
+    return;
+  }
+
+  if (!('serviceWorker' in globalThis.navigator)) return;
+
+  try {
+    const registration = await globalThis.navigator.serviceWorker.ready;
+    const syncCapable = registration as ServiceWorkerRegistration & {
+      sync?: { register: (tag: string) => Promise<void> };
+    };
+
+    if (typeof syncCapable.sync?.register === 'function') {
+      await syncCapable.sync.register(OFFLINE_SYNC_TAG);
+    }
+  } catch {
+    // Background sync can be unsupported/blocked. Online replay fallback remains active.
+  }
+}
+
+function enqueueOfflineMutation(item: Omit<QueuedMutation, 'id' | 'createdAt'>): void {
+  const queue = readQueuedMutations();
+  const queuedItem: QueuedMutation = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    createdAt: Date.now(),
+    ...item,
+  };
+  queue.push(queuedItem);
+  writeQueuedMutations(queue);
+}
+
+async function flushQueuedMutations(): Promise<void> {
+  if (!canUseBrowserStorage() || isQueueFlushRunning) return;
+  if (globalThis.navigator?.onLine === false) {
+    return;
+  }
+
+  const queue = readQueuedMutations();
+  if (queue.length === 0) return;
+
+  isQueueFlushRunning = true;
+
+  const remaining: QueuedMutation[] = [];
+
+  for (const item of queue) {
+    try {
+      const response = await fetch(`${API_BASE}${item.endpoint}`, {
+        method: item.method,
+        body: item.body,
+        headers: {
+          'Content-Type': 'application/json',
+          ...item.headers,
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        remaining.push(item);
+      }
+    } catch {
+      remaining.push(item);
+      break;
+    }
+  }
+
+  writeQueuedMutations(remaining);
+  isQueueFlushRunning = false;
+}
+
+function ensureOfflineMutationSync(): void {
+  if (!canUseBrowserStorage() || onlineListenerAttached) return;
+
+  onlineListenerAttached = true;
+  globalThis.window.addEventListener('online', () => {
+    void flushQueuedMutations();
+  });
+
+  void flushQueuedMutations();
+}
+
 function notifyBackendHealth(
   status: BackendHealthStatus,
   statusCode?: number,
@@ -57,7 +205,10 @@ async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
+  ensureOfflineMutationSync();
+
   const token = await getAuthToken();
+  const resolvedMethod = (options.method ?? 'GET').toUpperCase();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -71,10 +222,26 @@ async function apiRequest<T>(
   try {
     res = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
+      method: resolvedMethod,
       headers,
       credentials: 'include',
     });
   } catch {
+    if (shouldQueueOfflineMutation(endpoint, resolvedMethod)) {
+      enqueueOfflineMutation({
+        endpoint,
+        method: resolvedMethod as MutationMethod,
+        body: typeof options.body === 'string' ? options.body : null,
+        headers,
+      });
+      await tryRegisterBackgroundSync();
+      notifyBackendHealth('degraded', undefined, 'offline-queued');
+      return {
+        queued: true,
+        queuedAt: new Date().toISOString(),
+      } as T;
+    }
+
     notifyBackendHealth('degraded', undefined, 'network-error');
     throw new ApiError(0, 'Network request failed');
   }
@@ -123,6 +290,30 @@ export const fleetApi = {
 
   updateTruck: (id: string, data: Partial<TruckResponse>) =>
     apiRequest<TruckResponse>(`/trucks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+
+  updateTruckStatus: (id: string, status: TruckStatus) =>
+    apiRequest<TruckResponse>(`/trucks/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+
+  addTruckNote: (
+    id: string,
+    payload: {
+      note: string;
+      author?: string;
+      createdAt?: string;
+    }
+  ) =>
+    apiRequest<{
+      id?: string;
+      note?: string;
+      queued?: boolean;
+      queuedAt?: string;
+    }>(`/trucks/${id}/notes`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 
   deleteTruck: (id: string) =>
     apiRequest<void>(`/trucks/${id}`, { method: 'DELETE' }),
