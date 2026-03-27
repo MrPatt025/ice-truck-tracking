@@ -82,9 +82,9 @@ const DEFAULT_CONFIG: AnimationBudgetConfig = {
 // ─── Animation Budget Governor ────────────────────────────────
 
 export class AnimationBudgetGovernor {
-  private _config: AnimationBudgetConfig;
-  private _state: BudgetState;
-  private _fpsHistory: number[] = [];
+  private readonly _config: AnimationBudgetConfig;
+  private readonly _state: BudgetState;
+  private readonly _fpsHistory: number[] = [];
   private _lastDegradeTime = 0;
   private _lastRecoverTime = 0;
   private _mounted = false;
@@ -110,7 +110,7 @@ export class AnimationBudgetGovernor {
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || typeof window === 'undefined') return;
+    if (this._mounted || typeof globalThis.window === 'undefined') return;
     this._mounted = true;
     this._lastFrameTime = performance.now();
     this._monitor();
@@ -166,7 +166,7 @@ export class AnimationBudgetGovernor {
 
   /* ── Internal Monitoring ───────────────────────────────────── */
 
-  private _monitor = (): void => {
+  private readonly _monitor = (): void => {
     if (!this._mounted) return;
 
     const now = performance.now();
@@ -214,39 +214,54 @@ export class AnimationBudgetGovernor {
     if (this._fpsHistory.length < 30) return;
 
     // DEGRADE CONDITIONS
-    if (this._state.avgFPS < fpsCritical) {
+    if (this._state.avgFPS < fpsCritical && this._canDegrade(now, 2000)) {
       // Critical — jump two levels
-      if (now - this._lastDegradeTime > 2000) {
-        this._degrade();
-        this._degrade();
-        this._lastDegradeTime = now;
-      }
-    } else if (this._state.avgFPS < fpsWarning) {
+      this._degrade();
+      this._degrade();
+      this._lastDegradeTime = now;
+      return;
+    }
+
+    if (
+      this._state.avgFPS < fpsWarning &&
+      this._state.avgFPS >= fpsCritical &&
+      this._canDegrade(now, 3000)
+    ) {
       // Warning — step one level
-      if (now - this._lastDegradeTime > 3000) {
-        this._degrade();
-        this._lastDegradeTime = now;
-      }
+      this._degrade();
+      this._lastDegradeTime = now;
+      return;
     }
 
     // Memory pressure
-    if (this._state.memoryMB > memoryWarningMB && this._state.reductionLevel < 4) {
-      if (now - this._lastDegradeTime > 5000) {
-        this._degrade();
-        this._lastDegradeTime = now;
-      }
+    if (
+      this._state.memoryMB > memoryWarningMB &&
+      this._state.reductionLevel < 4 &&
+      this._canDegrade(now, 5000)
+    ) {
+      this._degrade();
+      this._lastDegradeTime = now;
+      return;
     }
 
     // RECOVERY CONDITIONS
-    if (
-      this._state.avgFPS > fpsWarning + 5 &&
-      this._state.reductionLevel > 0 &&
-      now - this._lastDegradeTime > recoveryMs &&
-      now - this._lastRecoverTime > recoveryMs
-    ) {
+    if (this._shouldRecover(now, fpsWarning + 5, recoveryMs)) {
       this._recover();
       this._lastRecoverTime = now;
     }
+  }
+
+  private _canDegrade(now: number, cooldownMs: number): boolean {
+    return now - this._lastDegradeTime > cooldownMs;
+  }
+
+  private _shouldRecover(now: number, fpsFloor: number, recoveryMs: number): boolean {
+    return (
+      this._state.avgFPS > fpsFloor &&
+      this._state.reductionLevel > 0 &&
+      now - this._lastDegradeTime > recoveryMs &&
+      now - this._lastRecoverTime > recoveryMs
+    );
   }
 
   private _degrade(): void {
@@ -266,7 +281,7 @@ export class AnimationBudgetGovernor {
     this._onLevelChange?.(this._state.reductionLevel);
 
     if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-budget-level', String(this._state.reductionLevel));
+      document.documentElement.dataset.budgetLevel = String(this._state.reductionLevel);
     }
 
     console.debug(`[Budget] Degraded to level ${this._state.reductionLevel}, actions:`, [...this._state.activeActions]);
@@ -290,7 +305,7 @@ export class AnimationBudgetGovernor {
     this._onLevelChange?.(this._state.reductionLevel);
 
     if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-budget-level', String(this._state.reductionLevel));
+      document.documentElement.dataset.budgetLevel = String(this._state.reductionLevel);
     }
 
     console.debug(`[Budget] Recovered to level ${this._state.reductionLevel}`);

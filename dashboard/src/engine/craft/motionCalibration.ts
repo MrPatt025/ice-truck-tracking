@@ -185,8 +185,8 @@ export class MotionCalibrationLab {
   private _globalScale = 1;
 
   constructor() {
-    if (typeof window !== 'undefined') {
-      const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (typeof globalThis.window !== 'undefined') {
+      const mq = globalThis.window.matchMedia('(prefers-reduced-motion: reduce)');
       this._reducedMotion = mq.matches;
       mq.addEventListener('change', (e) => { this._reducedMotion = e.matches; });
     }
@@ -273,6 +273,6 @@ export class MotionCalibrationLab {
 let _lab: MotionCalibrationLab | null = null;
 
 export function getMotionLab(): MotionCalibrationLab {
-  if (!_lab) _lab = new MotionCalibrationLab();
+  _lab ??= new MotionCalibrationLab();
   return _lab;
 }

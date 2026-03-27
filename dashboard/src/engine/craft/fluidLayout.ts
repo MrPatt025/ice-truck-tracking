@@ -44,8 +44,8 @@ const DEFAULT_MORPH: MorphConfig = {
 // ─── FLIP Animation Engine ────────────────────────────────────
 
 export class FLIPAnimator {
-  private _snapshots = new Map<string, MorphRect>();
-  private _activeAnimations = new Map<string, Animation>();
+  private readonly _snapshots = new Map<string, MorphRect>();
+  private readonly _activeAnimations = new Map<string, Animation>();
 
   /** Snapshot current position of a shared element */
   snapshot(id: string, el: HTMLElement): void {
@@ -56,7 +56,7 @@ export class FLIPAnimator {
       width: rect.width,
       height: rect.height,
       borderRadius: getComputedStyle(el).borderRadius,
-      opacity: parseFloat(getComputedStyle(el).opacity),
+      opacity: Number.parseFloat(getComputedStyle(el).opacity),
     });
   }
 
@@ -115,8 +115,8 @@ export class FLIPAnimator {
 
   private _correctChildScale(parent: HTMLElement, sw: number, sh: number, config: MorphConfig): void {
     const children = parent.children;
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i] as HTMLElement;
+    for (const childNode of children) {
+      const child = childNode as HTMLElement;
       child.animate(
         [
           { transform: `scale(${1 / sw}, ${1 / sh})` },
@@ -135,10 +135,10 @@ export class FLIPAnimator {
 // ─── Route Transition Manager ─────────────────────────────────
 
 export class RouteTransitionManager {
-  private _currentView: HTMLElement | null = null;
+  private readonly _currentView: HTMLElement | null = null;
   private _transitionType: TransitionType = 'dissolve';
-  private _duration = 350;
-  private _easing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+  private readonly _duration = 350;
+  private readonly _easing = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
   setTransitionType(type: TransitionType): void {
     this._transitionType = type;
@@ -249,7 +249,7 @@ export class RouteTransitionManager {
 // ─── Card-to-Modal Morph ──────────────────────────────────────
 
 export class CardModalMorph {
-  private _flipAnimator = new FLIPAnimator();
+  private readonly _flipAnimator = new FLIPAnimator();
   private _overlay: HTMLDivElement | null = null;
 
   /** Expand a card into a modal */

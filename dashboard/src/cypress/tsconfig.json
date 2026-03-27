@@ -11,7 +11,8 @@
     "noEmit": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "types": ["node"]
+    "typeRoots": ["./@types", "../../node_modules/@types"],
+    "types": ["cypress", "node"]
   },
   "include": [
     "e2e/**/*.cy.ts",

@@ -120,18 +120,30 @@ export default function LandingPage() {
   const [browserOffline, setBrowserOffline] = React.useState(false)
   const isLiveFlowing = wsStatus === 'connected'
 
-  const clearRouteFallbackTimer = React.useCallback(() => {
-    if (routeFallbackTimerRef.current !== null) {
-      globalThis.clearTimeout(routeFallbackTimerRef.current)
-      routeFallbackTimerRef.current = null
-    }
+  const resolveBrowserWindow = React.useCallback((): Window | null => {
+    return typeof globalThis.window === 'undefined' ? null : globalThis.window
   }, [])
 
+  const clearRouteFallbackTimer = React.useCallback(() => {
+    const browserWindow = resolveBrowserWindow()
+    if (routeFallbackTimerRef.current !== null) {
+      if (browserWindow) {
+        browserWindow.clearTimeout(routeFallbackTimerRef.current)
+      } else {
+        clearTimeout(routeFallbackTimerRef.current)
+      }
+      routeFallbackTimerRef.current = null
+    }
+  }, [resolveBrowserWindow])
+
   const navigateToDashboard = React.useCallback(() => {
+    const browserWindow = resolveBrowserWindow()
     clearRouteFallbackTimer()
 
-    const timeoutId = globalThis.setTimeout(() => {
-      globalThis.location.assign('/dashboard')
+    const timeoutId = setTimeout(() => {
+      if (browserWindow) {
+        browserWindow.location.assign('/dashboard')
+      }
     }, 3500)
     routeFallbackTimerRef.current = timeoutId
 
@@ -139,9 +151,9 @@ export default function LandingPage() {
       router.push('/dashboard')
     } catch {
       clearRouteFallbackTimer()
-      globalThis.location.assign('/dashboard')
+      browserWindow?.location.assign('/dashboard')
     }
-  }, [clearRouteFallbackTimer, router])
+  }, [clearRouteFallbackTimer, resolveBrowserWindow, router])
 
   const { scrollYProgress } = useScroll()
   const heroY = useTransform(scrollYProgress, [0, 0.25], ['0%', '12%'])
@@ -189,21 +201,22 @@ export default function LandingPage() {
   }, [clearRouteFallbackTimer])
 
   React.useEffect(() => {
-    if (globalThis.window === undefined) return
+    const browserWindow = resolveBrowserWindow()
+    if (!browserWindow) return
 
     const syncOnlineState = () => {
-      setBrowserOffline(!globalThis.navigator.onLine)
+      setBrowserOffline(!browserWindow.navigator.onLine)
     }
 
     syncOnlineState()
-    globalThis.addEventListener('online', syncOnlineState)
-    globalThis.addEventListener('offline', syncOnlineState)
+    browserWindow.addEventListener('online', syncOnlineState)
+    browserWindow.addEventListener('offline', syncOnlineState)
 
     return () => {
-      globalThis.removeEventListener('online', syncOnlineState)
-      globalThis.removeEventListener('offline', syncOnlineState)
+      browserWindow.removeEventListener('online', syncOnlineState)
+      browserWindow.removeEventListener('offline', syncOnlineState)
     }
-  }, [])
+  }, [resolveBrowserWindow])
 
   const statusIssues = React.useMemo<StatusIssue[]>(() => {
     const issues: StatusIssue[] = []
