@@ -648,13 +648,20 @@ export class ImperativeMapLayer {
         const now = performance.now();
         this.syncFromTransientStore();
         if (!this.overlay) return;
-        const layers = [this.buildLayer()];
+        const showHeatmap = useIoTStore.getState().showHeatmap;
+        const layers: Array<ScatterplotLayer<TruckRenderPoint> | HeatmapLayer<HeatmapPoint>> = [];
+
+        if (!showHeatmap) {
+            layers.push(this.buildLayer());
+        }
+
         const heatmapLayer = this.buildHeatmapLayer();
         if (heatmapLayer) {
-            layers.unshift(heatmapLayer);
+            layers.push(heatmapLayer);
         }
+
         const glowLayer = this.buildSelectedGlowLayer(now);
-        if (glowLayer) {
+        if (glowLayer && !showHeatmap) {
             layers.push(glowLayer);
         }
         this.overlay.setProps({
