@@ -22,6 +22,7 @@ spec:
         {{- include "ice-truck-tracking.selectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "ice-truck-tracking.serviceAccountName" . }}
+      automountServiceAccountToken: false
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:

@@ -6,11 +6,11 @@ replicaCount: 3
 
 image:
   repository: ghcr.io/pattanakorn025/ice-truck-api
-  tag: latest
+  tag: '1.0.0' # Always specify a stable version tag, never use 'latest'
   pullPolicy: IfNotPresent
 
-nameOverride: ""
-fullnameOverride: "ice-truck-api"
+nameOverride: ''
+fullnameOverride: 'ice-truck-api'
 
 serviceAccount:
   create: true
@@ -38,11 +38,11 @@ ingress:
   className: nginx
   annotations:
     cert-manager.io/cluster-issuer: letsencrypt-prod
-    nginx.ingress.kubernetes.io/rate-limit: "100"
-    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/rate-limit: '100'
+    nginx.ingress.kubernetes.io/rate-limit-window: '1m'
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/proxy-body-size: '10m'
   hosts:
     - host: api.ice-truck.example.com
       paths:
@@ -101,7 +101,7 @@ readinessProbe:
 
 env:
   NODE_ENV: production
-  PORT: "5000"
+  PORT: '5000'
   LOG_LEVEL: info
   LOG_FORMAT: json
 
@@ -144,18 +144,18 @@ networkPolicy:
     - to:
         - namespaceSelector: {}
       ports:
-        - port: 5432  # PostgreSQL
-        - port: 6432  # PgBouncer
-        - port: 6379  # Redis
-        - port: 1883  # MQTT
-        - port: 9092  # Kafka
+        - port: 5432 # PostgreSQL
+        - port: 6432 # PgBouncer
+        - port: 6379 # Redis
+        - port: 1883 # MQTT
+        - port: 9092 # Kafka
 
 # ── Subchart toggles ──────────────────────────────────────
 postgresql:
-  enabled: false  # Use external TimescaleDB
+  enabled: false # Use external TimescaleDB
 
 redis:
-  enabled: false  # Use external Redis cluster
+  enabled: false # Use external Redis cluster
 
 # ── Rolling Update Strategy ───────────────────────────────
 strategy:

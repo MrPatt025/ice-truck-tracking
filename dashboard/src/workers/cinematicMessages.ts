@@ -130,7 +130,7 @@ function isTransitionPayload(value: unknown): value is CinematicTransitionPayloa
 
 function isCameraFlyToPayload(value: unknown): value is CinematicCameraFlyToPayload {
     if (!isRecord(value)) return false
-    
+
     const truckId = value.truckId
     const latitude = value.targetLatitude
     const longitude = value.targetLongitude

@@ -61,7 +61,10 @@ router.post('/location', (req, res) => {
   // Also update truck location if truckId provided
   if (req.body.truckId) {
     // This would normally update the truck in database
-    console.log(`Mobile device ${deviceId} updated truck ${req.body.truckId} location`);
+    // Sanitize inputs before logging to prevent Log Forging attacks
+    const sanitizedDeviceId = String(deviceId).replaceAll(/[\n\r]/g, '');
+    const sanitizedTruckId = String(req.body.truckId).replaceAll(/[\n\r]/g, '');
+    console.log(`Mobile device ${sanitizedDeviceId} updated truck ${sanitizedTruckId} location`);
   }
 
   res.json({
@@ -107,8 +110,10 @@ router.post('/sync', (req, res) => {
   }
 
   // Process each location
+  // Sanitize device ID before logging to prevent Log Forging attacks
+  const sanitizedDeviceId = String(deviceId).replaceAll(/[\n\r]/g, '');
   locations.forEach(location => {
-    console.log(`Syncing location for device ${deviceId}:`, location);
+    console.log(`Syncing location for device ${sanitizedDeviceId}:`, location);
   });
 
   res.json({

@@ -54,7 +54,7 @@ export function SettingsScreen() {
   const handleLogout = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign Out', style: 'destructive', onPress: () => void logout() },
+      { text: 'Sign Out', style: 'destructive', onPress: () => { logout() } },
     ])
   }
 

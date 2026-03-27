@@ -11,10 +11,10 @@ interface FeatureFlag {
 }
 
 interface FeatureFlagsProps {
-  isAdmin?: boolean
+  readonly isAdmin?: boolean
 }
 
-export function FeatureFlags({ isAdmin = false }: FeatureFlagsProps) {
+export function FeatureFlags({ isAdmin = false }: Readonly<FeatureFlagsProps>) {
   const [flags, setFlags] = useState<FeatureFlag[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -79,8 +79,8 @@ export function FeatureFlags({ isAdmin = false }: FeatureFlagsProps) {
       <div className='animate-pulse'>
         <div className='h-4 bg-gray-200 rounded w-1/4 mb-4'></div>
         <div className='space-y-3'>
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className='h-16 bg-gray-200 rounded'></div>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={`skeleton-loader-${i}`} className='h-16 bg-gray-200 rounded'></div>
           ))}
         </div>
       </div>
@@ -121,7 +121,7 @@ export function FeatureFlags({ isAdmin = false }: FeatureFlagsProps) {
                 className={`${
                   flag.enabled ? 'bg-blue-600' : 'bg-gray-200'
                 } relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  !isAdmin ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                  isAdmin ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'
                 }`}
               >
                 <span
@@ -160,7 +160,7 @@ export function FeatureFlags({ isAdmin = false }: FeatureFlagsProps) {
                       max='100'
                       value={flag.rolloutPercentage}
                       onChange={e =>
-                        updateRollout(flag.key, parseInt(e.target.value))
+                        updateRollout(flag.key, Number.parseInt(e.target.value, 10))
                       }
                       className='w-20'
                     />

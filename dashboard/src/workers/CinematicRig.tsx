@@ -476,7 +476,14 @@ function MapModeTransitionVeil() {
 }
 
 export default function CinematicRig() {
-  const bloomIntensity = 0.26 + runtimeState.scroll * 0.34
+  const isTruckSelected = useCameraSelectionStore(
+    state => state.selectedTruckId !== null
+  )
+  // Cinematic Bloom: scroll-based + selection boost for neon glow aesthetic
+  const baseBloom = 0.26 + runtimeState.scroll * 0.34
+  const selectionBoost = isTruckSelected ? 0.28 : 0
+  const bloomIntensity = baseBloom + selectionBoost
+  
   const transitionActive =
     runtimeState.transition.phase !== 'idle' ||
     runtimeState.transition.progress > 0.02
@@ -504,8 +511,8 @@ export default function CinematicRig() {
       <EffectComposer multisampling={0}>
         <Bloom
           intensity={bloomIntensity}
-          luminanceThreshold={0.31}
-          luminanceSmoothing={0.4}
+          luminanceThreshold={0.24}
+          luminanceSmoothing={0.28}
           mipmapBlur
         />
         {shouldEnableDepthOfField ? (
