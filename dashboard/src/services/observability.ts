@@ -121,7 +121,7 @@ export class ClientObservability {
     }
 
     private observeWebVitals(): void {
-        if (typeof PerformanceObserver === 'undefined') return;
+        if (PerformanceObserver === undefined) return;
 
         // LCP
         try {

@@ -17,9 +17,7 @@ describe('RingBuffer', () => {
 
     it('push adds items', () => {
         const buf = new RingBuffer<number>(5);
-        buf.push(1);
-        buf.push(2);
-        buf.push(3);
+        buf.push(1, 2, 3);
 
         expect(buf.size).toBe(3);
         expect(buf.toArray()).toEqual([1, 2, 3]);
@@ -27,10 +25,7 @@ describe('RingBuffer', () => {
 
     it('wraps around when capacity is exceeded', () => {
         const buf = new RingBuffer<number>(3);
-        buf.push(1);
-        buf.push(2);
-        buf.push(3);
-        buf.push(4); // overwrites 1
+        buf.push(1, 2, 3, 4); // overwrites 1
 
         expect(buf.size).toBe(3);
         expect(buf.toArray()).toEqual([2, 3, 4]);
@@ -38,18 +33,14 @@ describe('RingBuffer', () => {
 
     it('latest returns most recent item', () => {
         const buf = new RingBuffer<string>(5);
-        buf.push('a');
-        buf.push('b');
-        buf.push('c');
+        buf.push('a', 'b', 'c');
 
         expect(buf.latest).toBe('c');
     });
 
     it('latest works after wrap-around', () => {
         const buf = new RingBuffer<number>(2);
-        buf.push(10);
-        buf.push(20);
-        buf.push(30); // overwrites 10
+        buf.push(10, 20, 30); // overwrites 10
 
         expect(buf.latest).toBe(30);
     });
@@ -72,11 +63,7 @@ describe('RingBuffer', () => {
 
     it('last(n) works after wrap-around', () => {
         const buf = new RingBuffer<number>(3);
-        buf.push(1);
-        buf.push(2);
-        buf.push(3);
-        buf.push(4);
-        buf.push(5);
+        buf.push(1, 2, 3, 4, 5);
 
         expect(buf.last(2)).toEqual([4, 5]);
         expect(buf.last(3)).toEqual([3, 4, 5]);
@@ -84,9 +71,7 @@ describe('RingBuffer', () => {
 
     it('clear resets the buffer', () => {
         const buf = new RingBuffer<number>(5);
-        buf.push(1);
-        buf.push(2);
-        buf.push(3);
+        buf.push(1, 2, 3);
         buf.clear();
 
         expect(buf.size).toBe(0);
@@ -125,6 +110,6 @@ describe('RingBuffer', () => {
         // Oldest should be 99_000
         const arr = buf.toArray();
         expect(arr[0]).toBe(99_000);
-        expect(arr[arr.length - 1]).toBe(99_999);
+        expect(arr.at(-1)).toBe(99_999);
     });
 });

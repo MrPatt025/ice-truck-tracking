@@ -302,7 +302,7 @@ export class CinematicScrollEngine {
   /* ── Injected Styles ───────────────────────────────────────── */
 
   private _injectStyles(): void {
-    if (typeof document === 'undefined') return;
+    if (document === undefined) return;
 
     const css = `
       :root {

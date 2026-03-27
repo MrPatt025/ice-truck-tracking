@@ -225,7 +225,7 @@ export class SceneGraphController {
   }
 
   private _applyCameraCSSVars(): void {
-    if (typeof document === 'undefined') return;
+    if (document === undefined) return;
     const root = document.documentElement;
     root.style.setProperty('--scene-camera-x', String(this._camera.x));
     root.style.setProperty('--scene-camera-y', String(this._camera.y));

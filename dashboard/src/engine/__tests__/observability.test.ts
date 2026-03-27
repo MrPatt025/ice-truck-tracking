@@ -70,7 +70,7 @@ describe('Observability — Scaling Decision Contract', () => {
         const lodOrder = ['ultra', 'high', 'medium', 'low', 'minimal'];
         expect(lodOrder).toHaveLength(5);
         expect(lodOrder[0]).toBe('ultra');
-        expect(lodOrder[lodOrder.length - 1]).toBe('minimal');
+        expect(lodOrder.at(-1)).toBe('minimal');
     });
 });
 

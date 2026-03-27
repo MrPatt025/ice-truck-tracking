@@ -174,7 +174,7 @@ async function main() {
         totalTelemetry,
         errors,
         avgTickMs: sorted.reduce((a, b) => a + b, 0) / sorted.length,
-        maxTickMs: sorted[sorted.length - 1] ?? 0,
+        maxTickMs: sorted.at(-1) ?? 0,
         p95TickMs: sorted[p95idx] ?? 0,
         memoryPeakMB: memoryPeak,
         memoryFinalMB: finalMem.heapUsed / 1024 / 1024,

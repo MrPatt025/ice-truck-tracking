@@ -101,7 +101,7 @@ export class CursorPhysicsEngine {
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || typeof document === 'undefined') return;
+    if (this._mounted || document === undefined) return;
     this._mounted = true;
 
     // Hide native cursor

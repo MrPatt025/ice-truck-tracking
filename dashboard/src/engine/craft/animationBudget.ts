@@ -313,7 +313,7 @@ export class AnimationBudgetGovernor {
 
   /** Apply CSS-level hints for budget actions */
   private _applyCSSHint(action: BudgetAction, active: boolean): void {
-    if (typeof document === 'undefined') return;
+    if (document === undefined) return;
     const root = document.documentElement;
 
     if (active) {

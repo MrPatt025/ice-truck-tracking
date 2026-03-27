@@ -70,7 +70,7 @@ const nextConfig: NextConfig = {
         cacheGroups?: Record<string, unknown>
       } | undefined
       const existingCacheGroups = existingSplitChunks?.cacheGroups ?? {}
-      
+
       config.optimization = {
         ...config.optimization,
         splitChunks: {

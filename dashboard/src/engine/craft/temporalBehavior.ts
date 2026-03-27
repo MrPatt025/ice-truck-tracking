@@ -218,7 +218,7 @@ export class TemporalUIEngine {
   }
 
   private _applyCSSVars(): void {
-    if (typeof document === 'undefined') return;
+    if (document === undefined) return;
     const root = document.documentElement;
 
     root.style.setProperty('--temporal-segment', this._state.segment);

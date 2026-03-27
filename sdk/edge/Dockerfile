@@ -5,21 +5,16 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies, copy source, build, create user and set permissions
+RUN npm ci --only=production && \
+    true
 
-# Copy source code
 COPY . .
 
-# Build TypeScript
-RUN npm run build
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S notification -u 1001
-
-# Set permissions
-RUN chown -R notification:nodejs /app
+RUN npm run build && \
+    addgroup -g 1001 -S nodejs && \
+    adduser -S notification -u 1001 && \
+    chown -R notification:nodejs /app
 USER notification
 
 EXPOSE 3002

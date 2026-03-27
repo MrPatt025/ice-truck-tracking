@@ -215,7 +215,7 @@ export class PredictiveRenderer {
   }
 
   private _scheduleIdlePrefetch(): void {
-    if (typeof requestIdleCallback === 'undefined') return;
+    if (requestIdleCallback === undefined) return;
 
     this._idleCallbackId = requestIdleCallback((deadline) => {
       // Prefetch highest-priority unloaded targets during idle

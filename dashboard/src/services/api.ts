@@ -196,7 +196,7 @@ function notifyBackendHealth(
 
 // ── Request Helpers ────────────────────────────────────────
 async function getAuthToken(): Promise<string | null> {
-  if (typeof document === 'undefined') return null;
+  if (document === undefined) return null;
   const match = /access_token=([^;]+)/.exec(document.cookie);
   return match ? match[1] : null;
 }

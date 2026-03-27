@@ -162,7 +162,7 @@ export class ColorIntelligenceEngine {
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || typeof document === 'undefined') return;
+    if (this._mounted || document === undefined) return;
     this._mounted = true;
     this._injectStyles();
     this._applyColorVars();

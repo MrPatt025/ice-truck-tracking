@@ -118,7 +118,7 @@ test.describe('GPU Rendering & Recovery', () => {
             expect(maxMemory).toBeLessThan(512);
 
             // Memory should not grow more than 50MB over the soak
-            const growth = memoryReadings[memoryReadings.length - 1] - memoryReadings[0];
+            const growth = memoryReadings.at(-1)! - memoryReadings[0];
             expect(growth).toBeLessThan(50);
         }
     });

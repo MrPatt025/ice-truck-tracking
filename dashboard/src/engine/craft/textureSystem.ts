@@ -87,7 +87,7 @@ export class MicroTexture {
   private readonly _seed = Math.floor(Math.random() * 1000);
 
   mount(parent: HTMLElement, config: TextureConfig['microGrain']): void {
-    if (typeof document === 'undefined') return;
+    if (document === undefined) return;
 
     const filterId = `craft-micro-grain-${this._seed}`;
     const svgMarkup = createSVGFilter(filterId, `
