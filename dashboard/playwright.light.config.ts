@@ -8,6 +8,20 @@
  */
 import { defineConfig, devices } from '@playwright/test';
 
+const lightUseConfig = {
+    baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
+    viewport: { width: 1280, height: 800 },
+    reducedMotion: 'reduce',
+    launchOptions: {
+        args: ['--force-prefers-reduced-motion'],
+    },
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
+    actionTimeout: 10_000,
+    navigationTimeout: 20_000,
+} as unknown as NonNullable<Parameters<typeof defineConfig>[0]['use']>;
+
 export default defineConfig({
     testDir: './e2e',
     testMatch: ['**/*.spec.ts', '**/*.light.spec.ts'],
@@ -23,21 +37,11 @@ export default defineConfig({
         ['html', { outputFolder: 'playwright-report/light', open: 'never' }],
         ['list'],
     ],
-    use: {
-        baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
-        launchOptions: {
-            args: ['--force-prefers-reduced-motion'],
-        },
-        trace: 'on-first-retry',
-        screenshot: 'only-on-failure',
-        video: 'retain-on-failure',
-        actionTimeout: 10_000,
-        navigationTimeout: 20_000,
-    },
+    use: lightUseConfig,
     projects: [
         {
             name: 'light-chromium',
-            use: { ...devices['Desktop Chrome'] },
+            use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
         },
     ],
     webServer: {

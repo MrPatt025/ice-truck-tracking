@@ -5,7 +5,7 @@ const HYDRATION_TIMEOUT_MS = 20_000;
 async function setAuthCookie(page: Page, baseURL: string): Promise<void> {
   await page.context().addCookies([
     {
-      name: 'access_token',
+      name: 'auth-token',
       value: 'e2e-test-token',
       url: baseURL,
     },

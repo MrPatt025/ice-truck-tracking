@@ -100,8 +100,8 @@ import type { StatusIssue } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
 import { dispatchBackendHealthEvent } from '@/lib/healthEvents'
 import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary'
-import MapModeToggle from '@/components/dashboard/MapModeToggle'
-import OfflineIndicator from '@/components/dashboard/OfflineIndicator'
+import MapModeToggle from '@/components/MapModeToggle'
+import OfflineBanner from '@/components/OfflineBanner'
 
 const GlassPulseFallback = () => (
   <div className='h-9 w-28 animate-pulse rounded-xl border border-white/20 bg-white/10 shadow-[0_16px_38px_-20px_rgba(56,189,248,0.85)]' />
@@ -1140,7 +1140,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
           )}
 
           <PremiumSystemStatusBanner issues={statusIssues} />
-          <OfflineIndicator className='fixed right-4 top-[8.7rem] z-[76] w-[min(92vw,26rem)]' />
+          <OfflineBanner className='fixed right-4 top-[8.7rem] z-[76] w-[min(92vw,26rem)]' />
 
           {/* ── Imperative Three.js 3D Background (no React rendering) ── */}
           {show3D && (
@@ -1163,12 +1163,12 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                     </div>
                   </motion.div>
                   <div>
-                    <p
+                    <h1
                       data-display-font='true'
                       className='bg-gradient-to-r from-cyan-100 via-white to-amber-100 bg-clip-text text-xl font-black uppercase tracking-[0.09em] text-transparent sm:text-2xl'
                     >
                       Cryogenic Mission Console
-                    </p>
+                    </h1>
                     <p className='text-[11px] sm:text-xs text-slate-300 font-medium tracking-[0.12em] uppercase'>
                       Fleet Sentinel Grid • IoT Engine v4.0
                     </p>
@@ -1357,7 +1357,6 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
 
           {/* ── Main Content ── */}
           <main className='mx-auto max-w-[120rem] space-y-6 px-4 py-6 sm:px-6'>
-            <h1 className='sr-only'>Cryogenic Mission Console</h1>
             {/* Status pills */}
             <div className='flex flex-wrap items-center gap-3'>
               <Pill intent={resolveConnectionIntent(connectionStatus)}>
