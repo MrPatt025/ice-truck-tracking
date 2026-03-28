@@ -32,6 +32,7 @@ export default defineConfig({
         navigationTimeout: 60_000,
         launchOptions: {
             args: [
+                '--force-prefers-reduced-motion',
                 '--enable-webgl',
                 '--use-gl=angle',
                 '--enable-features=Vulkan',

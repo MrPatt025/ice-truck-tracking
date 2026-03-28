@@ -25,6 +25,9 @@ export default defineConfig({
     ],
     use: {
         baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
+        launchOptions: {
+            args: ['--force-prefers-reduced-motion'],
+        },
         trace: 'on-first-retry',
         screenshot: 'only-on-failure',
         video: 'retain-on-failure',

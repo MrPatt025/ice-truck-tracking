@@ -100,6 +100,8 @@ import type { StatusIssue } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
 import { dispatchBackendHealthEvent } from '@/lib/healthEvents'
 import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary'
+import MapModeToggle from '@/components/dashboard/MapModeToggle'
+import OfflineIndicator from '@/components/dashboard/OfflineIndicator'
 
 const GlassPulseFallback = () => (
   <div className='h-9 w-28 animate-pulse rounded-xl border border-white/20 bg-white/10 shadow-[0_16px_38px_-20px_rgba(56,189,248,0.85)]' />
@@ -1106,7 +1108,6 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
       >
         <motion.div
           data-testid='dashboard-main'
-          tabIndex={0}
           style={{
             opacity: introOpacity,
             scale: introScale,
@@ -1139,6 +1140,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
           )}
 
           <PremiumSystemStatusBanner issues={statusIssues} />
+          <OfflineIndicator className='fixed right-4 top-[8.7rem] z-[76] w-[min(92vw,26rem)]' />
 
           {/* ── Imperative Three.js 3D Background (no React rendering) ── */}
           {show3D && (
@@ -1161,12 +1163,12 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                     </div>
                   </motion.div>
                   <div>
-                    <h1
+                    <p
                       data-display-font='true'
                       className='bg-gradient-to-r from-cyan-100 via-white to-amber-100 bg-clip-text text-xl font-black uppercase tracking-[0.09em] text-transparent sm:text-2xl'
                     >
                       Cryogenic Mission Console
-                    </h1>
+                    </p>
                     <p className='text-[11px] sm:text-xs text-slate-300 font-medium tracking-[0.12em] uppercase'>
                       Fleet Sentinel Grid • IoT Engine v4.0
                     </p>
@@ -1672,59 +1674,10 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                     <MapPin className='h-5 w-5 text-indigo-400' />
                     Live Fleet Map
                   </h3>
-                  <fieldset className='mb-4 inline-flex items-center rounded-xl bg-white/5 p-1 ring-1 ring-cyan-200/20'>
-                    <legend className='sr-only'>Map visualization mode</legend>
-                    <div className='relative'>
-                      {isLiveMode && (
-                        <motion.span
-                          layoutId='map-mode-pill'
-                          className='absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 shadow-lg'
-                          transition={{
-                            type: 'spring',
-                            stiffness: 420,
-                            damping: 34,
-                          }}
-                        />
-                      )}
-                      <MagneticButton
-                        onClick={() => setMapMode('live')}
-                        ariaLabel='Switch to live fleet mode'
-                        ariaPressed={isLiveMode}
-                        className={`relative z-10 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                          isLiveMode
-                            ? 'text-white'
-                            : 'text-slate-300 hover:bg-white/10'
-                        }`}
-                      >
-                        Live Fleet
-                      </MagneticButton>
-                    </div>
-                    <div className='relative'>
-                      {showHeatmap && (
-                        <motion.span
-                          layoutId='map-mode-pill'
-                          className='absolute inset-0 rounded-lg bg-gradient-to-r from-rose-500 to-orange-500 shadow-lg'
-                          transition={{
-                            type: 'spring',
-                            stiffness: 420,
-                            damping: 34,
-                          }}
-                        />
-                      )}
-                      <MagneticButton
-                        onClick={() => setMapMode('historical')}
-                        ariaLabel='Switch to historical heatmap mode'
-                        ariaPressed={showHeatmap}
-                        className={`relative z-10 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                          showHeatmap
-                            ? 'text-white'
-                            : 'text-slate-300 hover:bg-white/10'
-                        }`}
-                      >
-                        Historical Heatmap
-                      </MagneticButton>
-                    </div>
-                  </fieldset>
+                  <MapModeToggle
+                    isLiveMode={isLiveMode}
+                    onModeChange={setMapMode}
+                  />
                   <motion.div
                     layout
                     layoutId='map-viewport-shell'
