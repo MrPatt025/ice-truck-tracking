@@ -7,6 +7,12 @@
 import { RingBuffer } from '../ringBuffer';
 
 describe('RingBuffer', () => {
+    const pushMany = <T>(buf: RingBuffer<T>, ...items: T[]): void => {
+        for (const item of items) {
+            buf.push(item);
+        }
+    };
+
     it('starts empty', () => {
         const buf = new RingBuffer<number>(10);
         expect(buf.size).toBe(0);
@@ -17,7 +23,7 @@ describe('RingBuffer', () => {
 
     it('push adds items', () => {
         const buf = new RingBuffer<number>(5);
-        buf.push(1, 2, 3);
+        pushMany(buf, 1, 2, 3);
 
         expect(buf.size).toBe(3);
         expect(buf.toArray()).toEqual([1, 2, 3]);
@@ -25,7 +31,7 @@ describe('RingBuffer', () => {
 
     it('wraps around when capacity is exceeded', () => {
         const buf = new RingBuffer<number>(3);
-        buf.push(1, 2, 3, 4); // overwrites 1
+        pushMany(buf, 1, 2, 3, 4); // overwrites 1
 
         expect(buf.size).toBe(3);
         expect(buf.toArray()).toEqual([2, 3, 4]);
@@ -33,14 +39,14 @@ describe('RingBuffer', () => {
 
     it('latest returns most recent item', () => {
         const buf = new RingBuffer<string>(5);
-        buf.push('a', 'b', 'c');
+        pushMany(buf, 'a', 'b', 'c');
 
         expect(buf.latest).toBe('c');
     });
 
     it('latest works after wrap-around', () => {
         const buf = new RingBuffer<number>(2);
-        buf.push(10, 20, 30); // overwrites 10
+        pushMany(buf, 10, 20, 30); // overwrites 10
 
         expect(buf.latest).toBe(30);
     });
@@ -55,14 +61,14 @@ describe('RingBuffer', () => {
 
     it('last(n) clamps to available size', () => {
         const buf = new RingBuffer<number>(10);
-        buf.push(1, 2);
+        pushMany(buf, 1, 2);
 
         expect(buf.last(100)).toEqual([1, 2]);
     });
 
     it('last(n) works after wrap-around', () => {
         const buf = new RingBuffer<number>(3);
-        buf.push(1, 2, 3, 4, 5);
+        pushMany(buf, 1, 2, 3, 4, 5);
 
         expect(buf.last(2)).toEqual([4, 5]);
         expect(buf.last(3)).toEqual([3, 4, 5]);
@@ -70,7 +76,7 @@ describe('RingBuffer', () => {
 
     it('clear resets the buffer', () => {
         const buf = new RingBuffer<number>(5);
-        buf.push(1, 2, 3);
+        pushMany(buf, 1, 2, 3);
         buf.clear();
 
         expect(buf.size).toBe(0);

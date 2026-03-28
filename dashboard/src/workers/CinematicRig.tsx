@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unknown-property */
 
 import React from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
+import { useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import {
   AdditiveBlending,
   BufferAttribute,
@@ -19,6 +19,7 @@ import {
   Vector3,
   PerspectiveCamera,
   RingGeometry,
+  Mesh,
 } from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import {
@@ -26,6 +27,11 @@ import {
   DepthOfField,
   EffectComposer,
 } from '@react-three/postprocessing'
+import {
+  acceleratedRaycast,
+  computeBoundsTree,
+  disposeBoundsTree,
+} from 'three-mesh-bvh'
 import { runtimeState } from './cinematicRuntimeState'
 import { useCameraSelectionStore } from '../stores/cameraSelectionStore'
 import {
@@ -66,6 +72,50 @@ function disposeObjectTree(node: Object3D | null): void {
   for (const child of node.children) {
     disposeObjectTree(child)
   }
+}
+
+type BvhOptions = {
+  maxLeafTris?: number
+}
+
+type BvhEnabledGeometry = BufferGeometry & {
+  computeBoundsTree?: (options?: BvhOptions) => void
+  disposeBoundsTree?: () => void
+}
+
+type RaycastMeshPrototype = {
+  raycast: typeof acceleratedRaycast
+}
+
+let bvhRaycastPatched = false
+
+function ensureBvhRaycastAcceleration(): void {
+  if (bvhRaycastPatched) {
+    return
+  }
+
+  const bufferGeometryPrototype = BufferGeometry.prototype as BvhEnabledGeometry
+  bufferGeometryPrototype.computeBoundsTree =
+    computeBoundsTree as BvhEnabledGeometry['computeBoundsTree']
+  bufferGeometryPrototype.disposeBoundsTree =
+    disposeBoundsTree as BvhEnabledGeometry['disposeBoundsTree']
+
+  const meshPrototype = Mesh.prototype as RaycastMeshPrototype
+  meshPrototype.raycast = acceleratedRaycast
+
+  bvhRaycastPatched = true
+}
+
+function buildBoundsTree(mesh: Mesh | InstancedMesh | null): void {
+  if (!mesh) return
+  const geometry = mesh.geometry as BvhEnabledGeometry
+  geometry.computeBoundsTree?.({ maxLeafTris: 24 })
+}
+
+function releaseBoundsTree(mesh: Mesh | InstancedMesh | null): void {
+  if (!mesh) return
+  const geometry = mesh.geometry as BvhEnabledGeometry
+  geometry.disposeBoundsTree?.()
 }
 
 function isLowEndOrMobileRuntime(): boolean {
@@ -158,12 +208,50 @@ function AdaptiveLightingEnvironment({
 function TruckModel({
   enableSoftShadows,
 }: Readonly<{ enableSoftShadows: boolean }>) {
+  const bodyMesh = React.useRef<Mesh>(null)
   const root = React.useRef<Group>(null)
   const sensorGroup = React.useRef<Group>(null)
   const frostHullPanels = React.useRef<InstancedMesh>(null)
   const frontWheels = React.useRef<InstancedMesh>(null)
   const rearWheels = React.useRef<InstancedMesh>(null)
   const frostDummy = React.useRef(new Object3D())
+  const isTruckSelected = useCameraSelectionStore(
+    state => state.selectedTruckId !== null
+  )
+  const selectTruck = useCameraSelectionStore(state => state.selectTruck)
+  const deselectTruck = useCameraSelectionStore(state => state.deselectTruck)
+
+  const handleTruckPointerOver = React.useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      event.stopPropagation()
+      if (globalThis.document) {
+        globalThis.document.body.style.cursor = 'pointer'
+      }
+    },
+    []
+  )
+
+  const handleTruckPointerOut = React.useCallback(
+    (event: ThreeEvent<PointerEvent>) => {
+      event.stopPropagation()
+      if (globalThis.document) {
+        globalThis.document.body.style.cursor = ''
+      }
+    },
+    []
+  )
+
+  const handleTruckClick = React.useCallback(
+    (event: ThreeEvent<MouseEvent>) => {
+      event.stopPropagation()
+      if (isTruckSelected) {
+        deselectTruck()
+        return
+      }
+      selectTruck('hero-truck', 0, 0)
+    },
+    [deselectTruck, isTruckSelected, selectTruck]
+  )
 
   const frostShaderMaterial = React.useMemo(
     () =>
@@ -217,6 +305,29 @@ function TruckModel({
         frostPanels.setMatrixAt(index, dummy.matrix)
       })
       frostPanels.instanceMatrix.needsUpdate = true
+    }
+  }, [])
+
+  React.useEffect(() => {
+    const bodyMeshNode = bodyMesh.current
+    const frontWheelsNode = frontWheels.current
+    const rearWheelsNode = rearWheels.current
+    const frostHullPanelsNode = frostHullPanels.current
+
+    ensureBvhRaycastAcceleration()
+    buildBoundsTree(bodyMeshNode)
+    buildBoundsTree(frontWheelsNode)
+    buildBoundsTree(rearWheelsNode)
+    buildBoundsTree(frostHullPanelsNode)
+
+    return () => {
+      releaseBoundsTree(bodyMeshNode)
+      releaseBoundsTree(frontWheelsNode)
+      releaseBoundsTree(rearWheelsNode)
+      releaseBoundsTree(frostHullPanelsNode)
+      if (globalThis.document) {
+        globalThis.document.body.style.cursor = ''
+      }
     }
   }, [])
 
@@ -320,8 +431,14 @@ function TruckModel({
   })
 
   return (
-    <group ref={root} position={[0, 0, 0]}>
-      <mesh position={[0, 0.2, 0]} castShadow={enableSoftShadows}>
+    <group
+      ref={root}
+      position={[0, 0, 0]}
+      onPointerOver={handleTruckPointerOver}
+      onPointerOut={handleTruckPointerOut}
+      onClick={handleTruckClick}
+    >
+      <mesh ref={bodyMesh} position={[0, 0.2, 0]} castShadow={enableSoftShadows}>
         <boxGeometry args={[2.8, 0.24, 1.45]} />
         <meshStandardMaterial
           color='#1d4ed8'
@@ -640,10 +757,30 @@ function MapModeTransitionVeil() {
   )
 }
 
-export default function CinematicRig() {
-  const isTruckSelected = useCameraSelectionStore(
-    state => state.selectedTruckId !== null
-  )
+type CinematicPostFxConfig = {
+  enablePremiumLighting: boolean
+  enableSoftShadows: boolean
+  shouldEnablePostFx: boolean
+  shouldEnableDepthOfField: boolean
+  resolutionScale: number
+  bloomIntensity: number
+  luminanceThreshold: number
+  luminanceSmoothing: number
+  tiltShiftFocusDistance: number
+  tiltShiftFocalLength: number
+  tiltShiftBokehScale: number
+  tiltShiftHeight: number
+}
+
+function resolveResolutionScale(dpr: number): number {
+  if (dpr > 1.4) return 0.56
+  if (dpr > 1.15) return 0.72
+  return 1
+}
+
+function createPostFxConfig(
+  isTruckSelected: boolean
+): CinematicPostFxConfig {
   const scrollBloom = 0.12 + runtimeState.scroll * 0.16
   const neonSelectionBoost = isTruckSelected ? 0.2 : 0
   const bloomIntensity = Math.min(0.5, scrollBloom + neonSelectionBoost)
@@ -654,10 +791,10 @@ export default function CinematicRig() {
   const heavyScrollTransition =
     runtimeState.scroll > 0.1 && runtimeState.scroll < 0.92
   const fastThermalSwing = runtimeState.telemetry.temperatureC > 2.5
-  const lowEndRuntime = isLowEndOrMobileRuntime()
   const highDpr = runtimeState.viewport.dpr > 1.4
-  const disablePremiumLighting = lowEndRuntime || highDpr || transitionActive
-  const enablePremiumLighting = !disablePremiumLighting
+  const lowEndRuntime = isLowEndOrMobileRuntime()
+
+  const enablePremiumLighting = !(lowEndRuntime || highDpr || transitionActive)
   const enableSoftShadows = enablePremiumLighting && runtimeState.scroll < 0.9
   const shouldEnablePostFx = !(
     transitionActive ||
@@ -669,59 +806,78 @@ export default function CinematicRig() {
     shouldEnablePostFx &&
     runtimeState.scroll < 0.84 &&
     runtimeState.viewport.dpr <= 1.25
-  let resolutionScale = 1
-  if (highDpr) {
-    resolutionScale = 0.56
-  } else if (runtimeState.viewport.dpr > 1.15) {
-    resolutionScale = 0.72
+
+  return {
+    enablePremiumLighting,
+    enableSoftShadows,
+    shouldEnablePostFx,
+    shouldEnableDepthOfField,
+    resolutionScale: resolveResolutionScale(runtimeState.viewport.dpr),
+    bloomIntensity,
+    luminanceThreshold: isTruckSelected ? 0.3 : 0.36,
+    luminanceSmoothing: isTruckSelected ? 0.22 : 0.32,
+    tiltShiftFocusDistance: isTruckSelected ? 0.013 : 0.018,
+    tiltShiftFocalLength: isTruckSelected ? 0.011 : 0.014,
+    tiltShiftBokehScale: isTruckSelected ? 0.95 : 0.68,
+    tiltShiftHeight: isTruckSelected ? 220 : 320,
   }
-  const luminanceThreshold = isTruckSelected ? 0.3 : 0.36
-  const luminanceSmoothing = isTruckSelected ? 0.22 : 0.32
+}
 
-  const renderPostFx = () => {
-    if (!shouldEnablePostFx) {
-      return <></>
-    }
-
-    return (
-      <EffectComposer multisampling={0} resolutionScale={resolutionScale}>
-        <Bloom
-          intensity={bloomIntensity}
-          luminanceThreshold={luminanceThreshold}
-          luminanceSmoothing={luminanceSmoothing}
-          mipmapBlur
-        />
-        {shouldEnableDepthOfField ? (
-          <DepthOfField
-            focusDistance={0.018}
-            focalLength={0.016}
-            bokehScale={0.62}
-            height={360}
-          />
-        ) : (
-          <></>
-        )}
-      </EffectComposer>
-    )
+function CinematicPostFx({
+  config,
+}: Readonly<{ config: CinematicPostFxConfig }>) {
+  if (!config.shouldEnablePostFx) {
+    return <></>
   }
 
   return (
+    <EffectComposer multisampling={0} resolutionScale={config.resolutionScale}>
+      <Bloom
+        intensity={config.bloomIntensity}
+        luminanceThreshold={config.luminanceThreshold}
+        luminanceSmoothing={config.luminanceSmoothing}
+        mipmapBlur
+      />
+      {config.shouldEnableDepthOfField ? (
+        <DepthOfField
+          focusDistance={config.tiltShiftFocusDistance}
+          focalLength={config.tiltShiftFocalLength}
+          bokehScale={config.tiltShiftBokehScale}
+          height={config.tiltShiftHeight}
+        />
+      ) : (
+        <></>
+      )}
+    </EffectComposer>
+  )
+}
+
+export default function CinematicRig() {
+  const isTruckSelected = useCameraSelectionStore(
+    state => state.selectedTruckId !== null
+  )
+  const postFxConfig = React.useMemo(
+    () => createPostFxConfig(isTruckSelected),
+    [isTruckSelected]
+  )
+
+  return (
     <>
-      <AdaptiveLightingEnvironment enabled={enablePremiumLighting} />
+      <AdaptiveLightingEnvironment enabled={postFxConfig.enablePremiumLighting} />
       <color attach='background' args={['#020617']} />
-      <ambientLight intensity={enablePremiumLighting ? 0.48 : 0.58} />
+      <ambientLight intensity={postFxConfig.enablePremiumLighting ? 0.48 : 0.58} />
       <hemisphereLight
         color='#c7f0ff'
         groundColor='#0f172a'
-        intensity={enablePremiumLighting ? 0.62 : 0.35}
+        intensity={postFxConfig.enablePremiumLighting ? 0.62 : 0.35}
       />
       <directionalLight
         position={[5, 6, 3]}
-        intensity={enablePremiumLighting ? 1.18 : 0.92}
+        intensity={postFxConfig.enablePremiumLighting ? 1.18 : 0.92}
         color='#bae6fd'
-        castShadow={enableSoftShadows}
-        shadow-mapSize-width={enableSoftShadows ? 1024 : 256}
-        shadow-mapSize-height={enableSoftShadows ? 1024 : 256}
+        castShadow={postFxConfig.enableSoftShadows}
+        shadow-mapSize-width={postFxConfig.enableSoftShadows ? 1024 : 256}
+        shadow-mapSize-height={postFxConfig.enableSoftShadows ? 1024 : 256}
         shadow-camera-near={0.5}
         shadow-camera-far={26}
         shadow-camera-left={-6}
@@ -729,22 +885,22 @@ export default function CinematicRig() {
         shadow-camera-top={6}
         shadow-camera-bottom={-6}
         shadow-bias={-0.0006}
-        shadow-radius={enableSoftShadows ? 5 : 1}
+        shadow-radius={postFxConfig.enableSoftShadows ? 5 : 1}
       />
       <pointLight position={[0, 1.2, 0]} intensity={1.85} color='#22d3ee' />
       <pointLight
         position={[4.8, 1.6, -2.6]}
-        intensity={enablePremiumLighting ? 0.86 : 0.72}
+        intensity={postFxConfig.enablePremiumLighting ? 0.86 : 0.72}
         color='#2563eb'
       />
 
-      <RouteAndGround enableSoftShadows={enableSoftShadows} />
-      <TruckModel enableSoftShadows={enableSoftShadows} />
+      <RouteAndGround enableSoftShadows={postFxConfig.enableSoftShadows} />
+      <TruckModel enableSoftShadows={postFxConfig.enableSoftShadows} />
       <ColdFogParticles />
       <SelectionPulseHalo />
       <MapModeTransitionVeil />
 
-      {renderPostFx()}
+      <CinematicPostFx config={postFxConfig} />
     </>
   )
 }
