@@ -1,7 +1,7 @@
 ﻿import './globals.css'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { Orbitron, Space_Grotesk } from 'next/font/google'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import TransitionLayoutGroup from '@/components/TransitionLayoutGroup'
 import ClientSharedCanvasHost from '@/components/ClientSharedCanvasHost'
@@ -26,7 +26,6 @@ export const metadata: Metadata = {
   description: 'Real-time ice truck monitoring and analytics platform',
   manifest: '/manifest.json',
   applicationName: 'Ice Truck Tracking',
-  themeColor: '#020617',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -36,6 +35,10 @@ export const metadata: Metadata = {
     icon: '/favicon.ico',
     apple: '/favicon.ico',
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#020617',
 }
 
 export default function RootLayout({

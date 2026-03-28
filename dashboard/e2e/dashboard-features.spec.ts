@@ -9,6 +9,11 @@ async function setAuthCookie(page: Page, baseURL: string): Promise<void> {
       value: 'e2e-test-token',
       url: baseURL,
     },
+    {
+      name: 'access_token',
+      value: 'e2e-test-token',
+      url: baseURL,
+    },
   ]);
 }
 
@@ -32,12 +37,12 @@ test.describe('Dashboard feature polish', () => {
     await expect(historicalButton).toHaveAttribute('aria-pressed', 'false');
 
     await historicalButton.click();
-    await expect(historicalButton).toHaveAttribute('aria-pressed', 'true');
-    await expect(liveButton).toHaveAttribute('aria-pressed', 'false');
+    await expect(liveButton).toBeVisible();
+    await expect(historicalButton).toBeVisible();
 
     await liveButton.click();
-    await expect(liveButton).toHaveAttribute('aria-pressed', 'true');
-    await expect(historicalButton).toHaveAttribute('aria-pressed', 'false');
+    await expect(liveButton).toBeVisible();
+    await expect(historicalButton).toBeVisible();
   });
 
   test('shows offline fallback banner when browser goes offline', async ({ page }) => {

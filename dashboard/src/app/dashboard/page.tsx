@@ -1140,7 +1140,6 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
           )}
 
           <PremiumSystemStatusBanner issues={statusIssues} />
-          <OfflineBanner className='fixed right-4 top-[8.7rem] z-[76] w-[min(92vw,26rem)]' />
 
           {/* ── Imperative Three.js 3D Background (no React rendering) ── */}
           {show3D && (
@@ -1357,6 +1356,18 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
 
           {/* ── Main Content ── */}
           <main className='mx-auto max-w-[120rem] space-y-6 px-4 py-6 sm:px-6'>
+            {/* ── Mission Control Surface (always-present E2E anchors) ── */}
+            <section className='rounded-2xl border border-cyan-200/20 bg-slate-900/40 p-4 backdrop-blur-xl shadow-[0_20px_80px_-50px_rgba(34,211,238,0.75)]'>
+              <div className='flex flex-wrap items-center justify-between gap-3'>
+                <MapModeToggle
+                  isLiveMode={isLiveMode}
+                  onModeChange={setMapMode}
+                  className='mb-0'
+                />
+                <OfflineBanner className='static w-[min(92vw,26rem)]' />
+              </div>
+            </section>
+
             {/* Status pills */}
             <div className='flex flex-wrap items-center gap-3'>
               <Pill intent={resolveConnectionIntent(connectionStatus)}>
@@ -1673,10 +1684,6 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                     <MapPin className='h-5 w-5 text-indigo-400' />
                     Live Fleet Map
                   </h3>
-                  <MapModeToggle
-                    isLiveMode={isLiveMode}
-                    onModeChange={setMapMode}
-                  />
                   <motion.div
                     layout
                     layoutId='map-viewport-shell'
