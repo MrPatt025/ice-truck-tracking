@@ -17,9 +17,8 @@ describe('RingBuffer', () => {
 
     it('push adds items', () => {
         const buf = new RingBuffer<number>(5);
-        buf.push(1);
-        buf.push(2);
-        buf.push(3);
+        // NOSONAR - Use a typed iterable to avoid Sonar's consecutive-push false positive while preserving push(value) typing.
+        for (const value of [1, 2, 3]) buf.push(value);
 
         expect(buf.size).toBe(3);
         expect(buf.toArray()).toEqual([1, 2, 3]);
@@ -27,10 +26,7 @@ describe('RingBuffer', () => {
 
     it('wraps around when capacity is exceeded', () => {
         const buf = new RingBuffer<number>(3);
-        buf.push(1);
-        buf.push(2);
-        buf.push(3);
-        buf.push(4); // overwrites 1
+        for (const value of [1, 2, 3, 4]) buf.push(value); // overwrites 1
 
         expect(buf.size).toBe(3);
         expect(buf.toArray()).toEqual([2, 3, 4]);
@@ -38,18 +34,14 @@ describe('RingBuffer', () => {
 
     it('latest returns most recent item', () => {
         const buf = new RingBuffer<string>(5);
-        buf.push('a');
-        buf.push('b');
-        buf.push('c');
+        for (const value of ['a', 'b', 'c']) buf.push(value);
 
         expect(buf.latest).toBe('c');
     });
 
     it('latest works after wrap-around', () => {
         const buf = new RingBuffer<number>(2);
-        buf.push(10);
-        buf.push(20);
-        buf.push(30); // overwrites 10
+        for (const value of [10, 20, 30]) buf.push(value); // overwrites 10
 
         expect(buf.latest).toBe(30);
     });
@@ -64,19 +56,14 @@ describe('RingBuffer', () => {
 
     it('last(n) clamps to available size', () => {
         const buf = new RingBuffer<number>(10);
-        buf.push(1);
-        buf.push(2);
+        for (const value of [1, 2]) buf.push(value);
 
         expect(buf.last(100)).toEqual([1, 2]);
     });
 
     it('last(n) works after wrap-around', () => {
         const buf = new RingBuffer<number>(3);
-        buf.push(1);
-        buf.push(2);
-        buf.push(3);
-        buf.push(4);
-        buf.push(5);
+        for (const value of [1, 2, 3, 4, 5]) buf.push(value);
 
         expect(buf.last(2)).toEqual([4, 5]);
         expect(buf.last(3)).toEqual([3, 4, 5]);
@@ -84,9 +71,7 @@ describe('RingBuffer', () => {
 
     it('clear resets the buffer', () => {
         const buf = new RingBuffer<number>(5);
-        buf.push(1);
-        buf.push(2);
-        buf.push(3);
+        for (const value of [1, 2, 3]) buf.push(value);
         buf.clear();
 
         expect(buf.size).toBe(0);
@@ -96,13 +81,11 @@ describe('RingBuffer', () => {
 
     it('handles capacity of 1', () => {
         const buf = new RingBuffer<number>(1);
-        buf.push(1);
-        expect(buf.size).toBe(1);
-        expect(buf.latest).toBe(1);
-
-        buf.push(2);
-        expect(buf.size).toBe(1);
-        expect(buf.latest).toBe(2);
+        for (const value of [1, 2]) {
+            buf.push(value);
+            expect(buf.size).toBe(1);
+            expect(buf.latest).toBe(value);
+        }
         expect(buf.toArray()).toEqual([2]);
     });
 

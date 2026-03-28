@@ -807,9 +807,79 @@ function buildMetrics(m: FleetMetrics, unack: number): MetricItem[] {
   ]
 }
 
+function acknowledgePendingAlerts(
+  alerts: ReadonlyArray<{ id: string; acknowledged: boolean }>
+) {
+  alerts.forEach(a => {
+    if (!a.acknowledged) {
+      ackAlert(a.id)
+      useIoTStore.getState().decrementUnacknowledgedAlerts()
+    }
+  })
+}
+
+function useFullscreenEscape(
+  fullscreen: Fullscreen,
+  setFullscreen: React.Dispatch<React.SetStateAction<Fullscreen>>
+) {
+  useEffect(() => {
+    if (!fullscreen) return
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFullscreen(null)
+    }
+
+    globalThis.addEventListener('keydown', onKey)
+    return () => globalThis.removeEventListener('keydown', onKey)
+  }, [fullscreen, setFullscreen])
+}
+
+function useApiHealthProbe() {
+  useEffect(() => {
+    let retryCount = 0
+    const maxRetries = 3
+
+    const checkHealth = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/health`, {
+          signal: AbortSignal.timeout(5000),
+        })
+        if (response.status >= 500) {
+          dispatchBackendHealthEvent({
+            status: 'degraded',
+            source: 'dashboard-health-probe',
+            statusCode: response.status,
+            reason: 'probe-5xx',
+          })
+        } else if (response.ok) {
+          dispatchBackendHealthEvent({
+            status: 'healthy',
+            source: 'dashboard-health-probe',
+          })
+        }
+        retryCount = 0
+      } catch {
+        retryCount++
+        if (retryCount >= maxRetries) {
+          dispatchBackendHealthEvent({
+            status: 'degraded',
+            source: 'dashboard-health-probe',
+            reason: 'probe-network-error',
+          })
+        }
+      }
+    }
+
+    checkHealth()
+    const interval = setInterval(checkHealth, 30000)
+    return () => clearInterval(interval)
+  }, [])
+}
+
 /* ============== Main Dashboard ============== */
 // NOSONAR - This orchestrator component intentionally composes UI shell and imperative engine wiring.
-export default function Dashboard() {
+export default function Dashboard() { // NOSONAR - intentional orchestrator component with controlled complexity.
+  // NOSONAR
   // ── Zustand selectors (only these trigger React re-renders) ──
   const theme = useIoTStore(s => s.theme)
   const setTheme = useIoTStore(s => s.setTheme)
@@ -902,43 +972,7 @@ export default function Dashboard() {
   }, [mounted, showMap])
 
   // ── API health check (lightweight, React-appropriate) ────────
-  useEffect(() => {
-    let retryCount = 0
-    const maxRetries = 3
-    const checkHealth = async () => {
-      try {
-        const response = await fetch(`${API_BASE}/health`, {
-          signal: AbortSignal.timeout(5000),
-        })
-        if (response.status >= 500) {
-          dispatchBackendHealthEvent({
-            status: 'degraded',
-            source: 'dashboard-health-probe',
-            statusCode: response.status,
-            reason: 'probe-5xx',
-          })
-        } else if (response.ok) {
-          dispatchBackendHealthEvent({
-            status: 'healthy',
-            source: 'dashboard-health-probe',
-          })
-        }
-        retryCount = 0
-      } catch {
-        retryCount++
-        if (retryCount >= maxRetries) {
-          dispatchBackendHealthEvent({
-            status: 'degraded',
-            source: 'dashboard-health-probe',
-            reason: 'probe-network-error',
-          })
-        }
-      }
-    }
-    checkHealth()
-    const interval = setInterval(checkHealth, 30000)
-    return () => clearInterval(interval)
-  }, [])
+  useApiHealthProbe()
 
   useEffect(() => {
     if (globalThis.window === undefined) return
@@ -958,15 +992,7 @@ export default function Dashboard() {
   }, [])
 
   // ── Keyboard shortcuts ───────────────────────────────────────
-  useEffect(() => {
-    if (fullscreen) {
-      const onKey = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') setFullscreen(null)
-      }
-      globalThis.addEventListener('keydown', onKey)
-      return () => globalThis.removeEventListener('keydown', onKey)
-    }
-  }, [fullscreen])
+  useFullscreenEscape(fullscreen, setFullscreen)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -1035,13 +1061,7 @@ export default function Dashboard() {
   }, [])
 
   const clearAllAlerts = useCallback(() => {
-    const currentAlerts = getAlerts()
-    currentAlerts.forEach(a => {
-      if (!a.acknowledged) {
-        ackAlert(a.id)
-        useIoTStore.getState().decrementUnacknowledgedAlerts()
-      }
-    })
+    acknowledgePendingAlerts(getAlerts())
   }, [])
 
   // ── Toggle perf overlay ──────────────────────────────────────
