@@ -453,7 +453,7 @@ function buildStatusIssues({
       kind: 'network',
       title: 'Offline mode enabled',
       detail:
-        'Network access is unavailable. Telemetry and map sync will resume automatically once connectivity is restored.',
+        'Network access is unavailable. The dashboard remains in graceful fallback mode until connectivity is restored.',
     })
   }
 
