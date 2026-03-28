@@ -1083,6 +1083,7 @@ export default function Dashboard() {
       >
         <motion.div
           data-testid='dashboard-main'
+          tabIndex={0}
           style={{
             opacity: introOpacity,
             scale: introScale,
@@ -1092,6 +1093,7 @@ export default function Dashboard() {
           }}
           className='mission-control-shell relative min-h-screen overflow-x-hidden text-white selection:bg-cyan-500/30 selection:text-white'
         >
+          <h1 className='sr-only'>Dashboard</h1>
           <div className='pointer-events-none fixed inset-0 -z-20 hud-grid-overlay opacity-45' />
           <div className='pointer-events-none fixed inset-0 -z-10 scanline-overlay opacity-40' />
 
