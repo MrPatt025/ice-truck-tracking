@@ -115,7 +115,9 @@ export default function LandingPage() {
   const setProgress = useTransitionStore(s => s.setProgress)
   const transitionProgress = useMotionValue(0)
   const latestScrollRef = React.useRef(0)
-  const routeFallbackTimerRef = React.useRef<number | null>(null)
+  const routeFallbackTimerRef = React.useRef<
+    number | ReturnType<typeof setTimeout> | null
+  >(null)
   const { wsStatus, backendStatus } = useAppHealthEvents()
   const [browserOffline, setBrowserOffline] = React.useState(false)
   const isLiveFlowing = wsStatus === 'connected'
@@ -125,16 +127,11 @@ export default function LandingPage() {
   }, [])
 
   const clearRouteFallbackTimer = React.useCallback(() => {
-    const browserWindow = resolveBrowserWindow()
     if (routeFallbackTimerRef.current !== null) {
-      if (browserWindow) {
-        browserWindow.clearTimeout(routeFallbackTimerRef.current)
-      } else {
-        clearTimeout(routeFallbackTimerRef.current)
-      }
+      clearTimeout(routeFallbackTimerRef.current)
       routeFallbackTimerRef.current = null
     }
-  }, [resolveBrowserWindow])
+  }, [])
 
   const navigateToDashboard = React.useCallback(() => {
     const browserWindow = resolveBrowserWindow()

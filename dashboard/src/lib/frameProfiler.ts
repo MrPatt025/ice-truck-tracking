@@ -20,20 +20,17 @@ const HISTORY_MAX_SIZE = 300; // ~5 seconds at 60 FPS
 
 class FrameProfiler {
   private frameHistory: FrameMetrics[] = [];
-  private lastFrameTimeMs = 0;
   private smoothedFrameTimeMs = 0;
   private droppedFrameCount = 0;
   private totalFrameCount = 0;
-  private enabled = false;
+  private readonly enabled: boolean;
 
   constructor() {
     this.enabled =
-      typeof globalThis !== 'undefined' &&
-      typeof globalThis.console === 'object' &&
+      globalThis.console?.warn !== undefined &&
       // Enable profiling in development or if explicitly requested
       (process.env.NODE_ENV === 'development' ||
-        (typeof globalThis.location !== 'undefined' &&
-          globalThis.location.search.includes('fps=1')));
+        (globalThis.location?.search.includes('fps=1') ?? false));
   }
 
   /**

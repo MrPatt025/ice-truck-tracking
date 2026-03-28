@@ -99,6 +99,7 @@ import { useTransitionStore } from '@/stores/transitionStore'
 import type { StatusIssue } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
 import { dispatchBackendHealthEvent } from '@/lib/healthEvents'
+import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary'
 
 const GlassPulseFallback = () => (
   <div className='h-9 w-28 animate-pulse rounded-xl border border-white/20 bg-white/10 shadow-[0_16px_38px_-20px_rgba(56,189,248,0.85)]' />
@@ -439,7 +440,7 @@ function buildStatusIssues({
 }: Readonly<{
   backendStatus: 'healthy' | 'degraded' | 'unknown'
   browserOffline: boolean
-  connectionStatus: 'connected' | 'reconnecting' | 'offline'
+  connectionStatus: 'connected' | 'reconnecting' | 'offline' | 'disconnected'
   mounted: boolean
 }>): StatusIssue[] {
   if (!mounted) return []
@@ -1064,874 +1065,923 @@ export default function Dashboard() {
    *  All real-time visualization is imperative (3D, Map, Charts).
    * ================================================================ */
   return (
-    <motion.div
-      style={{
-        opacity: introOpacity,
-        scale: introScale,
-        y: introLift,
-        willChange: 'opacity, transform',
-        contain: 'layout paint style',
-      }}
-      className='mission-control-shell relative min-h-screen overflow-x-hidden text-white selection:bg-cyan-500/30 selection:text-white'
-    >
-      <div className='pointer-events-none fixed inset-0 -z-20 hud-grid-overlay opacity-45' />
-      <div className='pointer-events-none fixed inset-0 -z-10 scanline-overlay opacity-40' />
-
-      {/* ── Background gradient ── */}
-      <div
-        className='pointer-events-none fixed inset-0 -z-20 transition-all duration-1000 mix-blend-screen'
-        style={{ background: THEME_COLORS[theme].gradient }} // NOSONAR — dynamic theme
-      />
-
-      {/* ── Grid overlay ── */}
-      {showGrid && (
-        <div
-          className='pointer-events-none fixed inset-0 -z-10 opacity-[0.09] transition-opacity duration-500'
+    <GlobalErrorBoundary>
+      <React.Suspense
+        fallback={
+          <div
+            data-testid='dashboard-suspense-fallback'
+            className='mission-control-shell grid min-h-screen place-items-center bg-slate-950/90 text-cyan-100'
+          >
+            <div className='space-y-3 text-center'>
+              <div className='mx-auto h-10 w-10 animate-spin rounded-full border-2 border-cyan-300/35 border-t-cyan-200' />
+              <p className='text-sm tracking-wide'>
+                Restoring mission control pipeline...
+              </p>
+            </div>
+          </div>
+        }
+      >
+        <motion.div
+          data-testid='dashboard-main'
           style={{
-            // NOSONAR — complex CSS pattern
-            backgroundImage:
-              'linear-gradient(to right, #fff 1px, transparent 1px),linear-gradient(to bottom, #fff 1px, transparent 1px)',
-            backgroundSize: '48px 48px',
+            opacity: introOpacity,
+            scale: introScale,
+            y: introLift,
+            willChange: 'opacity, transform',
+            contain: 'layout paint style',
           }}
-        />
-      )}
+          className='mission-control-shell relative min-h-screen overflow-x-hidden text-white selection:bg-cyan-500/30 selection:text-white'
+        >
+          <div className='pointer-events-none fixed inset-0 -z-20 hud-grid-overlay opacity-45' />
+          <div className='pointer-events-none fixed inset-0 -z-10 scanline-overlay opacity-40' />
 
-      <PremiumSystemStatusBanner issues={statusIssues} />
+          {/* ── Background gradient ── */}
+          <div
+            className='pointer-events-none fixed inset-0 -z-20 transition-all duration-1000 mix-blend-screen'
+            style={{ background: THEME_COLORS[theme].gradient }} // NOSONAR — dynamic theme
+          />
 
-      {/* ── Imperative Three.js 3D Background (no React rendering) ── */}
-      {show3D && (
-        <div
-          ref={threeContainerRef}
-          className='fixed inset-0 -z-10 opacity-50'
-        />
-      )}
-
-      {/* ── Sticky Header ── */}
-      <header className='glass-panel sticky top-0 z-50 bg-slate-950/50 backdrop-blur-2xl ring-1 ring-cyan-200/20 shadow-[0_24px_90px_-45px_rgba(34,211,238,0.6)]'>
-        <div className='mx-auto max-w-[120rem] px-4 sm:px-6'>
-          <div className='flex items-center justify-between py-4'>
-            {/* Logo + Title */}
-            <div className='flex items-center gap-3 sm:gap-4'>
-              <motion.div layoutId='brand-mark' className='relative'>
-                <div className='absolute -inset-1 rounded-2xl bg-gradient-to-br from-violet-500/60 to-cyan-500/60 blur-lg animate-pulse-slow' />
-                <div className='relative flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-500 shadow-lg'>
-                  <Truck className='h-6 w-6 text-white' />
-                </div>
-              </motion.div>
-              <div>
-                <h1
-                  data-display-font='true'
-                  className='bg-gradient-to-r from-cyan-100 via-white to-amber-100 bg-clip-text text-xl font-black uppercase tracking-[0.09em] text-transparent sm:text-2xl'
-                >
-                  Cryogenic Mission Console
-                </h1>
-                <p className='text-[11px] sm:text-xs text-slate-300 font-medium tracking-[0.12em] uppercase'>
-                  Fleet Sentinel Grid • IoT Engine v4.0
-                </p>
-              </div>
-            </div>
-
-            {/* Toolbar */}
-            <div className='flex items-center gap-2 sm:gap-3'>
-              {/* Search (desktop only) */}
-              <div className='hidden lg:flex items-center gap-2 rounded-xl bg-white/5 ring-1 ring-white/10 px-3 py-2'>
-                <Search className='h-4 w-4 text-slate-400' />
-                <input
-                  type='text'
-                  placeholder='Search trucks...'
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className='bg-transparent text-sm outline-none w-40 placeholder:text-slate-500'
-                />
-              </div>
-
-              {/* Quick actions */}
-              <div className='flex items-center gap-1.5'>
-                <MagneticButton
-                  onClick={toggleGrid}
-                  title='Toggle Grid'
-                  ariaLabel='Toggle dashboard grid overlay'
-                  ariaPressed={showGrid}
-                  className={`rounded-xl p-2.5 ring-1 transition-all ${showGrid ? 'bg-violet-500/20 ring-violet-500/50 text-violet-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
-                >
-                  <Grid3X3 aria-hidden='true' className='h-4 w-4' />
-                </MagneticButton>
-                <MagneticButton
-                  onClick={toggle3D}
-                  title='Toggle 3D Background'
-                  ariaLabel='Toggle cinematic 3D background'
-                  ariaPressed={show3D}
-                  className={`rounded-xl p-2.5 ring-1 transition-all ${show3D ? 'bg-cyan-500/20 ring-cyan-500/50 text-cyan-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
-                >
-                  <Layers aria-hidden='true' className='h-4 w-4' />
-                </MagneticButton>
-                <MagneticButton
-                  onClick={toggleHeatmap}
-                  title='Toggle Fleet Heatmap'
-                  ariaLabel='Toggle fleet heatmap overlay'
-                  ariaPressed={showHeatmap}
-                  className={`rounded-xl p-2.5 ring-1 transition-all ${showHeatmap ? 'bg-rose-500/20 ring-rose-500/50 text-rose-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
-                >
-                  <ThermometerSun aria-hidden='true' className='h-4 w-4' />
-                </MagneticButton>
-                <MagneticButton
-                  onClick={togglePause}
-                  title={paused ? 'Resume' : 'Pause'}
-                  ariaLabel={paused ? 'Resume telemetry updates' : 'Pause telemetry updates'}
-                  ariaPressed={paused}
-                  className={`rounded-xl p-2.5 ring-1 transition-all ${paused ? 'bg-amber-500/20 ring-amber-500/50 text-amber-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
-                >
-                  {paused ? (
-                    <Play aria-hidden='true' className='h-4 w-4' />
-                  ) : (
-                    <Pause aria-hidden='true' className='h-4 w-4' />
-                  )}
-                </MagneticButton>
-                <MagneticButton
-                  onClick={toggleAlerts}
-                  title='Toggle Alerts Panel'
-                  ariaLabel='Toggle alerts panel'
-                  ariaPressed={showAlerts}
-                  className='relative rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
-                >
-                  <Bell aria-hidden='true' className='h-4 w-4' />
-                  {unacknowledgedAlerts > 0 && (
-                    <span className='absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold animate-pulse'>
-                      {unacknowledgedAlerts > 9 ? '9+' : unacknowledgedAlerts}
-                    </span>
-                  )}
-                </MagneticButton>
-                <MagneticButton
-                  onClick={downloadReport}
-                  title='Download Report'
-                  ariaLabel='Download JSON fleet report'
-                  className='rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
-                >
-                  <Download aria-hidden='true' className='h-4 w-4' />
-                </MagneticButton>
-                <MagneticButton
-                  onClick={togglePerf}
-                  title='Toggle Performance Overlay'
-                  ariaLabel='Toggle performance overlay'
-                  className='rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
-                >
-                  <Zap aria-hidden='true' className='h-4 w-4' />
-                </MagneticButton>
-                {canInstallApp && (
-                  <MagneticButton
-                    onClick={installApp}
-                    title='Install App'
-                    ariaLabel='Install dashboard app'
-                    className='hidden md:inline-flex rounded-xl px-3 py-2 ring-1 ring-cyan-300/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 transition-all'
-                  >
-                    <Download aria-hidden='true' className='h-4 w-4' />
-                    <span className='text-xs font-semibold tracking-wide uppercase'>
-                      {installingApp ? 'Installing...' : 'Install App'}
-                    </span>
-                  </MagneticButton>
-                )}
-              </div>
-
-              {/* API Status */}
-              <FpsTargetMonitor />
-
-              <Pill intent={resolveApiHealthIntent(apiHealthy)}>
-                {resolveApiHealthIcon(apiHealthy)}
-                <span className='hidden sm:inline'>
-                  {resolveApiHealthLabel(apiHealthy)}
-                </span>
-              </Pill>
-            </div>
-          </div>
-
-          {/* Control bar */}
-          <div className='flex flex-wrap items-center justify-between gap-3 pb-4 border-t border-white/5 pt-3'>
-            {/* Time range */}
-            <div className='flex items-center gap-1.5'>
-              <Clock className='h-4 w-4 text-slate-500 mr-1' />
-              {(['1h', '24h', '7d', '30d', '90d'] as const).map(r => (
-                <button
-                  key={r}
-                  onClick={() => setTimeRange(r)}
-                  className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-all ${
-                    timeRange === r
-                      ? 'bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg'
-                      : 'text-slate-400 hover:bg-white/10'
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-
-            {/* Theme selector + controls */}
-            <div className='flex items-center gap-3'>
-              <div className='flex items-center gap-1 rounded-xl p-1 bg-white/5 ring-1 ring-white/10'>
-                {(['dark', 'neon', 'ocean', 'forest'] as const).map(t => (
-                  <button
-                    key={t}
-                    onClick={() => setTheme(t)}
-                    className={`rounded-lg px-2.5 py-1 text-xs font-bold uppercase transition-all ${
-                      theme === t
-                        ? 'bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg'
-                        : 'text-slate-500 hover:text-slate-300'
-                    }`}
-                  >
-                    {t[0]}
-                  </button>
-                ))}
-              </div>
-
-              <div className='flex items-center gap-2 text-xs text-slate-500'>
-                <span>Refresh:</span>
-                <select
-                  value={refreshSpeed}
-                  onChange={e =>
-                    setRefreshSpeed(
-                      e.target.value as 'fast' | 'normal' | 'slow'
-                    )
-                  }
-                  className='bg-white/5 rounded-lg px-2 py-1 text-xs ring-1 ring-white/10 outline-none text-slate-300'
-                  aria-label='Refresh speed'
-                >
-                  <option value='fast'>Fast</option>
-                  <option value='normal'>Normal</option>
-                  <option value='slow'>Slow</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* ── Main Content ── */}
-      <main className='mx-auto max-w-[120rem] space-y-6 px-4 py-6 sm:px-6'>
-        {/* Status pills */}
-        <div className='flex flex-wrap items-center gap-3'>
-          <Pill intent={resolveConnectionIntent(connectionStatus)}>
-            <span
-              className={`h-2 w-2 rounded-full ${resolveConnectionDot(connectionStatus)}`}
+          {/* ── Grid overlay ── */}
+          {showGrid && (
+            <div
+              className='pointer-events-none fixed inset-0 -z-10 opacity-[0.09] transition-opacity duration-500'
+              style={{
+                // NOSONAR — complex CSS pattern
+                backgroundImage:
+                  'linear-gradient(to right, #fff 1px, transparent 1px),linear-gradient(to bottom, #fff 1px, transparent 1px)',
+                backgroundSize: '48px 48px',
+              }}
             />
-            {resolveConnectionLabel(connectionStatus)}
-          </Pill>
-          <Pill intent='neutral'>
-            <Clock className='h-3 w-3' />
-            <ClientOnlyText>
-              {resolveStatusText(paused, lastUpdate)}
-            </ClientOnlyText>
-          </Pill>
-          {!paused && (
-            <Pill intent='ok'>
-              <Zap className='h-3 w-3' />
-              {getAdaptiveController()?.getDeviceTier()
-                ? `GPU: ${getAdaptiveController()!.getDeviceTier()}`
-                : 'All systems operational'}
-            </Pill>
           )}
-        </div>
 
-        {/* ── Metric Cards Grid (React — updates via Zustand selector ~2x/sec) ── */}
-        <section className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-          {metricCards.map(m => (
-            <Tilt key={m.title}>
-              <GlassCard accent={m.accent}>
-                <div className='p-5 sm:p-6'>
-                  <div className='mb-3 flex items-center justify-between'>
-                    <span className='text-sm font-semibold text-slate-400'>
-                      {m.title}
-                    </span>
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${m.accent} shadow-lg`}
-                    >
-                      <m.icon className='h-5 w-5 text-white' />
+          <PremiumSystemStatusBanner issues={statusIssues} />
+
+          {/* ── Imperative Three.js 3D Background (no React rendering) ── */}
+          {show3D && (
+            <div
+              ref={threeContainerRef}
+              className='fixed inset-0 -z-10 opacity-50'
+            />
+          )}
+
+          {/* ── Sticky Header ── */}
+          <header className='glass-panel sticky top-0 z-50 bg-slate-950/50 backdrop-blur-2xl ring-1 ring-cyan-200/20 shadow-[0_24px_90px_-45px_rgba(34,211,238,0.6)]'>
+            <div className='mx-auto max-w-[120rem] px-4 sm:px-6'>
+              <div className='flex items-center justify-between py-4'>
+                {/* Logo + Title */}
+                <div className='flex items-center gap-3 sm:gap-4'>
+                  <motion.div layoutId='brand-mark' className='relative'>
+                    <div className='absolute -inset-1 rounded-2xl bg-gradient-to-br from-violet-500/60 to-cyan-500/60 blur-lg animate-pulse-slow' />
+                    <div className='relative flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-500 shadow-lg'>
+                      <Truck className='h-6 w-6 text-white' />
                     </div>
-                  </div>
-                  <p className='text-3xl font-black tracking-tight'>
-                    {m.value}
-                  </p>
-                  <div className='mt-2 flex items-center gap-2'>
-                    <span
-                      className={`flex items-center gap-1 text-sm font-semibold ${resolveTrendColor(m.trend)}`}
+                  </motion.div>
+                  <div>
+                    <h1
+                      data-display-font='true'
+                      className='bg-gradient-to-r from-cyan-100 via-white to-amber-100 bg-clip-text text-xl font-black uppercase tracking-[0.09em] text-transparent sm:text-2xl'
                     >
-                      {resolveTrendIcon(m.trend)}
-                      {m.change}
+                      Cryogenic Mission Console
+                    </h1>
+                    <p className='text-[11px] sm:text-xs text-slate-300 font-medium tracking-[0.12em] uppercase'>
+                      Fleet Sentinel Grid • IoT Engine v4.0
+                    </p>
+                  </div>
+                </div>
+
+                {/* Toolbar */}
+                <div className='flex items-center gap-2 sm:gap-3'>
+                  {/* Search (desktop only) */}
+                  <div className='hidden lg:flex items-center gap-2 rounded-xl bg-white/5 ring-1 ring-white/10 px-3 py-2'>
+                    <Search className='h-4 w-4 text-slate-400' />
+                    <input
+                      type='text'
+                      placeholder='Search trucks...'
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                      className='bg-transparent text-sm outline-none w-40 placeholder:text-slate-500'
+                    />
+                  </div>
+
+                  {/* Quick actions */}
+                  <div className='flex items-center gap-1.5'>
+                    <MagneticButton
+                      onClick={toggleGrid}
+                      title='Toggle Grid'
+                      ariaLabel='Toggle dashboard grid overlay'
+                      ariaPressed={showGrid}
+                      className={`rounded-xl p-2.5 ring-1 transition-all ${showGrid ? 'bg-violet-500/20 ring-violet-500/50 text-violet-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
+                    >
+                      <Grid3X3 aria-hidden='true' className='h-4 w-4' />
+                    </MagneticButton>
+                    <MagneticButton
+                      onClick={toggle3D}
+                      title='Toggle 3D Background'
+                      ariaLabel='Toggle cinematic 3D background'
+                      ariaPressed={show3D}
+                      className={`rounded-xl p-2.5 ring-1 transition-all ${show3D ? 'bg-cyan-500/20 ring-cyan-500/50 text-cyan-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
+                    >
+                      <Layers aria-hidden='true' className='h-4 w-4' />
+                    </MagneticButton>
+                    <MagneticButton
+                      onClick={toggleHeatmap}
+                      title='Toggle Fleet Heatmap'
+                      ariaLabel='Toggle fleet heatmap overlay'
+                      ariaPressed={showHeatmap}
+                      className={`rounded-xl p-2.5 ring-1 transition-all ${showHeatmap ? 'bg-rose-500/20 ring-rose-500/50 text-rose-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
+                    >
+                      <ThermometerSun aria-hidden='true' className='h-4 w-4' />
+                    </MagneticButton>
+                    <MagneticButton
+                      onClick={togglePause}
+                      title={paused ? 'Resume' : 'Pause'}
+                      ariaLabel={
+                        paused
+                          ? 'Resume telemetry updates'
+                          : 'Pause telemetry updates'
+                      }
+                      ariaPressed={paused}
+                      className={`rounded-xl p-2.5 ring-1 transition-all ${paused ? 'bg-amber-500/20 ring-amber-500/50 text-amber-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
+                    >
+                      {paused ? (
+                        <Play aria-hidden='true' className='h-4 w-4' />
+                      ) : (
+                        <Pause aria-hidden='true' className='h-4 w-4' />
+                      )}
+                    </MagneticButton>
+                    <MagneticButton
+                      onClick={toggleAlerts}
+                      title='Toggle Alerts Panel'
+                      ariaLabel='Toggle alerts panel'
+                      ariaPressed={showAlerts}
+                      className='relative rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
+                    >
+                      <Bell aria-hidden='true' className='h-4 w-4' />
+                      {unacknowledgedAlerts > 0 && (
+                        <span className='absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold animate-pulse'>
+                          {unacknowledgedAlerts > 9
+                            ? '9+'
+                            : unacknowledgedAlerts}
+                        </span>
+                      )}
+                    </MagneticButton>
+                    <MagneticButton
+                      onClick={downloadReport}
+                      title='Download Report'
+                      ariaLabel='Download JSON fleet report'
+                      className='rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
+                    >
+                      <Download aria-hidden='true' className='h-4 w-4' />
+                    </MagneticButton>
+                    <MagneticButton
+                      onClick={togglePerf}
+                      title='Toggle Performance Overlay'
+                      ariaLabel='Toggle performance overlay'
+                      className='rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
+                    >
+                      <Zap aria-hidden='true' className='h-4 w-4' />
+                    </MagneticButton>
+                    {canInstallApp && (
+                      <MagneticButton
+                        onClick={installApp}
+                        title='Install App'
+                        ariaLabel='Install dashboard app'
+                        className='hidden md:inline-flex rounded-xl px-3 py-2 ring-1 ring-cyan-300/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 transition-all'
+                      >
+                        <Download aria-hidden='true' className='h-4 w-4' />
+                        <span className='text-xs font-semibold tracking-wide uppercase'>
+                          {installingApp ? 'Installing...' : 'Install App'}
+                        </span>
+                      </MagneticButton>
+                    )}
+                  </div>
+
+                  {/* API Status */}
+                  <FpsTargetMonitor />
+
+                  <Pill intent={resolveApiHealthIntent(apiHealthy)}>
+                    {resolveApiHealthIcon(apiHealthy)}
+                    <span className='hidden sm:inline'>
+                      {resolveApiHealthLabel(apiHealthy)}
                     </span>
-                    <span className='text-xs text-slate-500'>{m.detail}</span>
+                  </Pill>
+                </div>
+              </div>
+
+              {/* Control bar */}
+              <div className='flex flex-wrap items-center justify-between gap-3 pb-4 border-t border-white/5 pt-3'>
+                {/* Time range */}
+                <div className='flex items-center gap-1.5'>
+                  <Clock className='h-4 w-4 text-slate-500 mr-1' />
+                  {(['1h', '24h', '7d', '30d', '90d'] as const).map(r => (
+                    <button
+                      key={r}
+                      onClick={() => setTimeRange(r)}
+                      className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition-all ${
+                        timeRange === r
+                          ? 'bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg'
+                          : 'text-slate-400 hover:bg-white/10'
+                      }`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Theme selector + controls */}
+                <div className='flex items-center gap-3'>
+                  <div className='flex items-center gap-1 rounded-xl p-1 bg-white/5 ring-1 ring-white/10'>
+                    {(['dark', 'neon', 'ocean', 'forest'] as const).map(t => (
+                      <button
+                        key={t}
+                        onClick={() => setTheme(t)}
+                        className={`rounded-lg px-2.5 py-1 text-xs font-bold uppercase transition-all ${
+                          theme === t
+                            ? 'bg-gradient-to-r from-violet-500 to-cyan-500 text-white shadow-lg'
+                            : 'text-slate-500 hover:text-slate-300'
+                        }`}
+                      >
+                        {t[0]}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className='flex items-center gap-2 text-xs text-slate-500'>
+                    <span>Refresh:</span>
+                    <select
+                      value={refreshSpeed}
+                      onChange={e =>
+                        setRefreshSpeed(
+                          e.target.value as 'fast' | 'normal' | 'slow'
+                        )
+                      }
+                      className='bg-white/5 rounded-lg px-2 py-1 text-xs ring-1 ring-white/10 outline-none text-slate-300'
+                      aria-label='Refresh speed'
+                    >
+                      <option value='fast'>Fast</option>
+                      <option value='normal'>Normal</option>
+                      <option value='slow'>Slow</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* ── Main Content ── */}
+          <main className='mx-auto max-w-[120rem] space-y-6 px-4 py-6 sm:px-6'>
+            {/* Status pills */}
+            <div className='flex flex-wrap items-center gap-3'>
+              <Pill intent={resolveConnectionIntent(connectionStatus)}>
+                <span
+                  className={`h-2 w-2 rounded-full ${resolveConnectionDot(connectionStatus)}`}
+                />
+                {resolveConnectionLabel(connectionStatus)}
+              </Pill>
+              <Pill intent='neutral'>
+                <Clock className='h-3 w-3' />
+                <ClientOnlyText>
+                  {resolveStatusText(paused, lastUpdate)}
+                </ClientOnlyText>
+              </Pill>
+              {!paused && (
+                <Pill intent='ok'>
+                  <Zap className='h-3 w-3' />
+                  {getAdaptiveController()?.getDeviceTier()
+                    ? `GPU: ${getAdaptiveController()!.getDeviceTier()}`
+                    : 'All systems operational'}
+                </Pill>
+              )}
+            </div>
+
+            {/* ── Metric Cards Grid (React — updates via Zustand selector ~2x/sec) ── */}
+            <section className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+              {metricCards.map(m => (
+                <Tilt key={m.title}>
+                  <GlassCard accent={m.accent}>
+                    <div className='p-5 sm:p-6'>
+                      <div className='mb-3 flex items-center justify-between'>
+                        <span className='text-sm font-semibold text-slate-400'>
+                          {m.title}
+                        </span>
+                        <div
+                          className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${m.accent} shadow-lg`}
+                        >
+                          <m.icon className='h-5 w-5 text-white' />
+                        </div>
+                      </div>
+                      <p className='text-3xl font-black tracking-tight'>
+                        {m.value}
+                      </p>
+                      <div className='mt-2 flex items-center gap-2'>
+                        <span
+                          className={`flex items-center gap-1 text-sm font-semibold ${resolveTrendColor(m.trend)}`}
+                        >
+                          {resolveTrendIcon(m.trend)}
+                          {m.change}
+                        </span>
+                        <span className='text-xs text-slate-500'>
+                          {m.detail}
+                        </span>
+                      </div>
+                    </div>
+                  </GlassCard>
+                </Tilt>
+              ))}
+            </section>
+
+            {/* ── Chart Sections (Imperative Canvas — zero React renders per frame) ── */}
+            <section className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+              {/* Revenue Trend Analysis */}
+              <GlassCard layoutId='panel-system-health'>
+                <div className='rounded-3xl p-6'>
+                  <div className='mb-4 flex items-center justify-between'>
+                    <h3 className='text-lg font-bold flex items-center gap-2'>
+                      <DollarSign className='h-5 w-5 text-violet-400' />
+                      Revenue Trend Analysis
+                    </h3>
+                    <button
+                      onClick={() => setFullscreen('revenue')}
+                      className='rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/10 transition-all'
+                      title='Fullscreen'
+                    >
+                      <Maximize2 className='h-4 w-4 text-slate-400' />
+                    </button>
+                  </div>
+                  <CanvasChart id='revenue' config={CHART_CONFIGS.revenue} />
+                </div>
+              </GlassCard>
+
+              {/* Fleet Activity & Efficiency */}
+              <GlassCard accent='from-cyan-400/30 via-blue-400/20 to-indigo-400/30'>
+                <div className='rounded-3xl p-6'>
+                  <div className='mb-4 flex items-center justify-between'>
+                    <h3 className='text-lg font-bold flex items-center gap-2'>
+                      <Truck className='h-5 w-5 text-cyan-400' />
+                      Fleet Activity &amp; Efficiency
+                    </h3>
+                    <button
+                      onClick={() => setFullscreen('fleet')}
+                      className='rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/10 transition-all'
+                      title='Fullscreen'
+                    >
+                      <Maximize2 className='h-4 w-4 text-slate-400' />
+                    </button>
+                  </div>
+                  <CanvasChart id='fleet' config={CHART_CONFIGS.fleet} />
+                </div>
+              </GlassCard>
+            </section>
+
+            <section className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
+              {/* Cargo Temperature Distribution */}
+              <GlassCard accent='from-blue-400/30 via-sky-400/20 to-cyan-400/30'>
+                <div className='rounded-3xl p-6'>
+                  <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
+                    <ThermometerSun className='h-5 w-5 text-sky-400' />
+                    Cargo Temperature Distribution
+                  </h3>
+                  <CanvasChart
+                    id='temperature'
+                    config={CHART_CONFIGS.temperature}
+                  />
+                  <div className='mt-4 grid grid-cols-2 gap-2'>
+                    {[
+                      { label: '≤ -10°C', color: 'bg-sky-400', pct: '20%' },
+                      {
+                        label: '-10 ~ -5°C',
+                        color: 'bg-emerald-400',
+                        pct: '30%',
+                      },
+                      { label: '-5 ~ 2°C', color: 'bg-violet-400', pct: '40%' },
+                      { label: '> 2°C', color: 'bg-rose-400', pct: '10%' },
+                    ].map(b => (
+                      <div
+                        key={b.label}
+                        className='flex items-center gap-2 text-xs text-slate-400'
+                      >
+                        <span
+                          className={`h-2.5 w-2.5 rounded-full ${b.color}`}
+                        />
+                        {b.label}: {b.pct}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </GlassCard>
-            </Tilt>
-          ))}
-        </section>
 
-        {/* ── Chart Sections (Imperative Canvas — zero React renders per frame) ── */}
-        <section className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-          {/* Revenue Trend Analysis */}
-          <GlassCard layoutId='panel-system-health'>
-            <div className='rounded-3xl p-6'>
-              <div className='mb-4 flex items-center justify-between'>
-                <h3 className='text-lg font-bold flex items-center gap-2'>
-                  <DollarSign className='h-5 w-5 text-violet-400' />
-                  Revenue Trend Analysis
-                </h3>
-                <button
-                  onClick={() => setFullscreen('revenue')}
-                  className='rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/10 transition-all'
-                  title='Fullscreen'
-                >
-                  <Maximize2 className='h-4 w-4 text-slate-400' />
-                </button>
-              </div>
-              <CanvasChart id='revenue' config={CHART_CONFIGS.revenue} />
-            </div>
-          </GlassCard>
-
-          {/* Fleet Activity & Efficiency */}
-          <GlassCard accent='from-cyan-400/30 via-blue-400/20 to-indigo-400/30'>
-            <div className='rounded-3xl p-6'>
-              <div className='mb-4 flex items-center justify-between'>
-                <h3 className='text-lg font-bold flex items-center gap-2'>
-                  <Truck className='h-5 w-5 text-cyan-400' />
-                  Fleet Activity &amp; Efficiency
-                </h3>
-                <button
-                  onClick={() => setFullscreen('fleet')}
-                  className='rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/10 transition-all'
-                  title='Fullscreen'
-                >
-                  <Maximize2 className='h-4 w-4 text-slate-400' />
-                </button>
-              </div>
-              <CanvasChart id='fleet' config={CHART_CONFIGS.fleet} />
-            </div>
-          </GlassCard>
-        </section>
-
-        <section className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
-          {/* Cargo Temperature Distribution */}
-          <GlassCard accent='from-blue-400/30 via-sky-400/20 to-cyan-400/30'>
-            <div className='rounded-3xl p-6'>
-              <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
-                <ThermometerSun className='h-5 w-5 text-sky-400' />
-                Cargo Temperature Distribution
-              </h3>
-              <CanvasChart
-                id='temperature'
-                config={CHART_CONFIGS.temperature}
-              />
-              <div className='mt-4 grid grid-cols-2 gap-2'>
-                {[
-                  { label: '≤ -10°C', color: 'bg-sky-400', pct: '20%' },
-                  { label: '-10 ~ -5°C', color: 'bg-emerald-400', pct: '30%' },
-                  { label: '-5 ~ 2°C', color: 'bg-violet-400', pct: '40%' },
-                  { label: '> 2°C', color: 'bg-rose-400', pct: '10%' },
-                ].map(b => (
-                  <div
-                    key={b.label}
-                    className='flex items-center gap-2 text-xs text-slate-400'
-                  >
-                    <span className={`h-2.5 w-2.5 rounded-full ${b.color}`} />
-                    {b.label}: {b.pct}
+              {/* Alert Timeline */}
+              <GlassCard accent='from-rose-400/30 via-orange-400/20 to-amber-400/30'>
+                <div className='rounded-3xl p-6'>
+                  <div className='mb-4 flex items-center justify-between'>
+                    <h3 className='text-lg font-bold flex items-center gap-2'>
+                      <AlertTriangle className='h-5 w-5 text-rose-400' />
+                      Alert Timeline
+                    </h3>
+                    <button
+                      onClick={() => setFullscreen('alerts')}
+                      className='rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/10 transition-all'
+                      title='Fullscreen'
+                    >
+                      <Maximize2 className='h-4 w-4 text-slate-400' />
+                    </button>
                   </div>
-                ))}
-              </div>
-            </div>
-          </GlassCard>
-
-          {/* Alert Timeline */}
-          <GlassCard accent='from-rose-400/30 via-orange-400/20 to-amber-400/30'>
-            <div className='rounded-3xl p-6'>
-              <div className='mb-4 flex items-center justify-between'>
-                <h3 className='text-lg font-bold flex items-center gap-2'>
-                  <AlertTriangle className='h-5 w-5 text-rose-400' />
-                  Alert Timeline
-                </h3>
-                <button
-                  onClick={() => setFullscreen('alerts')}
-                  className='rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/10 transition-all'
-                  title='Fullscreen'
-                >
-                  <Maximize2 className='h-4 w-4 text-slate-400' />
-                </button>
-              </div>
-              <CanvasChart id='alerts' config={CHART_CONFIGS.alerts} />
-            </div>
-          </GlassCard>
-
-          {/* Performance Metrics */}
-          <GlassCard accent='from-emerald-400/30 via-teal-400/20 to-green-400/30'>
-            <div className='rounded-3xl p-6'>
-              <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
-                <Activity className='h-5 w-5 text-emerald-400' />
-                Performance Metrics
-              </h3>
-              <CanvasChart id='fuel' config={CHART_CONFIGS.fuel} />
-              <div className='mt-6 grid grid-cols-2 gap-3'>
-                <div className='text-center p-3 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/30'>
-                  <p className='text-xs text-slate-400'>Avg Score</p>
-                  <p className='text-2xl font-bold text-emerald-400'>90.2</p>
+                  <CanvasChart id='alerts' config={CHART_CONFIGS.alerts} />
                 </div>
-                <div className='text-center p-3 rounded-xl bg-cyan-500/10 ring-1 ring-cyan-500/30'>
-                  <p className='text-xs text-slate-400'>Rank</p>
-                  <p className='text-2xl font-bold text-cyan-400'>#1</p>
-                </div>
-              </div>
-            </div>
-          </GlassCard>
-        </section>
+              </GlassCard>
 
-        {/* ── System Health + Live Map ── */}
-        <section className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-          <GlassCard>
-            <div className='rounded-3xl p-6'>
-              <h3 className='mb-6 text-lg font-bold flex items-center gap-2'>
-                <Settings className='h-5 w-5 text-violet-400' />
-                System Health Monitor
-              </h3>
-              <div className='space-y-4'>
-                {[
-                  {
-                    name: 'API Gateway',
-                    status: apiHealthy,
-                    latency: '24ms',
-                    uptime: '99.98%',
-                  },
-                  {
-                    name: 'WebSocket',
-                    status: connectionStatus === 'connected',
-                    latency: '12ms',
-                    uptime: '99.99%',
-                  },
-                  {
-                    name: 'Database',
-                    status: true,
-                    latency: '8ms',
-                    uptime: '100%',
-                  },
-                  {
-                    name: 'Cache Layer',
-                    status: true,
-                    latency: '3ms',
-                    uptime: '99.95%',
-                  },
-                  {
-                    name: 'GPS Tracking',
-                    status: true,
-                    latency: '156ms',
-                    uptime: '98.76%',
-                  },
-                  {
-                    name: 'Temperature Sensors',
-                    status: true,
-                    latency: '45ms',
-                    uptime: '99.87%',
-                  },
-                ].map(service => (
-                  <div
-                    key={service.name}
-                    className='flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all group'
-                  >
-                    <div className='flex items-center gap-3'>
-                      <span
-                        className={`h-3 w-3 rounded-full ${service.status ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}
-                      />
-                      <span className='font-medium'>{service.name}</span>
-                    </div>
-                    <div className='flex items-center gap-4'>
-                      <span className='text-xs text-slate-500'>
-                        {service.uptime}
-                      </span>
-                      <span className='text-sm text-slate-400'>
-                        {service.latency}
-                      </span>
-                      <Pill intent={service.status ? 'ok' : 'error'}>
-                        {service.status ? 'Online' : 'Offline'}
-                      </Pill>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* System health gauge */}
-              <div className='mt-8 grid place-items-center'>
-                <div className='relative grid place-items-center'>
-                  <svg width='180' height='180' viewBox='0 0 180 180'>
-                    <defs>
-                      <linearGradient
-                        id='healthGrad'
-                        x1='0%'
-                        y1='0%'
-                        x2='100%'
-                        y2='100%'
-                      >
-                        <stop offset='0%' stopColor='#10b981' />
-                        <stop offset='100%' stopColor='#14b8a6' />
-                      </linearGradient>
-                    </defs>
-                    <circle
-                      cx='90'
-                      cy='90'
-                      r='75'
-                      fill='none'
-                      stroke='rgba(255,255,255,0.1)'
-                      strokeWidth='12'
-                    />
-                    <circle
-                      cx='90'
-                      cy='90'
-                      r='75'
-                      fill='none'
-                      stroke='url(#healthGrad)'
-                      strokeWidth='12'
-                      strokeDasharray={`${2 * Math.PI * 75 * 0.968} ${2 * Math.PI * 75}`}
-                      strokeLinecap='round'
-                      transform='rotate(-90 90 90)'
-                      className='transition-all duration-1000'
-                    />
-                  </svg>
-                  <div className='absolute inset-0 grid place-items-center'>
-                    <div className='text-center'>
-                      <p className='text-5xl font-bold'>96.8%</p>
-                      <p className='text-sm text-slate-400 mt-1'>
-                        System Health
+              {/* Performance Metrics */}
+              <GlassCard accent='from-emerald-400/30 via-teal-400/20 to-green-400/30'>
+                <div className='rounded-3xl p-6'>
+                  <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
+                    <Activity className='h-5 w-5 text-emerald-400' />
+                    Performance Metrics
+                  </h3>
+                  <CanvasChart id='fuel' config={CHART_CONFIGS.fuel} />
+                  <div className='mt-6 grid grid-cols-2 gap-3'>
+                    <div className='text-center p-3 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/30'>
+                      <p className='text-xs text-slate-400'>Avg Score</p>
+                      <p className='text-2xl font-bold text-emerald-400'>
+                        90.2
                       </p>
                     </div>
+                    <div className='text-center p-3 rounded-xl bg-cyan-500/10 ring-1 ring-cyan-500/30'>
+                      <p className='text-xs text-slate-400'>Rank</p>
+                      <p className='text-2xl font-bold text-cyan-400'>#1</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </GlassCard>
+              </GlassCard>
+            </section>
 
-          {/* Live Fleet Map (Imperative Mapbox GL — no React rendering) */}
-          <GlassCard
-            layoutId='panel-live-map'
-            accent='from-indigo-400/30 via-blue-400/20 to-cyan-400/30'
-          >
-            <div className='rounded-3xl p-6'>
-              <h3 className='mb-6 text-lg font-bold flex items-center gap-2'>
-                <MapPin className='h-5 w-5 text-indigo-400' />
-                Live Fleet Map
-              </h3>
-              <fieldset className='mb-4 inline-flex items-center rounded-xl bg-white/5 p-1 ring-1 ring-cyan-200/20'>
-                <legend className='sr-only'>Map visualization mode</legend>
-                <div className='relative'>
-                  {isLiveMode && (
-                    <motion.span
-                      layoutId='map-mode-pill'
-                      className='absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 shadow-lg'
-                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                    />
-                  )}
-                  <MagneticButton
-                    onClick={() => setMapMode('live')}
-                    ariaLabel='Switch to live fleet mode'
-                    ariaPressed={isLiveMode}
-                    className={`relative z-10 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                      isLiveMode
-                        ? 'text-white'
-                        : 'text-slate-300 hover:bg-white/10'
-                    }`}
-                  >
-                    Live Fleet
-                  </MagneticButton>
-                </div>
-                <div className='relative'>
-                  {showHeatmap && (
-                    <motion.span
-                      layoutId='map-mode-pill'
-                      className='absolute inset-0 rounded-lg bg-gradient-to-r from-rose-500 to-orange-500 shadow-lg'
-                      transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                    />
-                  )}
-                  <MagneticButton
-                    onClick={() => setMapMode('historical')}
-                    ariaLabel='Switch to historical heatmap mode'
-                    ariaPressed={showHeatmap}
-                    className={`relative z-10 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-                      showHeatmap
-                        ? 'text-white'
-                        : 'text-slate-300 hover:bg-white/10'
-                    }`}
-                  >
-                    Historical Heatmap
-                  </MagneticButton>
-                </div>
-              </fieldset>
-              <motion.div
-                layout
-                layoutId='map-viewport-shell'
-                transition={{ type: 'spring', stiffness: 220, damping: 28 }}
-                animate={{ height: isLiveMode ? 400 : 430 }}
-                className='bloom-edge vignette-strong rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative'
-              >
-                {showMap ? (
-                  <div ref={mapContainerRef} className='absolute inset-0' />
-                ) : (
-                  <>
-                    <PingLayer count={12} />
-                    <div className='absolute inset-0 flex items-center justify-center backdrop-blur-sm'>
-                      <div className='text-center space-y-4'>
-                        <MapPin className='h-16 w-16 mx-auto text-cyan-400 animate-bounce' />
-                        <p className='text-2xl font-bold'>
-                          {metrics.activeTrucks || 55} Active Trucks
-                        </p>
-                        <p className='text-sm text-slate-400'>
-                          Real-time GPS tracking
-                        </p>
-                        <MagneticButton
-                          onClick={() => useIoTStore.getState().toggleMap()}
-                          className='mt-4 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 font-semibold shadow-lg transition-all'
-                        >
-                          Open Full Map
-                        </MagneticButton>
+            {/* ── System Health + Live Map ── */}
+            <section className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+              <GlassCard>
+                <div className='rounded-3xl p-6'>
+                  <h3 className='mb-6 text-lg font-bold flex items-center gap-2'>
+                    <Settings className='h-5 w-5 text-violet-400' />
+                    System Health Monitor
+                  </h3>
+                  <div className='space-y-4'>
+                    {[
+                      {
+                        name: 'API Gateway',
+                        status: apiHealthy,
+                        latency: '24ms',
+                        uptime: '99.98%',
+                      },
+                      {
+                        name: 'WebSocket',
+                        status: connectionStatus === 'connected',
+                        latency: '12ms',
+                        uptime: '99.99%',
+                      },
+                      {
+                        name: 'Database',
+                        status: true,
+                        latency: '8ms',
+                        uptime: '100%',
+                      },
+                      {
+                        name: 'Cache Layer',
+                        status: true,
+                        latency: '3ms',
+                        uptime: '99.95%',
+                      },
+                      {
+                        name: 'GPS Tracking',
+                        status: true,
+                        latency: '156ms',
+                        uptime: '98.76%',
+                      },
+                      {
+                        name: 'Temperature Sensors',
+                        status: true,
+                        latency: '45ms',
+                        uptime: '99.87%',
+                      },
+                    ].map(service => (
+                      <div
+                        key={service.name}
+                        className='flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all group'
+                      >
+                        <div className='flex items-center gap-3'>
+                          <span
+                            className={`h-3 w-3 rounded-full ${service.status ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}
+                          />
+                          <span className='font-medium'>{service.name}</span>
+                        </div>
+                        <div className='flex items-center gap-4'>
+                          <span className='text-xs text-slate-500'>
+                            {service.uptime}
+                          </span>
+                          <span className='text-sm text-slate-400'>
+                            {service.latency}
+                          </span>
+                          <Pill intent={service.status ? 'ok' : 'error'}>
+                            {service.status ? 'Online' : 'Offline'}
+                          </Pill>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* System health gauge */}
+                  <div className='mt-8 grid place-items-center'>
+                    <div className='relative grid place-items-center'>
+                      <svg width='180' height='180' viewBox='0 0 180 180'>
+                        <defs>
+                          <linearGradient
+                            id='healthGrad'
+                            x1='0%'
+                            y1='0%'
+                            x2='100%'
+                            y2='100%'
+                          >
+                            <stop offset='0%' stopColor='#10b981' />
+                            <stop offset='100%' stopColor='#14b8a6' />
+                          </linearGradient>
+                        </defs>
+                        <circle
+                          cx='90'
+                          cy='90'
+                          r='75'
+                          fill='none'
+                          stroke='rgba(255,255,255,0.1)'
+                          strokeWidth='12'
+                        />
+                        <circle
+                          cx='90'
+                          cy='90'
+                          r='75'
+                          fill='none'
+                          stroke='url(#healthGrad)'
+                          strokeWidth='12'
+                          strokeDasharray={`${2 * Math.PI * 75 * 0.968} ${2 * Math.PI * 75}`}
+                          strokeLinecap='round'
+                          transform='rotate(-90 90 90)'
+                          className='transition-all duration-1000'
+                        />
+                      </svg>
+                      <div className='absolute inset-0 grid place-items-center'>
+                        <div className='text-center'>
+                          <p className='text-5xl font-bold'>96.8%</p>
+                          <p className='text-sm text-slate-400 mt-1'>
+                            System Health
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </>
-                )}
+                  </div>
+                </div>
+              </GlassCard>
 
-                <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(34,211,238,0.18),transparent_55%)] mix-blend-screen' />
-                <div className='pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0)_0%,rgba(34,211,238,0.12)_48%,rgba(255,255,255,0)_100%)] animate-[pulse_3.8s_ease-in-out_infinite]' />
-                <div className='pointer-events-none absolute inset-0 scanline-overlay opacity-30' />
-              </motion.div>
-            </div>
-          </GlassCard>
-        </section>
-
-        {/* Footer */}
-        <div className='text-center space-y-2 pt-4 pb-8'>
-          <div className='flex items-center justify-center gap-4 flex-wrap text-xs text-slate-500'>
-            <span>
-              Environment:{' '}
-              <span className='font-mono text-slate-400'>Production</span>
-            </span>
-            <span>•</span>
-            <span>
-              Version: <span className='font-mono text-slate-400'>v4.0.0</span>
-            </span>
-            <span>•</span>
-            <span>
-              Build: <span className='font-mono text-slate-400'>#4523</span>
-            </span>
-            <span>•</span>
-            <span>
-              Uptime: <span className='font-mono text-emerald-400'>99.98%</span>
-            </span>
-          </div>
-          <p className='text-xs text-slate-600'>
-            © 2024 Fleet Management Pro • Powered by IoT Engine v4.0 Masterpiece
-            • All Rights Reserved
-          </p>
-          <p className='text-[10px] text-slate-700'>
-            Keyboard Shortcuts: Ctrl+G (Grid) • Ctrl+P (Pause) • Ctrl+R
-            (Refresh) • ESC (Close Modal)
-          </p>
-        </div>
-      </main>
-
-      {/* ── Alerts Side Panel ── */}
-      {showAlerts && (
-        <div className='fixed right-0 top-0 bottom-0 w-96 bg-slate-900/95 backdrop-blur-2xl ring-1 ring-white/10 shadow-2xl z-[60] animate-slideInRight overflow-hidden flex flex-col'>
-          <div className='p-6 border-b border-white/10'>
-            <div className='flex items-center justify-between mb-4'>
-              <h3 className='text-xl font-bold flex items-center gap-2'>
-                <Bell className='h-5 w-5 text-rose-400' />
-                Alert Center
-              </h3>
-              <button
-                onClick={toggleAlerts}
-                className='rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/10 transition-all'
-                aria-label='Close alerts panel'
+              {/* Live Fleet Map (Imperative Mapbox GL — no React rendering) */}
+              <GlassCard
+                layoutId='panel-live-map'
+                accent='from-indigo-400/30 via-blue-400/20 to-cyan-400/30'
               >
-                <X className='h-5 w-5' />
-              </button>
-            </div>
-            <div className='flex items-center justify-between'>
-              <Pill intent='info'>{unacknowledgedAlerts} unacknowledged</Pill>
-              <button
-                onClick={clearAllAlerts}
-                className='text-xs text-cyan-400 hover:text-cyan-300 transition-all'
-              >
-                Clear All
-              </button>
-            </div>
-          </div>
-
-          <div className='flex-1 overflow-y-auto p-6 space-y-3'>
-            {alertList.length === 0 ? (
-              <div className='text-center py-12 text-slate-400'>
-                <CheckCircle2 className='h-12 w-12 mx-auto mb-3 opacity-50' />
-                <p>No alerts at this time</p>
-              </div>
-            ) : (
-              (alertList as TelemetryAlert[]).map(alert => (
-                <div
-                  key={alert.id}
-                  className={`p-4 rounded-xl ring-1 transition-all ${resolveAlertBg(alert.level)} ${alert.acknowledged ? 'opacity-50' : ''}`}
-                >
-                  <div className='flex items-start justify-between gap-3'>
-                    <div className='flex-1'>
-                      <div className='flex items-center gap-2 mb-2'>
-                        <AlertTriangle
-                          className={`h-4 w-4 ${resolveAlertIconColor(alert.level)}`}
+                <div className='rounded-3xl p-6'>
+                  <h3 className='mb-6 text-lg font-bold flex items-center gap-2'>
+                    <MapPin className='h-5 w-5 text-indigo-400' />
+                    Live Fleet Map
+                  </h3>
+                  <fieldset className='mb-4 inline-flex items-center rounded-xl bg-white/5 p-1 ring-1 ring-cyan-200/20'>
+                    <legend className='sr-only'>Map visualization mode</legend>
+                    <div className='relative'>
+                      {isLiveMode && (
+                        <motion.span
+                          layoutId='map-mode-pill'
+                          className='absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 shadow-lg'
+                          transition={{
+                            type: 'spring',
+                            stiffness: 420,
+                            damping: 34,
+                          }}
                         />
-                        <span className='text-xs uppercase tracking-wider font-semibold'>
-                          {alert.level}
-                        </span>
-                        {alert.truckId && (
-                          <span className='text-xs text-slate-400'>
-                            • {alert.truckId}
-                          </span>
+                      )}
+                      <MagneticButton
+                        onClick={() => setMapMode('live')}
+                        ariaLabel='Switch to live fleet mode'
+                        ariaPressed={isLiveMode}
+                        className={`relative z-10 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                          isLiveMode
+                            ? 'text-white'
+                            : 'text-slate-300 hover:bg-white/10'
+                        }`}
+                      >
+                        Live Fleet
+                      </MagneticButton>
+                    </div>
+                    <div className='relative'>
+                      {showHeatmap && (
+                        <motion.span
+                          layoutId='map-mode-pill'
+                          className='absolute inset-0 rounded-lg bg-gradient-to-r from-rose-500 to-orange-500 shadow-lg'
+                          transition={{
+                            type: 'spring',
+                            stiffness: 420,
+                            damping: 34,
+                          }}
+                        />
+                      )}
+                      <MagneticButton
+                        onClick={() => setMapMode('historical')}
+                        ariaLabel='Switch to historical heatmap mode'
+                        ariaPressed={showHeatmap}
+                        className={`relative z-10 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                          showHeatmap
+                            ? 'text-white'
+                            : 'text-slate-300 hover:bg-white/10'
+                        }`}
+                      >
+                        Historical Heatmap
+                      </MagneticButton>
+                    </div>
+                  </fieldset>
+                  <motion.div
+                    layout
+                    layoutId='map-viewport-shell'
+                    transition={{ type: 'spring', stiffness: 220, damping: 28 }}
+                    animate={{ height: isLiveMode ? 400 : 430 }}
+                    className='bloom-edge vignette-strong rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative'
+                  >
+                    {showMap ? (
+                      <div ref={mapContainerRef} className='absolute inset-0' />
+                    ) : (
+                      <>
+                        <PingLayer count={12} />
+                        <div className='absolute inset-0 flex items-center justify-center backdrop-blur-sm'>
+                          <div className='text-center space-y-4'>
+                            <MapPin className='h-16 w-16 mx-auto text-cyan-400 animate-bounce' />
+                            <p className='text-2xl font-bold'>
+                              {metrics.activeTrucks || 55} Active Trucks
+                            </p>
+                            <p className='text-sm text-slate-400'>
+                              Real-time GPS tracking
+                            </p>
+                            <MagneticButton
+                              onClick={() => useIoTStore.getState().toggleMap()}
+                              className='mt-4 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 font-semibold shadow-lg transition-all'
+                            >
+                              Open Full Map
+                            </MagneticButton>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(34,211,238,0.18),transparent_55%)] mix-blend-screen' />
+                    <div className='pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0)_0%,rgba(34,211,238,0.12)_48%,rgba(255,255,255,0)_100%)] animate-[pulse_3.8s_ease-in-out_infinite]' />
+                    <div className='pointer-events-none absolute inset-0 scanline-overlay opacity-30' />
+                  </motion.div>
+                </div>
+              </GlassCard>
+            </section>
+
+            {/* Footer */}
+            <div className='text-center space-y-2 pt-4 pb-8'>
+              <div className='flex items-center justify-center gap-4 flex-wrap text-xs text-slate-500'>
+                <span>
+                  Environment:{' '}
+                  <span className='font-mono text-slate-400'>Production</span>
+                </span>
+                <span>•</span>
+                <span>
+                  Version:{' '}
+                  <span className='font-mono text-slate-400'>v4.0.0</span>
+                </span>
+                <span>•</span>
+                <span>
+                  Build: <span className='font-mono text-slate-400'>#4523</span>
+                </span>
+                <span>•</span>
+                <span>
+                  Uptime:{' '}
+                  <span className='font-mono text-emerald-400'>99.98%</span>
+                </span>
+              </div>
+              <p className='text-xs text-slate-600'>
+                © 2024 Fleet Management Pro • Powered by IoT Engine v4.0
+                Masterpiece • All Rights Reserved
+              </p>
+              <p className='text-[10px] text-slate-700'>
+                Keyboard Shortcuts: Ctrl+G (Grid) • Ctrl+P (Pause) • Ctrl+R
+                (Refresh) • ESC (Close Modal)
+              </p>
+            </div>
+          </main>
+
+          {/* ── Alerts Side Panel ── */}
+          {showAlerts && (
+            <div className='fixed right-0 top-0 bottom-0 w-96 bg-slate-900/95 backdrop-blur-2xl ring-1 ring-white/10 shadow-2xl z-[60] animate-slideInRight overflow-hidden flex flex-col'>
+              <div className='p-6 border-b border-white/10'>
+                <div className='flex items-center justify-between mb-4'>
+                  <h3 className='text-xl font-bold flex items-center gap-2'>
+                    <Bell className='h-5 w-5 text-rose-400' />
+                    Alert Center
+                  </h3>
+                  <button
+                    onClick={toggleAlerts}
+                    className='rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/10 transition-all'
+                    aria-label='Close alerts panel'
+                  >
+                    <X className='h-5 w-5' />
+                  </button>
+                </div>
+                <div className='flex items-center justify-between'>
+                  <Pill intent='info'>
+                    {unacknowledgedAlerts} unacknowledged
+                  </Pill>
+                  <button
+                    onClick={clearAllAlerts}
+                    className='text-xs text-cyan-400 hover:text-cyan-300 transition-all'
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
+
+              <div className='flex-1 overflow-y-auto p-6 space-y-3'>
+                {alertList.length === 0 ? (
+                  <div className='text-center py-12 text-slate-400'>
+                    <CheckCircle2 className='h-12 w-12 mx-auto mb-3 opacity-50' />
+                    <p>No alerts at this time</p>
+                  </div>
+                ) : (
+                  (alertList as TelemetryAlert[]).map(alert => (
+                    <div
+                      key={alert.id}
+                      className={`p-4 rounded-xl ring-1 transition-all ${resolveAlertBg(alert.level)} ${alert.acknowledged ? 'opacity-50' : ''}`}
+                    >
+                      <div className='flex items-start justify-between gap-3'>
+                        <div className='flex-1'>
+                          <div className='flex items-center gap-2 mb-2'>
+                            <AlertTriangle
+                              className={`h-4 w-4 ${resolveAlertIconColor(alert.level)}`}
+                            />
+                            <span className='text-xs uppercase tracking-wider font-semibold'>
+                              {alert.level}
+                            </span>
+                            {alert.truckId && (
+                              <span className='text-xs text-slate-400'>
+                                • {alert.truckId}
+                              </span>
+                            )}
+                          </div>
+                          <p className='text-sm mb-2'>{alert.message}</p>
+                          <p className='text-xs text-slate-500'>
+                            <ClientOnlyText>
+                              {new Date(alert.timestamp).toLocaleTimeString()}
+                            </ClientOnlyText>
+                          </p>
+                        </div>
+                        {!alert.acknowledged && (
+                          <button
+                            onClick={() => handleAckAlert(alert.id)}
+                            className='rounded-lg px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold transition-all'
+                          >
+                            Ack
+                          </button>
                         )}
                       </div>
-                      <p className='text-sm mb-2'>{alert.message}</p>
-                      <p className='text-xs text-slate-500'>
-                        <ClientOnlyText>
-                          {new Date(alert.timestamp).toLocaleTimeString()}
-                        </ClientOnlyText>
-                      </p>
                     </div>
-                    {!alert.acknowledged && (
-                      <button
-                        onClick={() => handleAckAlert(alert.id)}
-                        className='rounded-lg px-3 py-1.5 bg-white/10 hover:bg-white/20 text-xs font-semibold transition-all'
-                      >
-                        Ack
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Fullscreen Modal ── */}
-      {fullscreen && (
-        <div className='fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-2xl animate-fadeIn'>
-          <div className='absolute inset-4 lg:inset-10 rounded-3xl ring-1 ring-white/20 bg-slate-900/80 backdrop-blur-xl p-4 lg:p-8 shadow-2xl'>
-            <div className='mb-4 flex items-center justify-between'>
-              <h3 className='text-xl lg:text-2xl font-bold'>
-                {FULLSCREEN_TITLES[fullscreen]}
-              </h3>
-              <div className='flex items-center gap-3'>
-                <button
-                  onClick={() => setFullscreen(null)}
-                  className='rounded-xl p-2 ring-1 ring-white/20 hover:bg-white/10 transition-all'
-                  title='Minimize'
-                >
-                  <Minimize2 className='h-5 w-5' />
-                </button>
-                <button
-                  onClick={() => setFullscreen(null)}
-                  className='rounded-xl p-3 ring-1 ring-white/20 hover:bg-white/10 transition-all'
-                  aria-label='Close fullscreen'
-                >
-                  <X className='h-6 w-6' />
-                </button>
+                  ))
+                )}
               </div>
             </div>
-            <div className='h-[calc(100%-80px)]'>
-              {/* Fullscreen charts rendered imperatively */}
-              <CanvasChart
-                id={`fullscreen-${fullscreen}`}
-                config={FULLSCREEN_CONFIGS[fullscreen] ?? CHART_CONFIGS.fuel}
-                className='h-full'
-              />
+          )}
+
+          {/* ── Fullscreen Modal ── */}
+          {fullscreen && (
+            <div className='fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-2xl animate-fadeIn'>
+              <div className='absolute inset-4 lg:inset-10 rounded-3xl ring-1 ring-white/20 bg-slate-900/80 backdrop-blur-xl p-4 lg:p-8 shadow-2xl'>
+                <div className='mb-4 flex items-center justify-between'>
+                  <h3 className='text-xl lg:text-2xl font-bold'>
+                    {FULLSCREEN_TITLES[fullscreen]}
+                  </h3>
+                  <div className='flex items-center gap-3'>
+                    <button
+                      onClick={() => setFullscreen(null)}
+                      className='rounded-xl p-2 ring-1 ring-white/20 hover:bg-white/10 transition-all'
+                      title='Minimize'
+                    >
+                      <Minimize2 className='h-5 w-5' />
+                    </button>
+                    <button
+                      onClick={() => setFullscreen(null)}
+                      className='rounded-xl p-3 ring-1 ring-white/20 hover:bg-white/10 transition-all'
+                      aria-label='Close fullscreen'
+                    >
+                      <X className='h-6 w-6' />
+                    </button>
+                  </div>
+                </div>
+                <div className='h-[calc(100%-80px)]'>
+                  {/* Fullscreen charts rendered imperatively */}
+                  <CanvasChart
+                    id={`fullscreen-${fullscreen}`}
+                    config={
+                      FULLSCREEN_CONFIGS[fullscreen] ?? CHART_CONFIGS.fuel
+                    }
+                    className='h-full'
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* ── Global Styles ── */}
-      <style jsx global>{`
-        @keyframes shimmer {
-          to {
-            background-position: 200% center;
-          }
-        }
-        @keyframes gradient {
-          0%,
-          100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-        }
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        @keyframes pulse-slow {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0.7;
-          }
-        }
-        @keyframes spin-slow {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        @keyframes slideInRight {
-          from {
-            transform: translateX(100%);
-          }
-          to {
-            transform: translateX(0);
-          }
-        }
-        .animate-shimmer {
-          animation: shimmer 3s ease-in-out infinite;
-        }
-        .animate-gradient {
-          animation: gradient 8s ease infinite;
-        }
-        .animate-pulse-slow {
-          animation: pulse-slow 3s ease-in-out infinite;
-        }
-        .animate-spin-slow {
-          animation: spin-slow 3s linear infinite;
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-        .animate-slideInRight {
-          animation: slideInRight 0.3s ease-out;
-        }
+          {/* ── Global Styles ── */}
+          <style jsx global>{`
+            @keyframes shimmer {
+              to {
+                background-position: 200% center;
+              }
+            }
+            @keyframes gradient {
+              0%,
+              100% {
+                background-position: 0% 50%;
+              }
+              50% {
+                background-position: 100% 50%;
+              }
+            }
+            @keyframes fadeIn {
+              from {
+                opacity: 0;
+              }
+              to {
+                opacity: 1;
+              }
+            }
+            @keyframes pulse-slow {
+              0%,
+              100% {
+                opacity: 1;
+              }
+              50% {
+                opacity: 0.7;
+              }
+            }
+            @keyframes spin-slow {
+              from {
+                transform: rotate(0deg);
+              }
+              to {
+                transform: rotate(360deg);
+              }
+            }
+            @keyframes slideInRight {
+              from {
+                transform: translateX(100%);
+              }
+              to {
+                transform: translateX(0);
+              }
+            }
+            .animate-shimmer {
+              animation: shimmer 3s ease-in-out infinite;
+            }
+            .animate-gradient {
+              animation: gradient 8s ease infinite;
+            }
+            .animate-pulse-slow {
+              animation: pulse-slow 3s ease-in-out infinite;
+            }
+            .animate-spin-slow {
+              animation: spin-slow 3s linear infinite;
+            }
+            .animate-fadeIn {
+              animation: fadeIn 0.3s ease-out;
+            }
+            .animate-slideInRight {
+              animation: slideInRight 0.3s ease-out;
+            }
 
-        ::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-          background: rgba(15, 23, 42, 0.5);
-          border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-          background: linear-gradient(180deg, #8b5cf6, #06b6d4);
-          border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(180deg, #a78bfa, #22d3ee);
-        }
+            ::-webkit-scrollbar {
+              width: 8px;
+              height: 8px;
+            }
+            ::-webkit-scrollbar-track {
+              background: rgba(15, 23, 42, 0.5);
+              border-radius: 10px;
+            }
+            ::-webkit-scrollbar-thumb {
+              background: linear-gradient(180deg, #8b5cf6, #06b6d4);
+              border-radius: 10px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+              background: linear-gradient(180deg, #a78bfa, #22d3ee);
+            }
 
-        * {
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
-      `}</style>
-    </motion.div>
+            * {
+              -webkit-font-smoothing: antialiased;
+              -moz-osx-font-smoothing: grayscale;
+            }
+          `}</style>
+        </motion.div>
+      </React.Suspense>
+    </GlobalErrorBoundary>
   )
 }

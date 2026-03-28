@@ -80,9 +80,9 @@ let smoothedFrameMs = TARGET_FRAME_MS
 let lowFpsSampleCount = 0
 let recoverySampleCount = 0
 let interpolationRafHandle: number | null = null
-let interpolationTimeoutHandle: number | null = null
+let interpolationTimeoutHandle: ReturnType<typeof globalThis.setTimeout> | null = null
 let deckFlushRafHandle: number | null = null
-let deckFlushTimeoutHandle: number | null = null
+let deckFlushTimeoutHandle: ReturnType<typeof globalThis.setTimeout> | null = null
 let cinematicRigLoadPromise: Promise<void> | null = null
 
 function ensureCinematicRigMounted(): Promise<void> {

@@ -189,6 +189,18 @@ export function updateCameraFlyToProgress(
 ): void {
   const { cameraFlyTo } = runtimeState
   if (!cameraFlyTo.isAnimating || cameraFlyTo.startedAt === null) return
+  if (
+    cameraFlyTo.targetLatitude === null
+    || cameraFlyTo.targetLongitude === null
+    || cameraFlyTo.startLatitude === null
+    || cameraFlyTo.startLongitude === null
+    || cameraFlyTo.startZoom === null
+    || cameraFlyTo.startPitch === null
+  ) {
+    cameraFlyTo.isAnimating = false
+    cameraFlyTo.startedAt = null
+    return
+  }
 
   const elapsed = now - cameraFlyTo.startedAt
   const progress = clamp(elapsed / cameraFlyTo.durationMs, 0, 1)

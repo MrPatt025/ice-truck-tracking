@@ -55,8 +55,7 @@ describe('RingBuffer', () => {
 
     it('last(n) clamps to available size', () => {
         const buf = new RingBuffer<number>(10);
-        buf.push(1);
-        buf.push(2);
+        buf.push(1, 2);
 
         expect(buf.last(100)).toEqual([1, 2]);
     });

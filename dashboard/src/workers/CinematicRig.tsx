@@ -12,7 +12,6 @@ import {
   Group,
   InstancedMesh,
   Object3D,
-  Mesh,
   Material,
   MeshBasicMaterial,
   Points,
@@ -29,6 +28,11 @@ import {
 } from '@react-three/postprocessing'
 import { runtimeState } from './cinematicRuntimeState'
 import { useCameraSelectionStore } from '../stores/cameraSelectionStore'
+import {
+  FROST_TRUCK_FRAGMENT_SHADER,
+  FROST_TRUCK_VERTEX_SHADER,
+  createFrostShaderUniforms,
+} from '../engine/shaders/frostTruckShader'
 
 const tmpCameraPos = new Vector3()
 
@@ -86,14 +90,30 @@ function AdaptiveLightingEnvironment({
 }: Readonly<{ enabled: boolean }>) {
   const { gl, scene } = useThree()
 
+  useFrame(() => {
+    if (!enabled) return
+    const frostBias = Math.max(0, Math.min(1, runtimeState.telemetry.fogTint))
+    const thermalBias = Math.max(
+      0,
+      Math.min(1, (-runtimeState.telemetry.temperatureC + 6) / 18)
+    )
+    const targetEnvIntensity = 0.82 + frostBias * 0.2 + thermalBias * 0.12
+    scene.environmentIntensity +=
+      (targetEnvIntensity - scene.environmentIntensity) * 0.08
+  })
+
   React.useEffect(() => {
+    const rendererWithLighting = gl as typeof gl & {
+      physicallyCorrectLights?: boolean
+    }
     const previousEnvironment = scene.environment
     const previousEnvIntensity = scene.environmentIntensity
-    const previousPhysicallyCorrect = gl.physicallyCorrectLights
+    const previousPhysicallyCorrect =
+      rendererWithLighting.physicallyCorrectLights
     const previousShadowEnabled = gl.shadowMap.enabled
     const previousShadowType = gl.shadowMap.type
 
-    gl.physicallyCorrectLights = true
+    rendererWithLighting.physicallyCorrectLights = true
 
     if (!enabled) {
       scene.environment = null
@@ -102,7 +122,7 @@ function AdaptiveLightingEnvironment({
       return () => {
         scene.environment = previousEnvironment
         scene.environmentIntensity = previousEnvIntensity
-        gl.physicallyCorrectLights = previousPhysicallyCorrect
+        rendererWithLighting.physicallyCorrectLights = previousPhysicallyCorrect
         gl.shadowMap.enabled = previousShadowEnabled
         gl.shadowMap.type = previousShadowType
       }
@@ -122,7 +142,7 @@ function AdaptiveLightingEnvironment({
     return () => {
       scene.environment = previousEnvironment
       scene.environmentIntensity = previousEnvIntensity
-      gl.physicallyCorrectLights = previousPhysicallyCorrect
+      rendererWithLighting.physicallyCorrectLights = previousPhysicallyCorrect
       gl.shadowMap.enabled = previousShadowEnabled
       gl.shadowMap.type = previousShadowType
       environmentRenderTarget.texture.dispose()
@@ -139,15 +159,33 @@ function TruckModel({
   enableSoftShadows,
 }: Readonly<{ enableSoftShadows: boolean }>) {
   const root = React.useRef<Group>(null)
-  const leftHull = React.useRef<Mesh>(null)
-  const rightHull = React.useRef<Mesh>(null)
   const sensorGroup = React.useRef<Group>(null)
+  const frostHullPanels = React.useRef<InstancedMesh>(null)
   const frontWheels = React.useRef<InstancedMesh>(null)
   const rearWheels = React.useRef<InstancedMesh>(null)
+  const frostDummy = React.useRef(new Object3D())
+
+  const frostShaderMaterial = React.useMemo(
+    () =>
+      new ShaderMaterial({
+        vertexShader: FROST_TRUCK_VERTEX_SHADER,
+        fragmentShader: FROST_TRUCK_FRAGMENT_SHADER,
+        uniforms: createFrostShaderUniforms(),
+        transparent: true,
+      }),
+    []
+  )
+
+  React.useEffect(() => {
+    return () => {
+      frostShaderMaterial.dispose()
+    }
+  }, [frostShaderMaterial])
 
   React.useEffect(() => {
     const front = frontWheels.current
     const rear = rearWheels.current
+    const frostPanels = frostHullPanels.current
     if (!front || !rear) return
 
     const dummy = new Object3D()
@@ -168,6 +206,18 @@ function TruckModel({
       rear.setMatrixAt(index, dummy.matrix)
     })
     rear.instanceMatrix.needsUpdate = true
+
+    if (frostPanels) {
+      const panelOffsets = [-0.72, 0.72] as const
+      panelOffsets.forEach((x, index) => {
+        dummy.position.set(x, 0.6, 0)
+        dummy.rotation.set(0, 0, 0)
+        dummy.scale.set(1, 1, 1)
+        dummy.updateMatrix()
+        frostPanels.setMatrixAt(index, dummy.matrix)
+      })
+      frostPanels.instanceMatrix.needsUpdate = true
+    }
   }, [])
 
   /**
@@ -179,6 +229,7 @@ function TruckModel({
     const rootNode = root.current
     const frontWheelsNode = frontWheels.current
     const rearWheelsNode = rearWheels.current
+    const frostHullPanelsNode = frostHullPanels.current
 
     return () => {
       disposeObjectTree(rootNode)
@@ -197,6 +248,13 @@ function TruckModel({
       if (rearWheelsNode?.material) {
         disposeMaterial(rearWheelsNode.material)
       }
+
+      if (frostHullPanelsNode?.geometry) {
+        frostHullPanelsNode.geometry.dispose()
+      }
+      if (frostHullPanelsNode?.material) {
+        disposeMaterial(frostHullPanelsNode.material)
+      }
     }
   }, [])
 
@@ -205,10 +263,35 @@ function TruckModel({
     const exploded = 1 - p
     const glide = Math.max(0, p - 0.58)
     const targetFov = runtimeState.cameraFov
+    const frostPanels = frostHullPanels.current
 
     const openDistance = exploded * 1.5
-    if (leftHull.current) leftHull.current.position.x = -0.72 - openDistance
-    if (rightHull.current) rightHull.current.position.x = 0.72 + openDistance
+    if (frostPanels) {
+      const panelOffsets = [-0.72 - openDistance, 0.72 + openDistance] as const
+      panelOffsets.forEach((x, index) => {
+        const dummy = frostDummy.current
+        dummy.position.set(x, 0.6, 0)
+        dummy.rotation.set(0, 0, 0)
+        dummy.scale.set(1, 1, 1)
+        dummy.updateMatrix()
+        frostPanels.setMatrixAt(index, dummy.matrix)
+      })
+      frostPanels.instanceMatrix.needsUpdate = true
+    }
+
+    frostShaderMaterial.uniforms.uTime.value = clock.elapsedTime
+    const thermalBias = Math.max(
+      0,
+      Math.min(1, (-runtimeState.telemetry.temperatureC + 4) / 18)
+    )
+    const frostTint = runtimeState.telemetry.fogTint
+    frostShaderMaterial.uniforms.uFrostIntensity.value =
+      0.9 + thermalBias * 0.35
+    frostShaderMaterial.uniforms.uFrostColor.value.setRGB(
+      0.32 + frostTint * 0.16,
+      0.84 + frostTint * 0.08,
+      0.95
+    )
 
     if (sensorGroup.current) {
       sensorGroup.current.rotation.y += delta * (0.4 + exploded * 0.7)
@@ -248,37 +331,14 @@ function TruckModel({
         />
       </mesh>
 
-      <mesh
-        ref={leftHull}
-        position={[-0.72, 0.6, 0]}
+      <instancedMesh
+        ref={frostHullPanels}
+        args={[undefined, undefined, 2]}
         castShadow={enableSoftShadows}
       >
         <boxGeometry args={[1.25, 0.7, 1.35]} />
-        <meshStandardMaterial
-          color='#38bdf8'
-          roughness={0.24}
-          metalness={0.68}
-          emissive='#0b2f5e'
-          emissiveIntensity={0.18}
-          envMapIntensity={1.25}
-        />
-      </mesh>
-
-      <mesh
-        ref={rightHull}
-        position={[0.72, 0.6, 0]}
-        castShadow={enableSoftShadows}
-      >
-        <boxGeometry args={[1.25, 0.7, 1.35]} />
-        <meshStandardMaterial
-          color='#60a5fa'
-          roughness={0.24}
-          metalness={0.68}
-          emissive='#0b2f5e'
-          emissiveIntensity={0.2}
-          envMapIntensity={1.25}
-        />
-      </mesh>
+        <primitive attach='material' object={frostShaderMaterial} />
+      </instancedMesh>
 
       <group ref={sensorGroup} position={[0, 0.45, 0]}>
         <mesh position={[0, 0, 0]} castShadow={enableSoftShadows}>
@@ -651,7 +711,7 @@ export default function CinematicRig() {
       <color attach='background' args={['#020617']} />
       <ambientLight intensity={enablePremiumLighting ? 0.48 : 0.58} />
       <hemisphereLight
-        skyColor='#c7f0ff'
+        color='#c7f0ff'
         groundColor='#0f172a'
         intensity={enablePremiumLighting ? 0.62 : 0.35}
       />

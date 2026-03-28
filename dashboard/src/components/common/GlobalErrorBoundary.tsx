@@ -36,11 +36,16 @@ export class GlobalErrorBoundary extends React.Component<
     if (!this.state.hasError) return this.props.children
 
     return (
-      <div className='fixed inset-0 z-[120] grid place-items-center bg-slate-950/70 p-6 backdrop-blur-xl'>
+      <div
+        data-testid='error-boundary'
+        className='fixed inset-0 z-[120] grid place-items-center bg-slate-950/70 p-6 backdrop-blur-xl'
+      >
         <div className='w-full max-w-lg rounded-3xl border border-cyan-200/25 bg-slate-900/75 p-6 text-slate-100 shadow-[0_30px_80px_-40px_rgba(34,211,238,0.8)]'>
           <div className='mb-3 flex items-center gap-2 text-cyan-200'>
             <AlertTriangle className='h-5 w-5' />
-            <h2 className='text-lg font-semibold'>Interface recovered in safe mode</h2>
+            <h2 className='text-lg font-semibold'>
+              Interface recovered in safe mode
+            </h2>
           </div>
           <p className='text-sm text-slate-300'>
             A rendering fault occurred. Live telemetry is protected, and you can
