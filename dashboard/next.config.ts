@@ -2,6 +2,18 @@ import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === 'production'
 const withPWA = (config: NextConfig) => config
+const scriptSrc = isProduction
+  ? "script-src 'self' 'unsafe-inline'"
+  : "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+const localApiOrigins = isProduction ? [] : ['http://localhost:5000']
+const connectSrc = [
+  "'self'",
+  'ws:',
+  'wss:',
+  'https://api.mapbox.com',
+  'https://events.mapbox.com',
+  ...localApiOrigins,
+].join(' ')
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -9,11 +21,11 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  scriptSrc,
   "style-src 'self' 'unsafe-inline' https://api.mapbox.com",
   "img-src 'self' data: blob: https://*.mapbox.com https://api.mapbox.com https://events.mapbox.com https://demotiles.maplibre.org",
   "font-src 'self' data:",
-  "connect-src 'self' ws: wss: http://localhost:5000 https://api.mapbox.com https://events.mapbox.com",
+  `connect-src ${connectSrc}`,
   "worker-src 'self' blob:",
   "media-src 'self' blob:",
   "frame-src 'none'",

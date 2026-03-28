@@ -7,7 +7,7 @@
     "preinstall": "only-allow pnpm",
     "build": "npx turbo run build",
     "build:all": "turbo run build --force",
-    "test": "jest --passWithNoTests",
+    "test": "jest --config ./jest.config.js --passWithNoTests",
     "test:unit": "turbo run test:unit",
     "test:integration": "turbo run test:integration",
     "test:e2e": "turbo run test:e2e",

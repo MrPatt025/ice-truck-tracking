@@ -19,46 +19,6 @@ export function middleware(request: NextRequest) {
         },
     });
 
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    const apiOrigin = process.env.NEXT_PUBLIC_API_URL;
-    const connectSrc: string[] = [
-        "'self'",
-        'https://*.tile.openstreetmap.org',
-        'https://*.basemaps.cartocdn.com',
-        'https://demotiles.maplibre.org',
-    ];
-
-    if (apiOrigin) {
-        connectSrc.push(apiOrigin);
-    }
-
-    if (isDevelopment) {
-        connectSrc.push('ws://localhost:3000', 'ws://localhost:5000');
-    }
-
-    const scriptSrc = isDevelopment
-        ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-        : "script-src 'self'";
-    // style-src allows unsafe-inline for Tailwind CSS and global styles
-    const styleSrc = "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com";
-    // font-src allows external fonts from Google Fonts CDN and data URIs
-    const fontSrc = "font-src 'self' data: https: https://fonts.gstatic.com";
-    const csp = [
-        "default-src 'self'",
-        scriptSrc,
-        styleSrc,
-        "img-src 'self' data: blob:",
-        fontSrc,
-        `connect-src ${connectSrc.join(' ')}`,
-        "media-src 'self'",
-        "frame-ancestors 'none'",
-        "base-uri 'self'",
-        "form-action 'self'",
-        "object-src 'none'",
-        "worker-src 'self' blob:",
-        "upgrade-insecure-requests",
-    ].join('; ');
-
     // ── Security Headers (defense in depth) ─────────────────
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('X-Frame-Options', 'DENY');
@@ -72,8 +32,6 @@ export function middleware(request: NextRequest) {
         'Strict-Transport-Security',
         'max-age=63072000; includeSubDomains; preload'
     );
-    response.headers.set('Content-Security-Policy', csp);
-
     // ── Auth Guard for protected routes ─────────────────────
     const isProtected = PROTECTED_ROUTES.some(route => pathname.startsWith(route));
     const isAuthRoute = AUTH_ROUTES.some(route => pathname.startsWith(route));

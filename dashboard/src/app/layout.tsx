@@ -46,25 +46,11 @@ export default function RootLayout({
   return (
     <html lang='en' suppressHydrationWarning>
       <head>
-        {/* Core Web Vitals optimization: Preload critical fonts */}
-        <link
-          rel='preload'
-          href='https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap'
-          as='style'
-          crossOrigin='anonymous'
-        />
-        <link
-          rel='preload'
-          href='https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap'
-          as='style'
-          crossOrigin='anonymous'
-        />
         {/* DNS prefetch for external critical resources */}
         <link rel='dns-prefetch' href='https://api.mapbox.com' />
         <link rel='dns-prefetch' href='https://cdn.jsdelivr.net' />
-        <link rel='dns-prefetch' href='https://fonts.googleapis.com' />
       </head>
-      <body className={`${bodyFont.variable} ${displayFont.variable} relative isolate`}>
+      <body className={`${bodyFont.variable} ${displayFont.variable} antialiased relative isolate`}>
         <ThemeProvider>
           <GlobalErrorBoundary>
             <div
