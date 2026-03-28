@@ -116,7 +116,7 @@ export default function LandingPage() {
   const transitionProgress = useMotionValue(0)
   const latestScrollRef = React.useRef(0)
   const routeFallbackTimerRef = React.useRef<
-    number | ReturnType<typeof setTimeout> | null
+    ReturnType<typeof setTimeout> | null
   >(null)
   const { wsStatus, backendStatus } = useAppHealthEvents()
   const [browserOffline, setBrowserOffline] = React.useState(false)
@@ -138,7 +138,7 @@ export default function LandingPage() {
     clearRouteFallbackTimer()
 
     if (browserWindow) {
-      routeFallbackTimerRef.current = browserWindow.setTimeout(() => {
+      routeFallbackTimerRef.current = setTimeout(() => {
         browserWindow.location.assign('/dashboard')
       }, 3500)
     }

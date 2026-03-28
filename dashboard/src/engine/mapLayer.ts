@@ -8,7 +8,7 @@
  * ================================================================ */
 
 import mapboxgl from 'mapbox-gl';
-import { HeatmapLayer } from '@deck.gl/aggregation-layers';
+import { HeatmapLayer, ScreenGridLayer } from '@deck.gl/aggregation-layers';
 import { ScatterplotLayer } from '@deck.gl/layers';
 import type { PickingInfo } from '@deck.gl/core';
 import { MapboxOverlay } from '@deck.gl/mapbox';
@@ -75,6 +75,7 @@ const HEATMAP_ALPHA_EPSILON = 0.02;
 const MODE_TRANSITION_DURATION_MS = 500;
 const OPACITY_EPSILON = 0.01;
 const CACHE_PERSIST_INTERVAL_MS = 5_000;
+const TRUCK_CLUSTER_THRESHOLD = 100_000;
 
 const HEATMAP_BASE_COLOR_RANGE: readonly RGBA[] = [
     [14, 116, 144, 8],
@@ -461,6 +462,32 @@ export class ImperativeMapLayer {
         });
     }
 
+    private buildClusterLayer(): ScreenGridLayer<TruckRenderPoint> {
+        return new ScreenGridLayer<TruckRenderPoint>({
+            id: 'trucks-screen-grid-cluster',
+            data: this.renderData,
+            pickable: false,
+            cellSizePixels: 22,
+            opacity: this.liveVisibility,
+            getPosition: (d) => d.position,
+            getWeight: (d) => 1 + clampUnit(d.speed / 120) + clampUnit(Math.abs(d.temperature + 12) / 20),
+            colorRange: [
+                [8, 47, 73, 70],
+                [14, 116, 144, 92],
+                [6, 182, 212, 116],
+                [34, 197, 94, 150],
+                [250, 204, 21, 184],
+                [249, 115, 22, 212],
+                [239, 68, 68, 236],
+            ],
+            updateTriggers: {
+                getPosition: this.dataVersion,
+                getWeight: this.dataVersion,
+                opacity: Math.round(this.liveVisibility * 100),
+            },
+        });
+    }
+
     private loadCachedFleetIfNeeded(): void {
         if (this.cacheHydrationRequested) return;
         this.cacheHydrationRequested = true;
@@ -708,10 +735,19 @@ export class ImperativeMapLayer {
         const now = performance.now();
         this.syncFromTransientStore();
         if (!this.overlay) return;
-        const layers: Array<ScatterplotLayer<TruckRenderPoint> | HeatmapLayer<HeatmapPoint>> = [];
+        const layers: Array<
+            ScatterplotLayer<TruckRenderPoint>
+            | ScreenGridLayer<TruckRenderPoint>
+            | HeatmapLayer<HeatmapPoint>
+        > = [];
+        const useClusterLayer = this.renderData.length >= TRUCK_CLUSTER_THRESHOLD;
 
         if (this.liveVisibility > OPACITY_EPSILON) {
-            layers.push(this.buildLayer());
+            if (useClusterLayer) {
+                layers.push(this.buildClusterLayer());
+            } else {
+                layers.push(this.buildLayer());
+            }
         }
 
         const heatmapLayer = this.buildHeatmapLayer();
@@ -720,7 +756,7 @@ export class ImperativeMapLayer {
         }
 
         const glowLayer = this.buildSelectedGlowLayer(now);
-        if (glowLayer && this.liveVisibility > OPACITY_EPSILON) {
+        if (glowLayer && this.liveVisibility > OPACITY_EPSILON && !useClusterLayer) {
             layers.push(glowLayer);
         }
         this.overlay.setProps({

@@ -321,6 +321,7 @@ type MagneticButtonProps = Readonly<{
   title?: string
   ariaLabel?: string
   ariaPressed?: boolean
+  tabIndex?: number
   type?: 'button' | 'submit' | 'reset'
 }>
 
@@ -331,6 +332,7 @@ const MagneticButton = memo(function MagneticButton({
   title,
   ariaLabel,
   ariaPressed,
+  tabIndex,
   type = 'button',
 }: MagneticButtonProps) {
   const x = useMotionValue(0)
@@ -358,6 +360,7 @@ const MagneticButton = memo(function MagneticButton({
       title={title}
       aria-label={ariaLabel}
       aria-pressed={ariaPressed}
+      tabIndex={tabIndex}
       onClick={onClick}
       onMouseMove={onMove}
       onMouseLeave={reset}
@@ -1113,7 +1116,6 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
           }}
           className='mission-control-shell relative min-h-screen overflow-x-hidden text-white selection:bg-cyan-500/30 selection:text-white'
         >
-          <h1 className='sr-only'>Dashboard</h1>
           <div className='pointer-events-none fixed inset-0 -z-20 hud-grid-overlay opacity-45' />
           <div className='pointer-events-none fixed inset-0 -z-10 scanline-overlay opacity-40' />
 
@@ -1189,6 +1191,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                   <div className='flex items-center gap-1.5'>
                     <MagneticButton
                       onClick={toggleGrid}
+                      tabIndex={0}
                       title='Toggle Grid'
                       ariaLabel='Toggle dashboard grid overlay'
                       ariaPressed={showGrid}
@@ -1352,6 +1355,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
 
           {/* ── Main Content ── */}
           <main className='mx-auto max-w-[120rem] space-y-6 px-4 py-6 sm:px-6'>
+            <h1 className='sr-only'>Cryogenic Mission Console</h1>
             {/* Status pills */}
             <div className='flex flex-wrap items-center gap-3'>
               <Pill intent={resolveConnectionIntent(connectionStatus)}>
