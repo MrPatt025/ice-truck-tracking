@@ -242,16 +242,15 @@ const usePwaInstallPrompt = (mounted: boolean): PwaInstallPromptState => {
 }
 
 const useMapModeControls = (
-  showHeatmap: boolean,
-  toggleHeatmap: () => void
+  showHeatmap: boolean
 ): MapModeControls => {
   const setMapMode = useCallback(
     (mode: 'live' | 'historical') => {
       const shouldShowHeatmap = mode === 'historical'
       if (useIoTStore.getState().showHeatmap === shouldShowHeatmap) return
-      toggleHeatmap()
+      useIoTStore.setState({ showHeatmap: shouldShowHeatmap })
     },
-    [toggleHeatmap]
+    []
   )
 
   return {
@@ -1181,10 +1180,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
 
   const { canInstallApp, installingApp, installApp } =
     usePwaInstallPrompt(mounted)
-  const { isLiveMode, setMapMode } = useMapModeControls(
-    showHeatmap,
-    toggleHeatmap
-  )
+  const { isLiveMode, setMapMode } = useMapModeControls(showHeatmap)
   useIntroTransitionSync(
     isTransitioning,
     phase,
@@ -1635,20 +1631,22 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
             <motion.section
               initial={false}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.46, ease: [0.2, 0.84, 0.24, 1] }}
-              className='group relative overflow-hidden rounded-2xl border border-cyan-200/25 bg-slate-900/45 p-4 backdrop-blur-2xl shadow-[0_24px_90px_-54px_rgba(34,211,238,0.85)]'
+              transition={{ duration: 0.5, ease: [0.2, 0.84, 0.24, 1] }}
+              className='group relative overflow-hidden rounded-2xl border border-cyan-200/30 bg-slate-900/50 p-4 backdrop-blur-3xl shadow-[0_26px_96px_-56px_rgba(34,211,238,0.9)] supports-[backdrop-filter]:backdrop-saturate-150'
+              style={{ willChange: 'transform, opacity' }}
               data-testid='mission-control-surface'
             >
               <div
                 aria-hidden='true'
-                className='pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-soft-light'
+                className='pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-soft-light'
                 style={{
                   backgroundImage:
                     'url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4"/></filter><rect width="120" height="120" filter="url(%23n)"/></svg>\')',
                   backgroundSize: '72px 72px',
                 }}
               />
-              <div className='pointer-events-none absolute -inset-20 bg-[radial-gradient(80rem_30rem_at_20%_-20%,rgba(34,211,238,.22),transparent),radial-gradient(90rem_34rem_at_80%_140%,rgba(139,92,246,.2),transparent)] opacity-80 transition-opacity duration-700 group-hover:opacity-100' />
+              <div className='pointer-events-none absolute inset-0 rounded-[inherit] border border-white/10' />
+              <div className='pointer-events-none absolute -inset-20 bg-[radial-gradient(80rem_30rem_at_20%_-20%,rgba(34,211,238,.24),transparent),radial-gradient(90rem_34rem_at_80%_140%,rgba(139,92,246,.22),transparent)] opacity-80 transition-opacity duration-700 group-hover:opacity-100' />
               <div className='relative flex flex-wrap items-center justify-between gap-3'>
                 <MapModeToggle
                   isLiveMode={isLiveMode}

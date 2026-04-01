@@ -7,9 +7,9 @@ interface OfflineBannerProps {
 }
 
 const OfflineBanner = memo(function OfflineBanner({ className = '' }: Readonly<OfflineBannerProps>) {
-  const [isOnline, setIsOnline] = useState<boolean>(() => {
+  const [isOffline, setIsOffline] = useState<boolean>(() => {
     if (globalThis.window === undefined) return true
-    return globalThis.navigator.onLine
+    return globalThis.navigator.onLine === false
   })
 
   useEffect(() => {
@@ -18,19 +18,21 @@ const OfflineBanner = memo(function OfflineBanner({ className = '' }: Readonly<O
     }
 
     const updateStatus = () => {
-      setIsOnline(globalThis.navigator.onLine)
+      setIsOffline(globalThis.navigator.onLine === false)
     }
 
     updateStatus()
 
     globalThis.window.addEventListener('online', updateStatus)
     globalThis.window.addEventListener('offline', updateStatus)
-    const statusPoll = globalThis.window.setInterval(updateStatus, 400)
+    const statusPoll = globalThis.window.setInterval(updateStatus, 120)
+    const hydrationSync = globalThis.window.setTimeout(updateStatus, 50)
 
     return () => {
       globalThis.window.removeEventListener('online', updateStatus)
       globalThis.window.removeEventListener('offline', updateStatus)
       globalThis.window.clearInterval(statusPoll)
+      globalThis.window.clearTimeout(hydrationSync)
     }
   }, [])
 
@@ -38,9 +40,9 @@ const OfflineBanner = memo(function OfflineBanner({ className = '' }: Readonly<O
     <div
       role='status'
       aria-live='polite'
-      aria-hidden={isOnline}
+      aria-hidden={!isOffline}
       data-testid='offline-indicator'
-      className={`glass-panel rounded-xl border border-amber-200/30 bg-amber-100/10 p-3 text-amber-100 shadow-xl transition-opacity duration-200 ${isOnline ? 'pointer-events-none invisible opacity-0' : 'visible opacity-100'} ${className}`}
+      className={`glass-panel rounded-xl border border-amber-200/30 bg-amber-100/10 p-3 text-amber-100 shadow-xl transition-opacity duration-200 ${isOffline ? 'visible opacity-100' : 'pointer-events-none invisible opacity-0'} ${className}`}
     >
       <p className='text-sm font-semibold tracking-wide'>
         Offline mode enabled

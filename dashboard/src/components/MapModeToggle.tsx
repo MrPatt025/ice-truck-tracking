@@ -1,6 +1,6 @@
 'use client'
 
-import React, { memo, useEffect, useState } from 'react'
+import React, { memo, useEffect, useRef, useState } from 'react'
 
 interface MapModeToggleProps {
   isLiveMode: boolean
@@ -16,21 +16,34 @@ const MapModeToggle = memo(function MapModeToggle({
   onModeChange,
   className = '',
 }: Readonly<MapModeToggleProps>) {
+  const derivedMode = isLiveMode ? 'live' : 'historical'
   const [optimisticMode, setOptimisticMode] = useState<'live' | 'historical'>(
-    isLiveMode ? 'live' : 'historical'
+    derivedMode
   )
+  const pendingModeRef = useRef<'live' | 'historical' | null>(null)
 
   useEffect(() => {
-    setOptimisticMode(isLiveMode ? 'live' : 'historical')
-  }, [isLiveMode])
+    if (pendingModeRef.current === derivedMode) {
+      pendingModeRef.current = null
+    }
+
+    if (pendingModeRef.current === null) {
+      setOptimisticMode(derivedMode)
+    }
+  }, [derivedMode])
 
   const isHistoricalMode = optimisticMode === 'historical'
   const isLive = optimisticMode === 'live'
 
   const switchMode = (mode: 'live' | 'historical') => {
-    if (optimisticMode === mode) return
+    if (optimisticMode === mode && pendingModeRef.current === null) return
+
+    pendingModeRef.current = mode
     setOptimisticMode(mode)
-    onModeChange(mode)
+
+    if (derivedMode !== mode) {
+      onModeChange(mode)
+    }
   }
 
   return (
