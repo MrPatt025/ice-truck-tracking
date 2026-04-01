@@ -2,6 +2,7 @@
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const http = require('node:http');
+const { randomInt } = require('node:crypto');
 
 // Import configurations
 const config = require('./src/config/env');
@@ -129,6 +130,8 @@ app.get('/', (req, res) => {
 // ---- DEV mock data for frontend ----
 if (process.env.USE_FAKE_DB === 'true') {
   const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+  const rand = () => randomInt(0, 1_000_000) / 1_000_000;
+  const randBetween = (min, max) => min + rand() * (max - min);
 
   let mem = {
     trucks: [
@@ -145,19 +148,19 @@ if (process.env.USE_FAKE_DB === 'true') {
   setInterval(() => {
     mem.trucks = mem.trucks.map(t => ({
       ...t,
-      latitude: t.latitude + (Math.random() - 0.5) * 0.002,
-      longitude: t.longitude + (Math.random() - 0.5) * 0.002,
-      speed: clamp((t.speed ?? 30) + (Math.random() - 0.5) * 5, 0, 70),
-      temp: clamp((t.temp ?? -8) + (Math.random() - 0.5) * 0.5, -20, 5),
+      latitude: t.latitude + (rand() - 0.5) * 0.002,
+      longitude: t.longitude + (rand() - 0.5) * 0.002,
+      speed: clamp((t.speed ?? 30) + (rand() - 0.5) * 5, 0, 70),
+      temp: clamp((t.temp ?? -8) + (rand() - 0.5) * 0.5, -20, 5),
       updatedAt: new Date().toISOString(),
     }));
 
     // สุ่ม alert บ้าง
-    if (Math.random() < 0.2) {
+    if (rand() < 0.2) {
       mem.alerts.unshift({
         id: String(Date.now()),
-        level: ['info', 'warn', 'critical'][Math.floor(Math.random() * 3)],
-        message: `Ping from ${mem.trucks[Math.floor(Math.random() * mem.trucks.length)].id}`,
+        level: ['info', 'warn', 'critical'][randomInt(0, 3)],
+        message: `Ping from ${mem.trucks[randomInt(0, mem.trucks.length)].id}`,
         ts: new Date().toISOString()
       });
       mem.alerts = mem.alerts.slice(0, 50);
@@ -214,11 +217,11 @@ if (process.env.USE_FAKE_DB === 'true') {
     const n = Number(req.query.count || 5);
     mem.trucks = Array.from({ length: n }, (_, i) => ({
       id: `truck-${String(i + 1).padStart(3, '0')}`,
-      latitude: 13.7563 + (Math.random() - 0.5) * 0.02,
-      longitude: 100.5018 + (Math.random() - 0.5) * 0.02,
+      latitude: 13.7563 + (rand() - 0.5) * 0.02,
+      longitude: 100.5018 + (rand() - 0.5) * 0.02,
       driver_name: `Driver ${i + 1}`,
-      speed: Math.round(Math.random() * 60),
-      temp: -10 + Math.random() * 5,
+      speed: Math.round(randBetween(0, 60)),
+      temp: randBetween(-10, -5),
       updatedAt: new Date().toISOString(),
     }));
     try {

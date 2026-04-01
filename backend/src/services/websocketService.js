@@ -1,6 +1,9 @@
 const { Server } = require('socket.io');
+const { randomInt } = require('node:crypto');
 const logger = require('../config/logger');
 const { setWsConnections, recordWsMessage, recordWsError } = require('../middleware/observability');
+
+const rand = () => randomInt(0, 1_000_000) / 1_000_000;
 
 class WebSocketService {
   constructor() {
@@ -42,9 +45,9 @@ class WebSocketService {
     this.simulationInterval = setInterval(() => {
       const mockTruckData = {
         id: 'truck-001',
-        latitude: 13.7563 + (Math.random() - 0.5) * 0.01,
-        longitude: 100.5018 + (Math.random() - 0.5) * 0.01,
-        temperature: -18 + Math.random() * 2,
+        latitude: 13.7563 + (rand() - 0.5) * 0.01,
+        longitude: 100.5018 + (rand() - 0.5) * 0.01,
+        temperature: -18 + rand() * 2,
         status: 'active',
         timestamp: new Date().toISOString(),
       };

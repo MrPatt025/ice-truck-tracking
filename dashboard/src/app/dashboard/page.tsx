@@ -107,6 +107,14 @@ const GlassPulseFallback = () => (
   <div className='h-9 w-28 animate-pulse rounded-xl border border-white/20 bg-white/10 shadow-[0_16px_38px_-20px_rgba(56,189,248,0.85)]' />
 )
 
+const WebGLCanvasSkeleton = () => (
+  <canvas
+    data-testid='webgl-canvas-skeleton'
+    aria-hidden='true'
+    className='absolute inset-0 h-full w-full rounded-2xl opacity-30'
+  />
+)
+
 const FpsTargetMonitor = dynamic(() => import('@/components/FpsTargetMonitor'), {
   ssr: false,
   loading: GlassPulseFallback,
@@ -1098,6 +1106,13 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
             className='mission-control-shell grid min-h-screen place-items-center bg-slate-950/90 text-cyan-100'
           >
             <div className='space-y-3 text-center'>
+              <div className='mx-auto h-28 w-44 rounded-2xl border border-cyan-300/25 bg-cyan-500/5 p-2'>
+                <canvas
+                  data-testid='dashboard-fallback-canvas'
+                  aria-hidden='true'
+                  className='h-full w-full rounded-xl opacity-60'
+                />
+              </div>
               <div className='mx-auto h-10 w-10 animate-spin rounded-full border-2 border-cyan-300/35 border-t-cyan-200' />
               <p className='text-sm tracking-wide'>
                 Restoring mission control pipeline...
@@ -1146,7 +1161,9 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
             <div
               ref={threeContainerRef}
               className='fixed inset-0 -z-10 opacity-50'
-            />
+            >
+              <WebGLCanvasSkeleton />
+            </div>
           )}
 
           {/* ── Sticky Header ── */}
@@ -1363,7 +1380,10 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
           </header>
 
           {/* ── Main Content ── */}
-          <main className='mx-auto max-w-[120rem] space-y-6 px-4 py-6 sm:px-6'>
+          <main
+            className='mx-auto max-w-[120rem] space-y-6 px-4 py-6 sm:px-6'
+            style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 1400px' }}
+          >
             {/* ── Mission Control Surface (always-present E2E anchors) ── */}
             <section className='rounded-2xl border border-cyan-200/20 bg-slate-900/40 p-4 backdrop-blur-xl shadow-[0_20px_80px_-50px_rgba(34,211,238,0.75)]'>
               <div className='flex flex-wrap items-center justify-between gap-3'>

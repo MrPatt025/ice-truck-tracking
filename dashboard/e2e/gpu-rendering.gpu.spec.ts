@@ -7,7 +7,21 @@
  */
 import { test, expect } from '@playwright/test';
 
+const setAuthCookie = async (page: import('@playwright/test').Page, baseURL: string) => {
+    await page.context().addCookies([
+        {
+            name: 'access_token',
+            value: 'e2e-test-token',
+            url: baseURL,
+        },
+    ]);
+};
+
 test.describe('GPU Rendering & Recovery', () => {
+
+    test.beforeEach(async ({ page, baseURL }) => {
+        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+    });
 
     test('dashboard loads with WebGL canvas', async ({ page }) => {
         await page.goto('/dashboard');

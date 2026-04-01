@@ -27,6 +27,7 @@ jobs:
         with:
           args: detect --source . --config .gitleaks.toml --redact --verbose
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_CONFIG: .gitleaks.toml
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
 

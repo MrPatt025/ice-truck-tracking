@@ -13,7 +13,7 @@ COPY package.json pnpm-lock.yaml* ./
 # Development stage
 FROM base AS development
 RUN npm install
-COPY . .
+COPY --chown=node:node . .
 EXPOSE 5000
 USER node
 CMD ["dumb-init", "npm", "run", "dev"]
@@ -25,18 +25,17 @@ RUN npm install --omit=dev
 # Production stage
 FROM node:25-alpine AS production
 
-# Install security updates and dumb-init, create non-root user
-RUN apk update && apk upgrade && apk add --no-cache dumb-init curl \
-  && addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+# Install security updates and dumb-init
+RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
 
 # Set working directory
 WORKDIR /usr/src/app
 
 # Copy production dependencies
-COPY --from=dependencies --chown=nodejs:nodejs /usr/src/app/node_modules ./node_modules
+COPY --from=dependencies --chown=node:node /usr/src/app/node_modules ./node_modules
 
 # Copy application code
-COPY --chown=nodejs:nodejs . .
+COPY --chown=node:node . .
 
 # Set environment variables
 ENV NODE_ENV=production
@@ -46,7 +45,7 @@ ENV PORT=5000
 EXPOSE 5000
 
 # Switch to non-root user
-USER nodejs
+USER node
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

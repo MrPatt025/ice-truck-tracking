@@ -14,6 +14,7 @@
 
 const { GenericContainer, Wait } = require('testcontainers');
 const { Pool } = require('pg');
+const { randomUUID } = require('node:crypto');
 const path = require('node:path');
 const fs = require('node:fs');
 
@@ -263,7 +264,7 @@ describe('Testcontainers — PostgreSQL Integration', () => {
         );
 
         const rows = await query(
-            `SELECT id, truck_id, latitude, longitude, temperature, speed, time
+            `SELECT truck_id, latitude, longitude, temperature, speed, time
              FROM telemetry
              WHERE truck_id = $1
              ORDER BY time DESC`,
@@ -276,18 +277,32 @@ describe('Testcontainers — PostgreSQL Integration', () => {
     // ── Alerts ─────────────────────────────────────────────────
 
     test('insert and resolve an alert', async () => {
+        const alertMessage = `Temperature exceeds threshold (${randomUUID()})`;
+
         const [alert] = await query(
             `INSERT INTO alerts (truck_id, alert_type, severity, message)
              VALUES ($1, $2, $3, $4)
              RETURNING *`,
-            ['TRK-001', 'temperature_high', 'critical', 'Temperature exceeds threshold'],
+            ['TRK-001', 'temperature_high', 'critical', alertMessage],
         );
 
         expect(alert.resolved).toBe(false);
 
-        await query(`UPDATE alerts SET resolved = TRUE WHERE time = $1`, [alert.time]);
+        await query(
+            `UPDATE alerts
+             SET resolved = TRUE, resolved_at = NOW()
+             WHERE truck_id = $1 AND alert_type = $2 AND message = $3`,
+            ['TRK-001', 'temperature_high', alertMessage],
+        );
 
-        const resolved = await get(`SELECT resolved FROM alerts WHERE time = $1`, [alert.time]);
+        const resolved = await get(
+            `SELECT resolved
+             FROM alerts
+             WHERE truck_id = $1 AND alert_type = $2 AND message = $3
+             ORDER BY time DESC
+             LIMIT 1`,
+            ['TRK-001', 'temperature_high', alertMessage],
+        );
         expect(resolved.resolved).toBe(true);
     });
 
