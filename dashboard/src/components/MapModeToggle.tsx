@@ -1,6 +1,6 @@
 'use client'
 
-import React, { memo, useEffect, useState } from 'react'
+import React, { memo, useEffect, useRef, useState } from 'react'
 
 interface MapModeToggleProps {
   isLiveMode: boolean
@@ -19,9 +19,16 @@ const MapModeToggle = memo(function MapModeToggle({
   const [localMode, setLocalMode] = useState<'live' | 'historical'>(
     isLiveMode ? 'live' : 'historical'
   )
+  const pendingModeRef = useRef<'live' | 'historical' | null>(null)
 
   useEffect(() => {
-    setLocalMode(isLiveMode ? 'live' : 'historical')
+    const nextMode = isLiveMode ? 'live' : 'historical'
+    if (pendingModeRef.current !== null && pendingModeRef.current !== nextMode) {
+      return
+    }
+
+    pendingModeRef.current = null
+    setLocalMode(nextMode)
   }, [isLiveMode])
 
   const isHistoricalMode = localMode === 'historical'
@@ -29,8 +36,12 @@ const MapModeToggle = memo(function MapModeToggle({
 
   const switchMode = (mode: 'live' | 'historical') => {
     if (localMode === mode) return
+
+    pendingModeRef.current = mode
     setLocalMode(mode)
-    onModeChange(mode)
+    globalThis.queueMicrotask(() => {
+      onModeChange(mode)
+    })
   }
 
   return (

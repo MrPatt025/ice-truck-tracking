@@ -33,11 +33,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -50,11 +50,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -69,13 +69,13 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74
+      - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -98,17 +98,17 @@ jobs:
       NODE_ENV: test
       USE_FAKE_DB: 'true'
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: JWT_SECRET="$(openssl rand -hex 32)" pnpm --filter @ice-truck/backend run test -- --ci --coverage --forceExit --testTimeout=15000
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
           path: backend/coverage/
@@ -124,11 +124,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -142,17 +142,17 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @ice-truck/dashboard run test -- --ci --coverage
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@v4
         with:
           name: dashboard-coverage
           path: dashboard/coverage/
@@ -165,11 +165,11 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -180,7 +180,7 @@ jobs:
         run: pnpm --filter @ice-truck/dashboard run test:e2e:light
         env:
           E2E_LIGHT: 'true'
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report-light
@@ -197,11 +197,11 @@ jobs:
       NEXT_PUBLIC_API_URL: http://localhost:5000
       NEXT_PUBLIC_WS_URL: ws://localhost:5000
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -216,21 +216,21 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+      - uses: actions/download-artifact@v4
         with:
           name: backend-coverage
           path: backend-coverage
-      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+      - uses: actions/download-artifact@v4
         with:
           name: dashboard-coverage
           path: dashboard-coverage
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5.3.0
         env:
-          SONAR_TOKEN: ${{ secrets[format('{0}', 'SONAR_TOKEN')] }} # NOSONAR
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # NOSONAR
         with:
           args: >
             -Dsonar.projectKey=PATTANAKORN025_Ice-truck-racking
@@ -263,20 +263,20 @@ jobs:
       contents: read
     environment: production
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: pnpm/action-setup@02f6c237bd2518259fed6c71566509edfb3f2b74
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - name: Validate Vercel secrets
         env:
-          VERCEL_TOKEN: ${{ secrets[format('{0}', 'VERCEL_TOKEN')] }} # NOSONAR
-          VERCEL_ORG_ID: ${{ secrets[format('{0}', 'VERCEL_ORG_ID')] }} # NOSONAR
-          VERCEL_PROJECT_ID: ${{ secrets[format('{0}', 'VERCEL_PROJECT_ID')] }} # NOSONAR
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} # NOSONAR
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }} # NOSONAR
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }} # NOSONAR
         run: |
           test -n "$VERCEL_TOKEN"
           test -n "$VERCEL_ORG_ID"
@@ -284,9 +284,9 @@ jobs:
       - name: Deploy dashboard to Vercel
         working-directory: dashboard
         env:
-          VERCEL_TOKEN: ${{ secrets[format('{0}', 'VERCEL_TOKEN')] }} # NOSONAR
-          VERCEL_ORG_ID: ${{ secrets[format('{0}', 'VERCEL_ORG_ID')] }} # NOSONAR
-          VERCEL_PROJECT_ID: ${{ secrets[format('{0}', 'VERCEL_PROJECT_ID')] }} # NOSONAR
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} # NOSONAR
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }} # NOSONAR
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }} # NOSONAR
         run: |
           npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
           npx vercel build --prod --token="$VERCEL_TOKEN"
@@ -303,11 +303,11 @@ jobs:
     steps:
       - name: Validate Render deploy secret
         env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets[format('{0}', 'RENDER_DEPLOY_HOOK_URL')] }} # NOSONAR
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }} # NOSONAR
         run: |
           test -n "$RENDER_DEPLOY_HOOK_URL"
       - name: Trigger Render production deploy hook
         env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets[format('{0}', 'RENDER_DEPLOY_HOOK_URL')] }} # NOSONAR
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }} # NOSONAR
         run: |
           curl --fail --silent --show-error --max-time 30 -X POST "$RENDER_DEPLOY_HOOK_URL"

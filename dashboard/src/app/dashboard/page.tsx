@@ -1632,13 +1632,13 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
               initial={false}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.5, ease: [0.2, 0.84, 0.24, 1] }}
-              className='group relative overflow-hidden rounded-2xl border border-cyan-200/30 bg-slate-900/50 p-4 backdrop-blur-3xl shadow-[0_26px_96px_-56px_rgba(34,211,238,0.9)] supports-[backdrop-filter]:backdrop-saturate-150'
-              style={{ willChange: 'transform, opacity' }}
+              className='group relative isolate overflow-hidden rounded-[1.75rem] border border-cyan-200/25 bg-[linear-gradient(135deg,rgba(15,23,42,.82),rgba(15,23,42,.56))] p-5 backdrop-blur-[32px] shadow-[0_34px_120px_-64px_rgba(34,211,238,0.95)] supports-[backdrop-filter]:backdrop-saturate-150'
+              style={{ willChange: 'transform, opacity', minHeight: '6.25rem' }}
               data-testid='mission-control-surface'
             >
               <div
                 aria-hidden='true'
-                className='pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-soft-light'
+                className='pointer-events-none absolute inset-0 opacity-[0.08] mix-blend-soft-light'
                 style={{
                   backgroundImage:
                     'url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4"/></filter><rect width="120" height="120" filter="url(%23n)"/></svg>\')',
@@ -1646,14 +1646,17 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                 }}
               />
               <div className='pointer-events-none absolute inset-0 rounded-[inherit] border border-white/10' />
-              <div className='pointer-events-none absolute -inset-20 bg-[radial-gradient(80rem_30rem_at_20%_-20%,rgba(34,211,238,.24),transparent),radial-gradient(90rem_34rem_at_80%_140%,rgba(139,92,246,.22),transparent)] opacity-80 transition-opacity duration-700 group-hover:opacity-100' />
-              <div className='relative flex flex-wrap items-center justify-between gap-3'>
+              <div className='pointer-events-none absolute -inset-20 bg-[radial-gradient(80rem_30rem_at_20%_-20%,rgba(34,211,238,.28),transparent),radial-gradient(90rem_34rem_at_80%_140%,rgba(139,92,246,.24),transparent)] opacity-85 transition-opacity duration-700 group-hover:opacity-100' />
+              <div className='relative flex min-h-[4.75rem] flex-wrap items-center justify-between gap-4'>
                 <MapModeToggle
                   isLiveMode={isLiveMode}
                   onModeChange={setMapMode}
                   className='mb-0'
                 />
-                <OfflineBanner className='static w-[min(92vw,26rem)]' />
+                <OfflineBanner
+                  isOffline={browserOffline}
+                  className='static w-[min(92vw,26rem)]'
+                />
               </div>
             </motion.section>
 
