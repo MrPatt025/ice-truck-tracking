@@ -1,4 +1,4 @@
-﻿import './globals.css'
+import './globals.css'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { Orbitron, Space_Grotesk } from 'next/font/google'
 import type { Metadata, Viewport } from 'next'

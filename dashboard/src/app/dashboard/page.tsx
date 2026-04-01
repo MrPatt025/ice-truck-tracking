@@ -1162,15 +1162,23 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                     </div>
                   </motion.div>
                   <div>
-                    <h1
+                    <motion.h1
                       data-display-font='true'
-                      className='bg-gradient-to-r from-cyan-100 via-white to-amber-100 bg-clip-text text-xl font-black uppercase tracking-[0.09em] text-transparent sm:text-2xl'
+                      className='bg-gradient-to-r from-cyan-100 via-white to-amber-100 bg-clip-text text-lg font-black uppercase tracking-[0.11em] leading-tight text-transparent sm:text-2xl lg:text-3xl'
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, ease: EASE_CINEMATIC_INTRO }}
                     >
                       Cryogenic Mission Console
-                    </h1>
-                    <p className='text-[11px] sm:text-xs text-slate-300 font-medium tracking-[0.12em] uppercase'>
+                    </motion.h1>
+                    <motion.p
+                      className='mt-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 sm:text-xs'
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.6, delay: 0.1 }}
+                    >
                       Fleet Sentinel Grid • IoT Engine v4.0
-                    </p>
+                    </motion.p>
                   </div>
                 </div>
 
@@ -1393,40 +1401,67 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
             </div>
 
             {/* ── Metric Cards Grid (React — updates via Zustand selector ~2x/sec) ── */}
-            <section className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+            <motion.section
+              className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'
+              initial='hidden'
+              animate='visible'
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.1, delayChildren: 0.15 },
+                },
+              }}
+            >
               {metricCards.map(m => (
-                <Tilt key={m.title}>
-                  <GlassCard accent={m.accent}>
-                    <div className='p-5 sm:p-6'>
-                      <div className='mb-3 flex items-center justify-between'>
-                        <span className='text-sm font-semibold text-slate-400'>
-                          {m.title}
-                        </span>
-                        <div
-                          className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${m.accent} shadow-lg`}
-                        >
-                          <m.icon className='h-5 w-5 text-white' />
+                <motion.div
+                  key={m.title}
+                  variants={{
+                    hidden: { opacity: 0, y: 20, scale: 0.96 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      transition: {
+                        duration: 0.5,
+                        ease: EASE_CINEMATIC_INTRO,
+                      },
+                    },
+                  }}
+                >
+                  <Tilt>
+                    <GlassCard accent={m.accent}>
+                      <div className='p-5 sm:p-6'>
+                        <div className='mb-3 flex items-center justify-between'>
+                          <span className='text-xs font-bold uppercase tracking-widest text-slate-400'>
+                            {m.title}
+                          </span>
+                          <div
+                            className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${m.accent} shadow-lg`}
+                          >
+                            <m.icon className='h-5 w-5 text-white' />
+                          </div>
+                        </div>
+                        <p className='text-3xl font-black tracking-tighter sm:text-4xl'>
+                          {m.value}
+                        </p>
+                        <div className='mt-3 flex items-center gap-2'>
+                          <span
+                            className={`flex items-center gap-1 text-xs font-bold ${resolveTrendColor(m.trend)}`}
+                          >
+                            {resolveTrendIcon(m.trend)}
+                            {m.change}
+                          </span>
+                          <span className='text-[11px] text-slate-500'>
+                            {m.detail}
+                          </span>
                         </div>
                       </div>
-                      <p className='text-3xl font-black tracking-tight'>
-                        {m.value}
-                      </p>
-                      <div className='mt-2 flex items-center gap-2'>
-                        <span
-                          className={`flex items-center gap-1 text-sm font-semibold ${resolveTrendColor(m.trend)}`}
-                        >
-                          {resolveTrendIcon(m.trend)}
-                          {m.change}
-                        </span>
-                        <span className='text-xs text-slate-500'>
-                          {m.detail}
-                        </span>
-                      </div>
-                    </div>
-                  </GlassCard>
-                </Tilt>
+                    </GlassCard>
+                  </Tilt>
+                </motion.div>
               ))}
-            </section>
+            </motion.section>
 
             {/* ── Chart Sections (Imperative Canvas — zero React renders per frame) ── */}
             <section className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
