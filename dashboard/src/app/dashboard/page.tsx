@@ -111,6 +111,7 @@ const WebGLCanvasSkeleton = () => (
   <canvas
     data-testid='webgl-canvas-skeleton'
     aria-hidden='true'
+    tabIndex={-1}
     className='absolute inset-0 h-full w-full rounded-2xl opacity-30'
   />
 )
@@ -957,7 +958,7 @@ const LiveMetricCards = memo(function LiveMetricCards() {
   return (
     <motion.section
       variants={PANEL_SPRING}
-      className='grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'
+      className='grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8'
     >
       {metricCards.map(m => (
         <motion.div
@@ -967,7 +968,7 @@ const LiveMetricCards = memo(function LiveMetricCards() {
         >
           <Tilt>
             <GlassCard accent={m.accent}>
-              <div className='h-full min-h-[13.5rem] p-5 sm:p-6'>
+              <div className='h-full min-h-[11.5rem] p-4 sm:p-5'>
                 <div className='mb-3 flex items-center justify-between'>
                   <span className='text-xs font-bold uppercase tracking-widest text-slate-400'>
                     {m.title}
@@ -996,6 +997,61 @@ const LiveMetricCards = memo(function LiveMetricCards() {
         </motion.div>
       ))}
     </motion.section>
+  )
+})
+
+const OperationsPulsePanel = memo(function OperationsPulsePanel() {
+  const metrics = useIoTStore(s => s.metrics)
+  const connectionStatus = useIoTStore(s => s.connectionStatus)
+  const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
+
+  const throughput = metrics.totalDeliveries || 234
+  const coldChain = metrics.avgTemperature || -4.2
+  const fleetUtilization = metrics.activeTrucks
+    ? Math.round((metrics.activeTrucks / 55) * 100)
+    : 87
+
+  return (
+    <GlassCard accent='from-cyan-400/25 via-violet-400/15 to-emerald-400/20'>
+      <div className='rounded-3xl p-6'>
+        <h3 className='mb-5 text-lg font-bold flex items-center gap-2'>
+          <TrendingUp className='h-5 w-5 text-cyan-300' />
+          Operations Pulse
+        </h3>
+        <div className='grid grid-cols-2 gap-3'>
+          <div className='rounded-xl border border-cyan-200/20 bg-cyan-500/10 p-3'>
+            <p className='text-[10px] uppercase tracking-[0.14em] text-cyan-200/75'>
+              Throughput
+            </p>
+            <p className='mt-1 text-2xl font-black'>{throughput}</p>
+          </div>
+          <div className='rounded-xl border border-violet-200/20 bg-violet-500/10 p-3'>
+            <p className='text-[10px] uppercase tracking-[0.14em] text-violet-200/75'>
+              Fleet Utilization
+            </p>
+            <p className='mt-1 text-2xl font-black'>{fleetUtilization}%</p>
+          </div>
+          <div className='rounded-xl border border-emerald-200/20 bg-emerald-500/10 p-3'>
+            <p className='text-[10px] uppercase tracking-[0.14em] text-emerald-200/75'>
+              Cold Chain Avg
+            </p>
+            <p className='mt-1 text-2xl font-black'>{coldChain.toFixed(1)}°C</p>
+          </div>
+          <div className='rounded-xl border border-rose-200/20 bg-rose-500/10 p-3'>
+            <p className='text-[10px] uppercase tracking-[0.14em] text-rose-200/75'>
+              Unack Alerts
+            </p>
+            <p className='mt-1 text-2xl font-black'>{unacknowledgedAlerts}</p>
+          </div>
+        </div>
+        <div className='mt-4 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300'>
+          Data stream status:{' '}
+          <span className='font-semibold text-cyan-200'>
+            {resolveConnectionLabel(connectionStatus)}
+          </span>
+        </div>
+      </div>
+    </GlassCard>
   )
 })
 
@@ -1294,6 +1350,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                 <canvas
                   data-testid='dashboard-fallback-canvas'
                   aria-hidden='true'
+                  tabIndex={-1}
                   className='h-full w-full rounded-xl opacity-60'
                 />
               </div>
@@ -1560,8 +1617,11 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
 
           {/* ── Main Content ── */}
           <main
-            className='mx-auto max-w-[120rem] space-y-6 px-4 py-6 sm:px-6'
-            style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 1400px' }}
+            className='mx-auto max-w-[128rem] space-y-6 px-4 py-6 sm:px-6'
+            style={{
+              contentVisibility: 'auto',
+              containIntrinsicSize: '1px 1400px',
+            }}
           >
             {/* ── Mission Control Surface (always-present E2E anchors) ── */}
             <motion.section
@@ -1576,7 +1636,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                 className='pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-soft-light'
                 style={{
                   backgroundImage:
-                    "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"120\" height=\"120\"><filter id=\"n\"><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.72\" numOctaves=\"4\"/></filter><rect width=\"120\" height=\"120\" filter=\"url(%23n)\"/></svg>')",
+                    'url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4"/></filter><rect width="120" height="120" filter="url(%23n)"/></svg>\')',
                   backgroundSize: '72px 72px',
                 }}
               />
@@ -1625,7 +1685,13 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
             </motion.div>
 
             {/* ── Chart Sections (Imperative Canvas — zero React renders per frame) ── */}
-            <section className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
+            <motion.section
+              variants={PANEL_SPRING}
+              initial='hidden'
+              whileInView='show'
+              viewport={{ once: true, amount: 0.22 }}
+              className='grid grid-cols-1 gap-6 lg:grid-cols-2'
+            >
               {/* Revenue Trend Analysis */}
               <GlassCard layoutId='panel-system-health'>
                 <div className='rounded-3xl p-6'>
@@ -1665,260 +1731,296 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                   <CanvasChart id='fleet' config={CHART_CONFIGS.fleet} />
                 </div>
               </GlassCard>
-            </section>
+            </motion.section>
 
-            <section className='grid grid-cols-1 gap-6 lg:grid-cols-3'>
+            <motion.section
+              variants={PANEL_SPRING}
+              initial='hidden'
+              whileInView='show'
+              viewport={{ once: true, amount: 0.22 }}
+              className='grid grid-cols-1 gap-6 xl:grid-cols-12'
+            >
               {/* Cargo Temperature Distribution */}
-              <GlassCard accent='from-blue-400/30 via-sky-400/20 to-cyan-400/30'>
-                <div className='rounded-3xl p-6'>
-                  <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
-                    <ThermometerSun className='h-5 w-5 text-sky-400' />
-                    Cargo Temperature Distribution
-                  </h3>
-                  <CanvasChart
-                    id='temperature'
-                    config={CHART_CONFIGS.temperature}
-                  />
-                  <div className='mt-4 grid grid-cols-2 gap-2'>
-                    {[
-                      { label: '≤ -10°C', color: 'bg-sky-400', pct: '20%' },
-                      {
-                        label: '-10 ~ -5°C',
-                        color: 'bg-emerald-400',
-                        pct: '30%',
-                      },
-                      { label: '-5 ~ 2°C', color: 'bg-violet-400', pct: '40%' },
-                      { label: '> 2°C', color: 'bg-rose-400', pct: '10%' },
-                    ].map(b => (
-                      <div
-                        key={b.label}
-                        className='flex items-center gap-2 text-xs text-slate-400'
-                      >
-                        <span
-                          className={`h-2.5 w-2.5 rounded-full ${b.color}`}
-                        />
-                        {b.label}: {b.pct}
-                      </div>
-                    ))}
+              <div className='xl:col-span-4'>
+                <GlassCard accent='from-blue-400/30 via-sky-400/20 to-cyan-400/30'>
+                  <div className='rounded-3xl p-6'>
+                    <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
+                      <ThermometerSun className='h-5 w-5 text-sky-400' />
+                      Cargo Temperature Distribution
+                    </h3>
+                    <CanvasChart
+                      id='temperature'
+                      config={CHART_CONFIGS.temperature}
+                    />
+                    <div className='mt-4 grid grid-cols-2 gap-2'>
+                      {[
+                        { label: '≤ -10°C', color: 'bg-sky-400', pct: '20%' },
+                        {
+                          label: '-10 ~ -5°C',
+                          color: 'bg-emerald-400',
+                          pct: '30%',
+                        },
+                        {
+                          label: '-5 ~ 2°C',
+                          color: 'bg-violet-400',
+                          pct: '40%',
+                        },
+                        { label: '> 2°C', color: 'bg-rose-400', pct: '10%' },
+                      ].map(b => (
+                        <div
+                          key={b.label}
+                          className='flex items-center gap-2 text-xs text-slate-400'
+                        >
+                          <span
+                            className={`h-2.5 w-2.5 rounded-full ${b.color}`}
+                          />
+                          {b.label}: {b.pct}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </GlassCard>
+                </GlassCard>
+              </div>
 
               {/* Alert Timeline */}
-              <GlassCard accent='from-rose-400/30 via-orange-400/20 to-amber-400/30'>
-                <div className='rounded-3xl p-6'>
-                  <div className='mb-4 flex items-center justify-between'>
-                    <h3 className='text-lg font-bold flex items-center gap-2'>
-                      <AlertTriangle className='h-5 w-5 text-rose-400' />
-                      Alert Timeline
-                    </h3>
-                    <button
-                      onClick={() => setFullscreen('alerts')}
-                      className='rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/10 transition-all'
-                      title='Fullscreen'
-                    >
-                      <Maximize2 className='h-4 w-4 text-slate-400' />
-                    </button>
+              <div className='xl:col-span-4'>
+                <GlassCard accent='from-rose-400/30 via-orange-400/20 to-amber-400/30'>
+                  <div className='rounded-3xl p-6'>
+                    <div className='mb-4 flex items-center justify-between'>
+                      <h3 className='text-lg font-bold flex items-center gap-2'>
+                        <AlertTriangle className='h-5 w-5 text-rose-400' />
+                        Alert Timeline
+                      </h3>
+                      <button
+                        onClick={() => setFullscreen('alerts')}
+                        className='rounded-xl p-2 ring-1 ring-white/10 hover:bg-white/10 transition-all'
+                        title='Fullscreen'
+                      >
+                        <Maximize2 className='h-4 w-4 text-slate-400' />
+                      </button>
+                    </div>
+                    <CanvasChart id='alerts' config={CHART_CONFIGS.alerts} />
                   </div>
-                  <CanvasChart id='alerts' config={CHART_CONFIGS.alerts} />
-                </div>
-              </GlassCard>
+                </GlassCard>
+              </div>
 
               {/* Performance Metrics */}
-              <GlassCard accent='from-emerald-400/30 via-teal-400/20 to-green-400/30'>
-                <div className='rounded-3xl p-6'>
-                  <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
-                    <Activity className='h-5 w-5 text-emerald-400' />
-                    Performance Metrics
-                  </h3>
-                  <CanvasChart id='fuel' config={CHART_CONFIGS.fuel} />
-                  <div className='mt-6 grid grid-cols-2 gap-3'>
-                    <div className='text-center p-3 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/30'>
-                      <p className='text-xs text-slate-400'>Avg Score</p>
-                      <p className='text-2xl font-bold text-emerald-400'>
-                        90.2
-                      </p>
-                    </div>
-                    <div className='text-center p-3 rounded-xl bg-cyan-500/10 ring-1 ring-cyan-500/30'>
-                      <p className='text-xs text-slate-400'>Rank</p>
-                      <p className='text-2xl font-bold text-cyan-400'>#1</p>
+              <div className='xl:col-span-4'>
+                <GlassCard accent='from-emerald-400/30 via-teal-400/20 to-green-400/30'>
+                  <div className='rounded-3xl p-6'>
+                    <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
+                      <Activity className='h-5 w-5 text-emerald-400' />
+                      Performance Metrics
+                    </h3>
+                    <CanvasChart id='fuel' config={CHART_CONFIGS.fuel} />
+                    <div className='mt-6 grid grid-cols-2 gap-3'>
+                      <div className='text-center p-3 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/30'>
+                        <p className='text-xs text-slate-400'>Avg Score</p>
+                        <p className='text-2xl font-bold text-emerald-400'>
+                          90.2
+                        </p>
+                      </div>
+                      <div className='text-center p-3 rounded-xl bg-cyan-500/10 ring-1 ring-cyan-500/30'>
+                        <p className='text-xs text-slate-400'>Rank</p>
+                        <p className='text-2xl font-bold text-cyan-400'>#1</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </GlassCard>
-            </section>
+                </GlassCard>
+              </div>
+            </motion.section>
 
             {/* ── System Health + Live Map ── */}
-            <section className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-              <GlassCard accent='from-violet-400/20 via-cyan-300/10 to-transparent'>
-                <div className='rounded-3xl p-6'>
-                  <h3 className='mb-6 text-lg font-bold flex items-center gap-2'>
-                    <Settings className='h-5 w-5 text-violet-400' />
-                    System Health Monitor
-                  </h3>
-                  <div className='space-y-4'>
-                    {[
-                      {
-                        name: 'API Gateway',
-                        status: apiHealthy,
-                        latency: '24ms',
-                        uptime: '99.98%',
-                      },
-                      {
-                        name: 'WebSocket',
-                        status: connectionStatus === 'connected',
-                        latency: '12ms',
-                        uptime: '99.99%',
-                      },
-                      {
-                        name: 'Database',
-                        status: true,
-                        latency: '8ms',
-                        uptime: '100%',
-                      },
-                      {
-                        name: 'Cache Layer',
-                        status: true,
-                        latency: '3ms',
-                        uptime: '99.95%',
-                      },
-                      {
-                        name: 'GPS Tracking',
-                        status: true,
-                        latency: '156ms',
-                        uptime: '98.76%',
-                      },
-                      {
-                        name: 'Temperature Sensors',
-                        status: true,
-                        latency: '45ms',
-                        uptime: '99.87%',
-                      },
-                    ].map(service => (
-                      <div
-                        key={service.name}
-                        className='flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all group'
-                      >
-                        <div className='flex items-center gap-3'>
-                          <span
-                            className={`h-3 w-3 rounded-full ${service.status ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}
-                          />
-                          <span className='font-medium'>{service.name}</span>
+            <motion.section
+              variants={PANEL_SPRING}
+              initial='hidden'
+              whileInView='show'
+              viewport={{ once: true, amount: 0.22 }}
+              className='grid grid-cols-1 gap-6 xl:grid-cols-12'
+            >
+              <div className='xl:col-span-5 space-y-6'>
+                <GlassCard accent='from-violet-400/20 via-cyan-300/10 to-transparent'>
+                  <div className='rounded-3xl p-6'>
+                    <h3 className='mb-6 text-lg font-bold flex items-center gap-2'>
+                      <Settings className='h-5 w-5 text-violet-400' />
+                      System Health Monitor
+                    </h3>
+                    <div className='space-y-4'>
+                      {[
+                        {
+                          name: 'API Gateway',
+                          status: apiHealthy,
+                          latency: '24ms',
+                          uptime: '99.98%',
+                        },
+                        {
+                          name: 'WebSocket',
+                          status: connectionStatus === 'connected',
+                          latency: '12ms',
+                          uptime: '99.99%',
+                        },
+                        {
+                          name: 'Database',
+                          status: true,
+                          latency: '8ms',
+                          uptime: '100%',
+                        },
+                        {
+                          name: 'Cache Layer',
+                          status: true,
+                          latency: '3ms',
+                          uptime: '99.95%',
+                        },
+                        {
+                          name: 'GPS Tracking',
+                          status: true,
+                          latency: '156ms',
+                          uptime: '98.76%',
+                        },
+                        {
+                          name: 'Temperature Sensors',
+                          status: true,
+                          latency: '45ms',
+                          uptime: '99.87%',
+                        },
+                      ].map(service => (
+                        <div
+                          key={service.name}
+                          className='flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-all group'
+                        >
+                          <div className='flex items-center gap-3'>
+                            <span
+                              className={`h-3 w-3 rounded-full ${service.status ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`}
+                            />
+                            <span className='font-medium'>{service.name}</span>
+                          </div>
+                          <div className='flex items-center gap-4'>
+                            <span className='text-xs text-slate-500'>
+                              {service.uptime}
+                            </span>
+                            <span className='text-sm text-slate-400'>
+                              {service.latency}
+                            </span>
+                            <Pill intent={service.status ? 'ok' : 'error'}>
+                              {service.status ? 'Online' : 'Offline'}
+                            </Pill>
+                          </div>
                         </div>
-                        <div className='flex items-center gap-4'>
-                          <span className='text-xs text-slate-500'>
-                            {service.uptime}
-                          </span>
-                          <span className='text-sm text-slate-400'>
-                            {service.latency}
-                          </span>
-                          <Pill intent={service.status ? 'ok' : 'error'}>
-                            {service.status ? 'Online' : 'Offline'}
-                          </Pill>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
 
-                  {/* System health gauge */}
-                  <div className='mt-8 grid place-items-center'>
-                    <div className='relative grid place-items-center'>
-                      <svg width='180' height='180' viewBox='0 0 180 180'>
-                        <defs>
-                          <linearGradient
-                            id='healthGrad'
-                            x1='0%'
-                            y1='0%'
-                            x2='100%'
-                            y2='100%'
-                          >
-                            <stop offset='0%' stopColor='#10b981' />
-                            <stop offset='100%' stopColor='#14b8a6' />
-                          </linearGradient>
-                        </defs>
-                        <circle
-                          cx='90'
-                          cy='90'
-                          r='75'
-                          fill='none'
-                          stroke='rgba(255,255,255,0.1)'
-                          strokeWidth='12'
-                        />
-                        <circle
-                          cx='90'
-                          cy='90'
-                          r='75'
-                          fill='none'
-                          stroke='url(#healthGrad)'
-                          strokeWidth='12'
-                          strokeDasharray={`${2 * Math.PI * 75 * 0.968} ${2 * Math.PI * 75}`}
-                          strokeLinecap='round'
-                          transform='rotate(-90 90 90)'
-                          className='transition-all duration-1000'
-                        />
-                      </svg>
-                      <div className='absolute inset-0 grid place-items-center'>
-                        <div className='text-center'>
-                          <p className='text-5xl font-bold'>96.8%</p>
-                          <p className='text-sm text-slate-400 mt-1'>
-                            System Health
-                          </p>
+                    {/* System health gauge */}
+                    <div className='mt-8 grid place-items-center'>
+                      <div className='relative grid place-items-center'>
+                        <svg width='180' height='180' viewBox='0 0 180 180'>
+                          <defs>
+                            <linearGradient
+                              id='healthGrad'
+                              x1='0%'
+                              y1='0%'
+                              x2='100%'
+                              y2='100%'
+                            >
+                              <stop offset='0%' stopColor='#10b981' />
+                              <stop offset='100%' stopColor='#14b8a6' />
+                            </linearGradient>
+                          </defs>
+                          <circle
+                            cx='90'
+                            cy='90'
+                            r='75'
+                            fill='none'
+                            stroke='rgba(255,255,255,0.1)'
+                            strokeWidth='12'
+                          />
+                          <circle
+                            cx='90'
+                            cy='90'
+                            r='75'
+                            fill='none'
+                            stroke='url(#healthGrad)'
+                            strokeWidth='12'
+                            strokeDasharray={`${2 * Math.PI * 75 * 0.968} ${2 * Math.PI * 75}`}
+                            strokeLinecap='round'
+                            transform='rotate(-90 90 90)'
+                            className='transition-all duration-1000'
+                          />
+                        </svg>
+                        <div className='absolute inset-0 grid place-items-center'>
+                          <div className='text-center'>
+                            <p className='text-5xl font-bold'>96.8%</p>
+                            <p className='text-sm text-slate-400 mt-1'>
+                              System Health
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </GlassCard>
+                </GlassCard>
+                <OperationsPulsePanel />
+              </div>
 
               {/* Live Fleet Map (Imperative Mapbox GL — no React rendering) */}
-              <GlassCard
-                layoutId='panel-live-map'
-                accent='from-indigo-400/30 via-blue-400/20 to-cyan-400/30'
-              >
-                <div className='rounded-3xl p-6'>
-                  <h3 className='mb-6 text-lg font-bold flex items-center gap-2'>
-                    <MapPin className='h-5 w-5 text-indigo-400' />
-                    Live Fleet Map
-                  </h3>
-                  <motion.div
-                    layout
-                    layoutId='map-viewport-shell'
-                    transition={{ type: 'spring', stiffness: 220, damping: 28 }}
-                    animate={{ height: isLiveMode ? 400 : 430 }}
-                    className='bloom-edge vignette-strong rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative'
-                  >
-                    {showMap ? (
-                      <div ref={mapContainerRef} className='absolute inset-0' />
-                    ) : (
-                      <>
-                        <PingLayer count={12} />
-                        <div className='absolute inset-0 flex items-center justify-center backdrop-blur-sm'>
-                          <div className='text-center space-y-4'>
-                            <MapPin className='h-16 w-16 mx-auto text-cyan-400 animate-bounce' />
-                            <p className='text-2xl font-bold'>
-                              <ActiveTrucksHeadline />
-                            </p>
-                            <p className='text-sm text-slate-400'>
-                              Real-time GPS tracking
-                            </p>
-                            <MagneticButton
-                              onClick={() => useIoTStore.getState().toggleMap()}
-                              className='mt-4 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 font-semibold shadow-lg transition-all'
-                            >
-                              Open Full Map
-                            </MagneticButton>
+              <div className='xl:col-span-7'>
+                <GlassCard
+                  layoutId='panel-live-map'
+                  accent='from-indigo-400/30 via-blue-400/20 to-cyan-400/30'
+                >
+                  <div className='rounded-3xl p-6'>
+                    <h3 className='mb-6 text-lg font-bold flex items-center gap-2'>
+                      <MapPin className='h-5 w-5 text-indigo-400' />
+                      Live Fleet Map
+                    </h3>
+                    <motion.div
+                      layout
+                      layoutId='map-viewport-shell'
+                      transition={{
+                        type: 'spring',
+                        stiffness: 220,
+                        damping: 28,
+                      }}
+                      animate={{ height: isLiveMode ? 400 : 430 }}
+                      className='bloom-edge vignette-strong rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative'
+                    >
+                      {showMap ? (
+                        <div
+                          ref={mapContainerRef}
+                          className='absolute inset-0'
+                        />
+                      ) : (
+                        <>
+                          <PingLayer count={12} />
+                          <div className='absolute inset-0 flex items-center justify-center backdrop-blur-sm'>
+                            <div className='text-center space-y-4'>
+                              <MapPin className='h-16 w-16 mx-auto text-cyan-400 animate-bounce' />
+                              <p className='text-2xl font-bold'>
+                                <ActiveTrucksHeadline />
+                              </p>
+                              <p className='text-sm text-slate-400'>
+                                Real-time GPS tracking
+                              </p>
+                              <MagneticButton
+                                onClick={() =>
+                                  useIoTStore.getState().toggleMap()
+                                }
+                                className='mt-4 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 font-semibold shadow-lg transition-all'
+                              >
+                                Open Full Map
+                              </MagneticButton>
+                            </div>
                           </div>
-                        </div>
-                      </>
-                    )}
+                        </>
+                      )}
 
-                    <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(34,211,238,0.18),transparent_55%)] mix-blend-screen' />
-                    <div className='pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0)_0%,rgba(34,211,238,0.12)_48%,rgba(255,255,255,0)_100%)] animate-[pulse_3.8s_ease-in-out_infinite]' />
-                    <div className='pointer-events-none absolute inset-0 scanline-overlay opacity-30' />
-                  </motion.div>
-                </div>
-              </GlassCard>
-            </section>
+                      <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_48%,rgba(34,211,238,0.18),transparent_55%)] mix-blend-screen' />
+                      <div className='pointer-events-none absolute inset-0 bg-[linear-gradient(110deg,rgba(255,255,255,0)_0%,rgba(34,211,238,0.12)_48%,rgba(255,255,255,0)_100%)] animate-[pulse_3.8s_ease-in-out_infinite]' />
+                      <div className='pointer-events-none absolute inset-0 scanline-overlay opacity-30' />
+                    </motion.div>
+                  </div>
+                </GlassCard>
+              </div>
+            </motion.section>
 
             {/* Footer */}
             <div className='text-center space-y-2 pt-4 pb-8'>

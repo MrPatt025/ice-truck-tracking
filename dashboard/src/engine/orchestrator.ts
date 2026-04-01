@@ -325,7 +325,7 @@ export function setThreeCameraFov(fov: number): void {
 
 /** Mount the Mapbox GL map into a container */
 export function mountMap(container: HTMLElement, cinematicWorker?: Worker | null): void {
-    if (mapLayer || mapLayerLoadPromise) return;
+    if (mapLayer !== null || mapLayerLoadPromise !== null) return;
     const theme = useIoTStore.getState().theme;
     const mountNonce = ++mapLayerMountNonce;
 

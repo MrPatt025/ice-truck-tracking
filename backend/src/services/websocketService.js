@@ -6,11 +6,11 @@ const { setWsConnections, recordWsMessage, recordWsError } = require('../middlew
 const rand = () => randomInt(0, 1_000_000) / 1_000_000;
 
 class WebSocketService {
-  constructor() {
-    this.io = null;
-    this.connectedClients = new Set();
-    this.simulationInterval = null;
-  }
+  io = null;
+
+  connectedClients = new Set();
+
+  simulationInterval = null;
 
   initialize(server) {
     this.io = new Server(server, {

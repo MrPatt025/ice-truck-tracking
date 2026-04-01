@@ -21,7 +21,9 @@
 
 ## Overview
 
-This document describes the enhanced glassmorphism design system implemented in the Ice-Truck Tracking Platform dashboard. The system creates a **cinematic, high-performance UI** with:
+This document describes the enhanced glassmorphism design system implemented
+in the Ice-Truck Tracking Platform dashboard. The system creates a
+**cinematic, high-performance UI** with:
 
 - ✨ **Frosted glass** card panels with layered backdrop filters
 - 🌊 **Shimmer animations** that respond to hover interactions
