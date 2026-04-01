@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Snowflake, Loader2, AlertCircle } from 'lucide-react';
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
 import { useAuthStore } from '@/stores/authStore';
 import { useTransitionStore } from '@/stores/transitionStore'
 
@@ -186,8 +187,10 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-[200px]"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
-      <LoginContent />
-    </Suspense>
+    <PremiumPageWrapper mode='none' className='w-full'>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-[200px]"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+        <LoginContent />
+      </Suspense>
+    </PremiumPageWrapper>
   );
 }

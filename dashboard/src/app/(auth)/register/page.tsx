@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Snowflake, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function RegisterPage() {
@@ -75,11 +76,12 @@ export default function RegisterPage() {
   const displayError = validationError || error;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-    >
+    <PremiumPageWrapper mode='none'>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+      >
       {/* Logo */}
       <div className='text-center mb-8'>
         <div className='inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4'>
@@ -267,6 +269,7 @@ export default function RegisterPage() {
           </p>
         </div>
       </div>
-    </motion.div>
+      </motion.div>
+    </PremiumPageWrapper>
   )
 }

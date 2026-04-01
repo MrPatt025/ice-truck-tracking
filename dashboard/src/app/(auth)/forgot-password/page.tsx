@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Snowflake, Loader2, AlertCircle, ArrowLeft, Mail } from 'lucide-react';
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function ForgotPasswordPage() {
@@ -27,11 +28,12 @@ export default function ForgotPasswordPage() {
   }, [email, forgotPassword, clearError]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-    >
+    <PremiumPageWrapper mode='none'>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+      >
       {/* Logo */}
       <div className='text-center mb-8'>
         <div className='inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4'>
@@ -135,6 +137,7 @@ export default function ForgotPasswordPage() {
           </Link>
         </div>
       </div>
-    </motion.div>
+      </motion.div>
+    </PremiumPageWrapper>
   )
 }

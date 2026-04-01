@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Download, Plus, Search, Truck } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { SectionErrorBoundary } from '@/components/common/SectionErrorBoundary'
 import { VirtualizedFleetGrid } from '@/components/fleet/VirtualizedFleetGrid'
 import { cn } from '@/lib/utils'
@@ -206,6 +207,7 @@ export default function FleetManagementPage() {
 
   return (
     <AppSidebar>
+      <PremiumPageWrapper mode='glass'>
       <div className='mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>
         <header className='flex flex-col gap-3 rounded-2xl border border-white/15 bg-slate-900/40 p-5 backdrop-blur-2xl md:flex-row md:items-center md:justify-between'>
           <div>
@@ -313,6 +315,7 @@ export default function FleetManagementPage() {
           </p>
         </section>
       </div>
+      </PremiumPageWrapper>
     </AppSidebar>
   )
 }

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AppSidebar from '@/components/AppSidebar';
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
 import { useAuthStore } from '@/stores/authStore';
 
 type SettingsTab = 'profile' | 'security' | 'api-keys' | 'notifications' | 'appearance';
@@ -71,6 +72,7 @@ export default function SettingsPage() {
 
   return (
     <AppSidebar>
+      <PremiumPageWrapper mode='glass'>
       <div className='p-4 lg:p-6 max-w-[1200px] mx-auto'>
         {/* Header */}
         <div className='mb-6'>
@@ -526,6 +528,7 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+      </PremiumPageWrapper>
     </AppSidebar>
   )
 }

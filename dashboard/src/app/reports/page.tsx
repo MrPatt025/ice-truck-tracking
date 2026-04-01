@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AppSidebar from '@/components/AppSidebar';
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
 import type { ReportsTab } from '@/components/reports/ReportsCharts';
 
 const ReportsCharts = dynamic(
@@ -119,6 +120,7 @@ export default function ReportsPage() {
 
   return (
     <AppSidebar>
+      <PremiumPageWrapper mode='glass'>
       <div className='p-4 lg:p-6 space-y-6 max-w-[1600px] mx-auto'>
         {/* Header */}
         <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
@@ -222,6 +224,7 @@ export default function ReportsPage() {
           temperatureData={temperatureData}
         />
       </div>
+      </PremiumPageWrapper>
     </AppSidebar>
   )
 }

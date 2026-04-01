@@ -99,6 +99,7 @@ import { useTransitionStore } from '@/stores/transitionStore'
 import type { StatusIssue } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
 import { dispatchBackendHealthEvent } from '@/lib/healthEvents'
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary'
 import MapModeToggle from '@/components/MapModeToggle'
 import OfflineBanner from '@/components/OfflineBanner'
@@ -1342,6 +1343,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
    *  All real-time visualization is imperative (3D, Map, Charts).
    * ================================================================ */
   return (
+    <PremiumPageWrapper mode='none' animate={false}>
     <GlobalErrorBoundary>
       <React.Suspense
         fallback={
@@ -2275,5 +2277,6 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
         </motion.div>
       </React.Suspense>
     </GlobalErrorBoundary>
+    </PremiumPageWrapper>
   )
 }
