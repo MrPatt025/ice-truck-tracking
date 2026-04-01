@@ -42,7 +42,7 @@ const OfflineBanner = memo(function OfflineBanner({ className = '' }: Readonly<O
       aria-live='polite'
       aria-hidden={!isOffline}
       data-testid='offline-indicator'
-      className={`glass-panel rounded-xl border border-amber-200/30 bg-amber-100/10 p-3 text-amber-100 shadow-xl transition-opacity duration-200 ${isOffline ? 'visible opacity-100' : 'pointer-events-none invisible opacity-0'} ${className}`}
+      className={`glass-panel relative z-50 rounded-xl border border-amber-200/30 bg-amber-100/10 p-3 text-amber-100 shadow-xl transition-opacity duration-200 ${isOffline ? 'visible opacity-100' : 'pointer-events-none invisible opacity-0'} ${className}`}
     >
       <p className='text-sm font-semibold tracking-wide'>
         Offline mode enabled

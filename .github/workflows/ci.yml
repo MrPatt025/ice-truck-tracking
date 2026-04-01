@@ -208,6 +208,37 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
 
+  # ── SonarCloud Analysis (Reliability + Coverage) ───────────
+  sonarcloud:
+    needs: [test-backend, test-dashboard]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+        with:
+          name: backend-coverage
+          path: backend-coverage
+      - uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+        with:
+          name: dashboard-coverage
+          path: dashboard-coverage
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5.3.0
+        env:
+          SONAR_TOKEN: ${{ secrets[format('{0}', 'SONAR_TOKEN')] }} # NOSONAR
+        with:
+          args: >
+            -Dsonar.projectKey=PATTANAKORN025_Ice-truck-racking
+            -Dsonar.organization=pattanakorn025
+            -Dsonar.sources=backend/src,dashboard/src
+            -Dsonar.javascript.lcov.reportPaths=backend-coverage/lcov.info,dashboard-coverage/lcov.info
+            -Dsonar.coverage.exclusions=**/*.test.*,**/*.spec.*,**/tests/**,**/e2e/**
+
   # ── Preview Deployment (every PR) ────────────────────────
   preview:
     if: github.event_name == 'pull_request'

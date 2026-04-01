@@ -10,6 +10,7 @@ type Truck = {
 };
 type Alert = { id?: string; level?: string; message?: string; ts?: string } & Record<string, unknown>;
 const WS_URL  = process.env.NEXT_PUBLIC_WS_URL  || "ws://localhost:5000";
+const isBrowser = (): boolean => globalThis.window !== undefined;
 const API_BASE = (() => {
   const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim();
   if (configuredApiRoot) {
@@ -53,6 +54,7 @@ export function useRealTimeData() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
   const retryRef = useRef<number>(0);
   const maxRetry = 5;
   const handleWsMessage = (ev: MessageEvent) => {
@@ -74,8 +76,12 @@ export function useRealTimeData() {
   };
   const connect = useMemo(() => {
     return () => {
-      if (globalThis.window === undefined) return;
+      if (!isBrowser()) return;
       try {
+        if (reconnectTimeoutRef.current !== null) {
+          globalThis.window.clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
         wsRef.current?.close();
         const ws = new WebSocket(resolveWebSocketUrl());
         wsRef.current = ws;
@@ -86,7 +92,7 @@ export function useRealTimeData() {
           if (retryRef.current < maxRetry) {
             const wait = Math.min(1000 * 2 ** retryRef.current, 10000);
             retryRef.current += 1;
-            globalThis.setTimeout(connect, wait);
+            reconnectTimeoutRef.current = globalThis.window.setTimeout(connect, wait);
           }
         };
         ws.onerror = () => { /* let onclose handle retry */ };
@@ -95,26 +101,39 @@ export function useRealTimeData() {
   }, []);
   useEffect(() => {
     connect();
-    return () => wsRef.current?.close();
+    return () => {
+      if (reconnectTimeoutRef.current !== null) {
+        globalThis.window.clearTimeout(reconnectTimeoutRef.current);
+      }
+      wsRef.current?.close();
+    };
   }, [connect]);
   // Fallback polling (???????????????????? WS)
 useEffect(() => {
-  if (globalThis.window === undefined) return;
+  if (!isBrowser()) return;
   let tm: number | undefined;
+  let aborted = false;
+  const abortController = new AbortController();
+
   const poll = async () => {
     try {
       const [tRes, aRes] = await Promise.all([
-        fetch(`${API_BASE}/trucks`).catch(() => null),
-        fetch(`${API_BASE}/alerts`).catch(() => null),
+        fetch(`${API_BASE}/trucks`, { signal: abortController.signal }).catch(() => null),
+        fetch(`${API_BASE}/alerts`, { signal: abortController.signal }).catch(() => null),
       ]);
+      if (aborted) return;
       if (tRes?.ok) setTrucks(await tRes.json());
       if (aRes?.ok) setAlerts(await aRes.json());
     } catch { /* polling error */ }
     // ???????????? WS ?????????
-    if (!isConnected) tm = globalThis.window.setTimeout(poll, 10000);
+    if (!isConnected && !aborted) tm = globalThis.window.setTimeout(poll, 10000);
   };
   if (!isConnected) poll();
-  return () => { if (tm) globalThis.window.clearTimeout(tm); };
+  return () => {
+    aborted = true;
+    abortController.abort();
+    if (tm) globalThis.window.clearTimeout(tm);
+  };
 }, [isConnected]);
   return { trucks, alerts, isConnected, setTrucks, setAlerts };
 }

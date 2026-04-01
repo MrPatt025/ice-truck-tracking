@@ -1,6 +1,6 @@
 'use client'
 
-import React, { memo, useEffect, useRef, useState } from 'react'
+import React, { memo, useEffect, useState } from 'react'
 
 interface MapModeToggleProps {
   isLiveMode: boolean
@@ -16,34 +16,21 @@ const MapModeToggle = memo(function MapModeToggle({
   onModeChange,
   className = '',
 }: Readonly<MapModeToggleProps>) {
-  const derivedMode = isLiveMode ? 'live' : 'historical'
-  const [optimisticMode, setOptimisticMode] = useState<'live' | 'historical'>(
-    derivedMode
+  const [localMode, setLocalMode] = useState<'live' | 'historical'>(
+    isLiveMode ? 'live' : 'historical'
   )
-  const pendingModeRef = useRef<'live' | 'historical' | null>(null)
 
   useEffect(() => {
-    if (pendingModeRef.current === derivedMode) {
-      pendingModeRef.current = null
-    }
+    setLocalMode(isLiveMode ? 'live' : 'historical')
+  }, [isLiveMode])
 
-    if (pendingModeRef.current === null) {
-      setOptimisticMode(derivedMode)
-    }
-  }, [derivedMode])
-
-  const isHistoricalMode = optimisticMode === 'historical'
-  const isLive = optimisticMode === 'live'
+  const isHistoricalMode = localMode === 'historical'
+  const isLive = localMode === 'live'
 
   const switchMode = (mode: 'live' | 'historical') => {
-    if (optimisticMode === mode && pendingModeRef.current === null) return
-
-    pendingModeRef.current = mode
-    setOptimisticMode(mode)
-
-    if (derivedMode !== mode) {
-      onModeChange(mode)
-    }
+    if (localMode === mode) return
+    setLocalMode(mode)
+    onModeChange(mode)
   }
 
   return (

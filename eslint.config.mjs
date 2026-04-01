@@ -26,18 +26,6 @@ export default [
         ],
     },
 
-    // Explicit Next.js scope for dashboard app (prevents plugin detection warnings)
-    {
-        files: ['dashboard/**/*.{js,jsx,ts,tsx}'],
-        plugins: {
-            '@next/next': nextPlugin,
-        },
-        rules: {
-            ...nextPlugin.configs.recommended.rules,
-            ...nextPlugin.configs['core-web-vitals'].rules,
-        },
-    },
-
     // Base recommended configs
     js.configs.recommended,
     ...tseslint.configs.recommended,

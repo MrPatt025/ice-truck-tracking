@@ -48,6 +48,7 @@ interface HeatmapPoint {
 }
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim() ?? '';
+const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true';
 const OPEN_STYLE_URL = 'https://demotiles.maplibre.org/style.json';
 const MAPBOX_STYLES: Record<Theme, string> = {
     dark: 'mapbox://styles/mapbox/dark-v11',
@@ -88,6 +89,7 @@ const HEATMAP_BASE_COLOR_RANGE: readonly RGBA[] = [
 ];
 
 function resolveMapStyle(theme: Theme): string {
+    if (E2E_LIGHT_MODE) return OPEN_STYLE_URL;
     if (!MAPBOX_TOKEN) return OPEN_STYLE_URL;
     return MAPBOX_STYLES[theme] ?? MAPBOX_STYLES.dark;
 }
@@ -339,9 +341,9 @@ export class ImperativeMapLayer {
         if (globalThis.window === undefined) return;
         this.container = container;
 
-        if (MAPBOX_TOKEN) {
+        if (!E2E_LIGHT_MODE && MAPBOX_TOKEN) {
             mapboxgl.accessToken = MAPBOX_TOKEN;
-        } else {
+        } else if (!E2E_LIGHT_MODE) {
             console.warn('NEXT_PUBLIC_MAPBOX_TOKEN missing. Using public open style fallback.');
         }
 
