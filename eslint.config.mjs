@@ -3,6 +3,7 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactPlugin from 'eslint-plugin-react';
+import nextPlugin from '@next/eslint-plugin-next';
 import globals from 'globals';
 
 export default [
@@ -41,11 +42,19 @@ export default [
         plugins: {
             react: reactPlugin,
             'react-hooks': reactHooks,
+            '@next/next': nextPlugin,
         },
-        settings: { react: { version: '18.3' } },
+        settings: {
+            react: { version: '18.3' },
+            next: {
+                rootDir: ['dashboard/'],
+            },
+        },
         rules: {
             // React
             ...reactPlugin.configs.recommended.rules,
+            ...nextPlugin.configs.recommended.rules,
+            ...nextPlugin.configs['core-web-vitals'].rules,
             'react/react-in-jsx-scope': 'off',
             'react/display-name': 'off',
             'react/no-unknown-property': ['error', { ignore: ['jsx', 'global'] }],

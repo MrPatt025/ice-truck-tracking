@@ -658,15 +658,46 @@ const GlassCard = memo(
     layoutId?: string
   }>) => {
     const inner = (
-      <motion.div layout layoutId={layoutId} transition={{ type: 'spring', damping: 30, stiffness: 230 }}>
+      <motion.div
+        layout
+        layoutId={layoutId}
+        transition={{ type: 'spring', damping: 30, stiffness: 230 }}
+      >
         <div
-          className={`group glass-panel relative rounded-3xl p-[1.5px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02] will-change-transform`}
+          className={`group glass-panel relative rounded-3xl p-[2px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02] will-change-transform overflow-hidden`}
+          style={{
+            boxShadow:
+              '0 0 40px -10px rgba(139, 92, 246, 0.3), 0 0 20px -5px rgba(34, 211, 238, 0.2)',
+          }}
         >
+          {/* Enhanced glassmorphism background */}
           <div
-            className={`relative rounded-3xl bg-slate-900/66 backdrop-blur-2xl ring-1 ring-white/15 ${className}`}
+            className={`relative rounded-[calc(1.5rem-2px)] bg-slate-900/70 backdrop-blur-xl backdrop-saturate-150 backdrop-brightness-110 ring-1 ring-white/20 transition-all duration-500 group-hover:ring-white/30 ${className}`}
+            style={{
+              background:
+                'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(30, 41, 59, 0.65) 100%), rgba(15, 23, 42, 0.5)',
+              backdropFilter: 'blur(12px) saturate(150%) brightness(110%)',
+            }}
           >
-            <div className='pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.2),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.18),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]' />
-            <div className='pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.1),transparent)] bg-[length:200%_100%] animate-shimmer' />
+            {/* Multi-layer radial glow backdrop */}
+            <div className='pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.25),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.2),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]' />
+
+            {/* Noise texture overlay */}
+            <div
+              className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-[0.03] mix-blend-overlay'
+              style={{
+                backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" result="noise"/></filter><rect width="100" height="100" fill="white" filter="url(%23n)"/></svg>')`,
+                backgroundSize: '50px 50px',
+              }}
+            />
+
+            {/* Shimmer effect with enhanced animation */}
+            <div className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.15),transparent)] bg-[length:200%_100%] animate-shimmer' />
+
+            {/* Enhanced border glow effect */}
+            <div className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[linear-gradient(135deg,rgba(139,92,246,.1),transparent,rgba(34,211,238,.1))]' />
+
+            {/* Primary content */}
             <div className='relative'>{children}</div>
           </div>
         </div>
@@ -689,29 +720,70 @@ const GlassCard = memo(
 
 const Tilt = memo(({ children }: Readonly<{ children: React.ReactNode }>) => {
   const ref = useRef<HTMLDivElement>(null)
+  const mouseX = useRef(0)
+  const mouseY = useRef(0)
+  const tiltX = useRef(0)
+  const tiltY = useRef(0)
+  const isHovered = useRef(false)
+
   useEffect(() => {
     const el = ref.current
     if (!el) return
+
     const onMove = (e: MouseEvent) => {
+      if (!isHovered.current) return
+
       const rect = el.getBoundingClientRect()
       const x = (e.clientX - rect.left) / rect.width
       const y = (e.clientY - rect.top) / rect.height
-      el.style.transform = `perspective(1200px) rotateX(${(0.5 - y) * 8}deg) rotateY(${(x - 0.5) * 8}deg) translateZ(10px)`
+
+      // Target rotation values (0-8 degrees range, centered)
+      const targetTiltX = (0.5 - y) * 10
+      const targetTiltY = (x - 0.5) * 10
+
+      // Smooth interpolation for fluid motion
+      mouseX.current = x
+      mouseY.current = y
+      tiltX.current = targetTiltX
+      tiltY.current = targetTiltY
+
+      // Apply transform with smooth easing
+      el.style.transform = `perspective(1000px) rotateX(${targetTiltX}deg) rotateY(${targetTiltY}deg) translateZ(20px) scale3d(1.01, 1.01, 1.01)`
     }
+
+    const onEnter = () => {
+      if (el) {
+        isHovered.current = true
+        el.style.transition = 'transform 0.3s cubic-bezier(0.23, 1, 0.320, 1)'
+      }
+    }
+
     const onLeave = () => {
-      el.style.transform = `perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px)`
+      if (el) {
+        isHovered.current = false
+        el.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+        el.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale3d(1, 1, 1)`
+        tiltX.current = 0
+        tiltY.current = 0
+      }
     }
+
     el.addEventListener('mousemove', onMove)
+    el.addEventListener('mouseenter', onEnter)
     el.addEventListener('mouseleave', onLeave)
+
     return () => {
       el.removeEventListener('mousemove', onMove)
+      el.removeEventListener('mouseenter', onEnter)
       el.removeEventListener('mouseleave', onLeave)
     }
   }, [])
+
   return (
     <div
       ref={ref}
-      className='transition-transform duration-300 ease-out will-change-transform'
+      className='will-change-transform'
+      style={{ perspective: '1000px' }}
     >
       {children}
     </div>
@@ -1492,8 +1564,24 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
             style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 1400px' }}
           >
             {/* ── Mission Control Surface (always-present E2E anchors) ── */}
-            <section className='rounded-2xl border border-cyan-200/20 bg-slate-900/40 p-4 backdrop-blur-xl shadow-[0_20px_80px_-50px_rgba(34,211,238,0.75)]'>
-              <div className='flex flex-wrap items-center justify-between gap-3'>
+            <motion.section
+              initial={false}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.46, ease: [0.2, 0.84, 0.24, 1] }}
+              className='group relative overflow-hidden rounded-2xl border border-cyan-200/25 bg-slate-900/45 p-4 backdrop-blur-2xl shadow-[0_24px_90px_-54px_rgba(34,211,238,0.85)]'
+              data-testid='mission-control-surface'
+            >
+              <div
+                aria-hidden='true'
+                className='pointer-events-none absolute inset-0 opacity-[0.06] mix-blend-soft-light'
+                style={{
+                  backgroundImage:
+                    "url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"120\" height=\"120\"><filter id=\"n\"><feTurbulence type=\"fractalNoise\" baseFrequency=\"0.72\" numOctaves=\"4\"/></filter><rect width=\"120\" height=\"120\" filter=\"url(%23n)\"/></svg>')",
+                  backgroundSize: '72px 72px',
+                }}
+              />
+              <div className='pointer-events-none absolute -inset-20 bg-[radial-gradient(80rem_30rem_at_20%_-20%,rgba(34,211,238,.22),transparent),radial-gradient(90rem_34rem_at_80%_140%,rgba(139,92,246,.2),transparent)] opacity-80 transition-opacity duration-700 group-hover:opacity-100' />
+              <div className='relative flex flex-wrap items-center justify-between gap-3'>
                 <MapModeToggle
                   isLiveMode={isLiveMode}
                   onModeChange={setMapMode}
@@ -1501,7 +1589,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                 />
                 <OfflineBanner className='static w-[min(92vw,26rem)]' />
               </div>
-            </section>
+            </motion.section>
 
             {/* Status pills */}
             <div className='flex flex-wrap items-center gap-3'>

@@ -133,7 +133,10 @@ services:
   mosquitto:
     image: eclipse-mosquitto:2
     volumes:
-      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - type: bind
+        source: ./infra/mosquitto/mosquitto.conf
+        target: /mosquitto/config/mosquitto.conf
+        read_only: true
       - ./infra/mosquitto/acl:/mosquitto/config/acl:ro
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log

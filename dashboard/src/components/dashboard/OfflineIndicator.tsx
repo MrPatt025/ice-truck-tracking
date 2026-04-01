@@ -7,7 +7,10 @@ interface OfflineIndicatorProps {
 }
 
 const OfflineIndicator = memo(function OfflineIndicator({ className = '' }: Readonly<OfflineIndicatorProps>) {
-  const [isOnline, setIsOnline] = useState(true)
+  const [isOnline, setIsOnline] = useState<boolean>(() => {
+    if (globalThis.window === undefined) return true
+    return globalThis.navigator.onLine
+  })
 
   useEffect(() => {
     if (globalThis.window === undefined) {
@@ -22,10 +25,12 @@ const OfflineIndicator = memo(function OfflineIndicator({ className = '' }: Read
 
     globalThis.window.addEventListener('online', updateStatus)
     globalThis.window.addEventListener('offline', updateStatus)
+    const statusPoll = globalThis.window.setInterval(updateStatus, 400)
 
     return () => {
       globalThis.window.removeEventListener('online', updateStatus)
       globalThis.window.removeEventListener('offline', updateStatus)
+      globalThis.window.clearInterval(statusPoll)
     }
   }, [])
 

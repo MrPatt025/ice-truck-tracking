@@ -18,8 +18,7 @@ globalThis.cancelAnimationFrame = (_id: number): void => {
     rafCallbacks = [];
 };
 
-// Re-import to pick up mocks (must be after mock setup)
-const { frameScheduler } = require('../frameScheduler') as typeof import('../frameScheduler');
+let frameScheduler: typeof import('../frameScheduler').frameScheduler;
 
 // ─── Helpers ───────────────────────────────────────────────────
 
@@ -28,6 +27,10 @@ function flushRAF(time: number): void {
     rafCallbacks = [];
     cbs.forEach((cb) => cb(time));
 }
+
+beforeAll(async () => {
+    ({ frameScheduler } = await import('../frameScheduler'));
+});
 
 beforeEach(() => {
     frameScheduler.stop();

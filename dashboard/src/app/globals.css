@@ -253,6 +253,43 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes glass-border-glow {
+  0% {
+    box-shadow:
+      0 0 5px rgba(139, 92, 246, 0.3),
+      0 0 10px rgba(34, 211, 238, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 15px rgba(139, 92, 246, 0.5),
+      0 0 20px rgba(34, 211, 238, 0.4);
+  }
+  100% {
+    box-shadow:
+      0 0 5px rgba(139, 92, 246, 0.3),
+      0 0 10px rgba(34, 211, 238, 0.2);
+  }
+}
+
 .truck-popup-glass .mapboxgl-popup-content {
   background: transparent;
   border: 0;

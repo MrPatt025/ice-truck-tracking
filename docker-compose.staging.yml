@@ -74,7 +74,10 @@ services:
     ports:
       - '1883:1883'
     volumes:
-      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - type: bind
+        source: ./infra/mosquitto/mosquitto.conf
+        target: /mosquitto/config/mosquitto.conf
+        read_only: true
       - staging-mosquitto-data:/mosquitto/data
     networks:
       - staging-network

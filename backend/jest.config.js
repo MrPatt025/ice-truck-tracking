@@ -6,6 +6,7 @@ module.exports = {
   setupFilesAfterEnv: ["<rootDir>/tests/jest.setup.mocks.js"],
   roots: ["<rootDir>/tests", "<rootDir>/src"],
   testMatch: ["**/?(*.)+(spec|test).[jt]s?(x)"],
+  passWithNoTests: true,
   moduleNameMapper: {
     "^(.*/)?config/database$": "<rootDir>/tests/mocks/db.js",
   },

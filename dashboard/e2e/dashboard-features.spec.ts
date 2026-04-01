@@ -3,11 +3,15 @@ import { expect, test, type Page } from '@playwright/test';
 const HYDRATION_TIMEOUT_MS = 20_000;
 
 async function setAuthCookie(page: Page, baseURL: string): Promise<void> {
+  const origin = new URL(baseURL);
   await page.context().addCookies([
     {
-      name: 'auth-token',
+      name: 'access_token',
       value: 'e2e-test-token',
-      url: baseURL,
+      domain: origin.hostname,
+      path: '/',
+      secure: origin.protocol === 'https:',
+      sameSite: 'Lax',
     },
   ]);
 }
@@ -16,14 +20,12 @@ test.describe('Dashboard feature polish', () => {
   test.beforeEach(async ({ page, baseURL }) => {
     await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
     await page.goto('/dashboard');
-    await page.waitForTimeout(1200);
+    await expect(page.getByTestId('mission-control-surface')).toBeVisible({ timeout: HYDRATION_TIMEOUT_MS });
   });
 
   test('toggles Live Fleet and Historical Heatmap modes', async ({ page }) => {
-    const liveButton = page.getByRole('button', { name: 'Live Fleet' });
-    const historicalButton = page.getByRole('button', {
-      name: 'Historical Heatmap',
-    });
+    const liveButton = page.getByTestId('map-mode-live');
+    const historicalButton = page.getByTestId('map-mode-historical');
 
     await expect(liveButton).toBeVisible({ timeout: HYDRATION_TIMEOUT_MS });
     await expect(historicalButton).toBeVisible({ timeout: HYDRATION_TIMEOUT_MS });

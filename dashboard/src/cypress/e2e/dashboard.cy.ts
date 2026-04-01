@@ -1,6 +1,4 @@
-﻿/// <reference path="../@types/cypress/index.d.ts" />
-
-describe('Dashboard E2E Tests', () => {
+﻿describe('Dashboard E2E Tests', () => {
 	beforeEach(() => {
 		cy.visit('/')
 		cy.intercept('GET', '/api/v1/health', { fixture: 'health.json' })

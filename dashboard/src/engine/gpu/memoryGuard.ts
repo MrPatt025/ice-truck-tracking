@@ -13,6 +13,8 @@
  *  Integrates with SharedCanvasPool & PerformanceGuard.
  * ================================================================ */
 
+import { SharedCanvasPool } from './sharedCanvas';
+
 export type MemoryPressure = 'normal' | 'warn' | 'high' | 'critical';
 
 export interface GPUMemoryBudget {
@@ -175,8 +177,6 @@ export class GPUMemoryGuard {
         // Context count from pool (if available)
         let contextCount = 0;
         try {
-            // Dynamically import to avoid circular deps
-            const { SharedCanvasPool } = require('./sharedCanvas');
             contextCount = SharedCanvasPool.getInstance().stats().total;
         } catch {
             // SharedCanvasPool not available

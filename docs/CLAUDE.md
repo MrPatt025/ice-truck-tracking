@@ -547,7 +547,29 @@ Each decision should include:
 
 ---
 
-15. AI Agent Start Command
+15. Component & Animation Guides
+
+Comprehensive UI/UX documentation:
+
+**Frontend Component Guides**:
+• [GLASSMORPHISM_GUIDE.md](../GLASSMORPHISM_GUIDE.md) - GlassCard component, backdrop filters, color palettes, usage patterns
+• [ANIMATION_SYSTEM.md](../ANIMATION_SYSTEM.md) - Framer Motion, Tailwind animations, easing functions, performance optimization
+
+**Key References**:
+• GlassCard component location: `dashboard/src/app/dashboard/page.tsx:646`
+• Tilt parallax component location: `dashboard/src/app/dashboard/page.tsx:714`
+• Animation keyframes: `dashboard/src/app/globals.css:255`
+• Tailwind animations: `dashboard/tailwind.config.ts:13`
+
+**Performance targets**:
+• Frame rate: ≥ 60 FPS (hover interactions)
+• Component animation cost: <5ms per frame
+• Shimmer effect overhead: <1ms per frame (GPU optimized)
+• Tilt effect overhead: <5ms per frame
+
+---
+
+16. AI Agent Start Command
 
 When an AI agent begins work on this repository, start with:
 
