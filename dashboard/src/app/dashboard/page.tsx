@@ -1013,38 +1013,46 @@ const OperationsPulsePanel = memo(function OperationsPulsePanel() {
 
   return (
     <GlassCard accent='from-cyan-400/25 via-violet-400/15 to-emerald-400/20'>
-      <div className='rounded-3xl p-6'>
+      <div className='rounded-3xl p-5 xl:p-6'>
         <h3 className='mb-5 text-lg font-bold flex items-center gap-2'>
           <TrendingUp className='h-5 w-5 text-cyan-300' />
           Operations Pulse
         </h3>
         <div className='grid grid-cols-2 gap-3'>
-          <div className='rounded-xl border border-cyan-200/20 bg-cyan-500/10 p-3'>
+          <div className='rounded-xl border border-cyan-200/25 bg-cyan-500/10 p-3 backdrop-blur-md'>
             <p className='text-[10px] uppercase tracking-[0.14em] text-cyan-200/75'>
               Throughput
             </p>
-            <p className='mt-1 text-2xl font-black'>{throughput}</p>
+            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black'>
+              {throughput}
+            </p>
           </div>
-          <div className='rounded-xl border border-violet-200/20 bg-violet-500/10 p-3'>
+          <div className='rounded-xl border border-violet-200/25 bg-violet-500/10 p-3 backdrop-blur-md'>
             <p className='text-[10px] uppercase tracking-[0.14em] text-violet-200/75'>
               Fleet Utilization
             </p>
-            <p className='mt-1 text-2xl font-black'>{fleetUtilization}%</p>
+            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black'>
+              {fleetUtilization}%
+            </p>
           </div>
-          <div className='rounded-xl border border-emerald-200/20 bg-emerald-500/10 p-3'>
+          <div className='rounded-xl border border-emerald-200/25 bg-emerald-500/10 p-3 backdrop-blur-md'>
             <p className='text-[10px] uppercase tracking-[0.14em] text-emerald-200/75'>
               Cold Chain Avg
             </p>
-            <p className='mt-1 text-2xl font-black'>{coldChain.toFixed(1)}°C</p>
+            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black'>
+              {coldChain.toFixed(1)}°C
+            </p>
           </div>
-          <div className='rounded-xl border border-rose-200/20 bg-rose-500/10 p-3'>
+          <div className='rounded-xl border border-rose-200/25 bg-rose-500/10 p-3 backdrop-blur-md'>
             <p className='text-[10px] uppercase tracking-[0.14em] text-rose-200/75'>
               Unack Alerts
             </p>
-            <p className='mt-1 text-2xl font-black'>{unacknowledgedAlerts}</p>
+            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black'>
+              {unacknowledgedAlerts}
+            </p>
           </div>
         </div>
-        <div className='mt-4 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300'>
+        <div className='mt-4 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-slate-300 backdrop-blur-md'>
           Data stream status:{' '}
           <span className='font-semibold text-cyan-200'>
             {resolveConnectionLabel(connectionStatus)}
@@ -1371,7 +1379,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
             willChange: 'opacity, transform',
             contain: 'layout paint style',
           }}
-          className='mission-control-shell relative min-h-screen overflow-x-hidden text-white selection:bg-cyan-500/30 selection:text-white'
+          className='mission-control-shell relative min-h-screen overflow-x-clip text-white selection:bg-cyan-500/30 selection:text-white'
         >
           <div className='pointer-events-none fixed inset-0 -z-20 hud-grid-overlay opacity-45' />
           <div className='pointer-events-none fixed inset-0 -z-10 scanline-overlay opacity-40' />
@@ -1423,7 +1431,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                   <div>
                     <motion.h1
                       data-display-font='true'
-                      className='bg-gradient-to-r from-cyan-100 via-white to-amber-100 bg-clip-text text-lg font-black uppercase tracking-[0.11em] leading-tight text-transparent sm:text-2xl lg:text-3xl'
+                      className='bg-gradient-to-r from-cyan-100 via-white to-amber-100 bg-clip-text text-[clamp(1.1rem,0.82vw+0.95rem,2.05rem)] font-black uppercase tracking-[0.105em] leading-tight text-transparent'
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.6, ease: EASE_CINEMATIC_INTRO }}
@@ -1617,7 +1625,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
 
           {/* ── Main Content ── */}
           <main
-            className='mx-auto max-w-[128rem] space-y-6 px-4 py-6 sm:px-6'
+            className='mx-auto max-w-[128rem] space-y-6 overflow-x-clip px-4 py-6 sm:px-6'
             style={{
               contentVisibility: 'auto',
               containIntrinsicSize: '1px 1400px',
@@ -1741,7 +1749,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
               className='grid grid-cols-1 gap-6 xl:grid-cols-12'
             >
               {/* Cargo Temperature Distribution */}
-              <div className='xl:col-span-4'>
+              <div className='min-w-0 xl:col-span-4'>
                 <GlassCard accent='from-blue-400/30 via-sky-400/20 to-cyan-400/30'>
                   <div className='rounded-3xl p-6'>
                     <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
@@ -1783,7 +1791,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
               </div>
 
               {/* Alert Timeline */}
-              <div className='xl:col-span-4'>
+              <div className='min-w-0 xl:col-span-4'>
                 <GlassCard accent='from-rose-400/30 via-orange-400/20 to-amber-400/30'>
                   <div className='rounded-3xl p-6'>
                     <div className='mb-4 flex items-center justify-between'>
@@ -1805,7 +1813,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
               </div>
 
               {/* Performance Metrics */}
-              <div className='xl:col-span-4'>
+              <div className='min-w-0 xl:col-span-4'>
                 <GlassCard accent='from-emerald-400/30 via-teal-400/20 to-green-400/30'>
                   <div className='rounded-3xl p-6'>
                     <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
@@ -1838,7 +1846,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
               viewport={{ once: true, amount: 0.22 }}
               className='grid grid-cols-1 gap-6 xl:grid-cols-12'
             >
-              <div className='xl:col-span-5 space-y-6'>
+              <div className='min-w-0 xl:col-span-5 space-y-6'>
                 <GlassCard accent='from-violet-400/20 via-cyan-300/10 to-transparent'>
                   <div className='rounded-3xl p-6'>
                     <h3 className='mb-6 text-lg font-bold flex items-center gap-2'>
@@ -1962,7 +1970,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
               </div>
 
               {/* Live Fleet Map (Imperative Mapbox GL — no React rendering) */}
-              <div className='xl:col-span-7'>
+              <div className='min-w-0 xl:col-span-7'>
                 <GlassCard
                   layoutId='panel-live-map'
                   accent='from-indigo-400/30 via-blue-400/20 to-cyan-400/30'
