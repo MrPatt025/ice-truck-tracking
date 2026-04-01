@@ -67,10 +67,6 @@ function resolveWebSocketUrl(): string {
     return 'ws://localhost:5000'
   }
 
-  if (/^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)) {
-    return 'ws://localhost:5000'
-  }
-
   const protocol = globalThis.window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   return `${protocol}//${globalThis.window.location.host}`
 }
@@ -215,6 +211,7 @@ function HeroBackground({
   React.useEffect(() => {
     if (globalThis.window === undefined) return
 
+    const MAX_RECONNECT_ATTEMPTS = 8
     let closedByCleanup = false
 
     const clearReconnectTimer = () => {
@@ -226,6 +223,16 @@ function HeroBackground({
 
     const scheduleReconnect = () => {
       if (closedByCleanup) return
+
+      if (reconnectAttemptRef.current >= MAX_RECONNECT_ATTEMPTS) {
+        dispatchWsHealthEvent({
+          status: 'offline',
+          source: 'landing-hero-websocket',
+          attempt: reconnectAttemptRef.current,
+          reason: 'retry-limit-reached',
+        })
+        return
+      }
 
       clearReconnectTimer()
 

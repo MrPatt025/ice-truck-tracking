@@ -305,6 +305,29 @@ export class ImperativeMapLayer {
     private cacheHydrationRequested = false;
     private readonly cachedTruckMap = new Map<string, TruckTelemetry>();
     private lastCachePersistAt = 0;
+    private usingFallbackStyle = false;
+    private readonly mapErrorHandler = (event: mapboxgl.ErrorEvent): void => {
+        if (!this.map || this._destroyed || this.usingFallbackStyle) return;
+
+        const errorLike = event.error as { status?: number; message?: string } | undefined;
+        const sourceId = (event as { sourceId?: string }).sourceId ?? '';
+        const message = `${errorLike?.message ?? ''} ${sourceId}`.toLowerCase();
+        const isUnauthorized = errorLike?.status === 401
+            || message.includes('401')
+            || message.includes('unauthorized')
+            || message.includes('access token')
+            || message.includes('forbidden');
+
+        if (!isUnauthorized) return;
+
+        this.usingFallbackStyle = true;
+        console.warn('Mapbox style request unauthorized. Falling back to open map style.');
+        this.map.setStyle(OPEN_STYLE_URL);
+        this.map.once('style.load', () => {
+            this.installDeckOverlay();
+            this.refreshDeckLayer();
+        });
+    };
 
     get ready(): boolean {
         return this._ready;
@@ -323,6 +346,7 @@ export class ImperativeMapLayer {
         }
 
         const resolvedStyle = resolveMapStyle(style);
+        this.usingFallbackStyle = resolvedStyle === OPEN_STYLE_URL;
 
         try {
             this.map = createMapInstance(container, resolvedStyle);
@@ -336,6 +360,7 @@ export class ImperativeMapLayer {
 
         this.map.addControl(new mapboxgl.NavigationControl(), 'top-right');
         this.map.addControl(new mapboxgl.ScaleControl(), 'bottom-left');
+        this.map.on('error', this.mapErrorHandler);
 
         this.map.on('load', () => {
             if (!this.map || this._destroyed) return;
@@ -777,6 +802,7 @@ export class ImperativeMapLayer {
     setStyle(style: Theme): void {
         if (!this.map) return;
         const nextStyle = resolveMapStyle(style);
+        this.usingFallbackStyle = nextStyle === OPEN_STYLE_URL;
         this.map.setStyle(nextStyle);
         this.map.once('style.load', () => {
             this.installDeckOverlay();
@@ -861,6 +887,7 @@ export class ImperativeMapLayer {
     destroy(): void {
         this._destroyed = true;
         this._ready = false;
+        this.map?.off('error', this.mapErrorHandler);
         this.heatmapTrail.length = 0;
         this.cachedTruckMap.clear();
         this.cacheHydrationRequested = false;

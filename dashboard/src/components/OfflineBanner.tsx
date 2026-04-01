@@ -34,16 +34,13 @@ const OfflineBanner = memo(function OfflineBanner({ className = '' }: Readonly<O
     }
   }, [])
 
-  if (isOnline) {
-    return null
-  }
-
   return (
     <div
       role='status'
       aria-live='polite'
+      aria-hidden={isOnline}
       data-testid='offline-indicator'
-      className={`glass-panel rounded-xl border border-amber-200/30 bg-amber-100/10 p-3 text-amber-100 shadow-xl ${className}`}
+      className={`glass-panel rounded-xl border border-amber-200/30 bg-amber-100/10 p-3 text-amber-100 shadow-xl transition-opacity duration-200 ${isOnline ? 'pointer-events-none invisible opacity-0' : 'visible opacity-100'} ${className}`}
     >
       <p className='text-sm font-semibold tracking-wide'>
         Offline mode enabled
