@@ -21,11 +21,10 @@ export function useCinematicCamera(
     const transitionProgress = useMotionValue(0)
     const cinematicDriver = useTransform(
         [scrollYProgress, transitionProgress],
-        ([scroll, transition]) => {
-            const scrollValue = Number(scroll)
-            const transitionValue = Number(transition)
-            const clampedScroll = Math.min(1, Math.max(0, scrollValue * 0.92))
-            const clampedTransition = Math.min(1, Math.max(0, transitionValue))
+        (values) => {
+            const [scroll, transition] = values as number[]
+            const clampedScroll = Math.min(1, Math.max(0, scroll * 0.92))
+            const clampedTransition = Math.min(1, Math.max(0, transition))
             return Math.min(1, clampedScroll * 0.38 + clampedTransition * 0.82)
         }
     )
