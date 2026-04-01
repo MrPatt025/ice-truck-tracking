@@ -1,5 +1,7 @@
 module.exports = {
   testEnvironment: "node",
+  collectCoverage: true,
+  coverageReporters: ["text", "lcov"],
   setupFiles: ["<rootDir>/tests/jest.setup.env.js"],
   setupFilesAfterEnv: ["<rootDir>/tests/jest.setup.mocks.js"],
   roots: ["<rootDir>/tests", "<rootDir>/src"],

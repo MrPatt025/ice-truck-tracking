@@ -141,6 +141,16 @@ const PANEL_SPRING = {
   },
 }
 
+const METRIC_CARD_VARIANT = {
+  hidden: { opacity: 0, y: 20, scale: 0.96 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.5, ease: [0.2, 0.88, 0.25, 1] },
+  },
+}
+
 const FpsTargetMonitor = dynamic(() => import('@/components/FpsTargetMonitor'), {
   ssr: false,
   loading: GlassPulseFallback,
@@ -862,6 +872,11 @@ const UnacknowledgedAlertsText = memo(function UnacknowledgedAlertsText() {
   return <>{unacknowledgedAlerts} unacknowledged</>
 })
 
+const ActiveTrucksHeadline = memo(function ActiveTrucksHeadline() {
+  const activeTrucks = useIoTStore(s => s.metrics.activeTrucks)
+  return <>{activeTrucks || 55} Active Trucks</>
+})
+
 const LiveMetricCards = memo(function LiveMetricCards() {
   const metrics = useIoTStore(s => s.metrics)
   const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
@@ -870,24 +885,17 @@ const LiveMetricCards = memo(function LiveMetricCards() {
   return (
     <motion.section
       variants={PANEL_SPRING}
-      className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'
+      className='grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'
     >
       {metricCards.map(m => (
         <motion.div
           key={m.title}
-          variants={{
-            hidden: { opacity: 0, y: 20, scale: 0.96 },
-            show: {
-              opacity: 1,
-              y: 0,
-              scale: 1,
-              transition: { duration: 0.5, ease: EASE_CINEMATIC_INTRO },
-            },
-          }}
+          variants={METRIC_CARD_VARIANT}
+          className='h-full'
         >
           <Tilt>
             <GlassCard accent={m.accent}>
-              <div className='p-5 sm:p-6'>
+              <div className='h-full min-h-[13.5rem] p-5 sm:p-6'>
                 <div className='mb-3 flex items-center justify-between'>
                   <span className='text-xs font-bold uppercase tracking-widest text-slate-400'>
                     {m.title}
@@ -1238,6 +1246,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
         >
           <div className='pointer-events-none fixed inset-0 -z-20 hud-grid-overlay opacity-45' />
           <div className='pointer-events-none fixed inset-0 -z-10 scanline-overlay opacity-40' />
+          <div className='pointer-events-none fixed inset-0 -z-10 opacity-[0.04] [background-image:radial-gradient(rgba(255,255,255,0.65)_0.7px,transparent_0.7px)] [background-size:3px_3px]' />
 
           {/* ── Background gradient ── */}
           <div
@@ -1271,7 +1280,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
           )}
 
           {/* ── Sticky Header ── */}
-          <header className='glass-panel sticky top-0 z-50 bg-slate-950/50 backdrop-blur-2xl ring-1 ring-cyan-200/20 shadow-[0_24px_90px_-45px_rgba(34,211,238,0.6)]'>
+          <header className='glass-panel sticky top-0 z-50 bg-slate-950/45 backdrop-blur-[24px] ring-1 ring-cyan-200/25 shadow-[0_24px_90px_-45px_rgba(34,211,238,0.6)] [background-image:linear-gradient(110deg,rgba(34,211,238,0.08),rgba(255,255,255,0.02)_42%,rgba(99,102,241,0.08))]'>
             <div className='mx-auto max-w-[120rem] px-4 sm:px-6'>
               <div className='flex items-center justify-between py-4'>
                 {/* Logo + Title */}
@@ -1327,7 +1336,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                       ariaPressed={showGrid}
                       className={`rounded-xl p-2.5 ring-1 transition-all ${showGrid ? 'bg-violet-500/20 ring-violet-500/50 text-violet-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
                     >
-                      <Grid3X3 aria-hidden='true' className='h-4 w-4' />
+                      <Grid3X3 className='h-4 w-4' />
                     </MagneticButton>
                     <MagneticButton
                       onClick={toggle3D}
@@ -1336,7 +1345,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                       ariaPressed={show3D}
                       className={`rounded-xl p-2.5 ring-1 transition-all ${show3D ? 'bg-cyan-500/20 ring-cyan-500/50 text-cyan-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
                     >
-                      <Layers aria-hidden='true' className='h-4 w-4' />
+                      <Layers className='h-4 w-4' />
                     </MagneticButton>
                     <MagneticButton
                       onClick={toggleHeatmap}
@@ -1345,7 +1354,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                       ariaPressed={showHeatmap}
                       className={`rounded-xl p-2.5 ring-1 transition-all ${showHeatmap ? 'bg-rose-500/20 ring-rose-500/50 text-rose-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
                     >
-                      <ThermometerSun aria-hidden='true' className='h-4 w-4' />
+                      <ThermometerSun className='h-4 w-4' />
                     </MagneticButton>
                     <MagneticButton
                       onClick={togglePause}
@@ -1359,9 +1368,9 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                       className={`rounded-xl p-2.5 ring-1 transition-all ${paused ? 'bg-amber-500/20 ring-amber-500/50 text-amber-300' : 'ring-white/10 hover:bg-white/10 text-slate-400'}`}
                     >
                       {paused ? (
-                        <Play aria-hidden='true' className='h-4 w-4' />
+                        <Play className='h-4 w-4' />
                       ) : (
-                        <Pause aria-hidden='true' className='h-4 w-4' />
+                        <Pause className='h-4 w-4' />
                       )}
                     </MagneticButton>
                     <MagneticButton
@@ -1371,7 +1380,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                       ariaPressed={showAlerts}
                       className='relative rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
                     >
-                      <Bell aria-hidden='true' className='h-4 w-4' />
+                      <Bell className='h-4 w-4' />
                       <UnacknowledgedAlertsBadge />
                     </MagneticButton>
                     <MagneticButton
@@ -1380,7 +1389,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                       ariaLabel='Download JSON fleet report'
                       className='rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
                     >
-                      <Download aria-hidden='true' className='h-4 w-4' />
+                      <Download className='h-4 w-4' />
                     </MagneticButton>
                     <MagneticButton
                       onClick={togglePerf}
@@ -1388,7 +1397,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                       ariaLabel='Toggle performance overlay'
                       className='rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
                     >
-                      <Zap aria-hidden='true' className='h-4 w-4' />
+                      <Zap className='h-4 w-4' />
                     </MagneticButton>
                     {canInstallApp && (
                       <MagneticButton
@@ -1397,7 +1406,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                         ariaLabel='Install dashboard app'
                         className='hidden md:inline-flex rounded-xl px-3 py-2 ring-1 ring-cyan-300/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-200 transition-all'
                       >
-                        <Download aria-hidden='true' className='h-4 w-4' />
+                        <Download className='h-4 w-4' />
                         <span className='text-xs font-semibold tracking-wide uppercase'>
                           {installingApp ? 'Installing...' : 'Install App'}
                         </span>
@@ -1653,7 +1662,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
 
             {/* ── System Health + Live Map ── */}
             <section className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
-              <GlassCard>
+              <GlassCard accent='from-violet-400/20 via-cyan-300/10 to-transparent'>
                 <div className='rounded-3xl p-6'>
                   <h3 className='mb-6 text-lg font-bold flex items-center gap-2'>
                     <Settings className='h-5 w-5 text-violet-400' />
@@ -1799,7 +1808,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                           <div className='text-center space-y-4'>
                             <MapPin className='h-16 w-16 mx-auto text-cyan-400 animate-bounce' />
                             <p className='text-2xl font-bold'>
-                              {metrics.activeTrucks || 55} Active Trucks
+                              <ActiveTrucksHeadline />
                             </p>
                             <p className='text-sm text-slate-400'>
                               Real-time GPS tracking
