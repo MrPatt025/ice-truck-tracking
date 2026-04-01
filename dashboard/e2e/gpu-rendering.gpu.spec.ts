@@ -10,11 +10,21 @@ import { test, expect } from '@playwright/test';
 const setAuthCookie = async (page: import('@playwright/test').Page, baseURL: string) => {
     await page.context().addCookies([
         {
+            name: 'auth-token',
+            value: 'e2e-test-token',
+            url: baseURL,
+        },
+        {
             name: 'access_token',
             value: 'e2e-test-token',
             url: baseURL,
         },
     ]);
+};
+
+const waitForDashboardCanvas = async (page: import('@playwright/test').Page): Promise<void> => {
+    await page.waitForSelector('canvas', { state: 'attached', timeout: 30000 });
+    await expect(page.locator('canvas').first()).toBeVisible({ timeout: 30000 });
 };
 
 test.describe('GPU Rendering & Recovery', () => {
@@ -26,6 +36,7 @@ test.describe('GPU Rendering & Recovery', () => {
     test('dashboard loads with WebGL canvas', async ({ page }) => {
         await page.goto('/dashboard');
         await page.waitForLoadState('networkidle');
+        await waitForDashboardCanvas(page);
 
         // Should have at least one canvas for the 3D layer
         const canvases = page.locator('canvas');
@@ -36,6 +47,7 @@ test.describe('GPU Rendering & Recovery', () => {
     test('WebGL context loss triggers graceful freeze', async ({ page }) => {
         await page.goto('/dashboard');
         await page.waitForLoadState('networkidle');
+        await waitForDashboardCanvas(page);
         await page.waitForTimeout(3000); // Let engine boot
 
         // Inject context loss on the first WebGL canvas
@@ -74,6 +86,7 @@ test.describe('GPU Rendering & Recovery', () => {
     test('WebGL context restore re-renders scene', async ({ page }) => {
         await page.goto('/dashboard');
         await page.waitForLoadState('networkidle');
+        await waitForDashboardCanvas(page);
         await page.waitForTimeout(3000);
 
         const restored = await page.evaluate(() => {
@@ -108,6 +121,7 @@ test.describe('GPU Rendering & Recovery', () => {
     test('GPU memory stays below 512MB after 30s soak', async ({ page }) => {
         await page.goto('/dashboard');
         await page.waitForLoadState('networkidle');
+        await waitForDashboardCanvas(page);
         await page.waitForTimeout(5000); // Let engine stabilize
 
         // Sample memory every 5 seconds for 30 seconds
@@ -147,6 +161,7 @@ test.describe('GPU Rendering & Recovery', () => {
 
         await page.goto('/dashboard');
         await page.waitForLoadState('networkidle');
+        await waitForDashboardCanvas(page);
         await page.waitForTimeout(5000);
 
         // Filter out expected/benign errors

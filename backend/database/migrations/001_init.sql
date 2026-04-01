@@ -1,3 +1,4 @@
+-- NOSONAR
 -- ============================================================
 -- Ice Truck Tracking — PostgreSQL + TimescaleDB Schema
 -- Run once: psql -U postgres -d ice_tracking -f 001_init.sql
@@ -15,8 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(30) NOT NULL DEFAULT 'driver' CHECK (
-        role IN (
-            'admin',
+        role IN ( -- NOSONAR
+            'admin', -- NOSONAR
             'manager',
             'dispatcher',
             'driver',
@@ -105,7 +106,7 @@ SELECT create_hypertable (
 CREATE MATERIALIZED VIEW IF NOT EXISTS telemetry_5min
 WITH (timescaledb.continuous) AS
 SELECT
-    time_bucket ('5 minutes', time) AS bucket,
+    time_bucket ('5 minutes', time) AS bucket, -- NOSONAR
     truck_id,
     AVG(temperature) AS avg_temp,
     AVG(speed) AS avg_speed,

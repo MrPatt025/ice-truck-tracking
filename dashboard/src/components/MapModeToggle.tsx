@@ -1,6 +1,6 @@
 'use client'
 
-import React, { memo, useState } from 'react'
+import React, { memo } from 'react'
 
 interface MapModeToggleProps {
   isLiveMode: boolean
@@ -16,21 +16,7 @@ const MapModeToggle = memo(function MapModeToggle({
   onModeChange,
   className = '',
 }: Readonly<MapModeToggleProps>) {
-  const [activeMode, setActiveMode] = useState<'live' | 'historical'>(
-    isLiveMode ? 'live' : 'historical'
-  )
-
-  const isLive = activeMode === 'live'
-  const isHistoricalMode = activeMode === 'historical'
-
-  const activateMode = (mode: 'live' | 'historical') => {
-    setActiveMode(mode)
-    try {
-      onModeChange(mode)
-    } catch {
-      // Keep local toggle responsive even if upstream handlers fail.
-    }
-  }
+  const isHistoricalMode = !isLiveMode
 
   return (
     <fieldset
@@ -41,7 +27,7 @@ const MapModeToggle = memo(function MapModeToggle({
       <legend className='sr-only'>Map visualization mode</legend>
 
       <div className='relative'>
-        {isLive && (
+        {isLiveMode && (
           <span
             aria-hidden='true'
             className='pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 shadow-lg motion-safe:animate-pulse'
@@ -50,11 +36,10 @@ const MapModeToggle = memo(function MapModeToggle({
         <button
           type='button'
           tabIndex={0}
-          onMouseDown={() => activateMode('live')}
-          onClick={() => activateMode('live')}
-          aria-label='Live Fleet'
-          aria-pressed={isLive}
-          className={`${baseButtonClass} ${isLive ? 'text-white' : 'text-slate-300 hover:bg-white/10'}`}
+          onClick={() => onModeChange('live')}
+          aria-label='Switch to live fleet mode'
+          aria-pressed={isLiveMode}
+          className={`${baseButtonClass} ${isLiveMode ? 'text-white' : 'text-slate-300 hover:bg-white/10'}`}
         >
           Live Fleet
         </button>
@@ -70,9 +55,8 @@ const MapModeToggle = memo(function MapModeToggle({
         <button
           type='button'
           tabIndex={0}
-          onMouseDown={() => activateMode('historical')}
-          onClick={() => activateMode('historical')}
-          aria-label='Historical Heatmap'
+          onClick={() => onModeChange('historical')}
+          aria-label='Switch to historical heatmap mode'
           aria-pressed={isHistoricalMode}
           className={`${baseButtonClass} ${isHistoricalMode ? 'text-white' : 'text-slate-300 hover:bg-white/10'}`}
         >

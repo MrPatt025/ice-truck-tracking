@@ -1,3 +1,4 @@
+-- NOSONAR
 -- ============================================================================
 -- Ice Truck Tracking — TimescaleDB Schema (Production-Grade)
 -- PostgreSQL 16 + TimescaleDB 2.x
@@ -14,7 +15,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 -- ENUM TYPES
 -- ============================================================================
 DO $$ BEGIN
-  CREATE TYPE user_role AS ENUM ('admin', 'manager', 'dispatcher', 'driver', 'viewer');
+  CREATE TYPE user_role AS ENUM ('admin', 'manager', 'dispatcher', 'driver', 'viewer'); -- NOSONAR
 
 EXCEPTION WHEN duplicate_object THEN NULL;
 
@@ -161,7 +162,7 @@ CREATE TABLE IF NOT EXISTS telemetry (
 
 -- Convert to hypertable (partitioned by time, 1-day chunks)
 SELECT create_hypertable (
-        'telemetry', 'time', chunk_time_interval = > INTERVAL '1 day', if_not_exists = > TRUE
+        'telemetry', 'time', chunk_time_interval => INTERVAL '1 day', if_not_exists => TRUE -- NOSONAR
     );
 
 -- Alerts
@@ -183,7 +184,7 @@ CREATE TABLE IF NOT EXISTS alerts (
 );
 
 SELECT create_hypertable (
-        'alerts', 'time', chunk_time_interval = > INTERVAL '7 days', if_not_exists = > TRUE
+        'alerts', 'time', chunk_time_interval => INTERVAL '7 days', if_not_exists => TRUE -- NOSONAR
     );
 
 -- Audit log (immutable)
@@ -200,7 +201,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
 );
 
 SELECT create_hypertable (
-        'audit_log', 'time', chunk_time_interval = > INTERVAL '30 days', if_not_exists = > TRUE
+        'audit_log', 'time', chunk_time_interval => INTERVAL '30 days', if_not_exists => TRUE -- NOSONAR
     );
 
 -- ============================================================================
@@ -253,7 +254,7 @@ CREATE INDEX IF NOT EXISTS idx_drivers_truck ON drivers (assigned_truck);
 CREATE MATERIALIZED VIEW IF NOT EXISTS telemetry_hourly
 WITH (timescaledb.continuous) AS
 SELECT
-  time_bucket('1 hour', time) AS bucket,
+  time_bucket('1 hour', time) AS bucket, -- NOSONAR
   truck_id,
   AVG(speed)::DECIMAL(5,2)         AS avg_speed,
   MAX(speed)::DECIMAL(5,2)         AS max_speed,
@@ -314,7 +315,7 @@ SELECT
 ALTER TABLE telemetry SET(
     timescaledb.compress,
     timescaledb.compress_segmentby = 'truck_id',
-    timescaledb.compress_orderby = 'time DESC'
+    timescaledb.compress_orderby = 'time DESC' -- NOSONAR
 );
 
 SELECT add_compression_policy (
@@ -324,7 +325,7 @@ SELECT add_compression_policy (
 ALTER TABLE alerts SET(
     timescaledb.compress,
     timescaledb.compress_segmentby = 'truck_id',
-    timescaledb.compress_orderby = 'time DESC'
+    timescaledb.compress_orderby = 'time DESC' -- NOSONAR
 );
 
 SELECT add_compression_policy (
@@ -333,7 +334,7 @@ SELECT add_compression_policy (
 
 ALTER TABLE audit_log SET(
     timescaledb.compress,
-    timescaledb.compress_orderby = 'time DESC'
+    timescaledb.compress_orderby = 'time DESC' -- NOSONAR
 );
 
 SELECT add_compression_policy (

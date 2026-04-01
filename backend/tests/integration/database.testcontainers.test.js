@@ -51,7 +51,7 @@ async function runMigration(pg, sql) {
         .filter((s) => s.length > 0);
 
     for (const stmt of statements) {
-        await pg.query(stmt);  
+        await pg.query(stmt);
     }
 }
 

@@ -24,7 +24,7 @@ export default defineConfig({
         ['json', { outputFile: 'playwright-report/gpu/results.json' }],
     ],
     use: {
-        baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
+        baseURL: process.env.BASE_URL ?? 'http://localhost:3310',
         trace: 'on-first-retry',
         screenshot: 'on',
         video: 'on',
@@ -50,8 +50,8 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'pnpm run build && (node .next/standalone/dashboard/server.js || node .next/standalone/server.js)',
-        url: 'http://localhost:3000',
+        command: 'pnpm exec next dev -p 3310 --turbopack',
+        url: 'http://localhost:3310',
         reuseExistingServer: !process.env.CI,
         timeout: 600_000,
     },

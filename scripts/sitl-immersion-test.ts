@@ -47,6 +47,117 @@ interface ImmersionReport {
     failures: string[];
 }
 
+interface SoakRunResult {
+    tick: number;
+    totalTelemetry: number;
+    errors: number;
+    memoryPeak: number;
+}
+
+const waitMs = (ms: number): Promise<void> =>
+    new Promise(resolve => setTimeout(resolve, ms));
+
+function countTelemetryValidationErrors(
+    telemetry: Array<{ lat: number; lng: number }>,
+    tick: number,
+    failures: string[]
+): number {
+    let errors = 0;
+    for (const t of telemetry) {
+        if (t.lat < -90 || t.lat > 90) {
+            errors++;
+            failures.push(`Tick ${tick}: invalid lat ${t.lat}`);
+        }
+        if (t.lng < -180 || t.lng > 180) {
+            errors++;
+            failures.push(`Tick ${tick}: invalid lng ${t.lng}`);
+        }
+    }
+    return errors;
+}
+
+function logCheckpoint(params: {
+    elapsed: number;
+    durationMs: number;
+    tick: number;
+    totalTelemetry: number;
+    errors: number;
+    tickTimings: number[];
+    heapMB: number;
+}): void {
+    const { elapsed, durationMs, tick, totalTelemetry, errors, tickTimings, heapMB } = params;
+    const pct = ((elapsed / durationMs) * 100).toFixed(1);
+    const avgMs = tickTimings.reduce((a, b) => a + b, 0) / tickTimings.length;
+    process.stdout.write(
+        `\r  [${pct}%] tick=${tick} telemetry=${totalTelemetry} errors=${errors} avgTick=${avgMs.toFixed(1)}ms heap=${heapMB.toFixed(0)}MB`
+    );
+}
+
+async function runSoakLoop(params: {
+    sim: SITLSimulator;
+    startTime: number;
+    durationMs: number;
+    intervalMs: number;
+    checkInterval: number;
+    tickTimings: number[];
+    failures: string[];
+}): Promise<SoakRunResult> {
+    const {
+        sim,
+        startTime,
+        durationMs,
+        intervalMs,
+        checkInterval,
+        tickTimings,
+        failures,
+    } = params;
+
+    let tick = 0;
+    let totalTelemetry = 0;
+    let errors = 0;
+    let memoryPeak = 0;
+    let lastCheckpoint = startTime;
+
+    while (Date.now() - startTime < durationMs) {
+        const elapsed = Date.now() - startTime;
+        const tickStart = performance.now();
+
+        try {
+            const telemetry = sim.tick();
+            totalTelemetry += telemetry.length;
+            tick++;
+            errors += countTelemetryValidationErrors(telemetry, tick, failures);
+        } catch (err) {
+            errors++;
+            failures.push(`Tick ${tick}: ${err instanceof Error ? err.message : String(err)}`);
+        }
+
+        const tickMs = performance.now() - tickStart;
+        tickTimings.push(tickMs);
+
+        const mem = process.memoryUsage();
+        const heapMB = mem.heapUsed / 1024 / 1024;
+        if (heapMB > memoryPeak) memoryPeak = heapMB;
+
+        if (Date.now() - lastCheckpoint > checkInterval) {
+            lastCheckpoint = Date.now();
+            logCheckpoint({
+                elapsed,
+                durationMs,
+                tick,
+                totalTelemetry,
+                errors,
+                tickTimings,
+                heapMB,
+            });
+        }
+
+        await waitMs(intervalMs);
+    }
+
+    return { tick, totalTelemetry, errors, memoryPeak };
+}
+
 // ─── Argument Parsing ──────────────────────────────────────────
 
 function parseArgs(argv: string[]): ImmersionConfig {
@@ -78,12 +189,10 @@ function parseArgs(argv: string[]): ImmersionConfig {
 
 // ─── Main ──────────────────────────────────────────────────────
 
-async function main() {
+async function main() { // NOSONAR
     const config = parseArgs(process.argv);
     const durationMs = config.hours * 3_600_000;
     const tickTimings: number[] = [];
-    let totalTelemetry = 0;
-    let errors = 0;
     const failures: string[] = [];
 
     console.log(`\n🔬 SITL Immersion Test — ${config.hours}h soak`);
@@ -98,71 +207,21 @@ async function main() {
 
     const sim = new SITLSimulator(sitlConfig);
     const startTime = Date.now();
-    let tick = 0;
-    let memoryPeak = 0;
     const startMem = process.memoryUsage();
 
     const checkInterval = 60_000; // Report every minute
-    let lastCheckpoint = startTime;
-
-    const run = (): Promise<void> => {
-        return new Promise((resolve) => {
-            const timer = setInterval(() => {
-                const elapsed = Date.now() - startTime;
-
-                if (elapsed >= durationMs) {
-                    clearInterval(timer);
-                    resolve();
-                    return;
-                }
-
-                const tickStart = performance.now();
-                try {
-                    const telemetry = sim.tick();
-                    totalTelemetry += telemetry.length;
-                    tick++;
-
-                    // Validate telemetry
-                    for (const t of telemetry) {
-                        if (t.lat < -90 || t.lat > 90) {
-                            errors++;
-                            failures.push(`Tick ${tick}: invalid lat ${t.lat}`);
-                        }
-                        if (t.lng < -180 || t.lng > 180) {
-                            errors++;
-                            failures.push(`Tick ${tick}: invalid lng ${t.lng}`);
-                        }
-                    }
-                } catch (err) {
-                    errors++;
-                    failures.push(`Tick ${tick}: ${err instanceof Error ? err.message : String(err)}`);
-                }
-
-                const tickMs = performance.now() - tickStart;
-                tickTimings.push(tickMs);
-
-                // Memory check
-                const mem = process.memoryUsage();
-                const heapMB = mem.heapUsed / 1024 / 1024;
-                if (heapMB > memoryPeak) memoryPeak = heapMB;
-
-                // Checkpoint logging
-                if (Date.now() - lastCheckpoint > checkInterval) {
-                    lastCheckpoint = Date.now();
-                    const pct = ((elapsed / durationMs) * 100).toFixed(1);
-                    const avgMs = tickTimings.reduce((a, b) => a + b, 0) / tickTimings.length;
-                    process.stdout.write(
-                        `\r  [${pct}%] tick=${tick} telemetry=${totalTelemetry} errors=${errors} avgTick=${avgMs.toFixed(1)}ms heap=${heapMB.toFixed(0)}MB`
-                    );
-                }
-            }, config.intervalMs);
-        });
-    };
-
-    await run();
+    const soak = await runSoakLoop({
+        sim,
+        startTime,
+        durationMs,
+        intervalMs: config.intervalMs,
+        checkInterval,
+        tickTimings,
+        failures,
+    });
 
     const endTime = Date.now();
-    const sorted = [...tickTimings].sort((a, b) => a - b);
+    const sorted = (tickTimings.length > 0 ? [...tickTimings] : [0]).sort((a, b) => a - b);
     const p95idx = Math.floor(sorted.length * 0.95);
     const finalMem = process.memoryUsage();
 
@@ -170,20 +229,20 @@ async function main() {
         startTime: new Date(startTime).toISOString(),
         endTime: new Date(endTime).toISOString(),
         durationMs: endTime - startTime,
-        totalTicks: tick,
-        totalTelemetry,
-        errors,
+        totalTicks: soak.tick,
+        totalTelemetry: soak.totalTelemetry,
+        errors: soak.errors,
         avgTickMs: sorted.reduce((a, b) => a + b, 0) / sorted.length,
         maxTickMs: sorted.at(-1) ?? 0,
         p95TickMs: sorted[p95idx] ?? 0,
-        memoryPeakMB: memoryPeak,
+        memoryPeakMB: soak.memoryPeak,
         memoryFinalMB: finalMem.heapUsed / 1024 / 1024,
-        status: errors === 0 && memoryPeak < (startMem.heapUsed / 1024 / 1024) * 3 ? 'pass' : 'fail',
+        status: soak.errors === 0 && soak.memoryPeak < (startMem.heapUsed / 1024 / 1024) * 3 ? 'pass' : 'fail',
         failures: failures.slice(0, 50), // Cap failures list
     };
 
     // Write report
-    const fs = await import('fs');
+    const fs = await import('node:fs');
     fs.writeFileSync(config.reportPath, JSON.stringify(report, null, 2));
 
     console.log('\n\n📊 Immersion Test Report');
@@ -202,7 +261,9 @@ async function main() {
     process.exit(report.status === 'pass' ? 0 : 1);
 }
 
-main().catch((err) => {
+try {
+    await main();
+} catch (err) {
     console.error('Fatal error:', err);
     process.exit(2);
-});
+}
