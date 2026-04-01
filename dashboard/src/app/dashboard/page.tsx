@@ -115,6 +115,32 @@ const WebGLCanvasSkeleton = () => (
   />
 )
 
+const PANEL_STAGGER = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.08,
+    },
+  },
+}
+
+const PANEL_SPRING = {
+  hidden: { opacity: 0, y: 20, scale: 0.985 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 210,
+      damping: 24,
+      mass: 0.76,
+    },
+  },
+}
+
 const FpsTargetMonitor = dynamic(() => import('@/components/FpsTargetMonitor'), {
   ssr: false,
   loading: GlassPulseFallback,
@@ -820,6 +846,79 @@ function buildMetrics(m: FleetMetrics, unack: number): MetricItem[] {
   ]
 }
 
+const UnacknowledgedAlertsBadge = memo(function UnacknowledgedAlertsBadge() {
+  const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
+  if (unacknowledgedAlerts <= 0) return null
+
+  return (
+    <span className='absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold animate-pulse'>
+      {unacknowledgedAlerts > 9 ? '9+' : unacknowledgedAlerts}
+    </span>
+  )
+})
+
+const UnacknowledgedAlertsText = memo(function UnacknowledgedAlertsText() {
+  const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
+  return <>{unacknowledgedAlerts} unacknowledged</>
+})
+
+const LiveMetricCards = memo(function LiveMetricCards() {
+  const metrics = useIoTStore(s => s.metrics)
+  const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
+  const metricCards = buildMetrics(metrics, unacknowledgedAlerts)
+
+  return (
+    <motion.section
+      variants={PANEL_SPRING}
+      className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'
+    >
+      {metricCards.map(m => (
+        <motion.div
+          key={m.title}
+          variants={{
+            hidden: { opacity: 0, y: 20, scale: 0.96 },
+            show: {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              transition: { duration: 0.5, ease: EASE_CINEMATIC_INTRO },
+            },
+          }}
+        >
+          <Tilt>
+            <GlassCard accent={m.accent}>
+              <div className='p-5 sm:p-6'>
+                <div className='mb-3 flex items-center justify-between'>
+                  <span className='text-xs font-bold uppercase tracking-widest text-slate-400'>
+                    {m.title}
+                  </span>
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${m.accent} shadow-lg`}
+                  >
+                    <m.icon className='h-5 w-5 text-white' />
+                  </div>
+                </div>
+                <p className='text-3xl font-black tracking-tighter sm:text-4xl'>
+                  {m.value}
+                </p>
+                <div className='mt-3 flex items-center gap-2'>
+                  <span
+                    className={`flex items-center gap-1 text-xs font-bold ${resolveTrendColor(m.trend)}`}
+                  >
+                    {resolveTrendIcon(m.trend)}
+                    {m.change}
+                  </span>
+                  <span className='text-[11px] text-slate-500'>{m.detail}</span>
+                </div>
+              </div>
+            </GlassCard>
+          </Tilt>
+        </motion.div>
+      ))}
+    </motion.section>
+  )
+})
+
 function acknowledgePendingAlerts(
   alerts: ReadonlyArray<{ id: string; acknowledged: boolean }>
 ) {
@@ -914,8 +1013,6 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
   const searchTerm = useIoTStore(s => s.searchTerm)
   const setSearchTerm = useIoTStore(s => s.setSearchTerm)
   const connectionStatus = useIoTStore(s => s.connectionStatus)
-  const metrics = useIoTStore(s => s.metrics)
-  const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
   const { backendStatus } = useAppHealthEvents()
 
   // ── Local React state (UI-only, not telemetry) ───────────────
@@ -1037,8 +1134,6 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
     return () => clearInterval(interval)
   }, [paused])
 
-  // ── Build metric cards from Zustand metrics (re-renders ~2x/sec max) ──
-  const metricCards = buildMetrics(metrics, unacknowledgedAlerts)
   const apiHealthy = resolveApiHealthy(backendStatus)
 
   // ── Alert panel data (read from mutable store imperatively) ──
@@ -1046,15 +1141,24 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
 
   // ── Download report ──────────────────────────────────────────
   const downloadReport = useCallback(() => {
+    const store = useIoTStore.getState()
+    const runtimeMetricCards = buildMetrics(
+      store.metrics,
+      store.unacknowledgedAlerts
+    )
     const data = {
       timestamp: new Date().toISOString(),
       timeRange,
-      metrics: metricCards.map(mc => ({
+      metrics: runtimeMetricCards.map(mc => ({
         title: mc.title,
         value: mc.value,
         change: mc.change,
       })),
-      systemHealth: { api: apiHealthy, connectionStatus, refreshSpeed },
+      systemHealth: {
+        api: apiHealthy,
+        connectionStatus: store.connectionStatus,
+        refreshSpeed,
+      },
     }
     const blob = new Blob([JSON.stringify(data, null, 2)], {
       type: 'application/json',
@@ -1065,7 +1169,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
     a.download = `fleet-report-${Date.now()}.json`
     a.click()
     URL.revokeObjectURL(url)
-  }, [metricCards, apiHealthy, connectionStatus, refreshSpeed, timeRange])
+  }, [apiHealthy, refreshSpeed, timeRange])
 
   // ── Acknowledge alert ────────────────────────────────────────
   const handleAckAlert = useCallback((id: string) => {
@@ -1268,13 +1372,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                       className='relative rounded-xl p-2.5 ring-1 ring-white/10 hover:bg-white/10 text-slate-400 transition-all'
                     >
                       <Bell aria-hidden='true' className='h-4 w-4' />
-                      {unacknowledgedAlerts > 0 && (
-                        <span className='absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold animate-pulse'>
-                          {unacknowledgedAlerts > 9
-                            ? '9+'
-                            : unacknowledgedAlerts}
-                        </span>
-                      )}
+                      <UnacknowledgedAlertsBadge />
                     </MagneticButton>
                     <MagneticButton
                       onClick={downloadReport}
@@ -1420,68 +1518,14 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
               )}
             </div>
 
-            {/* ── Metric Cards Grid (React — updates via Zustand selector ~2x/sec) ── */}
-            <motion.section
-              className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4'
+            {/* ── Metric Cards Grid (isolated telemetry subscriptions) ── */}
+            <motion.div
               initial='hidden'
-              animate='visible'
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: { staggerChildren: 0.1, delayChildren: 0.15 },
-                },
-              }}
+              animate='show'
+              variants={PANEL_STAGGER}
             >
-              {metricCards.map(m => (
-                <motion.div
-                  key={m.title}
-                  variants={{
-                    hidden: { opacity: 0, y: 20, scale: 0.96 },
-                    visible: {
-                      opacity: 1,
-                      y: 0,
-                      scale: 1,
-                      transition: {
-                        duration: 0.5,
-                        ease: EASE_CINEMATIC_INTRO,
-                      },
-                    },
-                  }}
-                >
-                  <Tilt>
-                    <GlassCard accent={m.accent}>
-                      <div className='p-5 sm:p-6'>
-                        <div className='mb-3 flex items-center justify-between'>
-                          <span className='text-xs font-bold uppercase tracking-widest text-slate-400'>
-                            {m.title}
-                          </span>
-                          <div
-                            className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${m.accent} shadow-lg`}
-                          >
-                            <m.icon className='h-5 w-5 text-white' />
-                          </div>
-                        </div>
-                        <p className='text-3xl font-black tracking-tighter sm:text-4xl'>
-                          {m.value}
-                        </p>
-                        <div className='mt-3 flex items-center gap-2'>
-                          <span
-                            className={`flex items-center gap-1 text-xs font-bold ${resolveTrendColor(m.trend)}`}
-                          >
-                            {resolveTrendIcon(m.trend)}
-                            {m.change}
-                          </span>
-                          <span className='text-[11px] text-slate-500'>
-                            {m.detail}
-                          </span>
-                        </div>
-                      </div>
-                    </GlassCard>
-                  </Tilt>
-                </motion.div>
-              ))}
-            </motion.section>
+              <LiveMetricCards />
+            </motion.div>
 
             {/* ── Chart Sections (Imperative Canvas — zero React renders per frame) ── */}
             <section className='grid grid-cols-1 gap-6 lg:grid-cols-2'>
@@ -1831,7 +1875,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                 </div>
                 <div className='flex items-center justify-between'>
                   <Pill intent='info'>
-                    {unacknowledgedAlerts} unacknowledged
+                    <UnacknowledgedAlertsText />
                   </Pill>
                   <button
                     onClick={clearAllAlerts}

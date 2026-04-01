@@ -520,6 +520,19 @@ export class ImperativeThreeLayer {
         this.sceneCtrl?.markDirty('theme');
     }
 
+    /**
+     * Update camera FOV at runtime for cinematic transitions.
+     * Clamped to a safe range to avoid projection distortion.
+     */
+    setCameraFov(fov: number): void {
+        if (!this.camera) return;
+        const clamped = Math.min(78, Math.max(36, fov));
+        if (Math.abs(this.camera.fov - clamped) < 0.01) return;
+        this.camera.fov = clamped;
+        this.camera.updateProjectionMatrix();
+        this.sceneCtrl?.markDirty('camera');
+    }
+
     /** Get SceneController for external integration */
     getSceneController(): SceneController | null {
         return this.sceneCtrl;

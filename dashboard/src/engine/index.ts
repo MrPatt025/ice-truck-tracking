@@ -146,6 +146,7 @@ export {
     bootEngine,
     shutdownEngine,
     mount3D,
+    setThreeCameraFov,
     unmount3D,
     mountMap,
     unmountMap,

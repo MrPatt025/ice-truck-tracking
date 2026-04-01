@@ -318,6 +318,11 @@ export function unmount3D(): void {
     threeLayer = null;
 }
 
+/** Drive Three.js camera FOV from cinematic transitions/hooks */
+export function setThreeCameraFov(fov: number): void {
+    threeLayer?.setCameraFov(fov);
+}
+
 /** Mount the Mapbox GL map into a container */
 export function mountMap(container: HTMLElement, cinematicWorker?: Worker | null): void {
     if (mapLayer || mapLayerLoadPromise) return;
