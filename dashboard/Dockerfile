@@ -13,7 +13,10 @@ RUN npm install
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY package.json pnpm-lock.yaml* next.config.ts tsconfig.json tailwind.config.ts postcss.config.js cypress.config.ts jest.config.js jest.setup.js playwright.a11y.config.ts playwright.config.ts playwright.gpu.config.ts playwright.light.config.ts playwright.visual.config.ts next-env.d.ts ./
+COPY public ./public
+COPY src ./src
+COPY e2e ./e2e
 
 # Build the application
 RUN npm run build

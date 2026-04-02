@@ -18,7 +18,30 @@ const handleCastErrorDB = err => {
 };
 
 const handleDuplicateFieldsDB = err => {
-  const value = err.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+  const errmsg = typeof err.errmsg === 'string' ? err.errmsg : '';
+  const singleQuoteIndex = errmsg.indexOf("'");
+  const doubleQuoteIndex = errmsg.indexOf('"');
+  let startIndex = -1;
+
+  if (singleQuoteIndex === -1) {
+    startIndex = doubleQuoteIndex;
+  } else if (doubleQuoteIndex === -1) {
+    startIndex = singleQuoteIndex;
+  } else {
+    startIndex = Math.min(singleQuoteIndex, doubleQuoteIndex);
+  }
+
+  let value = 'duplicate value';
+
+  if (startIndex >= 0) {
+    const quoteChar = errmsg[startIndex];
+    const endIndex = errmsg.indexOf(quoteChar, startIndex + 1);
+
+    if (endIndex > startIndex) {
+      value = errmsg.slice(startIndex, endIndex + 1);
+    }
+  }
+
   const message = `Duplicate field value: ${value}. Please use another value!`;
   return new AppError(message, 400);
 };

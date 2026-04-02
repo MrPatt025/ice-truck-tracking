@@ -15,7 +15,17 @@ FROM node:25-alpine AS builder
 RUN npm install -g pnpm@10.30.3
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY next.config.js next.config.ts eslint.config.mjs tsconfig.json commitlint.config.js lint-staged.config.js renovate.json stryker.conf.js index.js ./
+COPY backend ./backend
+COPY dashboard ./dashboard
+COPY mobile-app ./mobile-app
+COPY sdk ./sdk
+COPY infra ./infra
+COPY monitoring ./monitoring
+COPY nginx ./nginx
+COPY scripts ./scripts
+COPY src ./src
 RUN pnpm run build
 
 FROM node:25-alpine AS runner

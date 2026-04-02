@@ -7,9 +7,10 @@ COPY package*.json ./
 
 # Install dependencies, copy source, build, create user and set permissions
 RUN npm ci --only=production && \
-    true
+  true
 
-COPY . .
+COPY tsconfig.json ./
+COPY src ./src
 
 RUN npm run build && \
     addgroup -g 1001 -S nodejs && \
