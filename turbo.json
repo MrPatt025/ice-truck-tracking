@@ -133,7 +133,6 @@
         "VERCEL_PROJECT_ID",
         "RENDER_DEPLOY_HOOK_URL"
       ],
-      "outputs": [".eslintcache"],
       "cache": true
     },
     "lint:fix": {

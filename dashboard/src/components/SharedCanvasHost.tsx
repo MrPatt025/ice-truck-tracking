@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { SharedCanvasPool } from '@/engine/gpu/sharedCanvas'
 import { useTransitionStore } from '@/stores/transitionStore'
 import { useCinematicCamera } from '@/hooks/useCinematicCamera'
+import { ClientObservability } from '@/services/observability'
 
 const SHARED_CANVAS_ID = 'fleet-shared-webgl-root'
 
@@ -26,6 +27,10 @@ export default function SharedCanvasHost() {
   )
 
   useCinematicCamera(canvas, isTransitioning, phase, progress)
+
+  useEffect(() => {
+    ClientObservability.getInstance().start()
+  }, [])
 
   useEffect(() => {
     canvas.id = SHARED_CANVAS_ID

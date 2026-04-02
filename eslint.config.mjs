@@ -51,15 +51,10 @@ export default [
         },
         settings: {
             react: { version: '18.3' },
-            next: {
-                rootDir: ['dashboard/'],
-            },
         },
         rules: {
             // React
             ...reactPlugin.configs.recommended.rules,
-            ...nextPlugin.configs.recommended.rules,
-            ...nextPlugin.configs['core-web-vitals'].rules,
             'react/react-in-jsx-scope': 'off',
             'react/display-name': 'off',
             'react/no-unknown-property': ['error', { ignore: ['jsx', 'global'] }],
@@ -76,6 +71,28 @@ export default [
 
             // General
             'no-empty': 'warn',
+        },
+    },
+
+    // Next.js rules — only apply to dashboard package
+    {
+        files: ['dashboard/**/*.{js,jsx,ts,tsx}'],
+        settings: {
+            next: {
+                rootDir: ['dashboard/'],
+            },
+        },
+        rules: {
+            ...nextPlugin.configs.recommended.rules,
+            ...nextPlugin.configs['core-web-vitals'].rules,
+        },
+    },
+
+    // Disable all @next rules for non-dashboard packages to avoid "Pages directory cannot be found" errors
+    {
+        files: ['backend/**/*.{js,jsx,ts,tsx}', 'mobile-app/**/*.{js,jsx,ts,tsx}', 'sdk/**/*.{js,jsx,ts,tsx}'],
+        rules: {
+            '@next/next/no-html-link-for-pages': 'off',
         },
     },
 

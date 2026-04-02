@@ -149,8 +149,8 @@ export function applyCameraFlyTo(payload: CinematicCameraFlyToPayload): void {
     // Deselecting truck - set initial state for return to overview
     runtimeState.cameraFlyTo = {
       truckId: null,
-      targetLatitude: null,
-      targetLongitude: null,
+      targetLatitude: defaultDeckViewState.latitude,
+      targetLongitude: defaultDeckViewState.longitude,
       startLatitude: runtimeState.deckViewState.latitude,
       startLongitude: runtimeState.deckViewState.longitude,
       startZoom: runtimeState.deckViewState.zoom,
