@@ -19,6 +19,13 @@ import {
 } from './cinematicRuntimeState'
 import { easeInOutCubic, lerp, clampUnit } from './easingFunctions'
 
+const workerGlobal = globalThis as typeof globalThis & {
+  global?: typeof globalThis
+}
+
+// Some worker bundles still reference Node-like global; normalize to Worker global.
+workerGlobal.global ??= workerGlobal
+
 type FleetNode = {
   id: string
   renderLongitude: number

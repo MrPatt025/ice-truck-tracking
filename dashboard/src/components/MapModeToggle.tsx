@@ -23,12 +23,10 @@ const MapModeToggle = memo(function MapModeToggle({
 
   useEffect(() => {
     const nextMode = isLiveMode ? 'live' : 'historical'
-    if (pendingModeRef.current !== null && pendingModeRef.current !== nextMode) {
-      return
-    }
-
-    pendingModeRef.current = null
     setLocalMode(nextMode)
+    if (pendingModeRef.current === nextMode) {
+      pendingModeRef.current = null
+    }
   }, [isLiveMode])
 
   const isHistoricalMode = localMode === 'historical'
@@ -39,9 +37,7 @@ const MapModeToggle = memo(function MapModeToggle({
 
     pendingModeRef.current = mode
     setLocalMode(mode)
-    globalThis.queueMicrotask(() => {
-      onModeChange(mode)
-    })
+    onModeChange(mode)
   }
 
   return (

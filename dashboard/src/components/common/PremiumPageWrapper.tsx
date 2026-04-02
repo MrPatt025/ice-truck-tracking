@@ -17,6 +17,34 @@ const ENTRY_TRANSITION = {
   ease: [0.22, 1, 0.36, 1] as const,
 }
 
+const CONTAINER_VARIANTS = {
+  hidden: { opacity: 0, y: 18 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      ...ENTRY_TRANSITION,
+      staggerChildren: 0.07,
+      delayChildren: 0.04,
+    },
+  },
+}
+
+const CONTENT_VARIANTS = {
+  hidden: { opacity: 0, y: 10, scale: 0.995 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 220,
+      damping: 24,
+      mass: 0.7,
+    },
+  },
+}
+
 export default function PremiumPageWrapper({
   children,
   className,
@@ -26,20 +54,36 @@ export default function PremiumPageWrapper({
 }: PremiumPageWrapperProps) {
   return (
     <motion.section
-      initial={animate ? { opacity: 0, y: 18 } : false}
-      animate={animate ? { opacity: 1, y: 0 } : undefined}
-      transition={ENTRY_TRANSITION}
-      className={cn('relative', className)}
+      initial={animate ? 'hidden' : false}
+      animate={animate ? 'show' : undefined}
+      variants={CONTAINER_VARIANTS}
+      className={cn('relative isolate overflow-visible', className)}
     >
-      <div
+      <motion.div
+        variants={CONTENT_VARIANTS}
         className={cn(
           mode === 'glass' &&
-            'rounded-2xl border border-white/15 bg-white/[0.03] shadow-[0_22px_55px_-32px_rgba(56,189,248,0.55)] backdrop-blur-xl',
+            'relative rounded-2xl border border-white/20 bg-slate-900/35 shadow-[0_32px_85px_-50px_rgba(56,189,248,0.8)] backdrop-blur-2xl',
           contentClassName
         )}
       >
+        {mode === 'glass' ? (
+          <>
+            <div className='pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(70rem_28rem_at_8%_-22%,rgba(56,189,248,.24),transparent),radial-gradient(80rem_32rem_at_105%_120%,rgba(139,92,246,.2),transparent)]' />
+            <div
+              aria-hidden='true'
+              className='pointer-events-none absolute inset-0 rounded-2xl opacity-[0.035] mix-blend-overlay'
+              style={{
+                backgroundImage:
+                  'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.82\' numOctaves=\'4\'/%3E%3C/filter%3E%3Crect width=\'120\' height=\'120\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
+                backgroundSize: '70px 70px',
+              }}
+            />
+            <div className='pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-cyan-200/20 shadow-[inset_0_0_35px_-20px_rgba(56,189,248,.95)]' />
+          </>
+        ) : null}
         {children}
-      </div>
+      </motion.div>
     </motion.section>
   )
 }

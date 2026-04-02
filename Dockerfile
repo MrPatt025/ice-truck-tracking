@@ -21,11 +21,12 @@ RUN pnpm run build
 FROM node:25-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV production
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/backend ./backend
-COPY --from=builder /app/dashboard/.next ./dashboard/.next
-COPY --from=builder /app/sdk/edge/dist ./sdk/edge/dist
-COPY --from=builder /app/sdk/mobile/dist ./sdk/mobile/dist
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/backend ./backend
+COPY --from=builder --chown=node:node /app/dashboard/.next ./dashboard/.next
+COPY --from=builder --chown=node:node /app/sdk/edge/dist ./sdk/edge/dist
+COPY --from=builder --chown=node:node /app/sdk/mobile/dist ./sdk/mobile/dist
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+USER node
 EXPOSE 3000 5000
 CMD ["node", "backend/index.js"]
