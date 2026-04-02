@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -45,7 +45,7 @@ const CONTENT_VARIANTS = {
   },
 }
 
-export default function PremiumPageWrapper({
+const PremiumPageWrapper = memo(function PremiumPageWrapper({
   children,
   className,
   contentClassName,
@@ -86,4 +86,6 @@ export default function PremiumPageWrapper({
       </motion.div>
     </motion.section>
   )
-}
+})
+
+export default PremiumPageWrapper
