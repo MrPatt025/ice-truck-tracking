@@ -43,14 +43,14 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:5000
           NEXT_PUBLIC_WS_URL: ws://localhost:5000
 
-      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         if: always()
         with:
           name: gpu-playwright-report
           path: dashboard/playwright-report/gpu/
           if-no-files-found: ignore
 
-      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         if: always()
         with:
           name: gpu-test-results
