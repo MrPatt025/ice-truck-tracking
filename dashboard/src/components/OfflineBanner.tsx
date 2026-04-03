@@ -60,7 +60,7 @@ const OfflineBanner = memo(function OfflineBanner({
       timerRef.current = globalThis.window.setTimeout(() => {
         timerRef.current = null
         void probeHealth()
-      }, delayMs)
+      }, delayMs) as unknown as number
     }
 
     const probeHealth = async () => {
@@ -74,9 +74,9 @@ const OfflineBanner = memo(function OfflineBanner({
       }
 
       const controller = new AbortController()
-      const timeoutId = globalThis.window.setTimeout(() => {
+      const timeoutId: number = globalThis.window.setTimeout(() => {
         controller.abort()
-      }, 1500)
+      }, 1500) as unknown as number
 
       try {
         const response = await fetch(resolveBackendHealthUrl(), {

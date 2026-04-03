@@ -18,7 +18,7 @@ export interface DeckViewState {
 export interface CinematicTransitionState {
   phase: CinematicTransitionPhase
   progress: number
-    isActive: boolean
+  isActive: boolean
 }
 
 export interface CinematicCameraFlyToState {
@@ -41,29 +41,29 @@ export interface CinematicMapModeState {
 
 export type CinematicRuntimeState = {
   scroll: number
-    cameraFov: number
+  cameraFov: number
   telemetry: CinematicTelemetryPayload
   viewport: CinematicViewportPayload
-    deckViewState: DeckViewState
+  deckViewState: DeckViewState
   transition: CinematicTransitionState
   cameraFlyTo: CinematicCameraFlyToState
   mapMode: CinematicMapModeState
 }
 
 const clamp = (value: number, min: number, max: number): number =>
-    Math.min(max, Math.max(min, value))
+  Math.min(max, Math.max(min, value))
 
 const defaultDeckViewState: DeckViewState = {
-    longitude: 100.5018,
-    latitude: 13.7563,
-    zoom: 12,
-    pitch: 34,
-    bearing: 0,
+  longitude: 100.5018,
+  latitude: 13.7563,
+  zoom: 12,
+  pitch: 34,
+  bearing: 0,
 }
 
 export const runtimeState: CinematicRuntimeState = {
   scroll: 0,
-    cameraFov: 48,
+  cameraFov: 48,
   telemetry: {
     temperatureC: -14,
     fogDensity: 0.4,
@@ -74,11 +74,11 @@ export const runtimeState: CinematicRuntimeState = {
     height: 1080,
     dpr: 1,
   },
-    deckViewState: defaultDeckViewState,
+  deckViewState: defaultDeckViewState,
   transition: {
     phase: 'idle',
     progress: 0,
-      isActive: false,
+    isActive: false,
   },
   cameraFlyTo: {
     truckId: null,
@@ -99,41 +99,41 @@ export const runtimeState: CinematicRuntimeState = {
 }
 
 export function applyScrollProgress(progress: number): void {
-    runtimeState.scroll = clamp(progress, 0, 1)
+  runtimeState.scroll = clamp(progress, 0, 1)
 }
 
 export function applyCameraFov(fov: number): void {
-    runtimeState.cameraFov = clamp(fov, 36, 68)
+  runtimeState.cameraFov = clamp(fov, 36, 68)
 }
 
 export function applyTelemetry(payload: CinematicTelemetryPayload): void {
-    runtimeState.telemetry = {
-        temperatureC: payload.temperatureC,
-        fogDensity: clamp(payload.fogDensity, 0, 1),
-        fogTint: clamp(payload.fogTint, 0, 1),
+  runtimeState.telemetry = {
+    temperatureC: payload.temperatureC,
+    fogDensity: clamp(payload.fogDensity, 0, 1),
+    fogTint: clamp(payload.fogTint, 0, 1),
   }
 }
 
 export function applyViewport(payload: CinematicViewportPayload): void {
   runtimeState.viewport = {
-      width: Math.max(1, Math.round(payload.width)),
-      height: Math.max(1, Math.round(payload.height)),
-      dpr: clamp(payload.dpr, 0.5, 2),
+    width: Math.max(1, Math.round(payload.width)),
+    height: Math.max(1, Math.round(payload.height)),
+    dpr: clamp(payload.dpr, 0.5, 2),
   }
 }
 
 export function applyTransition(payload: CinematicTransitionPayload): void {
   runtimeState.transition = {
     phase: payload.phase,
-        progress: clamp(payload.progress, 0, 1),
-        isActive: payload.isActive,
-    }
+    progress: clamp(payload.progress, 0, 1),
+    isActive: payload.isActive,
+  }
 }
 
 export function applyDeckViewState(next: Partial<DeckViewState>): void {
-    runtimeState.deckViewState = {
-        ...runtimeState.deckViewState,
-        ...next,
+  runtimeState.deckViewState = {
+    ...runtimeState.deckViewState,
+    ...next,
   }
 }
 
@@ -190,12 +190,12 @@ export function updateCameraFlyToProgress(
   const { cameraFlyTo } = runtimeState
   if (!cameraFlyTo.isAnimating || cameraFlyTo.startedAt === null) return
   if (
-    cameraFlyTo.targetLatitude === null
-    || cameraFlyTo.targetLongitude === null
-    || cameraFlyTo.startLatitude === null
-    || cameraFlyTo.startLongitude === null
-    || cameraFlyTo.startZoom === null
-    || cameraFlyTo.startPitch === null
+    cameraFlyTo.targetLatitude === null ||
+    cameraFlyTo.targetLongitude === null ||
+    cameraFlyTo.startLatitude === null ||
+    cameraFlyTo.startLongitude === null ||
+    cameraFlyTo.startZoom === null ||
+    cameraFlyTo.startPitch === null
   ) {
     cameraFlyTo.isAnimating = false
     cameraFlyTo.startedAt = null
@@ -213,17 +213,15 @@ export function updateCameraFlyToProgress(
 
   // Interpolate camera position smoothly
   const nextLatitude =
-    cameraFlyTo.startLatitude +
-    (cameraFlyTo.targetLatitude - cameraFlyTo.startLatitude) * eased
+     cameraFlyTo.startLatitude! +
+     (cameraFlyTo.targetLatitude! - cameraFlyTo.startLatitude!) * eased
   const nextLongitude =
-    cameraFlyTo.startLongitude +
-    (cameraFlyTo.targetLongitude - cameraFlyTo.startLongitude) * eased
+     cameraFlyTo.startLongitude! +
+     (cameraFlyTo.targetLongitude! - cameraFlyTo.startLongitude!) * eased
   const nextZoom =
-    cameraFlyTo.startZoom +
-    (targetZoom - cameraFlyTo.startZoom) * eased
+     cameraFlyTo.startZoom! + (targetZoom - cameraFlyTo.startZoom!) * eased
   const nextPitch =
-    cameraFlyTo.startPitch +
-    (targetPitch - cameraFlyTo.startPitch) * eased
+     cameraFlyTo.startPitch! + (targetPitch - cameraFlyTo.startPitch!) * eased
 
   applyDeckViewState({
     latitude: nextLatitude,
