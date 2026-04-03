@@ -7,15 +7,15 @@ import {
   type CinematicWorkerMessage,
 } from './cinematicMessages'
 import {
-    applyCameraFov,
-    applyDeckViewState,
-    applyScrollProgress,
-    applyTelemetry,
-    applyTransition,
-    applyViewport,
-    applyCameraFlyTo,
-    applyMapMode,
-    runtimeState,
+  applyCameraFov,
+  applyDeckViewState,
+  applyScrollProgress,
+  applyTelemetry,
+  applyTransition,
+  applyViewport,
+  applyCameraFlyTo,
+  applyMapMode,
+  runtimeState,
 } from './cinematicRuntimeState'
 import { easeInOutCubic, lerp, clampUnit } from './easingFunctions'
 
@@ -43,14 +43,14 @@ type FleetNode = {
 }
 
 type OffscreenInitPayload = {
-    drawingSurface?: OffscreenCanvas
-    width?: number
-    height?: number
-    pixelRatio?: number
+  drawingSurface?: OffscreenCanvas
+  width?: number
+  height?: number
+  pixelRatio?: number
 }
 
 const TRUCK_ICON_URI = `data:image/svg+xml;utf8,${encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="8" y="22" width="34" height="18" rx="6" fill="#38bdf8"/><rect x="40" y="26" width="14" height="14" rx="3" fill="#60a5fa"/><circle cx="20" cy="44" r="6" fill="#0f172a"/><circle cx="46" cy="44" r="6" fill="#0f172a"/></svg>'
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="8" y="22" width="34" height="18" rx="6" fill="#38bdf8"/><rect x="40" y="26" width="14" height="14" rx="3" fill="#60a5fa"/><circle cx="20" cy="44" r="6" fill="#0f172a"/><circle cx="46" cy="44" r="6" fill="#0f172a"/></svg>'
 )}`
 
 const TRUCK_ICON = {
@@ -87,20 +87,25 @@ let smoothedFrameMs = TARGET_FRAME_MS
 let lowFpsSampleCount = 0
 let recoverySampleCount = 0
 let interpolationRafHandle: number | null = null
-let interpolationTimeoutHandle: ReturnType<typeof globalThis.setTimeout> | null = null
+let interpolationTimeoutHandle: ReturnType<
+  typeof globalThis.setTimeout
+> | null = null
 let deckFlushRafHandle: number | null = null
-let deckFlushTimeoutHandle: ReturnType<typeof globalThis.setTimeout> | null = null
+let deckFlushTimeoutHandle: ReturnType<typeof globalThis.setTimeout> | null =
+  null
 let cinematicRigLoadPromise: Promise<void> | null = null
+let cinematicRigLoadStarted = false
 
 function ensureCinematicRigMounted(): Promise<void> {
-  if (cinematicRigLoadPromise) {
-    return cinematicRigLoadPromise
+  if (cinematicRigLoadStarted) {
+    return cinematicRigLoadPromise ?? Promise.resolve()
   }
 
+  cinematicRigLoadStarted = true
   cinematicRigLoadPromise = (async () => {
     const { default: CinematicRig } = await import('./CinematicRig')
     render(React.createElement(CinematicRig))
-  })().catch((error) => {
+  })().catch(error => {
     console.error('[Cinematic Worker] Failed to load CinematicRig:', error)
   })
 
@@ -117,21 +122,22 @@ function mixChannel(from: number, to: number, factor: number): number {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-    return Boolean(value) && typeof value === 'object'
+  return Boolean(value) && typeof value === 'object'
 }
 
 function isOffscreenInitMessage(
-    value: unknown
+  value: unknown
 ): value is { type: 'init'; payload: OffscreenInitPayload } {
-    if (!isRecord(value) || value.type !== 'init' || !isRecord(value.payload)) {
-        return false
-    }
+  if (!isRecord(value) || value.type !== 'init' || !isRecord(value.payload)) {
+    return false
+  }
 
-    const payload = value.payload
-    const hasCanvas =
-        'drawingSurface' in payload && payload.drawingSurface instanceof OffscreenCanvas
+  const payload = value.payload
+  const hasCanvas =
+    'drawingSurface' in payload &&
+    payload.drawingSurface instanceof OffscreenCanvas
 
-    return hasCanvas
+  return hasCanvas
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -154,11 +160,14 @@ function observeFramePacing(elapsedMs: number): void {
   const smoothedFps = 1000 / Math.max(1, smoothedFrameMs)
 
   // Frame profiling: log if FPS drops below 60 (frame > 16.6ms)
-  const TARGET_FRAME_MS_THRESHOLD = 16.6;
-  if (elapsedMs > TARGET_FRAME_MS_THRESHOLD && typeof console.warn === 'function') {
+  const TARGET_FRAME_MS_THRESHOLD = 16.6
+  if (
+    elapsedMs > TARGET_FRAME_MS_THRESHOLD &&
+    typeof console.warn === 'function'
+  ) {
     console.warn(
       `[🎬 Frame Drop] Frame took ${elapsedMs.toFixed(2)}ms (${(1000 / elapsedMs).toFixed(1)} FPS) | Smoothed: ${smoothedFps.toFixed(1)} FPS | DPR: ${adaptiveViewportDpr.toFixed(2)}`
-    );
+    )
   }
 
   if (smoothedFps < FPS_DROP_THRESHOLD) {
@@ -172,7 +181,10 @@ function observeFramePacing(elapsedMs: number): void {
   }
 
   lowFpsSampleCount = 0
-  if (smoothedFps > FPS_RECOVER_THRESHOLD && adaptiveViewportDpr < baseViewportDpr) {
+  if (
+    smoothedFps > FPS_RECOVER_THRESHOLD &&
+    adaptiveViewportDpr < baseViewportDpr
+  ) {
     recoverySampleCount += 1
     if (recoverySampleCount >= RECOVERY_SAMPLE_COUNT) {
       updateAdaptiveDpr(adaptiveViewportDpr + DPR_ADJUST_STEP)
@@ -186,93 +198,87 @@ function observeFramePacing(elapsedMs: number): void {
 
 function buildDeckLayers() {
   const now = performance.now()
-    const thermalLimit = Math.max(-3, runtimeState.telemetry.temperatureC - 1)
+  const thermalLimit = Math.max(-3, runtimeState.telemetry.temperatureC - 1)
 
-    const iconLayer = new IconLayer<FleetNode>({
-        id: 'cinematic-fleet-icons',
-      data: fleetNodes,
-      pickable: false,
-      sizeScale: 10,
-      billboard: true,
-      alphaCutoff: 0.02,
-      getPosition: node => [node.renderLongitude, node.renderLatitude],
-      getSize: node => (node.hotspot ? 3.2 : 2.5),
-      getAngle: node => node.heading,
-      getIcon: () => TRUCK_ICON,
-        getColor: node => {
-          const staleFactor = resolveStaleFactor(now - node.lastPacketAt)
-          const base = node.hotspot
-            ? [125, 211, 252, 232]
-            : [56, 189, 248, 220]
+  const iconLayer = new IconLayer<FleetNode>({
+    id: 'cinematic-fleet-icons',
+    data: fleetNodes,
+    pickable: false,
+    sizeScale: 10,
+    billboard: true,
+    alphaCutoff: 0.02,
+    getPosition: node => [node.renderLongitude, node.renderLatitude],
+    getSize: node => (node.hotspot ? 3.2 : 2.5),
+    getAngle: node => node.heading,
+    getIcon: () => TRUCK_ICON,
+    getColor: node => {
+      const staleFactor = resolveStaleFactor(now - node.lastPacketAt)
+      const base = node.hotspot ? [125, 211, 252, 232] : [56, 189, 248, 220]
 
-          return [
-            mixChannel(base[0], 148, staleFactor),
-            mixChannel(base[1], 163, staleFactor),
-            mixChannel(base[2], 184, staleFactor),
-            mixChannel(base[3], 132, staleFactor),
-          ]
-        },
-      updateTriggers: {
-          getSize: runtimeState.scroll,
-          getColor: runtimeState.telemetry.temperatureC,
-      },
+      return [
+        mixChannel(base[0], 148, staleFactor),
+        mixChannel(base[1], 163, staleFactor),
+        mixChannel(base[2], 184, staleFactor),
+        mixChannel(base[3], 132, staleFactor),
+      ]
+    },
+    updateTriggers: {
+      getSize: runtimeState.scroll,
+      getColor: runtimeState.telemetry.temperatureC,
+    },
   })
 
-      const auraLayer = new ScatterplotLayer<FleetNode>({
-        id: 'cinematic-fleet-aura',
-        data: fleetNodes,
-        pickable: false,
-        stroked: false,
-        radiusUnits: 'meters',
-        radiusMinPixels: 1,
-        radiusMaxPixels: 12,
-        getPosition: node => [node.renderLongitude, node.renderLatitude],
-        getRadius: node => (node.hotspot ? 58 : 34),
-        getFillColor: node => {
-          const staleFactor = resolveStaleFactor(now - node.lastPacketAt)
-          const base = node.hotspot
-            ? [56, 189, 248, 118]
-            : [14, 165, 233, 85]
+  const auraLayer = new ScatterplotLayer<FleetNode>({
+    id: 'cinematic-fleet-aura',
+    data: fleetNodes,
+    pickable: false,
+    stroked: false,
+    radiusUnits: 'meters',
+    radiusMinPixels: 1,
+    radiusMaxPixels: 12,
+    getPosition: node => [node.renderLongitude, node.renderLatitude],
+    getRadius: node => (node.hotspot ? 58 : 34),
+    getFillColor: node => {
+      const staleFactor = resolveStaleFactor(now - node.lastPacketAt)
+      const base = node.hotspot ? [56, 189, 248, 118] : [14, 165, 233, 85]
 
-          return [
-            mixChannel(base[0], 148, staleFactor),
-            mixChannel(base[1], 163, staleFactor),
-            mixChannel(base[2], 184, staleFactor),
-            mixChannel(base[3], 54, staleFactor),
-          ]
-        },
-        updateTriggers: {
-          getRadius: runtimeState.scroll,
-          getFillColor: runtimeState.telemetry.fogDensity,
-        },
-      })
-
-    const scatterplotLayer = new ScatterplotLayer<FleetNode>({
-        id: 'cinematic-thermal-hotspots',
-      data: fleetNodes,
-      pickable: false,
-      stroked: false,
-      radiusUnits: 'meters',
-      radiusMinPixels: 2,
-      radiusMaxPixels: 22,
-        getPosition: node => [node.renderLongitude, node.renderLatitude],
-      getRadius: node =>
-          node.tempC >= thermalLimit
-              ? 140 + Math.max(0, node.tempC + 10) * 11
-              : 0,
-      getFillColor: node => {
-          if (node.tempC > 2) return [255, 84, 84, 165]
-          if (node.tempC > -1) return [245, 158, 11, 140]
-          return [34, 211, 238, 110]
-      },
-      updateTriggers: {
-          getRadius: runtimeState.scroll,
-          getFillColor: runtimeState.telemetry.temperatureC,
-          getPosition: runtimeState.telemetry.fogDensity,
-      },
+      return [
+        mixChannel(base[0], 148, staleFactor),
+        mixChannel(base[1], 163, staleFactor),
+        mixChannel(base[2], 184, staleFactor),
+        mixChannel(base[3], 54, staleFactor),
+      ]
+    },
+    updateTriggers: {
+      getRadius: runtimeState.scroll,
+      getFillColor: runtimeState.telemetry.fogDensity,
+    },
   })
 
-    return [auraLayer, iconLayer, scatterplotLayer]
+  const scatterplotLayer = new ScatterplotLayer<FleetNode>({
+    id: 'cinematic-thermal-hotspots',
+    data: fleetNodes,
+    pickable: false,
+    stroked: false,
+    radiusUnits: 'meters',
+    radiusMinPixels: 2,
+    radiusMaxPixels: 22,
+    getPosition: node => [node.renderLongitude, node.renderLatitude],
+    getRadius: node =>
+      node.tempC >= thermalLimit ? 140 + Math.max(0, node.tempC + 10) * 11 : 0,
+    getFillColor: node => {
+      if (node.tempC > 2) return [255, 84, 84, 165]
+      if (node.tempC > -1) return [245, 158, 11, 140]
+      return [34, 211, 238, 110]
+    },
+    updateTriggers: {
+      getRadius: runtimeState.scroll,
+      getFillColor: runtimeState.telemetry.temperatureC,
+      getPosition: runtimeState.telemetry.fogDensity,
+    },
+  })
+
+  return [auraLayer, iconLayer, scatterplotLayer]
 }
 
 /**
@@ -371,7 +377,8 @@ function advanceFleetInterpolation(now: number): boolean {
     hasActiveInterpolation = true
     const progress = elapsed / node.lerpDurationMs
     node.renderLongitude =
-      node.startLongitude + (node.targetLongitude - node.startLongitude) * progress
+      node.startLongitude +
+      (node.targetLongitude - node.startLongitude) * progress
     node.renderLatitude =
       node.startLatitude + (node.targetLatitude - node.startLatitude) * progress
   }
@@ -402,9 +409,12 @@ function applyTrackingCameraAtTarget(): void {
   const flyTo = runtimeState.cameraFlyTo
   if (!hasFlyToTarget()) return
 
+  const { targetLongitude, targetLatitude } = flyTo
+  if (targetLongitude === null || targetLatitude === null) return
+
   applyDeckViewState({
-    longitude: flyTo.targetLongitude!,
-    latitude: flyTo.targetLatitude!,
+    longitude: targetLongitude,
+    latitude: targetLatitude,
     zoom: TRACKING_CAMERA.zoom,
     pitch: TRACKING_CAMERA.pitch,
     bearing: TRACKING_CAMERA.bearing,
@@ -446,14 +456,16 @@ function resolveAnimatedLatitude(eased: number): number | null {
 function resolveAnimatedZoom(eased: number): number | null {
   const flyTo = runtimeState.cameraFlyTo
   if (flyTo.startZoom === null) return null
-  const targetZoom = flyTo.truckId === null ? OVERVIEW_CAMERA.zoom : TRACKING_CAMERA.zoom
+  const targetZoom =
+    flyTo.truckId === null ? OVERVIEW_CAMERA.zoom : TRACKING_CAMERA.zoom
   return lerp(flyTo.startZoom, targetZoom, eased)
 }
 
 function resolveAnimatedPitch(eased: number): number | null {
   const flyTo = runtimeState.cameraFlyTo
   if (flyTo.startPitch === null) return null
-  const targetPitch = flyTo.truckId === null ? OVERVIEW_CAMERA.pitch : TRACKING_CAMERA.pitch
+  const targetPitch =
+    flyTo.truckId === null ? OVERVIEW_CAMERA.pitch : TRACKING_CAMERA.pitch
   return lerp(flyTo.startPitch, targetPitch, eased)
 }
 
@@ -546,85 +558,85 @@ function runInterpolationLoop(): void {
   tick()
 }
 
-  function updateFleetNodes(
-    fleet: ReadonlyArray<{
-      id: string
-      latitude: number
-      longitude: number
-      heading: number
-      tempC: number
-      status: string
-    }>
-  ): void {
-    const now = performance.now()
-    const seenIds = new Set<string>()
+function updateFleetNodes(
+  fleet: ReadonlyArray<{
+    id: string
+    latitude: number
+    longitude: number
+    heading: number
+    tempC: number
+    status: string
+  }>
+): void {
+  const now = performance.now()
+  const seenIds = new Set<string>()
 
-    for (const truck of fleet) {
-      seenIds.add(truck.id)
+  for (const truck of fleet) {
+    seenIds.add(truck.id)
 
-      const hotspot = truck.status === 'warning' || truck.tempC > -1
-      const existingNode = fleetNodeById.get(truck.id)
+    const hotspot = truck.status === 'warning' || truck.tempC > -1
+    const existingNode = fleetNodeById.get(truck.id)
 
-      if (existingNode) {
-        const nextLongitude = truck.longitude
-        const nextLatitude = truck.latitude
+    if (existingNode) {
+      const nextLongitude = truck.longitude
+      const nextLatitude = truck.latitude
 
-        if (
-          hasMeaningfulMovement(
-            existingNode.targetLongitude,
-            existingNode.targetLatitude,
-            nextLongitude,
-            nextLatitude
-          )
-        ) {
-          existingNode.startLongitude = existingNode.renderLongitude
-          existingNode.startLatitude = existingNode.renderLatitude
-          existingNode.targetLongitude = nextLongitude
-          existingNode.targetLatitude = nextLatitude
-          existingNode.lerpStartAt = now
-          existingNode.lerpDurationMs = getLerpDurationMs(
-            now,
-            existingNode.lastPacketAt
-          )
-        }
-
-        existingNode.lastPacketAt = now
-        existingNode.heading = truck.heading
-        existingNode.tempC = truck.tempC
-        existingNode.hotspot = hotspot
-        continue
+      if (
+        hasMeaningfulMovement(
+          existingNode.targetLongitude,
+          existingNode.targetLatitude,
+          nextLongitude,
+          nextLatitude
+        )
+      ) {
+        existingNode.startLongitude = existingNode.renderLongitude
+        existingNode.startLatitude = existingNode.renderLatitude
+        existingNode.targetLongitude = nextLongitude
+        existingNode.targetLatitude = nextLatitude
+        existingNode.lerpStartAt = now
+        existingNode.lerpDurationMs = getLerpDurationMs(
+          now,
+          existingNode.lastPacketAt
+        )
       }
 
-      const nextNode: FleetNode = {
-        id: truck.id,
-        renderLongitude: truck.longitude,
-        renderLatitude: truck.latitude,
-        startLongitude: truck.longitude,
-        startLatitude: truck.latitude,
-        targetLongitude: truck.longitude,
-        targetLatitude: truck.latitude,
-        lerpStartAt: now,
-        lerpDurationMs: BASE_LERP_DURATION_MS,
-        lastPacketAt: now,
-        heading: truck.heading,
-        tempC: truck.tempC,
-        hotspot,
-      }
-
-      mutableFleetNodes.push(nextNode)
-      fleetNodeById.set(nextNode.id, nextNode)
+      existingNode.lastPacketAt = now
+      existingNode.heading = truck.heading
+      existingNode.tempC = truck.tempC
+      existingNode.hotspot = hotspot
+      continue
     }
 
-    for (let index = mutableFleetNodes.length - 1; index >= 0; index -= 1) {
-      const node = mutableFleetNodes[index]
-      if (seenIds.has(node.id)) continue
-
-      mutableFleetNodes.splice(index, 1)
-      fleetNodeById.delete(node.id)
+    const nextNode: FleetNode = {
+      id: truck.id,
+      renderLongitude: truck.longitude,
+      renderLatitude: truck.latitude,
+      startLongitude: truck.longitude,
+      startLatitude: truck.latitude,
+      targetLongitude: truck.longitude,
+      targetLatitude: truck.latitude,
+      lerpStartAt: now,
+      lerpDurationMs: BASE_LERP_DURATION_MS,
+      lastPacketAt: now,
+      heading: truck.heading,
+      tempC: truck.tempC,
+      hotspot,
     }
 
-    fleetNodes = mutableFleetNodes
+    mutableFleetNodes.push(nextNode)
+    fleetNodeById.set(nextNode.id, nextNode)
   }
+
+  for (let index = mutableFleetNodes.length - 1; index >= 0; index -= 1) {
+    const node = mutableFleetNodes[index]
+    if (seenIds.has(node.id)) continue
+
+    mutableFleetNodes.splice(index, 1)
+    fleetNodeById.delete(node.id)
+  }
+
+  fleetNodes = mutableFleetNodes
+}
 
 function updateDeckScene(): void {
   if (!deckInstance) return
@@ -633,8 +645,8 @@ function updateDeckScene(): void {
     width: runtimeState.viewport.width,
     height: runtimeState.viewport.height,
     useDevicePixels: adaptiveViewportDpr,
-      viewState: runtimeState.deckViewState,
-      layers: buildDeckLayers(),
+    viewState: runtimeState.deckViewState,
+    layers: buildDeckLayers(),
   })
 }
 
@@ -647,14 +659,17 @@ function scheduleDeckSceneUpdate(): void {
     const elapsed = now - lastDeckRenderAt
 
     if (elapsed < TARGET_FRAME_MS) {
-      deckFlushTimeoutHandle = globalThis.setTimeout(() => {
-        deckFlushTimeoutHandle = null
-        flush()
-      }, Math.max(1, TARGET_FRAME_MS - elapsed))
+      deckFlushTimeoutHandle = globalThis.setTimeout(
+        () => {
+          deckFlushTimeoutHandle = null
+          flush()
+        },
+        Math.max(1, TARGET_FRAME_MS - elapsed)
+      )
       return
     }
 
-  observeFramePacing(elapsed)
+    observeFramePacing(elapsed)
     lastDeckRenderAt = now
     deckUpdateQueued = false
     updateDeckScene()
@@ -675,48 +690,49 @@ function scheduleDeckSceneUpdate(): void {
 }
 
 function syncCamera(progress: number): void {
-    const clamped = Math.min(1, Math.max(0, progress))
-    const fov = 48 + clamped * 8
-    const pitch = 34 + clamped * 18
-    const zoom = 12 - clamped * 2.1
-    const bearing = clamped * 8
+  const clamped = Math.min(1, Math.max(0, progress))
+  const fov = 48 + clamped * 8
+  const pitch = 34 + clamped * 18
+  const zoom = 12 - clamped * 2.1
+  const bearing = clamped * 8
 
-    applyCameraFov(fov)
-    applyDeckViewState({ pitch, zoom, bearing })
-    scheduleDeckSceneUpdate()
+  applyCameraFov(fov)
+  applyDeckViewState({ pitch, zoom, bearing })
+  scheduleDeckSceneUpdate()
 }
 
 function initializeDeck(payload: OffscreenInitPayload): void {
-    if (deckInstance || !payload.drawingSurface) return
+  if (deckInstance || !payload.drawingSurface) return
 
-    const gl = payload.drawingSurface.getContext('webgl2', {
-        alpha: true,
-        antialias: false,
-        powerPreference: 'high-performance',
-    })
+  const gl = payload.drawingSurface.getContext('webgl2', {
+    alpha: true,
+    antialias: false,
+    powerPreference: 'high-performance',
+  })
 
-    if (!gl) return
+  if (!gl) return
 
-    applyViewport({
-        width: payload.width ?? runtimeState.viewport.width,
-        height: payload.height ?? runtimeState.viewport.height,
-        dpr: payload.pixelRatio ?? runtimeState.viewport.dpr,
-    })
+  applyViewport({
+    width: payload.width ?? runtimeState.viewport.width,
+    height: payload.height ?? runtimeState.viewport.height,
+    dpr: payload.pixelRatio ?? runtimeState.viewport.dpr,
+  })
   baseViewportDpr = runtimeState.viewport.dpr
   adaptiveViewportDpr = baseViewportDpr
 
   deckInstance = new Deck({
-      id: 'cinematic-deck-dual-renderer',
-      canvas: payload.drawingSurface as unknown as HTMLCanvasElement,
-      gl,
-      controller: false,
+    id: 'cinematic-deck-dual-renderer',
+    // Deck's type definition expects HTMLCanvasElement, but workers use OffscreenCanvas.
+    canvas: payload.drawingSurface as unknown as HTMLCanvasElement,
+    gl,
+    controller: false,
     _animate: false,
     width: runtimeState.viewport.width,
     height: runtimeState.viewport.height,
     useDevicePixels: runtimeState.viewport.dpr,
-      viewState: runtimeState.deckViewState,
-      layers: buildDeckLayers(),
-      onError: () => {
+    viewState: runtimeState.deckViewState,
+    layers: buildDeckLayers(),
+    onError: () => {
       // Keep worker resilient when GPU drivers are unstable.
     },
   })
@@ -790,13 +806,13 @@ function handleWorkerMessage(data: CinematicWorkerMessage): void {
 
 // OffscreenCanvas communication is same-origin and guarded by origin verification.
 self.addEventListener('message', (event: MessageEvent<unknown>) => {
-    const messageOrigin = event.origin || self.location.origin
-    if (event.origin && messageOrigin !== self.location.origin) {
+  const messageOrigin = event.origin || self.location.origin
+  if (event.origin && messageOrigin !== self.location.origin) {
     return
   }
 
-    if (isOffscreenInitMessage(event.data)) {
-        initializeDeck(event.data.payload)
+  if (isOffscreenInitMessage(event.data)) {
+    initializeDeck(event.data.payload)
     return
   }
 

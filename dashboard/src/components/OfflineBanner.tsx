@@ -1,10 +1,31 @@
 'use client'
 
-import React, { memo, useEffect, useState } from 'react'
+import React, { memo, useEffect, useRef, useState } from 'react'
 
 interface OfflineBannerProps {
   className?: string
   isOffline?: boolean
+}
+
+const HEALTH_BASE_INTERVAL_MS = 5_000
+const HEALTH_MAX_INTERVAL_MS = 30_000
+
+function resolveBackendHealthUrl(): string {
+  const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim()
+  if (configuredApiRoot) {
+    return `${configuredApiRoot
+      .replace(/\/+$/, '')
+      .replace(/\/api(?:\/v1)?$/i, '')}/api/v1/health/livez`
+  }
+
+  if (
+    globalThis.window !== undefined &&
+    /^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)
+  ) {
+    return 'http://localhost:5000/api/v1/health/livez'
+  }
+
+  return 'http://localhost:5000/api/v1/health/livez'
 }
 
 const OfflineBanner = memo(function OfflineBanner({
@@ -15,6 +36,8 @@ const OfflineBanner = memo(function OfflineBanner({
     if (globalThis.window === undefined) return true
     return globalThis.navigator.onLine === false
   })
+  const timerRef = useRef<number | null>(null)
+  const retryCountRef = useRef(0)
 
   useEffect(() => {
     if (globalThis.window === undefined) {
@@ -23,46 +46,94 @@ const OfflineBanner = memo(function OfflineBanner({
 
     let cancelled = false
 
-    const updateStatus = async () => {
+    const clearTimer = () => {
+      if (timerRef.current !== null) {
+        globalThis.clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+    }
+
+    const scheduleProbe = (delayMs: number) => {
+      clearTimer()
+      if (cancelled) return
+
+      timerRef.current = globalThis.window.setTimeout(() => {
+        timerRef.current = null
+        void probeHealth()
+      }, delayMs)
+    }
+
+    const probeHealth = async () => {
+      if (cancelled) return
+
       if (globalThis.navigator.onLine === false) {
-        if (!cancelled) setDetectedOffline(true)
+        retryCountRef.current = 0
+        setDetectedOffline(true)
+        clearTimer()
         return
       }
 
+      const controller = new AbortController()
+      const timeoutId = globalThis.window.setTimeout(() => {
+        controller.abort()
+      }, 1500)
+
       try {
-        const controller = new AbortController()
-        const timeoutId = globalThis.window.setTimeout(() => {
-          controller.abort()
-        }, 1500)
-        const response = await fetch('/api/v1/health/livez', {
+        const response = await fetch(resolveBackendHealthUrl(), {
           cache: 'no-store',
           method: 'HEAD',
           signal: controller.signal,
         })
-        globalThis.window.clearTimeout(timeoutId)
-        if (!cancelled) setDetectedOffline(!response.ok)
+
+        setDetectedOffline(!response.ok)
+
+        if (response.ok) {
+          retryCountRef.current = 0
+          scheduleProbe(HEALTH_BASE_INTERVAL_MS)
+          return
+        }
+
+        retryCountRef.current = Math.min(retryCountRef.current + 1, 5)
+        scheduleProbe(
+          Math.min(
+            HEALTH_MAX_INTERVAL_MS,
+            HEALTH_BASE_INTERVAL_MS * 2 ** retryCountRef.current
+          )
+        )
       } catch {
-        if (!cancelled) setDetectedOffline(true)
+        retryCountRef.current = Math.min(retryCountRef.current + 1, 5)
+        setDetectedOffline(true)
+        scheduleProbe(
+          Math.min(
+            HEALTH_MAX_INTERVAL_MS,
+            HEALTH_BASE_INTERVAL_MS * 2 ** retryCountRef.current
+          )
+        )
+      } finally {
+        globalThis.window.clearTimeout(timeoutId)
       }
     }
 
-    updateStatus()
+    const handleOnline = () => {
+      void probeHealth()
+    }
 
-    globalThis.window.addEventListener('online', updateStatus)
-    globalThis.window.addEventListener('offline', updateStatus)
-    const statusPoll = globalThis.window.setInterval(() => {
-      void updateStatus()
-    }, 250)
-    const hydrationSync = globalThis.window.setTimeout(() => {
-      void updateStatus()
-    }, 50)
+    const handleOffline = () => {
+      retryCountRef.current = 0
+      setDetectedOffline(true)
+      clearTimer()
+    }
+
+    void probeHealth()
+
+    globalThis.window.addEventListener('online', handleOnline)
+    globalThis.window.addEventListener('offline', handleOffline)
 
     return () => {
       cancelled = true
-      globalThis.window.removeEventListener('online', updateStatus)
-      globalThis.window.removeEventListener('offline', updateStatus)
-      globalThis.window.clearInterval(statusPoll)
-      globalThis.window.clearTimeout(hydrationSync)
+      clearTimer()
+      globalThis.window.removeEventListener('online', handleOnline)
+      globalThis.window.removeEventListener('offline', handleOffline)
     }
   }, [])
 
