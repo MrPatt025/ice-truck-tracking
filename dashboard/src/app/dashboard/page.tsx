@@ -22,24 +22,6 @@
  * ================================================================ */
 "use client";
 
-const API_BASE = (() => {
-  const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim()
-  if (configuredApiRoot) {
-    return `${configuredApiRoot
-      .replace(/\/+$/, '')
-      .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`
-  }
-
-  if (
-    globalThis.window !== undefined
-    && /^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)
-  ) {
-    return '/api/v1'
-  }
-
-  return 'http://localhost:5000/api/v1'
-})()
-
 import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
 import dynamic from 'next/dynamic'
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion'
@@ -99,10 +81,13 @@ import { useTransitionStore } from '@/stores/transitionStore'
 import type { StatusIssue } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
 import { dispatchBackendHealthEvent } from '@/lib/healthEvents'
+import { resolveApiBaseV1 } from '@/lib/backendUrl'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary'
 import MapModeToggle from '@/components/MapModeToggle'
 import OfflineBanner from '@/components/OfflineBanner'
+
+const API_BASE = resolveApiBaseV1()
 
 const GlassPulseFallback = () => (
   <div className='h-9 w-28 animate-pulse rounded-xl border border-white/20 bg-white/10 shadow-[0_16px_38px_-20px_rgba(56,189,248,0.85)]' />

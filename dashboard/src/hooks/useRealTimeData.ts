@@ -1,4 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { resolveApiBaseV1 } from '@/lib/backendUrl';
 type Truck = {
   id: string;
   latitude: number;
@@ -11,23 +12,7 @@ type Truck = {
 type Alert = { id?: string; level?: string; message?: string; ts?: string } & Record<string, unknown>;
 const WS_URL  = process.env.NEXT_PUBLIC_WS_URL  || "ws://localhost:5000";
 const isBrowser = (): boolean => globalThis.window !== undefined;
-const API_BASE = (() => {
-  const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim();
-  if (configuredApiRoot) {
-    return `${configuredApiRoot
-      .replace(/\/+$/, '')
-      .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`;
-  }
-
-  if (
-    globalThis.window !== undefined
-    && /^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)
-  ) {
-    return '/api/v1';
-  }
-
-  return 'http://localhost:5000/api/v1';
-})();
+const API_BASE = resolveApiBaseV1();
 
 function resolveWebSocketUrl(): string {
   if (globalThis.window === undefined) {

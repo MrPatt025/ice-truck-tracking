@@ -1,6 +1,7 @@
 'use client'
 
 import React, { memo, useEffect, useRef, useState } from 'react'
+import { resolveBackendHealthUrl } from '@/lib/backendUrl'
 
 interface OfflineBannerProps {
   className?: string
@@ -9,24 +10,6 @@ interface OfflineBannerProps {
 
 const HEALTH_BASE_INTERVAL_MS = 5_000
 const HEALTH_MAX_INTERVAL_MS = 30_000
-
-function resolveBackendHealthUrl(): string {
-  const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim()
-  if (configuredApiRoot) {
-    return `${configuredApiRoot
-      .replace(/\/+$/, '')
-      .replace(/\/api(?:\/v1)?$/i, '')}/api/v1/health/livez`
-  }
-
-  if (
-    globalThis.window !== undefined &&
-    /^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)
-  ) {
-    return 'http://localhost:5000/api/v1/health/livez'
-  }
-
-  return 'http://localhost:5000/api/v1/health/livez'
-}
 
 const OfflineBanner = memo(function OfflineBanner({
   className = '',

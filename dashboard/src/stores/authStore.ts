@@ -5,6 +5,7 @@
  */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { resolveApiBaseV1 } from '@/lib/backendUrl';
 import type { UserRole } from '@/lib/tokens';
 
 // ── Types ──────────────────────────────────────────────────
@@ -79,23 +80,7 @@ const permissionMatrix: Record<UserRole, string[]> = {
 };
 
 // ── API Base URL ───────────────────────────────────────────
-const API_BASE = (() => {
-  const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim();
-  if (configuredApiRoot) {
-    return `${configuredApiRoot
-      .replace(/\/+$/, '')
-      .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`;
-  }
-
-  if (
-    globalThis.window !== undefined
-    && /^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)
-  ) {
-    return '/api/v1';
-  }
-
-  return 'http://localhost:5000/api/v1';
-})();
+const API_BASE = resolveApiBaseV1();
 
 // ── Store ──────────────────────────────────────────────────
 export const useAuthStore = create<AuthState>()(

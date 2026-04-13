@@ -10,6 +10,8 @@
  *  Reports to /api/metrics endpoint as JSON for Prometheus ingestion.
  * ================================================================ */
 
+import { resolveMetricsIngestUrl } from '@/lib/backendUrl';
+
 export interface WebVitalsMetric {
     name: 'LCP' | 'FID' | 'INP' | 'CLS' | 'TTFB' | 'FCP';
     value: number;
@@ -35,6 +37,7 @@ export interface ClientErrorReport {
 
 const METRICS_BUFFER_SIZE = 50;
 const FLUSH_INTERVAL_MS = 30_000; // 30s
+const METRICS_ENDPOINT = resolveMetricsIngestUrl();
 
 /**
  * ClientObservability — collects and reports browser metrics.
@@ -209,9 +212,9 @@ export class ClientObservability {
 
         // Use sendBeacon for reliability (survives page unload)
         if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
-            navigator.sendBeacon('/metrics', JSON.stringify(payload));
+            navigator.sendBeacon(METRICS_ENDPOINT, JSON.stringify(payload));
         } else {
-            fetch('/metrics', {
+            fetch(METRICS_ENDPOINT, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),

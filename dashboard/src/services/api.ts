@@ -7,24 +7,9 @@ import {
   dispatchBackendHealthEvent,
   type BackendHealthStatus,
 } from '@/lib/healthEvents';
+import { resolveApiBaseV1 } from '@/lib/backendUrl';
 
-const API_BASE = (() => {
-  const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim();
-  if (configuredApiRoot) {
-    return `${configuredApiRoot
-      .replace(/\/+$/, '')
-      .replace(/\/api(?:\/v1)?$/i, '')}/api/v1`;
-  }
-
-  if (
-    globalThis.window !== undefined
-    && /^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)
-  ) {
-    return '/api/v1';
-  }
-
-  return 'http://localhost:5000/api/v1';
-})();
+const API_BASE = resolveApiBaseV1();
 
 let latestBackendHealthStatus: BackendHealthStatus | null = null;
 

@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === 'production'
 const withPWA = (config: NextConfig) => config
+const configuredApiRoot = (process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? 'http://localhost:5000')
+  .trim()
+const backendOrigin = configuredApiRoot
+  .replace(/\/+$/, '')
+  .replace(/\/api(?:\/v1)?$/i, '')
 const scriptSrc = isProduction
   ? "script-src 'self' 'unsafe-inline'"
   : "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
@@ -25,9 +30,9 @@ const contentSecurityPolicy = [
   "frame-ancestors 'none'",
   "form-action 'self'",
   scriptSrc,
-  "style-src 'self' 'unsafe-inline' https://api.mapbox.com",
+  "style-src 'self' 'unsafe-inline' https://api.mapbox.com https://fonts.googleapis.com",
   "img-src 'self' data: blob: https://*.mapbox.com https://api.mapbox.com https://events.mapbox.com https://demotiles.maplibre.org",
-  "font-src 'self' data:",
+  "font-src 'self' data: https://fonts.gstatic.com",
   `connect-src ${connectSrc}`,
   "worker-src 'self' blob:",
   "media-src 'self' blob:",
@@ -115,7 +120,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:5000/api/:path*',
+        destination: `${backendOrigin}/api/:path*`,
+      },
+      {
+        source: '/metrics',
+        destination: `${backendOrigin}/metrics`,
       },
     ];
   },
