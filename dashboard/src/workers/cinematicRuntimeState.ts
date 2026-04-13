@@ -211,17 +211,20 @@ export function updateCameraFlyToProgress(
   const targetZoom = isTrackingTruck ? 16 : 12 // Close zoom for truck, wide for overview
   const targetPitch = isTrackingTruck ? 50 : 34 // Higher pitch for truck view
 
+  const startLatitude = cameraFlyTo.startLatitude
+  const targetLatitude = cameraFlyTo.targetLatitude
+  const startLongitude = cameraFlyTo.startLongitude
+  const targetLongitude = cameraFlyTo.targetLongitude
+  const startZoom = cameraFlyTo.startZoom
+  const startPitch = cameraFlyTo.startPitch
+
   // Interpolate camera position smoothly
   const nextLatitude =
-     cameraFlyTo.startLatitude! +
-     (cameraFlyTo.targetLatitude! - cameraFlyTo.startLatitude!) * eased
+    startLatitude + (targetLatitude - startLatitude) * eased
   const nextLongitude =
-     cameraFlyTo.startLongitude! +
-     (cameraFlyTo.targetLongitude! - cameraFlyTo.startLongitude!) * eased
-  const nextZoom =
-     cameraFlyTo.startZoom! + (targetZoom - cameraFlyTo.startZoom!) * eased
-  const nextPitch =
-     cameraFlyTo.startPitch! + (targetPitch - cameraFlyTo.startPitch!) * eased
+    startLongitude + (targetLongitude - startLongitude) * eased
+  const nextZoom = startZoom + (targetZoom - startZoom) * eased
+  const nextPitch = startPitch + (targetPitch - startPitch) * eased
 
   applyDeckViewState({
     latitude: nextLatitude,

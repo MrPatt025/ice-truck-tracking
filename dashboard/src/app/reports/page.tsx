@@ -121,15 +121,15 @@ export default function ReportsPage() {
   return (
     <AppSidebar>
       <PremiumPageWrapper mode='glass'>
-      <div className='p-4 lg:p-6 space-y-6 max-w-[1600px] mx-auto'>
+      <div className='mx-auto max-w-[1600px] space-y-6 p-4 lg:p-6'>
         {/* Header */}
         <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
           <div>
-            <h1 className='text-2xl font-bold flex items-center gap-2'>
+            <h1 className='flex items-center gap-2 text-2xl font-bold leading-tight'>
               <BarChart3 className='w-7 h-7 text-primary' />
               Reports & Analytics
             </h1>
-            <p className='text-muted-foreground text-sm mt-1'>
+            <p className='mt-1 text-sm leading-6 text-muted-foreground'>
               Fleet performance insights and historical analysis
             </p>
           </div>
@@ -141,7 +141,7 @@ export default function ReportsPage() {
                   key={range}
                   onClick={() => setTimeRange(range)}
                   className={cn(
-                    'px-3 py-1.5 text-sm font-medium transition-colors',
+                    'px-3 py-1.5 text-sm font-medium leading-5 transition-colors',
                     timeRange === range
                       ? 'bg-primary text-primary-foreground'
                       : 'hover:bg-muted text-muted-foreground'
@@ -191,7 +191,7 @@ export default function ReportsPage() {
                   {card.change}
                 </span>
               </div>
-              <p className='text-2xl font-bold'>{card.value}</p>
+              <p className='text-2xl font-bold tabular-nums'>{card.value}</p>
               <p className='text-xs text-muted-foreground mt-1'>{card.label}</p>
             </motion.div>
           ))}

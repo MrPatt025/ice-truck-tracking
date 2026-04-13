@@ -96,11 +96,20 @@ export function EnhancedMapView({
   }, [])
 
   const mapStyles = {
-    streets: 'bg-green-100',
-    satellite: 'bg-blue-200',
-    terrain: 'bg-yellow-100',
-    dark: 'bg-gray-800',
+    streets: 'bg-emerald-700 text-white',
+    satellite: 'bg-sky-700 text-white',
+    terrain: 'bg-amber-700 text-white',
+    dark: 'bg-slate-900 text-white',
   }
+
+  const contextLeft =
+    contextMenu === null
+      ? 0
+      : Math.max(8, Math.min(contextMenu.x, globalThis.innerWidth - 216))
+  const contextTop =
+    contextMenu === null
+      ? 0
+      : Math.max(8, Math.min(contextMenu.y, globalThis.innerHeight - 168))
 
   return (
     <div className='relative w-full h-full'>
@@ -110,32 +119,32 @@ export function EnhancedMapView({
           <select
             value={mapStyle}
             onChange={e => setMapStyle(e.target.value as MapStyle)}
-            className='text-sm border-none outline-none'
+            className='text-sm leading-5 rounded-md border border-slate-300 bg-white px-2 py-1 text-slate-900 outline-none focus:ring-2 focus:ring-cyan-400/70'
             aria-label='Map style'
           >
-            <option value='streets'>ðŸ—ºï¸ Streets</option>
-            <option value='satellite'>ðŸ›°ï¸ Satellite</option>
-            <option value='terrain'>ðŸ”ï¸ Terrain</option>
-            <option value='dark'>ðŸŒ™ Dark</option>
+            <option value='streets'>Streets</option>
+            <option value='satellite'>Satellite</option>
+            <option value='terrain'>Terrain</option>
+            <option value='dark'>Dark</option>
           </select>
         </div>
 
         <div className='bg-white rounded-lg shadow-md p-2 space-y-1'>
-          <label className='flex items-center text-sm'>
+          <label className='flex items-center text-sm leading-5 text-slate-800'>
             <input
               type='checkbox'
               checked={showClusters}
               onChange={e => setShowClusters(e.target.checked)}
-              className='mr-2'
+              className='mr-2 accent-cyan-500'
             />
             <span>Clustering</span>
           </label>
-          <label className='flex items-center text-sm'>
+          <label className='flex items-center text-sm leading-5 text-slate-800'>
             <input
               type='checkbox'
               checked={showHeatmap}
               onChange={e => setShowHeatmap(e.target.checked)}
-              className='mr-2'
+              className='mr-2 accent-cyan-500'
             />
             <span>Heatmap</span>
           </label>
@@ -173,19 +182,21 @@ export function EnhancedMapView({
                 } ${isSelected ? 'ring-4 ring-blue-300' : ''}`}
               >
                 <span className='text-xs text-white font-bold flex items-center justify-center h-full'>
-                  ðŸšš
+                  T
                 </span>
               </div>
 
               {isSelected && (
-                <div className='absolute top-8 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg p-3 min-w-48 z-30'>
-                  <h3 className='font-semibold text-sm'>{truck.driver_name}</h3>
-                  <p className='text-xs text-gray-600'>ID: {truck.id}</p>
-                  <p className='text-xs text-gray-600'>
+                <div className='absolute top-8 left-1/2 z-30 w-52 -translate-x-1/2 transform rounded-lg bg-white p-3 text-slate-900 shadow-lg'>
+                  <h3 className='line-clamp-2 text-sm font-semibold leading-5'>
+                    {truck.driver_name}
+                  </h3>
+                  <p className='mt-1 text-xs text-slate-600'>ID: {truck.id}</p>
+                  <p className='text-xs text-slate-600'>
                     Speed: {truck.speed} km/h
                   </p>
-                  <p className='text-xs text-gray-600'>
-                    Temp: {truck.temperature}Â°C
+                  <p className='text-xs text-slate-600'>
+                    Temp: {truck.temperature}°C
                   </p>
                   <p
                     className={`text-xs font-medium ${
@@ -211,28 +222,28 @@ export function EnhancedMapView({
       {/* Context Menu */}
       {contextMenu && (
         <div
-          className='fixed bg-white rounded-lg shadow-lg border py-2 z-50'
-          style={{ left: contextMenu.x, top: contextMenu.y }}
+          className='fixed z-50 w-52 rounded-lg border bg-white py-2 text-slate-900 shadow-lg'
+          style={{ left: contextLeft, top: contextTop }}
         >
           {contextMenu.truck ? (
             <>
-              <button className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'>
-                ðŸ” Zoom to Truck
+              <button className='w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100'>
+                Zoom to Truck
               </button>
-              <button className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'>
-                ðŸ“Š View History
+              <button className='w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100'>
+                View History
               </button>
-              <button className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'>
-                ðŸš¨ Create Alert
+              <button className='w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100'>
+                Create Alert
               </button>
             </>
           ) : (
             <>
-              <button className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'>
-                ðŸ“ Add Geofence
+              <button className='w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100'>
+                Add Geofence
               </button>
-              <button className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'>
-                ðŸŽ¯ Center Map
+              <button className='w-full px-4 py-2 text-left text-sm font-medium hover:bg-slate-100'>
+                Center Map
               </button>
             </>
           )}

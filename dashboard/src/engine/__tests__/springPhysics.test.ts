@@ -13,17 +13,23 @@ import {
 
 // ─── Helpers ───────────────────────────────────────────────────
 
+type Tickable = {
+  tick: (dt: number) => unknown;
+};
+
 /** Advance a spring for N simulation steps at 60 Hz */
-function simulate(spring: SpringValue, steps: number, dt = 1 / 60): void {
+function simulateTicks(spring: Tickable, steps: number, dt = 1 / 60): void {
     for (let i = 0; i < steps; i++) {
         spring.tick(dt);
     }
 }
 
+function simulate(spring: SpringValue, steps: number, dt = 1 / 60): void {
+  simulateTicks(spring, steps, dt);
+}
+
 function simulate2D(spring: Spring2D, steps: number, dt = 1 / 60): void {
-    for (let i = 0; i < steps; i++) {
-        spring.tick(dt);
-    }
+  simulateTicks(spring, steps, dt);
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -99,7 +105,7 @@ describe('SpringValue', () => {
         const s = new SpringValue(0);
         s.setTarget(100);
         // Simulate with a very large dt (e.g., 1 second — tab was backgrounded)
-        const stillAnimating = s.tick(1.0);
+      const stillAnimating = s.tick(1);
         // Should not explode — value should be finite
         expect(Number.isFinite(s.value)).toBe(true);
         expect(typeof stillAnimating).toBe('boolean');

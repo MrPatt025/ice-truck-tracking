@@ -979,7 +979,7 @@ const LiveMetricCards = memo(function LiveMetricCards() {
                     <m.icon className='h-5 w-5 text-white' />
                   </div>
                 </div>
-                <p className='text-3xl font-black tracking-tighter sm:text-4xl'>
+                <p className='text-3xl font-black tracking-tighter leading-none tabular-nums sm:text-4xl'>
                   {m.value}
                 </p>
                 <div className='mt-3 flex items-center gap-2'>
@@ -1023,7 +1023,7 @@ const OperationsPulsePanel = memo(function OperationsPulsePanel() {
             <p className='text-[10px] uppercase tracking-[0.14em] text-cyan-200/75'>
               Throughput
             </p>
-            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black'>
+            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black leading-none tabular-nums'>
               {throughput}
             </p>
           </div>
@@ -1031,7 +1031,7 @@ const OperationsPulsePanel = memo(function OperationsPulsePanel() {
             <p className='text-[10px] uppercase tracking-[0.14em] text-violet-200/75'>
               Fleet Utilization
             </p>
-            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black'>
+            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black leading-none tabular-nums'>
               {fleetUtilization}%
             </p>
           </div>
@@ -1039,7 +1039,7 @@ const OperationsPulsePanel = memo(function OperationsPulsePanel() {
             <p className='text-[10px] uppercase tracking-[0.14em] text-emerald-200/75'>
               Cold Chain Avg
             </p>
-            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black'>
+            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black leading-none tabular-nums'>
               {coldChain.toFixed(1)}°C
             </p>
           </div>
@@ -1047,7 +1047,7 @@ const OperationsPulsePanel = memo(function OperationsPulsePanel() {
             <p className='text-[10px] uppercase tracking-[0.14em] text-rose-200/75'>
               Unack Alerts
             </p>
-            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black'>
+            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black leading-none tabular-nums'>
               {unacknowledgedAlerts}
             </p>
           </div>

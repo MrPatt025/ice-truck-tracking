@@ -28,6 +28,7 @@ export function VirtualizedFleetGrid({
   onSelectRow,
 }: Readonly<VirtualizedFleetGridProps>) {
   const viewportRef = useRef<HTMLDivElement>(null)
+  const rafRef = useRef<number | null>(null)
   const [scrollTop, setScrollTop] = useState(0)
   const [viewportHeight, setViewportHeight] = useState(640)
 
@@ -36,7 +37,11 @@ export function VirtualizedFleetGrid({
     if (!viewport) return
 
     const onScroll = (): void => {
-      setScrollTop(viewport.scrollTop)
+      if (rafRef.current !== null) return
+      rafRef.current = globalThis.requestAnimationFrame(() => {
+        setScrollTop(viewport.scrollTop)
+        rafRef.current = null
+      })
     }
 
     const updateHeight = (): void => {
@@ -50,6 +55,10 @@ export function VirtualizedFleetGrid({
     observer.observe(viewport)
 
     return () => {
+      if (rafRef.current !== null) {
+        globalThis.cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
       viewport.removeEventListener('scroll', onScroll)
       observer.disconnect()
     }
@@ -73,7 +82,7 @@ export function VirtualizedFleetGrid({
 
   return (
     <div className='rounded-2xl border border-white/15 bg-slate-900/40 backdrop-blur-2xl'>
-      <div className='grid grid-cols-[1.1fr_0.75fr_0.95fr_0.85fr_0.65fr_0.95fr_0.8fr_0.7fr] gap-3 border-b border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-300'>
+      <div className='grid grid-cols-[1.1fr_0.75fr_0.95fr_0.85fr_0.65fr_0.95fr_0.8fr_0.7fr] gap-3 border-b border-white/10 px-4 py-3 text-xs font-semibold uppercase tracking-wide leading-5 text-slate-300'>
         <span>Vehicle</span>
         <span>Status</span>
         <span>Driver</span>
@@ -106,7 +115,7 @@ export function VirtualizedFleetGrid({
                   right: 0,
                   height: `${ROW_HEIGHT}px`,
                 }}
-                className='grid grid-cols-[1.1fr_0.75fr_0.95fr_0.85fr_0.65fr_0.95fr_0.8fr_0.7fr] items-center gap-3 border-b border-white/10 px-4 text-left text-sm text-slate-100 transition hover:bg-white/5'
+                className='grid grid-cols-[1.1fr_0.75fr_0.95fr_0.85fr_0.65fr_0.95fr_0.8fr_0.7fr] items-center gap-3 border-b border-white/10 px-4 text-left text-sm leading-5 text-slate-100 transition hover:bg-white/5'
                 data-testid='fleet-grid-row'
               >
                 <button

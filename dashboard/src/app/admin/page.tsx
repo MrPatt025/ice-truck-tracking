@@ -66,15 +66,15 @@ export default function AdminPage() {
   return (
     <AppSidebar>
       <PremiumPageWrapper mode='glass'>
-      <div className='p-4 lg:p-6 space-y-6 max-w-[1400px] mx-auto'>
+      <div className='mx-auto max-w-[1400px] space-y-6 p-4 lg:p-6'>
         {/* Header */}
         <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
           <div>
-            <h1 className='text-2xl font-bold flex items-center gap-2'>
+            <h1 className='flex items-center gap-2 text-2xl font-bold leading-tight'>
               <Shield className='w-7 h-7 text-primary' />
               User Administration
             </h1>
-            <p className='text-muted-foreground text-sm mt-1'>
+            <p className='mt-1 text-sm leading-6 text-muted-foreground'>
               Manage users, roles, and access permissions
             </p>
           </div>
@@ -152,13 +152,13 @@ export default function AdminPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder='Search users...'
-              className='w-full pl-10 pr-4 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50'
+              className='w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-primary/50'
             />
           </div>
           <select
             value={roleFilter}
             onChange={e => setRoleFilter(e.target.value)}
-            className='px-3 py-2.5 rounded-lg border border-input bg-background text-sm'
+            className='rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-5'
             aria-label='Filter by role'
           >
             <option value='all'>All Roles ({roleCounts.all})</option>
@@ -174,7 +174,7 @@ export default function AdminPage() {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className='px-3 py-2.5 rounded-lg border border-input bg-background text-sm'
+            className='rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-5'
             aria-label='Filter by status'
           >
             <option value='all'>All Statuses</option>
@@ -201,8 +201,8 @@ export default function AdminPage() {
                       {u.name.charAt(0)}
                     </div>
                     <div>
-                      <p className='font-medium'>{u.name}</p>
-                      <p className='text-xs text-muted-foreground'>{u.email}</p>
+                      <p className='truncate font-medium'>{u.name}</p>
+                      <p className='truncate text-xs text-muted-foreground'>{u.email}</p>
                     </div>
                   </div>
                   <span

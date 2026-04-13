@@ -228,15 +228,15 @@ export default function AlertsPage() {
   return (
     <AppSidebar>
       <PremiumPageWrapper mode='glass'>
-      <div className='p-4 lg:p-6 space-y-6 max-w-[1600px] mx-auto'>
+      <div className='mx-auto max-w-[1600px] space-y-6 p-4 lg:p-6'>
         {/* Header */}
         <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
           <div>
-            <h1 className='text-2xl font-bold flex items-center gap-2'>
+            <h1 className='flex items-center gap-2 text-2xl font-bold leading-tight'>
               <Bell className='w-7 h-7 text-primary' />
               Alerts & Rules
             </h1>
-            <p className='text-muted-foreground text-sm mt-1'>
+            <p className='mt-1 text-sm leading-6 text-muted-foreground'>
               {alertCounts.active} active alerts • {alertCounts.critical}{' '}
               critical
             </p>
@@ -339,14 +339,14 @@ export default function AlertsPage() {
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder='Search alerts...'
-                  className='w-full pl-10 pr-4 py-2 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50'
+                  className='w-full rounded-lg border border-input bg-background py-2 pl-10 pr-4 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-primary/50'
                 />
               </div>
               <select
                 aria-label='Filter by severity'
                 value={severityFilter}
                 onChange={e => setSeverityFilter(e.target.value)}
-                className='px-3 py-2 rounded-lg border border-input bg-background text-sm'
+                className='rounded-lg border border-input bg-background px-3 py-2 text-sm leading-5'
               >
                 <option value='all'>All Severities</option>
                 <option value='critical'>Critical</option>
@@ -357,7 +357,7 @@ export default function AlertsPage() {
                 aria-label='Filter by status'
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
-                className='px-3 py-2 rounded-lg border border-input bg-background text-sm'
+                className='rounded-lg border border-input bg-background px-3 py-2 text-sm leading-5'
               >
                 <option value='all'>All Statuses</option>
                 <option value='active'>Active</option>
@@ -406,7 +406,7 @@ export default function AlertsPage() {
                           {alert.status}
                         </span>
                       </div>
-                      <p className='text-sm text-muted-foreground truncate'>
+                      <p className='text-sm leading-6 text-muted-foreground truncate'>
                         {alert.message}
                       </p>
                       <div className='flex items-center gap-3 mt-1 text-xs text-muted-foreground'>
@@ -647,8 +647,8 @@ export default function AlertsPage() {
             </AnimatePresence>
 
             {/* Rules List */}
-            <div className='bg-card rounded-xl border border-border overflow-hidden'>
-              <table className='w-full text-sm'>
+            <div className='overflow-x-auto rounded-xl border border-border bg-card'>
+              <table className='w-full min-w-[760px] text-sm'>
                 <thead className='bg-muted/50 border-b border-border'>
                   <tr>
                     <th className='px-4 py-3 text-left font-medium text-muted-foreground'>

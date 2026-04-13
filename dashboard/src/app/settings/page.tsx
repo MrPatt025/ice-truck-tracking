@@ -73,14 +73,14 @@ export default function SettingsPage() {
   return (
     <AppSidebar>
       <PremiumPageWrapper mode='glass'>
-      <div className='p-4 lg:p-6 max-w-[1200px] mx-auto'>
+      <div className='mx-auto max-w-[1200px] p-4 lg:p-6'>
         {/* Header */}
         <div className='mb-6'>
-          <h1 className='text-2xl font-bold flex items-center gap-2'>
+          <h1 className='flex items-center gap-2 text-2xl font-bold leading-tight'>
             <Settings className='w-7 h-7 text-primary' />
             Settings
           </h1>
-          <p className='text-muted-foreground text-sm mt-1'>
+          <p className='mt-1 text-sm leading-6 text-muted-foreground'>
             Manage your account preferences and configuration
           </p>
         </div>
@@ -153,7 +153,7 @@ export default function SettingsPage() {
                       onChange={e =>
                         setProfile(p => ({ ...p, name: e.target.value }))
                       }
-                      className='w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50'
+                      className='w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-primary/50'
                     />
                   </div>
                   <div className='space-y-2'>
@@ -170,7 +170,7 @@ export default function SettingsPage() {
                       onChange={e =>
                         setProfile(p => ({ ...p, email: e.target.value }))
                       }
-                      className='w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50'
+                      className='w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-primary/50'
                     />
                   </div>
                   <div className='space-y-2'>
@@ -188,7 +188,7 @@ export default function SettingsPage() {
                         setProfile(p => ({ ...p, phone: e.target.value }))
                       }
                       placeholder='+66 xxx xxx xxxx'
-                      className='w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50'
+                      className='w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-primary/50'
                     />
                   </div>
                   <div className='space-y-2'>
@@ -205,7 +205,7 @@ export default function SettingsPage() {
                       onChange={e =>
                         setProfile(p => ({ ...p, company: e.target.value }))
                       }
-                      className='w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/50'
+                      className='w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-primary/50'
                     />
                   </div>
                 </div>
@@ -282,7 +282,7 @@ export default function SettingsPage() {
                           sessionTimeout: Number(e.target.value),
                         }))
                       }
-                      className='px-3 py-1.5 rounded-lg border border-input bg-background text-sm'
+                      className='rounded-lg border border-input bg-background px-3 py-1.5 text-sm leading-5'
                       aria-label='Session timeout'
                     >
                       <option value={15}>15 minutes</option>

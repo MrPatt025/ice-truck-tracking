@@ -112,7 +112,7 @@ describe('SpatialIndex', () => {
 
         const result = idx.nearest(0, 0);
         expect(result).not.toBeNull();
-        expect(result!.id).toBe('B');
+      expect(result?.id).toBe('B');
     });
 
     it('nearest returns null for empty index', () => {
@@ -159,7 +159,7 @@ describe('SpatialIndex', () => {
         const idx = new SpatialIndex();
         idx.bulkLoad([makeTruck('solo', 42, 42)]);
         expect(idx.size).toBe(1);
-        expect(idx.nearest(42, 42)!.id).toBe('solo');
+      expect(idx.nearest(42, 42)?.id).toBe('solo');
     });
 });
 
@@ -199,7 +199,7 @@ describe('EntityMap', () => {
 
         const ids: string[] = [];
         map.forEach((entity) => ids.push(entity.id));
-        expect(ids.sort()).toEqual(['A', 'B']);
+      expect(ids.toSorted((a, b) => a.localeCompare(b))).toEqual(['A', 'B']);
     });
 
     it('clears all entries', () => {
