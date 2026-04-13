@@ -1,0 +1,36 @@
+# Gitleaks Ignore File
+# This file contains patterns for false-positive secrets that appear in
+# test files, example configurations, and documentation.
+
+# ─── Environment Examples ──────────────────────────────────────────
+backend/.env.example
+backend/env.example
+dashboard/.env.example
+dashboard/.env.local.example
+.env.example
+.env.*.example
+
+# ─── Test Files with Mock Credentials ──────────────────────────────
+backend/test/**
+backend/tests/**
+backend/**/*.test.ts
+backend/**/*.spec.ts
+dashboard/**/*.test.ts
+dashboard/**/*.test.tsx
+dashboard/**/*.spec.ts
+dashboard/**/*.spec.tsx
+e2e/**
+tests/**
+
+# ─── Database & Configuration Files ────────────────────────────────
+*.sql
+docker-compose*.yml
+.env.local
+.env.local.example
+
+# ─── Common Mock Credentials ───────────────────────────────────────
+# These patterns catch common test/example mock secrets
+password123
+admin123
+super_secret_key
+mock_token_12345
