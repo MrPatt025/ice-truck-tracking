@@ -1,0 +1,241 @@
+{
+  "project_name": "Ice Truck Tracking Platform",
+  "project_type": "frontend",
+  "source": "manual-handoff",
+  "summary": "World-class 14-page premium UI with glassmorphism, zero-render telemetry, and cinematic transitions.",
+  "primary_routes": [
+    "/",
+    "/login",
+    "/forgot-password",
+    "/reset-password",
+    "/register",
+    "/dashboard",
+    "/alerts",
+    "/fleet",
+    "/reports",
+    "/settings",
+    "/admin"
+  ],
+  "ux_goals": [
+    "Premium glassmorphism presentation across all pages",
+    "Consistent content density, padding, and typography",
+    "Cinematic landing-to-dashboard FOV zoom & opacity transitions",
+    "Zero-render architecture for realtime telemetry (60 FPS locked)",
+    "Responsive design with zero layout shifts on entry"
+  ],
+  "performance_goals": [
+    "Dashboard uses imperative Three.js + deck.gl rendering (no React state churn)",
+    "Telemetry updates via mutable refs or Zustand transient subscriptions",
+    "Frame scheduler maintains 60 FPS under 100+ truck coordinate updates/sec",
+    "No post-processing (Bloom, DoF) during transitions to preserve smooth motion"
+  ],
+  "critical_features": [
+    {
+      "feature_id": "F001",
+      "name": "Landing Page Hero & Navigation",
+      "route": "/",
+      "description": "Public entry point with brand, hero CTA, features showcase, and navigation to auth/dashboard.",
+      "acceptance_criteria": [
+        "AC01: Hero section renders with gradient background and readable headline text",
+        "AC02: 'Open Dashboard' button is visible and clickable",
+        "AC03: Navbar brand logo and items are properly aligned and responsive",
+        "AC04: Page wrapper applies premium glassmorphism (blur, noise, cyan glow ring)",
+        "AC05: Framer Motion spring entrance completes without layout shifts",
+        "AC06: Navigation links (Features, Tech Stack, Stats) scroll to anchors or navigate correctly",
+        "AC07: Mobile responsiveness verified (375px width shows on one column, text stays readable)",
+        "AC08: Page footer copyright and links are visible"
+      ]
+    },
+    {
+      "feature_id": "F002",
+      "name": "Authentication Flow (Login/Register)",
+      "route": "/login",
+      "description": "Auth pages with form validation, error handling, and navigation to recovery flows.",
+      "acceptance_criteria": [
+        "AC01: Login form renders with email and password fields",
+        "AC02: Form validation shows errors for empty or invalid input",
+        "AC03: 'Forgot Password' link navigates to /forgot-password page",
+        "AC04: 'Don't have an account?' link navigates to /register page",
+        "AC05: Page wrapper glassmorphism styling is consistent with landing page",
+        "AC06: Typography and button styles match design system",
+        "AC07: No layout shifts during form interactions",
+        "AC08: Register page mirrors login with additional password confirm field"
+      ]
+    },
+    {
+      "feature_id": "F003",
+      "name": "Dashboard Realtime Telemetry Surface",
+      "route": "/dashboard",
+      "description": "Main dashboard with zero-render imperativerendering for fleet telemetry, heatmaps, and statusoverviews.",
+      "acceptance_criteria": [
+        "AC01: Dashboard renders without layout shift on entry",
+        "AC02: WebGL canvas mounts correctly (Three.js/deck.gl layers)",
+        "AC03: Main map surface loads with no console errors",
+        "AC04: Sidebar navigation is responsive and collapsible",
+        "AC05: Realtime truck markers update WITHOUT React re-renders (verified via DevTools Profiler)",
+        "AC06: Page mode set to 'none' with animate=false to prevent entry churn",
+        "AC07: Telemetry updates use Zustand transient store (mutable Map, not state)",
+        "AC08: Frame scheduler keeps consistent 60 FPS under 100+ updates/sec"
+      ]
+    },
+    {
+      "feature_id": "F004",
+      "name": "Alerts Management Page",
+      "route": "/alerts",
+      "description": "Filtered alerts list with severity levels, incident detail view, and triage actions.",
+      "acceptance_criteria": [
+        "AC01: Alerts page renders with consistent glassmorphism wrapper styling",
+        "AC02: Alert items display with priority badges (critical, warning, info)",
+        "AC03: Click on alert expands detail panel without page navigation",
+        "AC04: Filters (by truck, severity, time range) are functional",
+        "AC05: Pagination or infinite scroll loads alerts smoothly",
+        "AC06: Responsive on mobile (375px) with stacked layout",
+        "AC07: Date/time displayed in user timezone",
+        "AC08: No layout shifts during alert list updates"
+      ]
+    },
+    {
+      "feature_id": "F005",
+      "name": "Fleet Management & Status",
+      "route": "/fleet",
+      "description": "Overview of all trucks, status indicators, live coordinates, and maintenance flags.",
+      "acceptance_criteria": [
+        "AC01: Fleet page loads with table or grid of truck cards",
+        "AC02: Each truck card shows: truck ID, status (active/idle/maintenance), driver name, location",
+        "AC03: Status indicators use consistent color coding (green=active, orange=idle, red=maintenance)",
+        "AC04: Clicking a truck navigates to detail view or shows sidebar detail",
+        "AC05: Page wrapper glassmorphism applied consistently",
+        "AC06: Responsive grid reflows at 768px and 1024px breakpoints",
+        "AC07: Search/filter by truck ID or driver name is functional",
+        "AC08: Last update timestamp is displayed"
+      ]
+    },
+    {
+      "feature_id": "F006",
+      "name": "Reports & Analytics",
+      "route": "/reports",
+      "description": "Historical data visualization: delivery trends, temperature anomalies, fuel efficiency, uptime metrics.",
+      "acceptance_criteria": [
+        "AC01: Reports page renders with premium glassmorphism wrapper",
+        "AC02: Date range picker allows selection of custom or preset ranges (last 7d, 30d, etc.)",
+        "AC03: Charts (line, bar) render correctly without console errors",
+        "AC04: Data loads within 2 seconds for standard queries",
+        "AC05: Export CSV button is visible and functional",
+        "AC06: Tab navigation (Delivery Metrics, Temperature, Fuel) switches views smoothly",
+        "AC07: Responsive on mobile (stacked charts, no horizontal scroll)",
+        "AC08: Y-axis labels and legends are readable"
+      ]
+    },
+    {
+      "feature_id": "F007",
+      "name": "Settings & Configuration",
+      "route": "/settings",
+      "description": "User preferences, theme toggle, alert thresholds, notification channels, API key management.",
+      "acceptance_criteria": [
+        "AC01: Settings page renders with glassmorphism wrapper",
+        "AC02: Theme toggle (light/dark) updates page appearance without full reload",
+        "AC03: Alert threshold inputs accept numeric values and show validation errors",
+        "AC04: Notification channel toggles (email, push, SMS) are functional",
+        "AC05: Save button persists settings to localStorage or backend",
+        "AC06: Success message displayed on settings save",
+        "AC07: Responsive form layout on mobile (single column)",
+        "AC08: API key masking and copy-to-clipboard button functional"
+      ]
+    },
+    {
+      "feature_id": "F008",
+      "name": "Admin Panel",
+      "route": "/admin",
+      "description": "System administration: user management, role assignments, system logs, feature flags.",
+      "acceptance_criteria": [
+        "AC01: Admin page loads with glassmorphism wrapper styling",
+        "AC02: User list displays name, email, role, and last login timestamp",
+        "AC03: Edit user role dropdown is functional and persists changes",
+        "AC04: Feature flags table shows flag name, status, and last modified info",
+        "AC05: Toggle feature flag switches state without full page reload",
+        "AC06: System logs tab shows paginated entries with filters",
+        "AC07: Responsive table reflows on mobile (horizontal scroll or card view)",
+        "AC08: Delete user action shows confirmation dialog before proceeding"
+      ]
+    },
+    {
+      "feature_id": "F009",
+      "name": "Glassmorphism & Animation Quality",
+      "route": "ALL",
+      "description": "Premium UI polish applied consistently across all 14 pages.",
+      "acceptance_criteria": [
+        "AC01: All wrapped pages render with backdrop-blur-2xl effect",
+        "AC02: SVG fractal noise overlay is subtle (opacity 0.035) and not distracting",
+        "AC03: Radial gradients (cyan & purple) create depth without oversaturation",
+        "AC04: Glow ring (ring-1 cyan-200/20) is visible but not harsh",
+        "AC05: Framer Motion spring animations have stiffness: 220, damping: 24, mass: 0.7",
+        "AC06: Staggered entry completes in under 500ms with no visual glitches",
+        "AC07: Page wrapper applies contain: 'layout paint style' for render isolation",
+        "AC08: No layout shifts or reflows observed during entry animation",
+        "AC09: Animations respect prefers-reduced-motion if media query is present",
+        "AC10: All pages render consistently at 1920x1080 and mobile 375x667 viewports"
+      ]
+    },
+    {
+      "feature_id": "F010",
+      "name": "Zero-Render Telemetry Architecture",
+      "route": "/dashboard",
+      "description": "Imperative realtime rendering without React state re-renders for high-frequency IoT data.",
+      "acceptance_criteria": [
+        "AC01: Dashboard page uses mode='none' and animate={false} on PremiumPageWrapper",
+        "AC02: Telemetry store uses Zustand transient subscription with mutable Map",
+        "AC03: Truck coordinate updates trigger imperative Three.js/deck.gl renders, not React.useState",
+        "AC04: WebSocket message handler updates ref directly, bypassing render cycle",
+        "AC05: Frame scheduler maintains stable 60 FPS under 100+ truck updates/sec",
+        "AC06: React DevTools Profiler shows 0 additional renders when telemetry updates arrive",
+        "AC07: Dashboard CPU usage remains below 25% under peak data load",
+        "AC08: Memory footprint stable (no growth > 50MB over 5-minute observation window)"
+      ]
+    },
+    {
+      "feature_id": "F011",
+      "name": "Navigation & Page Transitions",
+      "route": "ALL",
+      "description": "Smooth navigation between all pages with no broken links or layout thrashing.",
+      "acceptance_criteria": [
+        "AC01: All route links in navbar navigate without page reload",
+        "AC02: Sidebar menu collapsible and functional on desktop/mobile",
+        "AC03: Back button (browser or app) navigates to previous page correctly",
+        "AC04: No 404 errors in browser console for internal navigation",
+        "AC05: Page transitions complete smoothly without visual stutter",
+        "AC06: Loading indicator (if present) displays during page load and clears on completion",
+        "AC07: Active nav item styling reflects current page",
+        "AC08: Mobile hamburger menu toggles sidebar visibility without layout thrash"
+      ]
+    },
+    {
+      "feature_id": "F012",
+      "name": "Accessibility & Responsiveness",
+      "route": "ALL",
+      "description": "WCAG 2.1 AA compliance and responsive design across breakpoints.",
+      "acceptance_criteria": [
+        "AC01: All pages have semantic HTML structure (main, header, nav, section)",
+        "AC02: All clickable elements have accessible labels (aria-label or text)",
+        "AC03: Forms include proper label elements and error announcements",
+        "AC04: Color contrast ratios meet WCAG AA standards (4.5:1 for text)",
+        "AC05: Responsive design verified at 375px, 768px, 1024px, 1920px viewports",
+        "AC06: No horizontal scrolling on mobile (max-width: 600px)",
+        "AC07: Touch targets minimum 48x48px on mobile browsers",
+        "AC08: Keyboard navigation (Tab/Enter/Escape) functional throughout"
+      ]
+    }
+  ],
+  "known_considerations": [
+    "Backend should be running on localhost:5000 for live telemetry (optional for this frontend test).",
+    "Dashboard card with WebGL canvas may show black initially if Three.js takes time to initialize (normal).",
+    "TestSprite will execute synthetic interactions; live data will be mock/empty without backend.",
+    "Some animations may appear faster/slower depending on browser and system resources."
+  ],
+  "test_environment": {
+    "frontend_url": "http://localhost:3000",
+    "backend_api": "http://localhost:5000 (optional)",
+    "browsers": ["chromium"],
+    "viewport_priority": ["1920x1080", "375x667"],
+    "network_condition": "normal"
+  }
+}
