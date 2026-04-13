@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, type ReactNode } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 type PremiumPageWrapperProps = Readonly<{
@@ -31,16 +31,16 @@ const CONTAINER_VARIANTS = {
 }
 
 const CONTENT_VARIANTS = {
-  hidden: { opacity: 0, y: 10, scale: 0.995 },
+  hidden: { opacity: 0, y: 8, scale: 0.995 },
   show: {
     opacity: 1,
     y: 0,
     scale: 1,
     transition: {
       type: 'spring',
-      stiffness: 220,
-      damping: 24,
-      mass: 0.7,
+      stiffness: 240,
+      damping: 26,
+      mass: 0.68,
     },
   },
 }
@@ -52,20 +52,27 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
   mode = 'glass',
   animate = true,
 }: PremiumPageWrapperProps) {
+  const prefersReducedMotion = useReducedMotion()
+  const shouldAnimate = animate && !prefersReducedMotion
+
   return (
     <motion.section
-      initial={animate ? 'hidden' : false}
-      animate={animate ? 'show' : undefined}
+      initial={shouldAnimate ? 'hidden' : false}
+      animate={shouldAnimate ? 'show' : undefined}
       variants={CONTAINER_VARIANTS}
-      className={cn('relative isolate overflow-visible', className)}
+      className={cn(
+        'relative isolate overflow-visible premium-rhythm motion-safe:transform-gpu',
+        className
+      )}
     >
       <motion.div
         variants={CONTENT_VARIANTS}
         className={cn(
           mode === 'glass' &&
-            'relative rounded-2xl border border-white/20 bg-slate-900/35 shadow-[0_32px_85px_-50px_rgba(56,189,248,0.8)] backdrop-blur-2xl',
+            'premium-surface relative rounded-2xl border border-white/20 bg-slate-900/35 shadow-[0_32px_85px_-50px_rgba(56,189,248,0.8)] backdrop-blur-2xl supports-[backdrop-filter]:backdrop-saturate-150',
           contentClassName
         )}
+        style={{ contain: 'layout paint style' }}
       >
         {mode === 'glass' ? (
           <>

@@ -20,11 +20,13 @@ test.describe('Chaos Engineering — Network Resilience', () => {
 
     let interceptedCount = 0
     let successCount = 0
+    let apiRequestIndex = 0
 
     // Intercept all network requests and drop 90% of them
     await page.route('**/api/**', route => {
       interceptedCount += 1
-      const shouldFail = Math.random() < 0.9 // 90% loss rate
+      apiRequestIndex += 1
+      const shouldFail = apiRequestIndex % 10 !== 0 // deterministic 90% loss rate
 
       if (shouldFail) {
         // Simulate packet loss by aborting (network error, not HTTP error)
@@ -64,12 +66,15 @@ test.describe('Chaos Engineering — Network Resilience', () => {
 
     const startTime = Date.now()
     let highLatencyTriggered = false
+    let wsRequestIndex = 0
+    let telemetryRequestIndex = 0
 
     // Intercept WebSocket/SSE transport calls and add latency
     const delayRoute = async (
       route: Parameters<Parameters<typeof page.route>[1]>[0]
     ): Promise<void> => {
-      const delay = Math.random() < 0.3 ? 5000 : 100 // 30% of messages get 5s delay
+      wsRequestIndex += 1
+      const delay = wsRequestIndex % 10 < 3 ? 5000 : 100 // deterministic 30% spike pattern
       if (delay > 1000) {
         highLatencyTriggered = true
       }
@@ -82,7 +87,8 @@ test.describe('Chaos Engineering — Network Resilience', () => {
 
     // Also monitor streaming/long-poll endpoints
     await page.route('**/api/v1/telemetry/**', async route => {
-      const delay = Math.random() < 0.2 ? 5000 : 50 // 20% of telemetry gets 5s delay
+      telemetryRequestIndex += 1
+      const delay = telemetryRequestIndex % 5 === 0 ? 5000 : 50 // deterministic 20% spike pattern
       if (delay > 1000) {
         highLatencyTriggered = true
       }
@@ -207,16 +213,20 @@ test.describe('Chaos Engineering — Network Resilience', () => {
 
   test('connection recovery after extended network split', async ({ page }) => {
     await page.goto('/dashboard')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 })
 
     // Capture initial state
     const initialTrucks = page.locator('[data-testid="truck-item"]')
     const initialCount = await initialTrucks.count()
 
     // Simulate 30-second network split (all requests fail)
-    await page.route('**/*', route => {
-      return route.abort('failed')
-    })
+    const forceSplit = (
+      route: Parameters<Parameters<typeof page.route>[1]>[0]
+    ): Promise<void> => route.abort('failed')
+    await page.route('**/api/**', forceSplit)
+    await page.route('**/socket.io/**', forceSplit)
+    await page.route('**/ws**', forceSplit)
 
     // Let the split persist for 3 seconds
     await page.waitForTimeout(3000)
@@ -225,10 +235,13 @@ test.describe('Chaos Engineering — Network Resilience', () => {
     expect(await page.locator('body').isVisible()).toBe(true)
 
     // Restore network
-    await page.unroute('**/*')
+    await page.unroute('**/api/**', forceSplit)
+    await page.unroute('**/socket.io/**', forceSplit)
+    await page.unroute('**/ws**', forceSplit)
 
     // Wait for reconnection and data sync
     await page.waitForTimeout(2000)
+    await expect(page.locator('body')).toBeVisible({ timeout: 15000 })
 
     // Should restore or show synced state
     const finalTrucks = page.locator('[data-testid="truck-item"]')

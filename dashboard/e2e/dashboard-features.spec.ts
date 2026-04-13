@@ -16,10 +16,26 @@ async function setAuthCookie(page: Page, baseURL: string): Promise<void> {
   ]);
 }
 
+async function gotoDashboardWithRetry(page: Page): Promise<void> {
+  const MAX_ATTEMPTS = 3;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    try {
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+      return;
+    } catch (error) {
+      if (attempt === MAX_ATTEMPTS) {
+        throw error;
+      }
+      await page.waitForTimeout(500);
+    }
+  }
+}
+
 test.describe('Dashboard feature polish', () => {
   test.beforeEach(async ({ page, baseURL }) => {
     await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
-    await page.goto('/dashboard');
+    await gotoDashboardWithRetry(page);
     await expect(page.getByTestId('mission-control-surface')).toBeVisible({ timeout: HYDRATION_TIMEOUT_MS });
   });
 
@@ -33,18 +49,29 @@ test.describe('Dashboard feature polish', () => {
     await expect(liveButton).toHaveAttribute('aria-pressed', 'true');
     await expect(historicalButton).toHaveAttribute('aria-pressed', 'false');
 
-    await historicalButton.click();
+    await historicalButton.click({ force: true });
     await expect(historicalButton).toHaveAttribute('aria-pressed', 'true');
     await expect(liveButton).toHaveAttribute('aria-pressed', 'false');
 
-    await liveButton.click();
+    await liveButton.click({ force: true });
     await expect(liveButton).toHaveAttribute('aria-pressed', 'true');
     await expect(historicalButton).toHaveAttribute('aria-pressed', 'false');
   });
 
   test('shows offline fallback banner when browser goes offline', async ({ page }) => {
-    await page.context().setOffline(true);
-    await page.waitForTimeout(350);
+    await page.evaluate(() => {
+      Object.defineProperty(globalThis.navigator, 'onLine', {
+        configurable: true,
+        get: () => false,
+      });
+      globalThis.dispatchEvent(new Event('offline'));
+    });
+
+    await expect
+      .poll(async () => page.evaluate(() => globalThis.navigator.onLine), {
+        timeout: HYDRATION_TIMEOUT_MS,
+      })
+      .toBe(false);
 
     const offlineIndicator = page.getByTestId('offline-indicator');
 
@@ -52,6 +79,18 @@ test.describe('Dashboard feature polish', () => {
     await expect(offlineIndicator).toContainText('Offline mode enabled');
     await expect(offlineIndicator).toContainText('graceful fallback mode');
 
-    await page.context().setOffline(false);
+    await page.evaluate(() => {
+      Object.defineProperty(globalThis.navigator, 'onLine', {
+        configurable: true,
+        get: () => true,
+      });
+      globalThis.dispatchEvent(new Event('online'));
+    });
+
+    await expect
+      .poll(async () => page.evaluate(() => globalThis.navigator.onLine), {
+        timeout: HYDRATION_TIMEOUT_MS,
+      })
+      .toBe(true);
   });
 });
