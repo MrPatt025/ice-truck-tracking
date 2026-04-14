@@ -18,14 +18,19 @@ const SALT_ROUNDS = config.SALT_ROUNDS || 12;
  * Parse human-readable duration to milliseconds.
  */
 const parseDuration = (str) => {
-    const match = str.match(/^(\d+)\s*([smhd])$/);
-    if (!match) return 3600000; // fallback 1h
-    const n = Number(match[1]);
-    switch (match[2]) {
-        case 's': return n * 1000;
-        case 'm': return n * 60 * 1000;
-        case 'h': return n * 3600 * 1000;
-        case 'd': return n * 86400 * 1000;
+    const normalized = typeof str === 'string' ? str.trim() : '';
+    if (normalized.length < 2) return 3600000;
+
+    const unit = normalized.slice(-1);
+    const amount = Number(normalized.slice(0, -1));
+
+    if (!Number.isFinite(amount) || amount <= 0) return 3600000;
+
+    switch (unit) {
+        case 's': return amount * 1000;
+        case 'm': return amount * 60 * 1000;
+        case 'h': return amount * 3600 * 1000;
+        case 'd': return amount * 86400 * 1000;
         default: return 3600000;
     }
 };

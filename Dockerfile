@@ -17,14 +17,13 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY next.config.js next.config.ts eslint.config.mjs tsconfig.json commitlint.config.js lint-staged.config.js renovate.json stryker.conf.js index.js ./
-COPY backend ./backend
+COPY backend/package.json ./backend/
+COPY backend/index.js ./backend/
+COPY backend/swagger.json ./backend/
+COPY backend/src ./backend/src
 COPY dashboard ./dashboard
-COPY mobile-app ./mobile-app
-COPY sdk ./sdk
-COPY infra ./infra
-COPY monitoring ./monitoring
-COPY nginx ./nginx
-COPY scripts ./scripts
+COPY sdk/edge ./sdk/edge
+COPY sdk/mobile ./sdk/mobile
 COPY src ./src
 RUN pnpm run build
 

@@ -8,6 +8,14 @@ router.use(protect);
 // Mock mobile devices
 const mobileDevices = new Map();
 
+function removeLineBreaks(value) {
+  return String(value)
+    .split('\n')
+    .join('')
+    .split('\r')
+    .join('');
+}
+
 // Register mobile device
 router.post('/register', (req, res) => {
   const { deviceId, deviceInfo } = req.body;
@@ -62,8 +70,8 @@ router.post('/location', (req, res) => {
   if (req.body.truckId) {
     // This would normally update the truck in database
     // Sanitize inputs before logging to prevent Log Forging attacks
-    const sanitizedDeviceId = String(deviceId).replaceAll(/[\n\r]/g, '');
-    const sanitizedTruckId = String(req.body.truckId).replaceAll(/[\n\r]/g, '');
+    const sanitizedDeviceId = removeLineBreaks(deviceId);
+    const sanitizedTruckId = removeLineBreaks(req.body.truckId);
     console.log(`Mobile device ${sanitizedDeviceId} updated truck ${sanitizedTruckId} location`);
   }
 
@@ -111,7 +119,7 @@ router.post('/sync', (req, res) => {
 
   // Process each location
   // Sanitize device ID before logging to prevent Log Forging attacks
-  const sanitizedDeviceId = String(deviceId).replaceAll(/[\n\r]/g, '');
+  const sanitizedDeviceId = removeLineBreaks(deviceId);
   locations.forEach(location => {
     console.log(`Syncing location for device ${sanitizedDeviceId}:`, location);
   });

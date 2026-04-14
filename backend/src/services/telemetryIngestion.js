@@ -12,7 +12,34 @@ const {
     recordMqttMessage,
 } = require('../middleware/observability');
 
-const topicTruckIdSchema = z.string().trim().min(1).max(64).regex(/^[A-Za-z0-9_-]+$/);
+function isSafeTopicTruckId(value) {
+    if (typeof value !== 'string') {
+        return false;
+    }
+
+    const trimmed = value.trim();
+    if (trimmed.length < 1 || trimmed.length > 64) {
+        return false;
+    }
+
+    for (const character of trimmed) {
+        const code = character.codePointAt(0);
+        const isDigit = code >= 48 && code <= 57;
+        const isUppercase = code >= 65 && code <= 90;
+        const isLowercase = code >= 97 && code <= 122;
+        const isAllowedSymbol = character === '_' || character === '-';
+
+        if (!isDigit && !isUppercase && !isLowercase && !isAllowedSymbol) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+const topicTruckIdSchema = z.string().trim().min(1).max(64).refine(isSafeTopicTruckId, {
+    message: 'Truck topic IDs may only contain letters, numbers, hyphens, and underscores',
+});
 
 const telemetryMessageSchema = z.object({
     latitude: z.coerce.number().min(-90).max(90),

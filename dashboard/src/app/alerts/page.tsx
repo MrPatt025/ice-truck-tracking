@@ -13,6 +13,8 @@ import AppSidebar from '@/components/AppSidebar';
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
 import { useAuthStore, hasPermission } from '@/stores/authStore';
 
+const ALERTS_BASE_TS = Date.parse('2026-01-01T12:00:00.000Z')
+
 // ── Types ──────────────────────────────────────────────────
 interface Alert {
   id: string;
@@ -59,11 +61,11 @@ const mockAlerts: Alert[] = Array.from({ length: 20 }, (_, i) => {
     severity: severities[i % 3],
     message: `${types[i % types.length]} detected on ICE-${String((i % 10) + 1).padStart(3, '0')}`,
     status: statuses[i % 3],
-    createdAt: new Date(Date.now() - i * 600000).toISOString(),
+    createdAt: new Date(ALERTS_BASE_TS - i * 600000).toISOString(),
     acknowledgedAt:
       statuses[i % 3] === 'active'
         ? undefined
-        : new Date(Date.now() - i * 300000).toISOString(),
+        : new Date(ALERTS_BASE_TS - i * 300000).toISOString(),
   }
 })
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, type ReactNode } from 'react'
+import { memo, type ReactNode, useState, useEffect } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -53,11 +53,18 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
   animate = true,
 }: PremiumPageWrapperProps) {
   const prefersReducedMotion = useReducedMotion()
-  const shouldAnimate = animate && !prefersReducedMotion
+  const [isMounted, setIsMounted] = useState(false)
+  
+  // Prevent hydration mismatch: only animate after mount on client
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+  
+  const shouldAnimate = isMounted && animate && !prefersReducedMotion
 
   return (
     <motion.section
-      initial={shouldAnimate ? 'hidden' : false}
+      initial={false}
       animate={shouldAnimate ? 'show' : undefined}
       variants={CONTAINER_VARIANTS}
       className={cn(
@@ -72,7 +79,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
             'premium-surface relative rounded-2xl border border-white/20 bg-slate-900/35 shadow-[0_32px_85px_-50px_rgba(56,189,248,0.8)] backdrop-blur-2xl supports-[backdrop-filter]:backdrop-saturate-150',
           contentClassName
         )}
-        style={{ contain: 'layout paint style' }}
+        style={{ contain: 'layout style paint' }}
       >
         {mode === 'glass' ? (
           <>

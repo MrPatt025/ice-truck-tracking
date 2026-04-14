@@ -1,6 +1,7 @@
 import './globals.css'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { Orbitron, Space_Grotesk } from 'next/font/google'
+import Script from 'next/script'
 import type { Metadata, Viewport } from 'next'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import TransitionLayoutGroup from '@/components/TransitionLayoutGroup'
@@ -52,6 +53,14 @@ export default function RootLayout({
         {/* DNS prefetch for external critical resources */}
         <link rel='dns-prefetch' href='https://api.mapbox.com' />
         <link rel='dns-prefetch' href='https://cdn.jsdelivr.net' />
+        <Script
+          id='global-alias-polyfill'
+          strategy='beforeInteractive'
+          dangerouslySetInnerHTML={{
+            __html:
+              "if (typeof globalThis !== 'undefined' && typeof globalThis.global === 'undefined') { globalThis.global = globalThis; }",
+          }}
+        />
       </head>
       <body className={`${bodyFont.variable} ${displayFont.variable} antialiased relative isolate`}>
         <ThemeProvider>

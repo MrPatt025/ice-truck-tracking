@@ -13,7 +13,8 @@ COPY --chown=node:node package.json pnpm-lock.yaml* ./
 # Development stage
 FROM base AS development
 RUN npm install
-COPY --chown=node:node . .
+COPY --chown=node:node index.js swagger.json ./
+COPY --chown=node:node src ./src
 EXPOSE 5000
 USER node
 CMD ["dumb-init", "npm", "run", "dev"]
@@ -35,7 +36,8 @@ WORKDIR /usr/src/app
 COPY --from=dependencies --chown=node:node /usr/src/app/node_modules ./node_modules
 
 # Copy application code
-COPY --chown=node:node . .
+COPY --chown=node:node index.js swagger.json ./
+COPY --chown=node:node src ./src
 
 # Set environment variables
 ENV NODE_ENV=production

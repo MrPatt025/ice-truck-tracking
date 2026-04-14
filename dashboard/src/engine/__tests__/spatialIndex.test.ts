@@ -199,7 +199,10 @@ describe('EntityMap', () => {
 
         const ids: string[] = [];
         map.forEach((entity) => ids.push(entity.id));
-      expect(ids.toSorted((a, b) => a.localeCompare(b))).toEqual(['A', 'B']);
+        expect([...ids].sort((a: string, b: string) => a.localeCompare(b))).toEqual([
+            'A',
+            'B',
+        ]);
     });
 
     it('clears all entries', () => {

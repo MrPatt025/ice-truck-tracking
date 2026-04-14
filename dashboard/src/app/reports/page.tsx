@@ -12,6 +12,13 @@ import AppSidebar from '@/components/AppSidebar';
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
 import type { ReportsTab } from '@/components/reports/ReportsCharts';
 
+const MOCK_BASE_DATE = new Date('2026-01-01T00:00:00.000Z')
+
+function seededNoise(seed: number): number {
+  const x = Math.sin(seed * 12.9898) * 43758.5453
+  return x - Math.floor(x)
+}
+
 const ReportsCharts = dynamic(
   () => import('@/components/reports/ReportsCharts').then(mod => mod.ReportsCharts),
   {
@@ -33,30 +40,30 @@ const ReportsCharts = dynamic(
 // ── Mock Data ──────────────────────────────────────────────
 const temperatureData = Array.from({ length: 24 }, (_, i) => ({
   hour: `${String(i).padStart(2, '0')}:00`,
-  avg: -18 + Math.sin(i / 3) * 3 + Math.random() * 2,
+  avg: -18 + Math.sin(i / 3) * 3 + seededNoise(i + 1) * 2,
   min: -22 + Math.sin(i / 3) * 2,
-  max: -14 + Math.sin(i / 3) * 3 + Math.random() * 2,
-}));
+  max: -14 + Math.sin(i / 3) * 3 + seededNoise(i + 101) * 2,
+}))
 
 const deliveryData = Array.from({ length: 7 }, (_, i) => {
-  const d = new Date();
-  d.setDate(d.getDate() - 6 + i);
+  const d = new Date(MOCK_BASE_DATE)
+  d.setDate(MOCK_BASE_DATE.getDate() - 6 + i)
   return {
     date: d.toLocaleDateString('en-US', { weekday: 'short' }),
-    completed: 40 + Math.floor(Math.random() * 30),
-    failed: Math.floor(Math.random() * 5),
-    pending: 10 + Math.floor(Math.random() * 15),
-  };
+    completed: 40 + Math.floor(seededNoise(i + 201) * 30),
+    failed: Math.floor(seededNoise(i + 301) * 5),
+    pending: 10 + Math.floor(seededNoise(i + 401) * 15),
+  }
 });
 
 const fuelData = Array.from({ length: 30 }, (_, i) => {
-  const d = new Date();
-  d.setDate(d.getDate() - 29 + i);
+  const d = new Date(MOCK_BASE_DATE)
+  d.setDate(MOCK_BASE_DATE.getDate() - 29 + i)
   return {
     date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    consumption: 200 + Math.random() * 100,
-    cost: 8000 + Math.random() * 4000,
-  };
+    consumption: 200 + seededNoise(i + 501) * 100,
+    cost: 8000 + seededNoise(i + 601) * 4000,
+  }
 });
 
 const fleetDistribution = [

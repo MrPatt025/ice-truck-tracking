@@ -176,7 +176,7 @@ test.describe('Features Section', () => {
         const section = page.locator('section#features');
         await expect(section).toBeVisible({ timeout: HYDRATION_TIMEOUT });
         await expect(
-            section.getByRole('heading', { name: /Everything You Need/ }),
+            section.getByRole('heading', { name: /Everything You Need for Cold-Chain IoT/ }),
         ).toBeVisible();
     });
 
@@ -199,12 +199,12 @@ test.describe('Features Section', () => {
 
     test('each feature card should have a description', async ({ page }) => {
         const featureDescriptions = [
-            /live map/i,
-            /TimescaleDB/i,
-            /threshold alerts/i,
-            /RBAC/i,
-            /shadcn/i,
-            /Mosquitto MQTT/i,
+            /sub-second MQTT updates/i,
+            /TimescaleDB stores millions of temperature readings/i,
+            /threshold alerts pushed to dashboard & mobile/i,
+            /Granular RBAC/i,
+            /shadcn\/ui components/i,
+            /Eclipse Mosquitto MQTT/i,
         ];
 
         for (const desc of featureDescriptions) {
@@ -239,10 +239,13 @@ test.describe('Tech Stack Section', () => {
             'React 18',
             'TypeScript',
             'Tailwind CSS',
+            'shadcn/ui',
+            'Framer Motion',
             'PostgreSQL',
             'TimescaleDB',
             'Redis',
             'MQTT',
+            'Socket.IO',
             'Playwright',
         ];
 

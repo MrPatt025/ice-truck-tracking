@@ -6,6 +6,84 @@
 
 const { z } = require('zod');
 
+function isSafeUsername(value) {
+    if (typeof value !== 'string' || value.length < 3 || value.length > 50) {
+        return false;
+    }
+
+    for (const character of value) {
+        const code = character.codePointAt(0);
+        const isDigit = code >= 48 && code <= 57;
+        const isUppercase = code >= 65 && code <= 90;
+        const isLowercase = code >= 97 && code <= 122;
+        const isAllowedSymbol = character === '_' || character === '-';
+
+        if (!isDigit && !isUppercase && !isLowercase && !isAllowedSymbol) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function hasPasswordComplexity(value) {
+    if (typeof value !== 'string') {
+        return false;
+    }
+
+    let hasUppercase = false;
+    let hasLowercase = false;
+    let hasDigit = false;
+    let hasSpecial = false;
+
+    for (const character of value) {
+        const code = character.codePointAt(0);
+
+        if (code >= 65 && code <= 90) {
+            hasUppercase = true;
+        } else if (code >= 97 && code <= 122) {
+            hasLowercase = true;
+        } else if (code >= 48 && code <= 57) {
+            hasDigit = true;
+        } else {
+            hasSpecial = true;
+        }
+
+        if (hasUppercase && hasLowercase && hasDigit && hasSpecial) {
+            return true;
+        }
+    }
+
+    return hasUppercase && hasLowercase && hasDigit && hasSpecial;
+}
+
+function stripHtmlTags(value) {
+    if (typeof value !== 'string' || value.indexOf('<') === -1) {
+        return value;
+    }
+
+    let result = '';
+    let isInsideTag = false;
+
+    for (const character of value) {
+        if (character === '<') {
+            isInsideTag = true;
+            continue;
+        }
+
+        if (character === '>') {
+            isInsideTag = false;
+            continue;
+        }
+
+        if (!isInsideTag) {
+            result += character;
+        }
+    }
+
+    return result.trim();
+}
+
 // ── Reusable Schemas ───────────────────────────────────────
 const uuidSchema = z.string().uuid();
 
@@ -36,13 +114,14 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-    username: z.string().min(3).max(50).trim().regex(/^[a-zA-Z0-9_-]+$/),
+    username: z.string().min(3).max(50).trim().refine(isSafeUsername, {
+        message: 'Username may only contain letters, numbers, hyphens, and underscores',
+    }),
     email: z.string().email().max(255).toLowerCase(),
     password: z.string().min(8).max(128)
-        .regex(/[A-Z]/, 'Must contain uppercase')
-        .regex(/[a-z]/, 'Must contain lowercase')
-        .regex(/\d/, 'Must contain digit')
-        .regex(/[\W_]/, 'Must contain special character'),
+        .refine(hasPasswordComplexity, {
+            message: 'Password must include uppercase, lowercase, digit, and special character',
+        }),
     full_name: z.string().min(1).max(100).trim(),
     phone: z.string().max(20).optional(),
     role: z.enum(['admin', 'manager', 'dispatcher', 'driver', 'viewer']).default('viewer'),
@@ -53,7 +132,9 @@ const refreshTokenSchema = z.object({
 });
 
 const authRouteRegisterSchema = z.object({
-    username: z.string().min(3).max(50).trim().regex(/^[a-zA-Z0-9_-]+$/),
+    username: z.string().min(3).max(50).trim().refine(isSafeUsername, {
+        message: 'Username may only contain letters, numbers, hyphens, and underscores',
+    }),
     password: z.string().min(8).max(128),
     role: z.enum(['admin', 'owner', 'manager', 'dispatcher', 'driver', 'viewer']),
     full_name: z.string().min(1).max(100).trim(),
@@ -167,17 +248,23 @@ function validate(schema, source = 'body') {
 /**
  * Sanitize string fields — strip HTML tags and trim whitespace.
  */
-function sanitize(req, _res, next) {  
-    const stripHtml = (str) =>
-        typeof str === 'string' ? str.replaceAll(/<[^>]*>/g, '').trim() : str;
-
+function sanitize(req, _res, next) {
     const deepSanitize = (obj) => {
+        if (typeof obj === 'string') {
+            return stripHtmlTags(obj);
+        }
+
         if (typeof obj !== 'object' || obj === null) return obj;
+
+        if (Array.isArray(obj)) {
+            return obj.map((item) => deepSanitize(item));
+        }
+
         for (const key of Object.keys(obj)) {
             if (typeof obj[key] === 'string') {
-                obj[key] = stripHtml(obj[key]);
+                obj[key] = stripHtmlTags(obj[key]);
             } else if (typeof obj[key] === 'object') {
-                deepSanitize(obj[key]);
+                obj[key] = deepSanitize(obj[key]);
             }
         }
         return obj;

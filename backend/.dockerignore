@@ -4,3 +4,7 @@ dist
 .turbo
 npm-debug.log*
 pnpm-debug.log*
+.env
+.env.*
+tests
+src-ts
