@@ -36,6 +36,7 @@ export default function AppSidebar({
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
+  const currentPathname = pathname ?? ''
   const user = useAuthStore(s => s.user)
   const logout = useAuthStore(s => s.logout)
 
@@ -44,8 +45,8 @@ export default function AppSidebar({
   )
 
   const isActive = (href: string) => {
-    if (href === '/dashboard') return pathname === '/dashboard'
-    return pathname.startsWith(href)
+    if (href === '/dashboard') return currentPathname === '/dashboard'
+    return currentPathname.startsWith(href)
   }
 
   const handleLogout = () => {

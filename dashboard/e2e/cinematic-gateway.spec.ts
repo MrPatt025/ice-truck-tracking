@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Cinematic Gateway Transition', () => {
-  test.beforeEach(async ({}, testInfo) => {
+  test.beforeEach(async ({ page: _page }, testInfo) => {
     test.skip(
       testInfo.project.name.includes('light'),
       'Cinematic WebGL transition checks are validated in GPU profile, not light profile.'
