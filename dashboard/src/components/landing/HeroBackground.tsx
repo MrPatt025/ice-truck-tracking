@@ -28,6 +28,8 @@ type HeroBackgroundProps = {
   isTransitioning?: boolean
 }
 
+const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
@@ -92,8 +94,13 @@ function HeroBackground({
     transitionProgress ?? fallbackTransitionProgress
 
   React.useEffect(() => {
+    if (E2E_LIGHT_MODE) return
+
     const worker = new Worker(
-      new URL('../../workers/cinematicScene.worker.ts', import.meta.url),
+      new URL(
+        '../../workers/cinematicScene.worker.bootstrap.ts',
+        import.meta.url
+      ),
       { type: 'module', name: 'cinematic-scene-worker' }
     )
 
@@ -134,6 +141,8 @@ function HeroBackground({
   }, [])
 
   React.useEffect(() => {
+    if (E2E_LIGHT_MODE) return
+
     const pushTelemetry = (trucks: readonly FleetTruck[]) => {
       if (!workerRef.current) return
 
@@ -183,6 +192,8 @@ function HeroBackground({
 
   // Handle camera fly-to when truck selection changes
   React.useEffect(() => {
+    if (E2E_LIGHT_MODE) return
+
     const sendCameraFlyTo = (target: ReturnType<typeof useCameraSelectionStore.getState>['cameraTarget']) => {
       if (!workerRef.current) return
 
@@ -209,6 +220,8 @@ function HeroBackground({
   }, [])
 
   React.useEffect(() => {
+    if (E2E_LIGHT_MODE) return
+
     if (globalThis.window === undefined) return
 
     const MAX_RECONNECT_ATTEMPTS = 8
