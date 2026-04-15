@@ -4,7 +4,7 @@ echo "🚚❄️ Ice Truck Tracking - Production Deployment"
 echo "=============================================="
 
 # Check if running as root
-if [ "$EUID" -eq 0 ]; then
+if [[ "$EUID" -eq 0 ]]; then
     echo "⚠️  Warning: Running as root. Consider using a non-root user."
 fi
 
@@ -20,7 +20,7 @@ echo "✅ Docker: $(docker --version)"
 echo "✅ Docker Compose: $(docker-compose --version)"
 
 # Check environment file
-if [ ! -f ".env" ]; then
+if [[ ! -f ".env" ]]; then
     echo "⚠️  .env file not found. Creating from example..."
     cp .env.example .env
     echo "📝 Please edit .env file with your configuration"
