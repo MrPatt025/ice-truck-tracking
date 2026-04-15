@@ -70,7 +70,7 @@ function resolveWebSocketUrl(): string {
   }
 
   const protocol = globalThis.window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-  return `${protocol}//${globalThis.window.location.host}`
+  return `${protocol}//${globalThis.window.location.hostname}:5000`
 }
 
 function HeroBackground({
@@ -221,6 +221,7 @@ function HeroBackground({
 
   React.useEffect(() => {
     if (E2E_LIGHT_MODE) return
+    if (!isTransitioning) return
 
     if (globalThis.window === undefined) return
 
@@ -341,7 +342,7 @@ function HeroBackground({
         reason: 'cleanup',
       })
     }
-  }, [])
+  }, [isTransitioning])
 
   useMotionValueEvent(activeScrollProgress, 'change', latest => {
     const normalized = clamp(latest, 0, 1)

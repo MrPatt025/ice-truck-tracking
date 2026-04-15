@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package.json pnpm-lock.yaml* ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder

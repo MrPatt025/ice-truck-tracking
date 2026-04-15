@@ -58,7 +58,7 @@ function hasPasswordComplexity(value) {
 }
 
 function stripHtmlTags(value) {
-    if (typeof value !== 'string' || value.indexOf('<') === -1) {
+    if (typeof value !== 'string' || !value.includes('<')) {
         return value;
     }
 

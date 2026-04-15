@@ -178,17 +178,12 @@ export default function LandingPage() {
     (e?: React.MouseEvent<HTMLAnchorElement>) => {
       if (e) e.preventDefault()
       if (isTransitioning) return
-      router.prefetch('/dashboard')
       transitionProgress.set(0.04)
       startTransition()
       setProgress(0.04)
     },
-    [isTransitioning, router, setProgress, startTransition, transitionProgress]
+    [isTransitioning, setProgress, startTransition, transitionProgress]
   )
-
-  React.useEffect(() => {
-    router.prefetch('/dashboard')
-  }, [router])
 
   React.useEffect(() => {
     return () => {

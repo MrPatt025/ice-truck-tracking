@@ -43,9 +43,7 @@ import {
 const tmpCameraPos = new Vector3()
 
 function isPerspectiveCamera(camera: unknown): camera is PerspectiveCamera {
-  if (!camera || typeof camera !== 'object') return false
-  const candidate = camera as { isPerspectiveCamera?: unknown }
-  return candidate.isPerspectiveCamera === true
+  return camera instanceof PerspectiveCamera
 }
 
 type TraversableNode = Object3D & {
@@ -74,19 +72,6 @@ function disposeObjectTree(node: Object3D | null): void {
   }
 }
 
-type BvhOptions = {
-  maxLeafTris?: number
-}
-
-type BvhEnabledGeometry = BufferGeometry & {
-  computeBoundsTree?: (options?: BvhOptions) => void
-  disposeBoundsTree?: () => void
-}
-
-type RaycastMeshPrototype = {
-  raycast: typeof acceleratedRaycast
-}
-
 let bvhRaycastPatched = false
 
 function ensureBvhRaycastAcceleration(): void {
@@ -94,28 +79,30 @@ function ensureBvhRaycastAcceleration(): void {
     return
   }
 
-  const bufferGeometryPrototype = BufferGeometry.prototype as BvhEnabledGeometry
-  bufferGeometryPrototype.computeBoundsTree =
-    computeBoundsTree as BvhEnabledGeometry['computeBoundsTree']
-  bufferGeometryPrototype.disposeBoundsTree =
-    disposeBoundsTree as BvhEnabledGeometry['disposeBoundsTree']
+  Object.assign(BufferGeometry.prototype, {
+    computeBoundsTree,
+    disposeBoundsTree,
+  })
 
-  const meshPrototype = Mesh.prototype as RaycastMeshPrototype
-  meshPrototype.raycast = acceleratedRaycast
+  Mesh.prototype.raycast = acceleratedRaycast
 
   bvhRaycastPatched = true
 }
 
 function buildBoundsTree(mesh: Mesh | InstancedMesh | null): void {
   if (!mesh) return
-  const geometry = mesh.geometry as BvhEnabledGeometry
-  geometry.computeBoundsTree?.({ maxLeafTris: 24 })
+  const computeTree = Reflect.get(mesh.geometry, 'computeBoundsTree')
+  if (typeof computeTree === 'function') {
+    computeTree.call(mesh.geometry, { maxLeafTris: 24 })
+  }
 }
 
 function releaseBoundsTree(mesh: Mesh | InstancedMesh | null): void {
   if (!mesh) return
-  const geometry = mesh.geometry as BvhEnabledGeometry
-  geometry.disposeBoundsTree?.()
+  const disposeTree = Reflect.get(mesh.geometry, 'disposeBoundsTree')
+  if (typeof disposeTree === 'function') {
+    disposeTree.call(mesh.geometry)
+  }
 }
 
 function isLowEndOrMobileRuntime(): boolean {
@@ -124,13 +111,15 @@ function isLowEndOrMobileRuntime(): boolean {
   const userAgent = globalThis.navigator.userAgent.toLowerCase()
   const isMobile = /android|iphone|ipad|ipod|mobile/.test(userAgent)
 
-  const navWithHints = globalThis.navigator as Navigator & {
-    deviceMemory?: number
-    hardwareConcurrency?: number
-  }
+  const memoryHint = Reflect.get(globalThis.navigator, 'deviceMemory')
+  const concurrencyHint = Reflect.get(
+    globalThis.navigator,
+    'hardwareConcurrency'
+  )
 
-  const deviceMemory = navWithHints.deviceMemory ?? 8
-  const hardwareConcurrency = navWithHints.hardwareConcurrency ?? 8
+  const deviceMemory = typeof memoryHint === 'number' ? memoryHint : 8
+  const hardwareConcurrency =
+    typeof concurrencyHint === 'number' ? concurrencyHint : 8
 
   return isMobile || deviceMemory <= 4 || hardwareConcurrency <= 4
 }
@@ -153,17 +142,13 @@ function AdaptiveLightingEnvironment({
   })
 
   React.useEffect(() => {
-    const rendererWithLighting = gl as typeof gl & {
-      physicallyCorrectLights?: boolean
-    }
     const previousEnvironment = scene.environment
     const previousEnvIntensity = scene.environmentIntensity
-    const previousPhysicallyCorrect =
-      rendererWithLighting.physicallyCorrectLights
+    const previousPhysicallyCorrect = Reflect.get(gl, 'physicallyCorrectLights')
     const previousShadowEnabled = gl.shadowMap.enabled
     const previousShadowType = gl.shadowMap.type
 
-    rendererWithLighting.physicallyCorrectLights = true
+    Reflect.set(gl, 'physicallyCorrectLights', true)
 
     if (!enabled) {
       scene.environment = null
@@ -172,7 +157,7 @@ function AdaptiveLightingEnvironment({
       return () => {
         scene.environment = previousEnvironment
         scene.environmentIntensity = previousEnvIntensity
-        rendererWithLighting.physicallyCorrectLights = previousPhysicallyCorrect
+        Reflect.set(gl, 'physicallyCorrectLights', previousPhysicallyCorrect)
         gl.shadowMap.enabled = previousShadowEnabled
         gl.shadowMap.type = previousShadowType
       }
@@ -182,7 +167,10 @@ function AdaptiveLightingEnvironment({
     pmremGenerator.compileEquirectangularShader()
 
     const roomEnvironment = new RoomEnvironment()
-    const environmentRenderTarget = pmremGenerator.fromScene(roomEnvironment, 0.03)
+    const environmentRenderTarget = pmremGenerator.fromScene(
+      roomEnvironment,
+      0.03
+    )
 
     scene.environment = environmentRenderTarget.texture
     scene.environmentIntensity = 0.92
@@ -192,7 +180,7 @@ function AdaptiveLightingEnvironment({
     return () => {
       scene.environment = previousEnvironment
       scene.environmentIntensity = previousEnvIntensity
-      rendererWithLighting.physicallyCorrectLights = previousPhysicallyCorrect
+      Reflect.set(gl, 'physicallyCorrectLights', previousPhysicallyCorrect)
       gl.shadowMap.enabled = previousShadowEnabled
       gl.shadowMap.type = previousShadowType
       environmentRenderTarget.texture.dispose()

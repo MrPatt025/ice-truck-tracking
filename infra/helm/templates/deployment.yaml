@@ -47,7 +47,14 @@ spec:
           readinessProbe:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            limits:
+              cpu: {{ .Values.resources.limits.cpu | quote }}
+              memory: {{ .Values.resources.limits.memory | quote }}
+              ephemeral-storage: {{ default "1Gi" (index .Values.resources.limits "ephemeral-storage") | quote }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+              memory: {{ .Values.resources.requests.memory | quote }}
+              ephemeral-storage: {{ default "256Mi" (index .Values.resources.requests "ephemeral-storage") | quote }}
           volumeMounts:
             - name: tmp
               mountPath: /tmp
