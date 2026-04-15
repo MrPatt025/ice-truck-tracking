@@ -9,7 +9,7 @@ on:
     - cron: '0 6 * * 1' # Weekly Monday 6 AM UTC
 
 env:
-  NODE_VERSION: '22'
+  NODE_VERSION: '24'
   PNPM_VERSION: '10.32.1'
 
 jobs:
@@ -116,7 +116,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: pnpm/action-setup@08c4be7e2e672a47d11bd04269e27e5f3e8529cb
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
@@ -152,7 +152,7 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: pnpm/action-setup@08c4be7e2e672a47d11bd04269e27e5f3e8529cb
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f
