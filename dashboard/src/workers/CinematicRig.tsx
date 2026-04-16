@@ -62,11 +62,10 @@ function disposeMaterial(material: Material | Material[] | undefined): void {
   material.dispose?.()
 }
 
-function disposeObjectTree(node: Object3D | null): void {
+function disposeObjectTree(node: TraversableNode | null): void {
   if (!node) return
-  const current = node as TraversableNode
-  current.geometry?.dispose?.()
-  disposeMaterial(current.material)
+  node.geometry?.dispose?.()
+  disposeMaterial(node.material)
   for (const child of node.children) {
     disposeObjectTree(child)
   }

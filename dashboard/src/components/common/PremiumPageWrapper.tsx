@@ -54,12 +54,12 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
 }: PremiumPageWrapperProps) {
   const prefersReducedMotion = useReducedMotion()
   const [isMounted, setIsMounted] = useState(false)
-  
+
   // Prevent hydration mismatch: only animate after mount on client
   useEffect(() => {
     setIsMounted(true)
   }, [])
-  
+
   const shouldAnimate = isMounted && animate && !prefersReducedMotion
 
   return (
@@ -77,7 +77,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         variants={CONTENT_VARIANTS}
         className={cn(
           mode === 'glass' &&
-            'premium-surface relative rounded-2xl border border-white/20 bg-slate-900/35 shadow-[0_32px_85px_-50px_rgba(56,189,248,0.8)] backdrop-blur-2xl supports-[backdrop-filter]:backdrop-saturate-150',
+            'premium-surface relative overflow-hidden rounded-2xl border border-white/20 bg-slate-900/35 shadow-[0_32px_85px_-50px_rgba(56,189,248,0.8)] backdrop-blur-2xl supports-[backdrop-filter]:backdrop-saturate-150',
           contentClassName
         )}
         style={{ contain: 'layout style paint' }}
@@ -85,12 +85,14 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         {mode === 'glass' ? (
           <>
             <div className='pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(74rem_30rem_at_10%_-24%,rgba(56,189,248,.26),transparent),radial-gradient(84rem_34rem_at_96%_115%,rgba(16,185,129,.18),transparent)]' />
+            <div className='pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-80' />
+            <div className='pointer-events-none absolute inset-y-6 left-0 w-px bg-gradient-to-b from-transparent via-cyan-200/25 to-transparent opacity-70' />
             <div
               aria-hidden='true'
               className='pointer-events-none absolute inset-0 rounded-2xl opacity-[0.035] mix-blend-overlay'
               style={{
                 backgroundImage:
-                  'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.82\' numOctaves=\'4\'/%3E%3C/filter%3E%3Crect width=\'120\' height=\'120\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
+                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E\")",
                 backgroundSize: '70px 70px',
               }}
             />

@@ -2,11 +2,7 @@
   "compilerOptions": {
     "forceConsistentCasingInFileNames": true,
     "target": "ES2022",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "ES2022"
-    ],
+    "lib": ["dom", "dom.iterable", "ES2022"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -24,43 +20,18 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@/components/*": [
-        "./src/components/*"
-      ],
-      "@/ui/*": [
-        "./src/ui/*"
-      ],
-      "@/hooks/*": [
-        "./src/hooks/*"
-      ],
-      "@/services/*": [
-        "./src/services/*"
-      ],
-      "@/stores/*": [
-        "./src/stores/*"
-      ],
-      "@/lib/*": [
-        "./src/lib/*"
-      ],
-      "@/engine/*": [
-        "./src/engine/*"
-      ],
-      "@/workers/*": [
-        "./src/workers/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/ui/*": ["./src/ui/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/services/*": ["./src/services/*"],
+      "@/stores/*": ["./src/stores/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/engine/*": ["./src/engine/*"],
+      "@/workers/*": ["./src/workers/*"]
     },
-    "typeRoots": [
-      "./node_modules/@types"
-    ],
-    "types": [
-      "node",
-      "react",
-      "react-dom",
-      "jest"
-    ]
+    "typeRoots": ["./node_modules/@types"],
+    "types": ["node", "react", "react-dom", "jest"]
   },
   "include": [
     "next-env.d.ts",
@@ -72,6 +43,7 @@
   ],
   "exclude": [
     "node_modules",
+    ".next/dev",
     "src/cypress",
     "cypress",
     "cypress.config.ts",
