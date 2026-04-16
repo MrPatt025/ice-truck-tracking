@@ -19,13 +19,24 @@ function toWebSocketUrl(rawUrl: string): string {
   if (!trimmed) return 'ws://localhost:5000';
 
   try {
-    const normalized = /^(?:[a-z]+:)?\/\//i.test(trimmed) ? trimmed : `http://${trimmed}`;
-    const url = new URL(normalized);
+    const url = new URL(trimmed);
     if (url.protocol === 'http:') url.protocol = 'ws:';
     else if (url.protocol === 'https:') url.protocol = 'wss:';
-    return url.toString().replace(/\/+$/, '');
+    while (url.pathname.length > 1 && url.pathname.endsWith('/')) {
+      url.pathname = url.pathname.slice(0, -1);
+    }
+    return url.toString();
   } catch {
-    return trimmed;
+    try {
+      const url = new URL(`http://${trimmed}`);
+      url.protocol = 'ws:';
+      while (url.pathname.length > 1 && url.pathname.endsWith('/')) {
+        url.pathname = url.pathname.slice(0, -1);
+      }
+      return url.toString();
+    } catch {
+      return 'ws://localhost:5000';
+    }
   }
 }
 

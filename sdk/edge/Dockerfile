@@ -3,19 +3,18 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package files
-COPY --chown=node:node package.json ./
+COPY package.json ./
 
 # Install dependencies, copy source, build, create user and set permissions
-RUN npm ci --only=production && \
+RUN npm ci --only=production --ignore-scripts && \
   true
 
-COPY --chown=node:node tsconfig.json ./
-COPY --chown=node:node src ./src
+COPY tsconfig.json ./
+COPY src ./src
 
 RUN npm run build && \
     addgroup -g 1001 -S nodejs && \
-    adduser -S notification -u 1001 && \
-    chown -R notification:nodejs /app
+  adduser -S notification -u 1001
 USER notification
 
 EXPOSE 3002

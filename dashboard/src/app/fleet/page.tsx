@@ -1,11 +1,11 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState } from 'react'
 import { Download, Plus, Search, Truck } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { SectionErrorBoundary } from '@/components/common/SectionErrorBoundary'
-import { VirtualizedFleetGrid } from '@/components/fleet/VirtualizedFleetGrid'
 import { resolveApiBaseV1 } from '@/lib/backendUrl'
 import { cn } from '@/lib/utils'
 import {
@@ -26,6 +26,17 @@ type FleetStatusFilter =
 const ALL_FILTERS: FleetStatusFilter[] = ['all', ...truckStatusSchema.options]
 
 const API_BASE = resolveApiBaseV1()
+
+const VirtualizedFleetGrid = dynamic(
+  () =>
+    import('@/components/fleet/VirtualizedFleetGrid').then(
+      module => module.VirtualizedFleetGrid
+    ),
+  {
+    ssr: false,
+    loading: () => <FleetGridSkeleton />,
+  }
+)
 
 function createTrend(seed: number): number[] {
   return Array.from({ length: 24 }, (_, idx) => {

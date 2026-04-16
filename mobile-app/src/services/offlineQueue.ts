@@ -25,6 +25,7 @@ class OfflineQueue {
   private queue: QueuedRequest[] = [];
   private isProcessing = false;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
+  private sequence = 0;
 
   async init(): Promise<void> {
     // Load persisted queue
@@ -54,7 +55,7 @@ class OfflineQueue {
 
     this.queue.push({
       ...request,
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: `${Date.now()}-${this.sequence++}`,
       timestamp: Date.now(),
       retryCount: 0,
     });

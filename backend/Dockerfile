@@ -8,20 +8,20 @@ RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
 WORKDIR /usr/src/app
 
 # Copy package files
-COPY --chown=node:node package.json ./
+COPY package.json ./
 
 # Development stage
 FROM base AS development
-RUN npm install
-COPY --chown=node:node index.js swagger.json ./
-COPY --chown=node:node src ./src
+RUN npm install --ignore-scripts
+COPY index.js swagger.json ./
+COPY src ./src
 EXPOSE 5000
 USER node
 CMD ["dumb-init", "npm", "run", "dev"]
 
 # Production dependencies stage
 FROM base AS dependencies
-RUN npm install --omit=dev
+RUN npm install --omit=dev --ignore-scripts
 
 # Production stage
 FROM node:25-alpine AS production
@@ -33,11 +33,11 @@ RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
 WORKDIR /usr/src/app
 
 # Copy production dependencies
-COPY --from=dependencies --chown=node:node /usr/src/app/node_modules ./node_modules
+COPY --from=dependencies /usr/src/app/node_modules ./node_modules
 
 # Copy application code
-COPY --chown=node:node index.js swagger.json ./
-COPY --chown=node:node src ./src
+COPY index.js swagger.json ./
+COPY src ./src
 
 # Set environment variables
 ENV NODE_ENV=production

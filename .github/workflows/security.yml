@@ -121,7 +121,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Run pnpm audit
         run: pnpm audit --audit-level=high
         continue-on-error: true
@@ -157,7 +157,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Check for known vulnerabilities
         run: npx audit-ci --high
         continue-on-error: true

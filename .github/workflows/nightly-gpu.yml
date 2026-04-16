@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Install Playwright with Chrome
         run: npx playwright install --with-deps chromium

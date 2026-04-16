@@ -2,11 +2,32 @@ import type { NextConfig } from "next";
 
 const isProduction = process.env.NODE_ENV === 'production'
 const withPWA = (config: NextConfig) => config
-const configuredApiRoot = (process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? 'http://localhost:5000')
-  .trim()
-const backendOrigin = configuredApiRoot
-  .replace(/\/+$/, '')
-  .replace(/\/api(?:\/v1)?$/i, '')
+const configuredApiRoot = (process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? 'http://localhost:5000').trim()
+
+function trimPathTrailingSlashes(url: URL): void {
+  while (url.pathname.length > 1 && url.pathname.endsWith('/')) {
+    url.pathname = url.pathname.slice(0, -1)
+  }
+}
+
+function normalizeBackendOrigin(rawUrl: string): string {
+  const candidate = /^[a-z]+:\/\//i.test(rawUrl) ? rawUrl : `http://${rawUrl}`
+  const url = new URL(candidate)
+
+  trimPathTrailingSlashes(url)
+  const pathnameLower = url.pathname.toLowerCase()
+
+  if (pathnameLower.endsWith('/api/v1')) {
+    url.pathname = url.pathname.slice(0, -7) || '/'
+  } else if (pathnameLower.endsWith('/api')) {
+    url.pathname = url.pathname.slice(0, -4) || '/'
+  }
+
+  trimPathTrailingSlashes(url)
+  return `${url.origin}${url.pathname === '/' ? '' : url.pathname}`
+}
+
+const backendOrigin = normalizeBackendOrigin(configuredApiRoot)
 const scriptSrc = isProduction
   ? "script-src 'self' 'unsafe-inline'"
   : "script-src 'self' 'unsafe-inline' 'unsafe-eval'"

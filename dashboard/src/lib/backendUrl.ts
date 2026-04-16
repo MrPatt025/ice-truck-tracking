@@ -1,8 +1,27 @@
+function trimPathTrailingSlashes(url: URL): void {
+  while (url.pathname.length > 1 && url.pathname.endsWith('/')) {
+    url.pathname = url.pathname.slice(0, -1)
+  }
+}
+
 function normalizeApiRoot(configuredApiRoot: string): string {
-  return configuredApiRoot
-    .trim()
-    .replace(/\/+$/, '')
-    .replace(/\/api(?:\/v1)?$/i, '')
+  const trimmed = configuredApiRoot.trim()
+  const candidate = /^[a-z]+:\/\//i.test(trimmed)
+    ? trimmed
+    : `http://${trimmed}`
+
+  const url = new URL(candidate)
+  trimPathTrailingSlashes(url)
+
+  const pathLower = url.pathname.toLowerCase()
+  if (pathLower.endsWith('/api/v1')) {
+    url.pathname = url.pathname.slice(0, -7) || '/'
+  } else if (pathLower.endsWith('/api')) {
+    url.pathname = url.pathname.slice(0, -4) || '/'
+  }
+
+  trimPathTrailingSlashes(url)
+  return `${url.origin}${url.pathname === '/' ? '' : url.pathname}`
 }
 
 export function resolveBackendOrigin(): string {

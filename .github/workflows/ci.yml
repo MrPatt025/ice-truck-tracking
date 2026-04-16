@@ -46,7 +46,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
 
   # ── Lint & Type Check ────────────────────────────────────
   lint:
@@ -63,7 +63,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm run lint
       - run: pnpm run type-check
 
@@ -84,7 +84,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
 
   # ── Backend Tests ────────────────────────────────────────
@@ -111,7 +111,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: JWT_SECRET="$(openssl rand -hex 32)" pnpm --filter @ice-truck/backend run test -- --ci --coverage --forceExit --testTimeout=15000
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -137,7 +137,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm --filter @ice-truck/backend run test:containers
 
   # ── Dashboard Tests ──────────────────────────────────────
@@ -155,7 +155,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm --filter @ice-truck/dashboard run test -- --ci --coverage
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -178,7 +178,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Install Playwright browsers
         run: pnpm --filter @ice-truck/dashboard exec playwright install --with-deps chromium firefox
       - name: Run E2E Light Tests (no GPU)
@@ -210,7 +210,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm run build
 
   # ── SonarCloud Analysis (Reliability + Coverage) ───────────
@@ -276,7 +276,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Validate Vercel secrets
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} # NOSONAR
