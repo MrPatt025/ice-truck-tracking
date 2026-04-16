@@ -33,6 +33,7 @@ import {
   disposeBoundsTree,
 } from 'three-mesh-bvh'
 import { runtimeState } from './cinematicRuntimeState'
+import { secureRandom, secureRandomRange } from '../lib/secureRandom'
 import { useCameraSelectionStore } from '../stores/cameraSelectionStore'
 import {
   FROST_TRUCK_FRAGMENT_SHADER,
@@ -544,12 +545,12 @@ function ColdFogParticles() {
 
     for (let i = 0; i < count; i += 1) {
       const i3 = i * 3
-      const radius = 0.8 + Math.random() * 2.4
-      const angle = Math.random() * Math.PI * 2
+        const radius = secureRandomRange(0.8, 3.2)
+        const angle = secureRandomRange(0, Math.PI * 2)
       positions[i3] = Math.cos(angle) * radius
-      positions[i3 + 1] = -0.18 + Math.random() * 1.9
-      positions[i3 + 2] = Math.sin(angle) * (0.55 + Math.random() * 1.9)
-      seeds[i] = Math.random()
+        positions[i3 + 1] = secureRandomRange(-0.18, 1.72)
+        positions[i3 + 2] = Math.sin(angle) * secureRandomRange(0.55, 2.45)
+        seeds[i] = secureRandom()
     }
 
     g.setAttribute('position', new BufferAttribute(positions, 3))

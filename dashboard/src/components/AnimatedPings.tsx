@@ -1,5 +1,6 @@
 ﻿'use client'
 import React, { memo } from 'react'
+import { secureRandomRange } from '@/lib/secureRandom'
 
 type Item = {
   id: number
@@ -22,10 +23,10 @@ const AnimatedPings = memo(function AnimatedPings({
   const [items] = React.useState<Item[]>(() =>
     Array.from({ length: count }).map((_, i) => ({
       id: i,
-      left: 20 + Math.random() * 60,
-      top: 20 + Math.random() * 60,
-      delay: i * 0.3 + Math.random() * 0.5,
-      duration: 3 + Math.random() * 1,
+      left: secureRandomRange(20, 80),
+      top: secureRandomRange(20, 80),
+      delay: i * 0.3 + secureRandomRange(0, 0.5),
+      duration: secureRandomRange(3, 4),
     }))
   )
 

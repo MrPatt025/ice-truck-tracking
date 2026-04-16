@@ -23,6 +23,12 @@ import type {
     TruckStatus,
 } from './types';
 import { io, type Socket } from 'socket.io-client';
+import {
+    secureRandom,
+    secureRandomChance,
+    secureRandomInt,
+    secureRandomRange,
+} from '../lib/secureRandom';
 
 // ─── State inside the worker ───────────────────────────────────
 let socket: Socket | null = null;
@@ -66,14 +72,14 @@ function startSimulation(): void {
         const id = `T${String(i).padStart(3, '0')}`;
         trucks.set(id, {
             id,
-            lat: 13.7 + (Math.random() - 0.5) * 0.4,
-            lng: 100.5 + (Math.random() - 0.5) * 0.4,
-            speed: 30 + Math.random() * 60,
-            heading: Math.random() * 360,
-            temperature: -8 + Math.random() * 6,
-            fuelLevel: 40 + Math.random() * 60,
-            engineRpm: 1200 + Math.random() * 2000,
-            odometer: 10000 + Math.random() * 90000,
+            lat: 13.7 + (secureRandom() - 0.5) * 0.4,
+            lng: 100.5 + (secureRandom() - 0.5) * 0.4,
+            speed: secureRandomRange(30, 90),
+            heading: secureRandomRange(0, 360),
+            temperature: secureRandomRange(-8, -2),
+            fuelLevel: secureRandomRange(40, 100),
+            engineRpm: secureRandomRange(1200, 3200),
+            odometer: secureRandomRange(10000, 100000),
             status: 'active' as TruckStatus,
             driverName: `Driver ${i}`,
             routeId: `R${String(Math.ceil(i / 5)).padStart(2, '0')}`,
@@ -92,22 +98,22 @@ function startSimulation(): void {
 
         trucks.forEach((t) => {
             // Random walk
-            const dLat = (Math.random() - 0.5) * 0.001;
-            const dLng = (Math.random() - 0.5) * 0.001;
+            const dLat = (secureRandom() - 0.5) * 0.001;
+            const dLng = (secureRandom() - 0.5) * 0.001;
             t.lat += dLat;
             t.lng += dLng;
-            t.heading = (t.heading + (Math.random() - 0.5) * 10 + 360) % 360;
-            t.speed = Math.max(0, Math.min(120, t.speed + (Math.random() - 0.5) * 5));
-            t.temperature += (Math.random() - 0.5) * 0.3;
+            t.heading = (t.heading + (secureRandom() - 0.5) * 10 + 360) % 360;
+            t.speed = Math.max(0, Math.min(120, t.speed + (secureRandom() - 0.5) * 5));
+            t.temperature += (secureRandom() - 0.5) * 0.3;
             t.temperature = Math.max(-15, Math.min(5, t.temperature));
-            t.fuelLevel = Math.max(5, Math.min(100, t.fuelLevel - Math.random() * 0.05));
-            t.engineRpm = 800 + Math.random() * 2800;
+            t.fuelLevel = Math.max(5, Math.min(100, t.fuelLevel - secureRandomRange(0, 0.05)));
+            t.engineRpm = secureRandomRange(800, 3600);
             t.timestamp = now;
 
             // Random status changes
-            if (Math.random() < 0.002) {
+            if (secureRandomChance(0.002)) {
                 const statuses: TruckStatus[] = ['active', 'idle', 'offline', 'maintenance'];
-                t.status = statuses[Math.floor(Math.random() * statuses.length)];
+                t.status = statuses[secureRandomInt(statuses.length)];
             }
 
             batch.push({ ...t });
@@ -117,16 +123,16 @@ function startSimulation(): void {
         pendingBatch.push(...batch);
 
         // Random alerts
-        if (Math.random() < 0.05) {
+        if (secureRandomChance(0.05)) {
             const truckIds = Array.from(trucks.keys());
-            const truckId = truckIds[Math.floor(Math.random() * truckIds.length)];
+            const truckId = truckIds[secureRandomInt(truckIds.length)];
             const truck = trucks.get(truckId);
             if (!truck) return;
             const alert: TelemetryAlert = {
                 id: `A${++alertSeq}`,
                 truckId,
                 level: randomAlertLevel(),
-                message: Math.random() < 0.5
+                message: secureRandomChance(0.5)
                     ? `Temperature deviation: ${truck.temperature.toFixed(1)}°C`
                     : `Speed alert: ${truck.speed.toFixed(0)} km/h`,
                 timestamp: now,
@@ -358,11 +364,11 @@ function computeMetrics(): FleetMetrics {
         criticalAlerts: Math.floor(alertSeq * 0.1),
         warningAlerts: Math.floor(alertSeq * 0.3),
         avgFuelLevel: totalFuel / n,
-        onTimeRate: 94 + Math.random() * 5,
+        onTimeRate: secureRandomRange(94, 99),
         totalDeliveries: Math.floor(200 + activeTrucks * 3.5),
         revenueToday: Math.floor(35000 + activeTrucks * 250),
         activeDrivers: activeTrucks,
-        fuelEfficiency: 7.5 + Math.random() * 1.5,
+        fuelEfficiency: secureRandomRange(7.5, 9),
         timestamp: Date.now(),
     };
 }
@@ -400,7 +406,7 @@ function post(msg: WorkerOutbound): void {
 
 // ─── Alert level helper ────────────────────────────────────────
 function randomAlertLevel(): 'critical' | 'warning' | 'info' {
-    const r = Math.random();
+    const r = secureRandom();
     if (r < 0.1) return 'critical';
     if (r < 0.3) return 'warning';
     return 'info';

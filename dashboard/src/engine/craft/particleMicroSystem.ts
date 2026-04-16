@@ -15,6 +15,7 @@
  * ================================================================ */
 
 import type { DeviceTier } from '../types';
+import { secureRandom, secureRandomRange } from '../../lib/secureRandom';
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -145,15 +146,15 @@ export class ParticleMicroSystem {
   /** Emit spark particles at a position */
   emitSparks(x: number, y: number, count = 8): void {
     for (let i = 0; i < count && this._particles.length < this._config.maxParticles; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 50 + Math.random() * 150;
+      const angle = secureRandomRange(0, Math.PI * 2);
+      const speed = secureRandomRange(50, 200);
       this._particles.push({
         x, y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         life: 1,
         maxLife: this._config.sparkLifetime,
-        size: 1.5 + Math.random() * 2,
+        size: secureRandomRange(1.5, 3.5),
         opacity: 0.8,
         color: this._config.sparkColor,
         type: 'spark',
@@ -166,11 +167,11 @@ export class ParticleMicroSystem {
     if (this._particles.length >= this._config.maxParticles) return;
     this._particles.push({
       x, y,
-      vx: vx * 0.3 + (Math.random() - 0.5) * 10,
-      vy: vy * 0.3 + (Math.random() - 0.5) * 10,
+      vx: vx * 0.3 + (secureRandom() - 0.5) * 10,
+      vy: vy * 0.3 + (secureRandom() - 0.5) * 10,
       life: 1,
       maxLife: this._config.trailLifetime,
-      size: 2 + Math.random() * 3,
+      size: secureRandomRange(2, 5),
       opacity: 0.4,
       color: this._config.trailColor,
       type: 'trail',
@@ -304,14 +305,14 @@ export class ParticleMicroSystem {
     const h = this._canvas?.height || 1080;
     for (let i = 0; i < count; i++) {
       this._particles.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * this._config.ambientSpeed,
-        vy: (Math.random() - 0.5) * this._config.ambientSpeed * 0.5,
-        life: 0.5 + Math.random() * 0.5,
-        maxLife: 10 + Math.random() * 20,
-        size: 1 + Math.random() * 2,
-        opacity: 0.08 + Math.random() * 0.07,
+        x: secureRandomRange(0, w),
+        y: secureRandomRange(0, h),
+        vx: (secureRandom() - 0.5) * this._config.ambientSpeed,
+        vy: (secureRandom() - 0.5) * this._config.ambientSpeed * 0.5,
+        life: secureRandomRange(0.5, 1),
+        maxLife: secureRandomRange(10, 30),
+        size: secureRandomRange(1, 3),
+        opacity: secureRandomRange(0.08, 0.15),
         color: this._config.ambientColor,
         type: 'ambient',
       });
@@ -324,14 +325,14 @@ export class ParticleMicroSystem {
     const count = Math.floor(this._config.dustCount * this._currentScale);
     for (let i = 0; i < count; i++) {
       this._particles.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        vx: (Math.random() - 0.5) * this._config.dustSpeed,
-        vy: Math.random() * this._config.dustSpeed * -0.3,
-        life: 0.7 + Math.random() * 0.3,
-        maxLife: 15 + Math.random() * 30,
-        size: 0.5 + Math.random() * 1,
-        opacity: 0.04 + Math.random() * 0.03,
+        x: secureRandomRange(0, w),
+        y: secureRandomRange(0, h),
+        vx: (secureRandom() - 0.5) * this._config.dustSpeed,
+        vy: secureRandom() * this._config.dustSpeed * -0.3,
+        life: secureRandomRange(0.7, 1),
+        maxLife: secureRandomRange(15, 45),
+        size: secureRandomRange(0.5, 1.5),
+        opacity: secureRandomRange(0.04, 0.07),
         color: this._config.dustColor,
         type: 'dust',
       });

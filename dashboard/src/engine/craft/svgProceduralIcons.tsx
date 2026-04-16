@@ -74,87 +74,104 @@ type SvgInteractionHandlers = Pick<
   'onMouseEnter' | 'onMouseLeave' | 'onMouseDown' | 'onMouseUp'
 >;
 
+function createStableTitleId(): string {
+  if (globalThis.crypto?.randomUUID) {
+    return `craft-icon-title-${globalThis.crypto.randomUUID()}`
+  }
+
+  if (globalThis.crypto?.getRandomValues) {
+    const bytes = new Uint8Array(8)
+    globalThis.crypto.getRandomValues(bytes)
+    const token = Array.from(bytes, byte =>
+      byte.toString(16).padStart(2, '0')
+    ).join('')
+    return `craft-icon-title-${token}`
+  }
+
+  return `craft-icon-title-${Date.now()}`
+}
+
 function createElasticHandlers(enabled: boolean): SvgInteractionHandlers {
   if (!enabled) {
-    return {};
+    return {}
   }
 
   return {
-    onMouseEnter: (e) => {
-      (e.currentTarget as SVGElement).style.transform = 'scale(1.12)';
+    onMouseEnter: e => {
+      ;(e.currentTarget as SVGElement).style.transform = 'scale(1.12)'
     },
-    onMouseLeave: (e) => {
-      (e.currentTarget as SVGElement).style.transform = 'scale(1)';
+    onMouseLeave: e => {
+      ;(e.currentTarget as SVGElement).style.transform = 'scale(1)'
     },
-    onMouseDown: (e) => {
-      (e.currentTarget as SVGElement).style.transform = 'scale(0.92)';
+    onMouseDown: e => {
+      ;(e.currentTarget as SVGElement).style.transform = 'scale(0.92)'
     },
-    onMouseUp: (e) => {
-      (e.currentTarget as SVGElement).style.transform = 'scale(1.12)';
+    onMouseUp: e => {
+      ;(e.currentTarget as SVGElement).style.transform = 'scale(1.12)'
     },
-  };
+  }
 }
 
 function getLoadingStyle(state: IconState): React.CSSProperties {
   if (state === 'loading') {
-    return { animation: 'craft-icon-spin 1.2s linear infinite' };
+    return { animation: 'craft-icon-spin 1.2s linear infinite' }
   }
-  return {};
+  return {}
 }
 
 function getA11yProps(
   label: string | undefined,
-  titleId: string | undefined,
+  titleId: string | undefined
 ): Record<string, string | boolean | undefined> {
   if (label && titleId) {
     return {
       'aria-hidden': undefined,
       'aria-labelledby': titleId,
-    };
+    }
   }
 
   return {
     'aria-hidden': true,
     'aria-labelledby': undefined,
-  };
+  }
 }
 
 // ─── Path Interpolation ───────────────────────────────────────
 
 function interpolatePaths(from: string, to: string, t: number): string {
-  const fromNums = from.match(/-?\d+\.?\d*/g)?.map(Number) || [];
-  const toNums = to.match(/-?\d+\.?\d*/g)?.map(Number) || [];
-  const letters = from.match(/[A-Za-z]/g) || [];
+  const fromNums = from.match(/-?\d+\.?\d*/g)?.map(Number) || []
+  const toNums = to.match(/-?\d+\.?\d*/g)?.map(Number) || []
+  const letters = from.match(/[A-Za-z]/g) || []
 
-  if (fromNums.length !== toNums.length) return t < 0.5 ? from : to;
+  if (fromNums.length !== toNums.length) return t < 0.5 ? from : to
 
   const interpolated = fromNums.map((f, i) => {
-    const target = toNums[i] ?? f;
-    return f + (target - f) * t;
-  });
+    const target = toNums[i] ?? f
+    return f + (target - f) * t
+  })
 
   // Rebuild path string
-  let result = '';
-  let numIdx = 0;
-  let letterIdx = 0;
+  let result = ''
+  let numIdx = 0
+  let letterIdx = 0
 
   for (let i = 0; i < from.length; i++) {
-    const char = from[i];
+    const char = from[i]
     if (/[A-Za-z]/.test(char) && letterIdx < letters.length) {
-      result += letters[letterIdx++];
+      result += letters[letterIdx++]
     } else if (/[-\d.]/.test(char)) {
       // Find the full number
-      const numMatch = LEADING_NUMBER_PATTERN.exec(from.slice(i));
+      const numMatch = LEADING_NUMBER_PATTERN.exec(from.slice(i))
       if (numMatch && numIdx < interpolated.length) {
-        result += interpolated[numIdx++].toFixed(2);
-        i += numMatch[0].length - 1;
+        result += interpolated[numIdx++].toFixed(2)
+        i += numMatch[0].length - 1
       }
     } else {
-      result += char;
+      result += char
     }
   }
 
-  return result;
+  return result
 }
 
 // ─── Component ────────────────────────────────────────────────
@@ -173,70 +190,74 @@ export const ProceduralIcon: React.FC<ProceduralIconProps> = ({
   className = '',
   label,
 }) => {
-  const pathRef = useRef<SVGPathElement>(null);
-  const animRef = useRef<Animation | null>(null);
+  const pathRef = useRef<SVGPathElement>(null)
+  const animRef = useRef<Animation | null>(null)
   const titleId = useMemo(
-    () => (label ? `craft-icon-title-${Math.random().toString(36).slice(2, 10)}` : undefined),
-    [label],
-  );
+    () => (label ? createStableTitleId() : undefined),
+    [label]
+  )
 
   // Morph interpolation
   const currentPath = useMemo(() => {
-    if (!morphTo) return path;
-    return morphed ? interpolatePaths(path, morphTo, 1) : path;
-  }, [path, morphTo, morphed]);
+    if (!morphTo) return path
+    return morphed ? interpolatePaths(path, morphTo, 1) : path
+  }, [path, morphTo, morphed])
 
   // Stroke width based on state
-  const sw = strokeWidth ?? STATE_STROKE[state];
-  const iconColor = color ?? STATE_COLORS[state];
-  const loadingStyle = useMemo(() => getLoadingStyle(state), [state]);
-  const elasticHandlers = useMemo(() => createElasticHandlers(elastic), [elastic]);
-  const a11yProps = useMemo(() => getA11yProps(label, titleId), [label, titleId]);
+  const sw = strokeWidth ?? STATE_STROKE[state]
+  const iconColor = color ?? STATE_COLORS[state]
+  const loadingStyle = useMemo(() => getLoadingStyle(state), [state])
+  const elasticHandlers = useMemo(
+    () => createElasticHandlers(elastic),
+    [elastic]
+  )
+  const a11yProps = useMemo(
+    () => getA11yProps(label, titleId),
+    [label, titleId]
+  )
 
   // Draw-in animation on mount
   useEffect(() => {
-    if (!drawIn || !pathRef.current || globalThis.window === undefined) return;
+    if (!drawIn || !pathRef.current || globalThis.window === undefined) return
 
-    const pathEl = pathRef.current;
-    const length = pathEl.getTotalLength();
-    pathEl.style.strokeDasharray = String(length);
-    pathEl.style.strokeDashoffset = String(length);
+    const pathEl = pathRef.current
+    const length = pathEl.getTotalLength()
+    pathEl.style.strokeDasharray = String(length)
+    pathEl.style.strokeDashoffset = String(length)
 
     const anim = pathEl.animate(
-      [
-        { strokeDashoffset: String(length) },
-        { strokeDashoffset: '0' },
-      ],
+      [{ strokeDashoffset: String(length) }, { strokeDashoffset: '0' }],
       {
         duration: 600,
         easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
         fill: 'forwards',
-      },
-    );
+      }
+    )
 
-    animRef.current = anim;
-    return () => anim.cancel();
-  }, [drawIn]);
+    animRef.current = anim
+    return () => anim.cancel()
+  }, [drawIn])
 
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox='0 0 24 24'
       fill={filled ? iconColor : 'none'}
       stroke={filled ? 'none' : iconColor}
       strokeWidth={sw}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      strokeLinecap='round'
+      strokeLinejoin='round'
       className={`craft-icon ${className}`}
       style={{
-        transition: 'color 200ms ease, stroke 200ms ease, transform 150ms cubic-bezier(0.22, 1, 0.36, 1)',
+        transition:
+          'color 200ms ease, stroke 200ms ease, transform 150ms cubic-bezier(0.22, 1, 0.36, 1)',
         willChange: 'transform',
         ...loadingStyle,
       }}
       aria-hidden={a11yProps['aria-hidden'] as boolean | undefined}
       aria-labelledby={a11yProps['aria-labelledby'] as string | undefined}
-      data-craft-icon=""
+      data-craft-icon=''
       data-state={state}
       {...elasticHandlers}
     >
@@ -249,8 +270,8 @@ export const ProceduralIcon: React.FC<ProceduralIconProps> = ({
         }}
       />
     </svg>
-  );
-};
+  )
+}
 
 // ─── Common Icon Paths ────────────────────────────────────────
 

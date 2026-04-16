@@ -14,6 +14,7 @@
  * ================================================================ */
 
 import type { Theme, DeviceTier } from '../types';
+import { secureRandom, secureRandomInt, secureRandomRange } from '../../lib/secureRandom';
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -84,7 +85,7 @@ function createSVGFilter(id: string, inner: string): string {
 export class MicroTexture {
   private _svgEl: HTMLDivElement | null = null;
   private _el: HTMLDivElement | null = null;
-  private readonly _seed = Math.floor(Math.random() * 1000);
+  private readonly _seed = secureRandomInt(1000);
 
   mount(parent: HTMLElement, config: TextureConfig['microGrain']): void {
     if (document === undefined) return;
@@ -160,9 +161,9 @@ export class BrushedMetal {
     ctx.lineWidth = 0.5;
 
     for (let i = 0; i < config.streakCount; i++) {
-      const x = Math.random() * 256;
-      const y = Math.random() * 256;
-      const len = 20 + Math.random() * 60;
+      const x = secureRandomRange(0, 256);
+      const y = secureRandomRange(0, 256);
+      const len = secureRandomRange(20, 80);
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.lineTo(x + Math.cos(rad) * len, y + Math.sin(rad) * len);
@@ -203,7 +204,7 @@ export class BrushedMetal {
 export class SoftDustGrain {
   private _el: HTMLDivElement | null = null;
   private _svgEl: HTMLDivElement | null = null;
-  private _seed = Math.floor(Math.random() * 999);
+  private _seed = Math.floor(secureRandom() * 999);
   private _animated = false;
   private _time = 0;
 

@@ -6,17 +6,17 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies
-COPY package.json pnpm-lock.yaml* ./
+COPY --chown=node:node package.json ./
 RUN npm install --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY package.json pnpm-lock.yaml* next.config.ts tsconfig.json tailwind.config.ts postcss.config.js cypress.config.ts jest.config.js jest.setup.js playwright.a11y.config.ts playwright.config.ts playwright.gpu.config.ts playwright.light.config.ts playwright.visual.config.ts next-env.d.ts ./
-COPY public ./public
-COPY src ./src
-COPY e2e ./e2e
+COPY --from=deps --chown=node:node /app/node_modules ./node_modules
+COPY --chown=node:node package.json next.config.ts tsconfig.json tailwind.config.ts postcss.config.js cypress.config.ts jest.config.js jest.setup.js playwright.a11y.config.ts playwright.config.ts playwright.gpu.config.ts playwright.light.config.ts playwright.visual.config.ts next-env.d.ts ./
+COPY --chown=node:node public ./public
+COPY --chown=node:node src ./src
+COPY --chown=node:node e2e ./e2e
 
 # Build the application
 RUN npm run build
@@ -30,7 +30,7 @@ ENV NODE_ENV production
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Set the correct permission for prerender cache
 RUN mkdir .next \

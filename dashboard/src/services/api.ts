@@ -30,6 +30,22 @@ const OFFLINE_SYNC_TAG = 'ice-truck-fleet-sync';
 let isQueueFlushRunning = false;
 let onlineListenerAttached = false;
 
+function createStableMutationId(): string {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.randomUUID) {
+    return `${Date.now()}-${cryptoApi.randomUUID()}`;
+  }
+
+  if (cryptoApi?.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    cryptoApi.getRandomValues(bytes);
+    const token = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+    return `${Date.now()}-${token}`;
+  }
+
+  return `${Date.now()}-offline`;
+}
+
 function canUseBrowserStorage(): boolean {
   return globalThis.window !== undefined;
 }
@@ -104,7 +120,7 @@ async function tryRegisterBackgroundSync(): Promise<void> {
 function enqueueOfflineMutation(item: Omit<QueuedMutation, 'id' | 'createdAt'>): void {
   const queue = readQueuedMutations();
   const queuedItem: QueuedMutation = {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    id: createStableMutationId(),
     createdAt: Date.now(),
     ...item,
   };

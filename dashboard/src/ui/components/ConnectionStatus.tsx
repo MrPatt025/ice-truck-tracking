@@ -2,6 +2,7 @@
 
 import { memo, useState, useEffect } from 'react'
 import { cn } from '../utils'
+import { secureRandomInt } from '@/lib/secureRandom'
 
 interface ConnectionStatusProps {
   className?: string
@@ -52,7 +53,7 @@ export const ConnectionStatus = memo(function ConnectionStatus({
   useEffect(() => {
     if (!isOnline) {
       const interval = setInterval(() => {
-        setQueuedActions(prev => prev + Math.floor(Math.random() * 2))
+        setQueuedActions(prev => prev + secureRandomInt(2))
       }, 5000)
 
       return () => clearInterval(interval)

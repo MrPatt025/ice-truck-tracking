@@ -14,6 +14,7 @@ import {
 } from '@/stores/fleetTelemetryStore'
 import { useCameraSelectionStore } from '@/stores/cameraSelectionStore'
 import { dispatchWsHealthEvent } from '@/lib/healthEvents'
+import { secureRandomInt } from '@/lib/secureRandom'
 import { parseFleetLivePacket } from '@/lib/schemas/telemetry'
 import { registerCinematicWorkerWithMap } from '@/engine/orchestrator'
 import type {
@@ -54,15 +55,32 @@ function summarizeFleetTelemetry(trucks: readonly FleetTruck[]): {
   return { temperatureC, fogDensity, fogTint }
 }
 
+function toWebSocketUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim()
+  if (!trimmed) return 'ws://localhost:5000'
+
+  try {
+    const normalized = /^(?:[a-z]+:)?\/\//i.test(trimmed)
+      ? trimmed
+      : `http://${trimmed}`
+    const url = new URL(normalized)
+    if (url.protocol === 'http:') url.protocol = 'ws:'
+    else if (url.protocol === 'https:') url.protocol = 'wss:'
+    return url.toString().replace(/\/+$/, '')
+  } catch {
+    return trimmed
+  }
+}
+
 function resolveWebSocketUrl(): string {
   const configuredWs = process.env.NEXT_PUBLIC_WS_URL?.trim()
   if (configuredWs) {
-    return configuredWs.replace(/^http/i, 'ws')
+    return toWebSocketUrl(configuredWs)
   }
 
   const apiRoot = process.env.NEXT_PUBLIC_API_URL?.trim()
   if (apiRoot) {
-    return apiRoot.replace(/^http/i, 'ws').replace(/\/+$/, '')
+    return toWebSocketUrl(apiRoot)
   }
 
   if (globalThis.window === undefined) {
@@ -251,7 +269,7 @@ function HeroBackground({
       clearReconnectTimer()
 
       const backoff = Math.min(10000, 1000 * 2 ** reconnectAttemptRef.current)
-      const jitter = Math.floor(Math.random() * 250)
+        const jitter = secureRandomInt(250)
       const nextAttempt = reconnectAttemptRef.current + 1
       reconnectAttemptRef.current = nextAttempt
 

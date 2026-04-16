@@ -32,14 +32,31 @@ import {
 import type { SpringConfig } from '../types';
 import { frameScheduler } from '../frameScheduler';
 
+function createStableId(prefix: string): string {
+  if (globalThis.crypto?.randomUUID) {
+    return `${prefix}-${globalThis.crypto.randomUUID()}`
+  }
+
+  if (globalThis.crypto?.getRandomValues) {
+    const bytes = new Uint8Array(6)
+    globalThis.crypto.getRandomValues(bytes)
+    const token = Array.from(bytes, byte =>
+      byte.toString(16).padStart(2, '0')
+    ).join('')
+    return `${prefix}-${token}`
+  }
+
+  return `${prefix}-${Date.now()}`
+}
+
 // ═════════════════════════════════════════════════════════════════
 //  1. useSpring — single value spring hook
 // ═════════════════════════════════════════════════════════════════
 
 export interface UseSpringOptions {
-    config?: Partial<SpringConfig>;
-    onUpdate?: (value: number) => void;
-    onRest?: () => void;
+  config?: Partial<SpringConfig>
+  onUpdate?: (value: number) => void
+  onRest?: () => void
 }
 
 /**
@@ -59,7 +76,7 @@ export function useSpring(
 ] {
   const springRef = useRef<SpringValue | null>(null)
   const valueRef = useRef(initial)
-  const idRef = useRef(`spring-${Math.random().toString(36).slice(2, 8)}`)
+  const idRef = useRef(createStableId('spring'))
 
   // Initialize spring once
   springRef.current ??= new SpringValue(initial, options.config)
@@ -113,7 +130,7 @@ export function useSpring2D(
 ] {
   const springRef = useRef<Spring2D | null>(null)
   const posRef = useRef({ x: initialX, y: initialY })
-  const idRef = useRef(`spring2d-${Math.random().toString(36).slice(2, 8)}`)
+  const idRef = useRef(createStableId('spring2d'))
 
   springRef.current ??= new Spring2D(initialX, initialY, config)
 
@@ -171,7 +188,7 @@ export function MagneticButton({
 }: Readonly<MagneticButtonProps>) {
   const ref = useRef<HTMLButtonElement>(null)
   const springRef = useRef<Spring2D | null>(null)
-  const idRef = useRef(`magnetic-${Math.random().toString(36).slice(2, 8)}`)
+  const idRef = useRef(createStableId('magnetic'))
 
   useEffect(() => {
     if (!ref.current || disabled) return
@@ -265,7 +282,7 @@ export function InertiaPanel({
 }: Readonly<InertiaPanelProps>) {
   const ref = useRef<HTMLDivElement>(null)
   const gestureRef = useRef<GestureEngine | null>(null)
-  const idRef = useRef(`inertia-${Math.random().toString(36).slice(2, 8)}`)
+  const idRef = useRef(createStableId('inertia'))
 
   useEffect(() => {
     if (!ref.current) return
@@ -360,7 +377,7 @@ export function SpringNumber({
 }: Readonly<SpringNumberProps>) {
   const ref = useRef<HTMLSpanElement>(null)
   const springRef = useRef<SpringValue | null>(null)
-  const idRef = useRef(`num-${Math.random().toString(36).slice(2, 8)}`)
+  const idRef = useRef(createStableId('num'))
 
   useEffect(() => {
     const spring = new SpringValue(value, config)
@@ -389,7 +406,9 @@ export function SpringNumber({
   }, [value])
 
   return (
-    <span ref={ref} className={`${className ?? ''} tabular-nums`} style={style}> {/* NOSONAR — passed-through style prop */}
+    <span ref={ref} className={`${className ?? ''} tabular-nums`} style={style}>
+      {' '}
+      {/* NOSONAR — passed-through style prop */}
       {format(value)}
     </span>
   )

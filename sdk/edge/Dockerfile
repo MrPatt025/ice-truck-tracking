@@ -3,14 +3,14 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY --chown=node:node package.json ./
 
 # Install dependencies, copy source, build, create user and set permissions
 RUN npm ci --only=production && \
   true
 
-COPY tsconfig.json ./
-COPY src ./src
+COPY --chown=node:node tsconfig.json ./
+COPY --chown=node:node src ./src
 
 RUN npm run build && \
     addgroup -g 1001 -S nodejs && \

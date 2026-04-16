@@ -91,6 +91,21 @@ export class EmotionalTimingEngine {
     }
   }
 
+  private generateAnimationId(): string {
+    if (globalThis.crypto?.randomUUID) {
+      return `emo-${Date.now()}-${globalThis.crypto.randomUUID()}`;
+    }
+
+    if (globalThis.crypto?.getRandomValues) {
+      const bytes = new Uint8Array(8);
+      globalThis.crypto.getRandomValues(bytes);
+      const token = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+      return `emo-${Date.now()}-${token}`;
+    }
+
+    return `emo-${Date.now()}-fallback`;
+  }
+
   /** Animate an element through all 3 emotional phases */
   animate(
     el: HTMLElement,
@@ -110,7 +125,7 @@ export class EmotionalTimingEngine {
       return;
     }
 
-    const id = options?.id || `emo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const id = options?.id || this.generateAnimationId();
     const isOut = options?.direction === 'out';
     const phases = isOut
       ? [seq.settling, seq.action, seq.anticipation]  // Reverse for exit

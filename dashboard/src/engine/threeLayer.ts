@@ -18,6 +18,7 @@ import * as THREE from 'three';
 import { getTruckMap } from './store';
 import type { Theme, ScalingDecision } from './types';
 import { SceneController } from './gpu/sceneController';
+import { secureRandom, secureRandomInt, secureRandomRange } from '../lib/secureRandom';
 import {
     createMeshGradientMaterial,
     createDepthFogMaterial,
@@ -242,26 +243,26 @@ export class ImperativeThreeLayer {
         const icoCount = 15;
         for (let i = 0; i < icoCount; i++) {
             const detail = 1; // LOD detail level
-            const g = new THREE.IcosahedronGeometry(Math.random() * 2 + 0.5, detail);
+            const g = new THREE.IcosahedronGeometry(secureRandomRange(0.5, 2.5), detail);
             const m = new THREE.MeshPhongMaterial({
-                color: colors[Math.floor(Math.random() * colors.length)],
+                color: colors[secureRandomInt(colors.length)],
                 transparent: true,
                 opacity: 0.25,
                 shininess: 100,
-                wireframe: Math.random() > 0.7,
+                wireframe: secureRandom() > 0.7,
             });
             const mesh = new THREE.Mesh(g, m);
             mesh.position.set(
-                (Math.random() - 0.5) * 50,
-                (Math.random() - 0.5) * 50,
-                (Math.random() - 0.5) * 50,
+                (secureRandom() - 0.5) * 50,
+                (secureRandom() - 0.5) * 50,
+                (secureRandom() - 0.5) * 50,
             );
-            mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-            mesh.userData.speed = 0.001 + Math.random() * 0.002;
+            mesh.rotation.set(secureRandomRange(0, Math.PI), secureRandomRange(0, Math.PI), 0);
+            mesh.userData.speed = secureRandomRange(0.001, 0.003);
             mesh.userData.axis = new THREE.Vector3(
-                Math.random() - 0.5,
-                Math.random() - 0.5,
-                Math.random() - 0.5,
+                secureRandom() - 0.5,
+                secureRandom() - 0.5,
+                secureRandom() - 0.5,
             ).normalize();
             this.scene.add(mesh);
             this.ambientMeshes.push(mesh);
@@ -269,25 +270,25 @@ export class ImperativeThreeLayer {
 
         // Tori
         for (let i = 0; i < 6; i++) {
-            const g = new THREE.TorusGeometry(Math.random() * 3 + 1, 0.12, 12, 64);
+            const g = new THREE.TorusGeometry(secureRandomRange(1, 4), 0.12, 12, 64);
             const m = new THREE.MeshPhongMaterial({
-                color: colors[Math.floor(Math.random() * colors.length)],
+                color: colors[secureRandomInt(colors.length)],
                 transparent: true,
                 opacity: 0.2,
                 shininess: 120,
             });
             const mesh = new THREE.Mesh(g, m);
             mesh.position.set(
-                (Math.random() - 0.5) * 45,
-                (Math.random() - 0.5) * 45,
-                (Math.random() - 0.5) * 45,
+                (secureRandom() - 0.5) * 45,
+                (secureRandom() - 0.5) * 45,
+                (secureRandom() - 0.5) * 45,
             );
-            mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
-            mesh.userData.speed = 0.0006 + Math.random() * 0.001;
+            mesh.rotation.set(secureRandomRange(0, Math.PI), secureRandomRange(0, Math.PI), 0);
+            mesh.userData.speed = secureRandomRange(0.0006, 0.0016);
             mesh.userData.axis = new THREE.Vector3(
-                Math.random() - 0.5,
-                Math.random() - 0.5,
-                Math.random() - 0.5,
+                secureRandom() - 0.5,
+                secureRandom() - 0.5,
+                secureRandom() - 0.5,
             ).normalize();
             this.scene.add(mesh);
             this.ambientMeshes.push(mesh);
@@ -303,10 +304,10 @@ export class ImperativeThreeLayer {
         this.particleSpeeds = new Float32Array(count);
 
         for (let i = 0; i < count; i++) {
-            this.particlePositions[i * 3] = (Math.random() - 0.5) * 80;
-            this.particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 80;
-            this.particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 80;
-            this.particleSpeeds[i] = 0.02 + Math.random() * 0.05;
+            this.particlePositions[i * 3] = (secureRandom() - 0.5) * 80;
+            this.particlePositions[i * 3 + 1] = (secureRandom() - 0.5) * 80;
+            this.particlePositions[i * 3 + 2] = (secureRandom() - 0.5) * 80;
+            this.particleSpeeds[i] = secureRandomRange(0.02, 0.07);
         }
 
         const geo = new THREE.BufferGeometry();

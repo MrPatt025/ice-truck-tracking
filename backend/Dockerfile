@@ -8,7 +8,7 @@ RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
 WORKDIR /usr/src/app
 
 # Copy package files
-COPY --chown=node:node package.json pnpm-lock.yaml* ./
+COPY --chown=node:node package.json ./
 
 # Development stage
 FROM base AS development
