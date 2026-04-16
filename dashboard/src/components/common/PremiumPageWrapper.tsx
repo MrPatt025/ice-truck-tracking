@@ -64,13 +64,14 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
 
   return (
     <motion.section
-      initial={false}
+      initial={shouldAnimate ? 'hidden' : false}
       animate={shouldAnimate ? 'show' : undefined}
       variants={CONTAINER_VARIANTS}
       className={cn(
-        'relative isolate overflow-visible premium-rhythm motion-safe:transform-gpu',
+        'premium-page-shell relative isolate min-h-[100svh] overflow-visible premium-rhythm motion-safe:transform-gpu',
         className
       )}
+      style={{ contain: 'layout style paint' }}
     >
       <motion.div
         variants={CONTENT_VARIANTS}
@@ -83,7 +84,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
       >
         {mode === 'glass' ? (
           <>
-            <div className='pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(70rem_28rem_at_8%_-22%,rgba(56,189,248,.24),transparent),radial-gradient(80rem_32rem_at_105%_120%,rgba(139,92,246,.2),transparent)]' />
+            <div className='pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(74rem_30rem_at_10%_-24%,rgba(56,189,248,.26),transparent),radial-gradient(84rem_34rem_at_96%_115%,rgba(16,185,129,.18),transparent)]' />
             <div
               aria-hidden='true'
               className='pointer-events-none absolute inset-0 rounded-2xl opacity-[0.035] mix-blend-overlay'
@@ -93,6 +94,8 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
                 backgroundSize: '70px 70px',
               }}
             />
+            <div className='pointer-events-none absolute -left-8 -top-8 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl' />
+            <div className='pointer-events-none absolute -bottom-10 -right-10 h-44 w-44 rounded-full bg-emerald-300/15 blur-3xl' />
             <div className='pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-cyan-200/20 shadow-[inset_0_0_35px_-20px_rgba(56,189,248,.95)]' />
           </>
         ) : null}

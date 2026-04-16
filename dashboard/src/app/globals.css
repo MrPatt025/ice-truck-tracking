@@ -115,6 +115,7 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
+    min-height: 100svh;
   }
 
   h1,
@@ -295,6 +296,20 @@
     box-shadow:
       inset 0 0 40px rgba(34, 211, 238, 0.2),
       0 0 80px rgba(34, 211, 238, 0.18);
+  }
+
+  .premium-page-shell {
+    background:
+      radial-gradient(
+        900px 420px at 12% -15%,
+        rgba(56, 189, 248, 0.09),
+        transparent 62%
+      ),
+      radial-gradient(
+        980px 420px at 88% 118%,
+        rgba(16, 185, 129, 0.08),
+        transparent 64%
+      );
   }
 }
 

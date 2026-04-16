@@ -48,9 +48,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["http://localhost:3000", "http://192.168.56.1:3000"],
   compress: true,
   poweredByHeader: false,
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
+  turbopack: {},
   /**
    * Core Web Vitals optimization:
    * - Image optimization for LCP (Largest Contentful Paint)
