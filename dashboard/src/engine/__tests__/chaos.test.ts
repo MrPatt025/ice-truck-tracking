@@ -8,7 +8,7 @@
  *   ✓ Multiple engine boot/shutdown cycles → clean state
  */
 
-import { getRandomValues } from 'crypto';
+import { getRandomValues } from 'node:crypto';
 
 // Secure random float generator (0-1)
 function secureRandomFloat(): number {

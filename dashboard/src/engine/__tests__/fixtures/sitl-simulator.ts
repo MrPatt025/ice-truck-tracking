@@ -9,7 +9,7 @@
  *
  * Can be used standalone or imported by test harnesses.
  */
-import { getRandomValues } from 'crypto';
+import { getRandomValues } from 'node:crypto';
 import type { TruckTelemetry, TruckStatus } from '../../types';
 
 // Secure random float generator (0-1)
