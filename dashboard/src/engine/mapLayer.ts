@@ -373,7 +373,7 @@ export class ImperativeMapLayer {
     }
 
     private installDeckOverlay(): void {
-        if (!this.map || this.overlayDisabled) return;
+        if (!this.map || this.overlayDisabled || E2E_LIGHT_MODE) return;
         if (this.overlay) {
             this.map.removeControl(this.overlay);
             this.overlay.finalize();

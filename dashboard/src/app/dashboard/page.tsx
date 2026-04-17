@@ -152,6 +152,8 @@ const PremiumSystemStatusBanner = dynamic(
   }
 )
 
+const DASHBOARD_TITLE = 'Ice Truck Tracking Dashboard | Mission Control'
+
 // ─── Types ─────────────────────────────────────────────────────
 type Trend = 'up' | 'down' | 'stable'
 type Fullscreen = null | 'revenue' | 'fleet' | 'temp' | 'alerts' | 'performance'
@@ -1122,6 +1124,10 @@ function useApiHealthProbe() {
 // NOSONAR - This orchestrator component intentionally composes UI shell and imperative engine wiring.
 export default function Dashboard() { // NOSONAR - intentional orchestrator component with controlled complexity.
   // NOSONAR
+  useEffect(() => {
+    document.title = DASHBOARD_TITLE
+  }, [])
+
   // ── Zustand selectors (only these trigger React re-renders) ──
   const theme = useIoTStore(s => s.theme)
   const setTheme = useIoTStore(s => s.setTheme)
