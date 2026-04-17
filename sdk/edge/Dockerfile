@@ -5,6 +5,11 @@ WORKDIR /app
 # Copy package files
 COPY package.json ./
 
+# Configure NPM network retry settings to prevent ECONNRESET timeouts
+ENV NPM_CONFIG_FETCH_RETRIES=5
+ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000
+ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
+
 # Install dependencies, copy source, build, create user and set permissions
 RUN npm ci --only=production --ignore-scripts && \
   true

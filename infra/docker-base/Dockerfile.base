@@ -12,6 +12,11 @@ RUN apk add --no-cache \
   python3 \
     && rm -rf /var/cache/apk/*
 
+# Configure NPM network retry settings to prevent ECONNRESET timeouts
+ENV NPM_CONFIG_FETCH_RETRIES=5
+ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000
+ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
+
 # Copy package files
 COPY package.json ./
 COPY turbo.json ./

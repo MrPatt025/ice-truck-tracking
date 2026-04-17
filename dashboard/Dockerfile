@@ -5,6 +5,11 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
+# Configure NPM network retry settings to prevent ECONNRESET timeouts
+ENV NPM_CONFIG_FETCH_RETRIES=5
+ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000
+ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
+
 # Install dependencies
 COPY package.json ./
 RUN npm install --legacy-peer-deps --ignore-scripts
