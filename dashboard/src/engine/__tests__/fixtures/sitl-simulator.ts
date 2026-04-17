@@ -9,7 +9,15 @@
  *
  * Can be used standalone or imported by test harnesses.
  */
+import { getRandomValues } from 'crypto';
 import type { TruckTelemetry, TruckStatus } from '../../types';
+
+// Secure random float generator (0-1)
+function secureRandomFloat(): number {
+    const arr = new Uint32Array(1);
+    getRandomValues(arr);
+    return (arr[0] >>> 0) / 0x100000000;
+}
 
 // ─── Configuration ─────────────────────────────────────────────
 
@@ -62,11 +70,11 @@ interface TruckState {
 // ─── Helpers ───────────────────────────────────────────────────
 
 function randomInRange(min: number, max: number): number {
-    return min + Math.random() * (max - min);
+    return min + secureRandomFloat() * (max - min);
 }
 
 function randomOffset(center: number, radiusDeg: number): number {
-    return center + (Math.random() - 0.5) * 2 * radiusDeg;
+    return center + (secureRandomFloat() - 0.5) * 2 * radiusDeg;
 }
 
 function clamp(val: number, min: number, max: number): number {
@@ -127,9 +135,9 @@ export class SITLSimulator {
                 fuelLevel: randomInRange(20, 100),
                 engineRpm: randomInRange(800, 3500),
                 odometer: randomInRange(5000, 200000),
-                status: Math.random() > 0.1 ? 'active' : STATUSES[Math.floor(Math.random() * STATUSES.length)],
-                driverName: DRIVER_NAMES[Math.floor(Math.random() * DRIVER_NAMES.length)],
-                routeId: `R${Math.floor(Math.random() * 50) + 1}`,
+                status: secureRandomFloat() > 0.1 ? 'active' : STATUSES[Math.floor(secureRandomFloat() * STATUSES.length)],
+                driverName: DRIVER_NAMES[Math.floor(secureRandomFloat() * DRIVER_NAMES.length)],
+                routeId: `R${Math.floor(secureRandomFloat() * 50) + 1}`,
                 _targetLat: randomOffset(areaCenter.lat, latRadius),
                 _targetLng: randomOffset(areaCenter.lng, lngRadius),
                 _spiking: false,
@@ -143,8 +151,8 @@ export class SITLSimulator {
     private updateGPSPosition(truck: TruckState, latRadius: number, lngRadius: number): void {
         const dLat = (truck._targetLat - truck.lat) * 0.02;
         const dLng = (truck._targetLng - truck.lng) * 0.02;
-        truck.lat += dLat + (Math.random() - 0.5) * 0.001;
-        truck.lng += dLng + (Math.random() - 0.5) * 0.001;
+        truck.lat += dLat + (secureRandomFloat() - 0.5) * 0.001;
+        truck.lng += dLng + (secureRandomFloat() - 0.5) * 0.001;
 
         const dist = Math.hypot(truck.lat - truck._targetLat, truck.lng - truck._targetLng);
         if (dist < 0.01) {
@@ -152,8 +160,8 @@ export class SITLSimulator {
             truck._targetLng = randomOffset(this.config.areaCenter.lng, lngRadius);
         }
 
-        truck.speed = clamp(truck.speed + (Math.random() - 0.5) * 5, 0, 120);
-        truck.heading = (truck.heading + (Math.random() - 0.5) * 15 + 360) % 360;
+        truck.speed = clamp(truck.speed + (secureRandomFloat() - 0.5) * 5, 0, 120);
+        truck.heading = (truck.heading + (secureRandomFloat() - 0.5) * 15 + 360) % 360;
     }
 
     private updateTemperature(truck: TruckState): void {
@@ -164,7 +172,7 @@ export class SITLSimulator {
                 truck._spiking = false;
                 truck.temperature = randomInRange(temperatureRange.min, temperatureRange.max);
             }
-        } else if (Math.random() < spikeChance) {
+        } else if (secureRandomFloat() < spikeChance) {
             truck._spiking = true;
             truck._spikeCountdown = Math.floor(randomInRange(5, 20));
             truck.temperature = randomInRange(5, 25);
@@ -172,7 +180,7 @@ export class SITLSimulator {
             this._spikes++;
         } else {
             truck.temperature = clamp(
-                truck.temperature + (Math.random() - 0.5) * 0.5,
+                truck.temperature + (secureRandomFloat() - 0.5) * 0.5,
                 temperatureRange.min,
                 temperatureRange.max,
             );
@@ -190,7 +198,7 @@ export class SITLSimulator {
         const lngRadius = areaRadiusKm * KM_TO_DEG_LNG;
 
         for (const truck of this.trucks) {
-            if (Math.random() < packetLossRate) {
+            if (secureRandomFloat() < packetLossRate) {
                 this._droppedPackets++;
                 this._totalPackets++;
                 continue;
@@ -199,10 +207,10 @@ export class SITLSimulator {
             this.updateGPSPosition(truck, latRadius, lngRadius);
             this.updateTemperature(truck);
 
-            truck.fuelLevel = clamp(truck.fuelLevel - Math.random() * 0.05, 0, 100);
+            truck.fuelLevel = clamp(truck.fuelLevel - secureRandomFloat() * 0.05, 0, 100);
             truck.odometer += truck.speed * (this.config.tickIntervalMs / 3_600_000);
             truck.engineRpm = truck.speed > 0
-                ? clamp(800 + truck.speed * 30 + (Math.random() - 0.5) * 200, 800, 6000)
+                ? clamp(800 + truck.speed * 30 + (secureRandomFloat() - 0.5) * 200, 800, 6000)
                 : 800;
 
             if (!truck._spiking && truck.status === 'alert') truck.status = 'active';

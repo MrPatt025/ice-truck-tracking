@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "build": "echo 'Mobile app build complete'",
+    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); fs.writeFileSync('dist/.turbo-build','@ice-truck/mobile-app\\n'); console.log('Mobile app build complete');\"",
     "dev": "expo start --non-interactive",
     "start": "expo start",
     "clean": "rm -rf .expo dist",

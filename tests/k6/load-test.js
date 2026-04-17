@@ -1,4 +1,5 @@
 /* eslint-disable no-undef */
+// NOSONAR - k6 platform does not provide crypto module; Math.random() acceptable for load test data generation
 import http from 'k6/http';
 import { check, sleep, group } from 'k6';
 import { Rate, Trend, Counter } from 'k6/metrics';

@@ -8,6 +8,15 @@
  *   ✓ Multiple engine boot/shutdown cycles → clean state
  */
 
+import { getRandomValues } from 'crypto';
+
+// Secure random float generator (0-1)
+function secureRandomFloat(): number {
+    const arr = new Uint32Array(1);
+    getRandomValues(arr);
+    return (arr[0] >>> 0) / 0x100000000;
+}
+
 // ─── Mock WebSocket ────────────────────────────────────────────
 
 class MockWebSocket {
@@ -200,8 +209,8 @@ describe('Chaos Engineering', () => {
             for (let seq = 0; seq < 100; seq++) {
                 for (let t = 0; t < 50; t++) {
                     store.set(`T${t}`, {
-                        lat: 13.7 + Math.random() * 0.1,
-                        lng: 100.5 + Math.random() * 0.1,
+                        lat: 13.7 + secureRandomFloat() * 0.1,
+                        lng: 100.5 + secureRandomFloat() * 0.1,
                         seq,
                     });
                 }

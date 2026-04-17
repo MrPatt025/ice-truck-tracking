@@ -4,7 +4,7 @@
   "description": "Professional Ice Truck Tracking System - Backend API",
   "main": "index.js",
   "scripts": {
-    "build": "echo 'Backend build complete'",
+    "build": "node -e \"const fs=require('fs'); fs.mkdirSync('dist',{recursive:true}); fs.writeFileSync('dist/.turbo-build','@ice-truck/backend\\n'); console.log('Backend build complete');\"",
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "jest --ci --runInBand --detectOpenHandles --coverage --passWithNoTests",

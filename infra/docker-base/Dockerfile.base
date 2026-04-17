@@ -46,9 +46,9 @@ RUN addgroup -g 1001 -S nodejs \
 
 WORKDIR /app
 
-# Copy built application
-COPY --from=builder --chown=nextjs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nextjs:nodejs /app/package*.json ./
+# Copy built application (owned by root, read-only for app user)
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
 
 # Install only production dependencies
 RUN npm ci --only=production --ignore-scripts && npm cache clean --force
