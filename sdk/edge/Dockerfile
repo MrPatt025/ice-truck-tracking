@@ -3,7 +3,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Copy package files
-COPY --chown=node:node package.json ./
+COPY package.json ./
 
 # Configure NPM network retry settings to prevent ECONNRESET timeouts
 ENV NPM_CONFIG_FETCH_RETRIES=5
@@ -15,8 +15,8 @@ RUN npm ci --only=production --ignore-scripts && \
   addgroup -g 1001 -S nodejs && \
   adduser -S notification -u 1001
 
-COPY --chown=notification:nodejs tsconfig.json ./
-COPY --chown=notification:nodejs src ./src
+COPY tsconfig.json ./
+COPY src ./src
 
 RUN npm run build && \
   true

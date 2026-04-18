@@ -55,6 +55,13 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "alb_access_logs" 
   }
 }
 
+resource "aws_s3_bucket_logging" "alb_access_logs" {
+  bucket = aws_s3_bucket.alb_access_logs.id
+
+  target_bucket = aws_s3_bucket.alb_access_logs.id
+  target_prefix = "s3-access/"
+}
+
 resource "aws_s3_bucket_policy" "alb_access_logs" {
   bucket = aws_s3_bucket.alb_access_logs.id
 
@@ -83,6 +90,23 @@ resource "aws_s3_bucket_policy" "alb_access_logs" {
         }
         Action   = "s3:GetBucketAcl"
         Resource = aws_s3_bucket.alb_access_logs.arn
+      },
+      {
+        Sid    = "DenyInsecureTransport"
+        Effect = "Deny"
+        Principal = {
+          AWS = "*"
+        }
+        Action = "s3:*"
+        Resource = [
+          aws_s3_bucket.alb_access_logs.arn,
+          "${aws_s3_bucket.alb_access_logs.arn}/*"
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
       }
     ]
   })
