@@ -36,6 +36,7 @@ const scriptSrc = isProduction
 const localApiOrigins: string[] = []
 if (!isProduction) {
   localApiOrigins.push('http://localhost:5000')
+  localApiOrigins.push('ws://localhost:5000')
 }
 const connectSrc = [
   "'self'",
@@ -55,7 +56,7 @@ const contentSecurityPolicy = [
   scriptSrc,
   "style-src 'self' 'unsafe-inline' https://api.mapbox.com https://fonts.googleapis.com",
   "img-src 'self' data: blob: https://*.mapbox.com https://api.mapbox.com https://events.mapbox.com https://demotiles.maplibre.org",
-  "font-src 'self' data: https://fonts.gstatic.com",
+  "font-src 'self' data: https://fonts.gstatic.com https://r2cdn.perplexity.ai",
   `connect-src ${connectSrc}`,
   "worker-src 'self' blob:",
   "media-src 'self' blob:",

@@ -374,6 +374,13 @@ export class ImperativeMapLayer {
 
     private installDeckOverlay(): void {
         if (!this.map || this.overlayDisabled || E2E_LIGHT_MODE) return;
+        const canvas = this.map.getCanvas();
+        if (!canvas || !canvas.style) {
+            this.overlayDisabled = true;
+            this.overlay = null;
+            console.warn('Deck overlay disabled because map canvas is not ready for touchAction binding.');
+            return;
+        }
         if (this.overlay) {
             this.map.removeControl(this.overlay);
             this.overlay.finalize();
