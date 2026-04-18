@@ -35,8 +35,7 @@ const scriptSrc = isProduction
   : "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
 const localApiOrigins: string[] = []
 if (!isProduction) {
-  localApiOrigins.push('http://localhost:5000')
-  localApiOrigins.push('ws://localhost:5000')
+  localApiOrigins.push('http://localhost:5000', 'ws://localhost:5000')
 }
 const connectSrc = [
   "'self'",
