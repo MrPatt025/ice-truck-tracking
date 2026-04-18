@@ -45,6 +45,18 @@ const CONTENT_VARIANTS = {
   },
 }
 
+const ORNAMENT_VARIANTS = {
+  hidden: { opacity: 0, scale: 0.96 },
+  show: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
+  },
+}
+
 const CHILDREN_VARIANTS = {
   hidden: { opacity: 0, y: 10 },
   show: {
@@ -96,22 +108,30 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         }}
       />
       <motion.div
+        aria-hidden='true'
+        variants={ORNAMENT_VARIANTS}
+        className='pointer-events-none absolute -top-28 left-1/2 -z-10 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-300/10 blur-[120px]'
+      />
+      <motion.div
         variants={CONTENT_VARIANTS}
         className={cn(
           mode === 'glass' &&
-            'premium-surface relative overflow-hidden rounded-2xl border border-white/20 bg-slate-900/35 shadow-[0_32px_85px_-50px_rgba(56,189,248,0.8)] backdrop-blur-2xl supports-[backdrop-filter]:backdrop-saturate-150',
+            'premium-surface relative overflow-hidden rounded-3xl border border-white/20 bg-slate-900/35 shadow-[0_30px_90px_-50px_rgba(56,189,248,0.8),0_12px_40px_-28px_rgba(16,185,129,0.75)] backdrop-blur-2xl supports-[backdrop-filter]:backdrop-saturate-150',
           contentClassName
         )}
         style={{ contain: 'layout style paint' }}
       >
         {mode === 'glass' ? (
           <>
-            <div className='pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(74rem_30rem_at_10%_-24%,rgba(56,189,248,.26),transparent),radial-gradient(84rem_34rem_at_96%_115%,rgba(16,185,129,.18),transparent)]' />
+            <motion.div
+              variants={ORNAMENT_VARIANTS}
+              className='pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(74rem_30rem_at_10%_-24%,rgba(56,189,248,.26),transparent),radial-gradient(84rem_34rem_at_96%_115%,rgba(16,185,129,.18),transparent)]'
+            />
             <div className='pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-80' />
             <div className='pointer-events-none absolute inset-y-6 left-0 w-px bg-gradient-to-b from-transparent via-cyan-200/25 to-transparent opacity-70' />
             <div
               aria-hidden='true'
-              className='pointer-events-none absolute inset-0 rounded-2xl opacity-[0.035] mix-blend-overlay'
+              className='pointer-events-none absolute inset-0 rounded-3xl opacity-[0.035] mix-blend-overlay'
               style={{
                 backgroundImage:
                   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E\")",
@@ -120,12 +140,12 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
             />
             <div className='pointer-events-none absolute -left-8 -top-8 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl' />
             <div className='pointer-events-none absolute -bottom-10 -right-10 h-44 w-44 rounded-full bg-emerald-300/15 blur-3xl' />
-            <div className='pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-cyan-200/20 shadow-[inset_0_0_35px_-20px_rgba(56,189,248,.95)]' />
+            <div className='pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-cyan-200/20 shadow-[inset_0_0_35px_-20px_rgba(56,189,248,.95)]' />
           </>
         ) : null}
         <motion.div
           variants={CHILDREN_VARIANTS}
-          className='relative z-[1]'
+          className='relative z-[1] antialiased [text-wrap:balance]'
           style={{ contain: 'layout style paint' }}
         >
           {children}

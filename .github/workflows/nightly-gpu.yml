@@ -24,11 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+      - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
@@ -43,14 +43,14 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:5000
           NEXT_PUBLIC_WS_URL: ws://localhost:5000
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         if: always()
         with:
           name: gpu-playwright-report
           path: dashboard/playwright-report/gpu/
           if-no-files-found: ignore
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         if: always()
         with:
           name: gpu-test-results
