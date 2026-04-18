@@ -93,7 +93,7 @@ function buildBoundsTree(mesh: Mesh | InstancedMesh | null): void {
   if (!mesh) return
   const computeTree = Reflect.get(mesh.geometry, 'computeBoundsTree')
   if (typeof computeTree === 'function') {
-    computeTree.call(mesh.geometry, { maxLeafTris: 24 })
+    computeTree.call(mesh.geometry, { maxLeafSize: 24 })
   }
 }
 
@@ -776,20 +776,12 @@ function createPostFxConfig(
   const transitionActive =
     runtimeState.transition.phase !== 'idle' ||
     runtimeState.transition.progress > 0.02
-  const heavyScrollTransition =
-    runtimeState.scroll > 0.1 && runtimeState.scroll < 0.92
-  const fastThermalSwing = runtimeState.telemetry.temperatureC > 2.5
   const highDpr = runtimeState.viewport.dpr > 1.4
   const lowEndRuntime = isLowEndOrMobileRuntime()
 
   const enablePremiumLighting = !(lowEndRuntime || highDpr || transitionActive)
   const enableSoftShadows = enablePremiumLighting && runtimeState.scroll < 0.9
-  const shouldEnablePostFx = !(
-    transitionActive ||
-    heavyScrollTransition ||
-    highDpr ||
-    fastThermalSwing
-  )
+  const shouldEnablePostFx = false
   const shouldEnableDepthOfField =
     shouldEnablePostFx &&
     runtimeState.scroll < 0.84 &&
