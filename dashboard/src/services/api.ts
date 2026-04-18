@@ -197,9 +197,14 @@ function notifyBackendHealth(
 
 // ── Request Helpers ────────────────────────────────────────
 async function getAuthToken(): Promise<string | null> {
-  if (document === undefined) return null;
-  const match = /access_token=([^;]+)/.exec(document.cookie);
-  return match ? match[1] : null;
+  const cookie = globalThis.document?.cookie;
+  if (!cookie) return null;
+
+  const tokenPair = cookie
+    .split('; ')
+    .find((pair) => pair.startsWith('access_token='));
+
+  return tokenPair ? tokenPair.slice('access_token='.length) : null;
 }
 
 async function apiRequest<T>(

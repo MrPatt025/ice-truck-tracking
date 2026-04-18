@@ -11,6 +11,7 @@ import { ObjectPool } from '../dataViz/objectPool';
 import { RingBuffer } from '../ringBuffer';
 import { SpatialIndex } from '../dataViz/spatialIndex';
 import type { SpatialEntity, TruckTelemetry } from '../types';
+import { randomInt } from 'node:crypto';
 
 // ─── Helpers ───────────────────────────────────────────────────
 
@@ -101,7 +102,7 @@ describe('Memory Guard — Spatial Index Rebuild', () => {
 
         for (let round = 0; round < 10; round++) {
             const entities = Array.from({ length: 1000 }, (_, i) =>
-                makeTruck(`T${i}`, Math.random() * 1000, Math.random() * 1000),
+                makeTruck(`T${i}`, randomInt(1000), randomInt(1000)),
             );
             idx.bulkLoad(entities);
             expect(idx.size).toBe(1000);
@@ -114,7 +115,7 @@ describe('Memory Guard — Spatial Index Rebuild', () => {
     it('clear after bulk load fully resets', () => {
         const idx = new SpatialIndex();
         idx.bulkLoad(Array.from({ length: 5000 }, (_, i) =>
-            makeTruck(`T${i}`, Math.random() * 500, Math.random() * 500),
+            makeTruck(`T${i}`, randomInt(500), randomInt(500)),
         ));
 
         expect(idx.size).toBe(5000);
@@ -144,7 +145,7 @@ describe('Memory Guard — Sustained Computation Soak', () => {
             // Rebuild spatial index every 100 iterations
             if (iter % 100 === 0) {
                 const entities = Array.from({ length: 100 }, (_, i) =>
-                    makeTruck(`T${i}`, Math.random() * 100, Math.random() * 100),
+                    makeTruck(`T${i}`, randomInt(100), randomInt(100)),
                 );
                 idx.bulkLoad(entities);
             }

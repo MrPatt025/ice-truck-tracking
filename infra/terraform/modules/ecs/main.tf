@@ -1,9 +1,21 @@
 resource "aws_ecs_cluster" "main" {
   name = "${var.project_name}-${var.environment}"
-  
+
   setting {
     name  = "containerInsights"
     value = "enabled"
+  }
+
+  configuration {
+    execute_command_configuration {
+      kms_key_id = aws_kms_key.logs.arn
+      logging    = "OVERRIDE"
+
+      log_configuration {
+        cloud_watch_encryption_enabled = true
+        cloud_watch_log_group_name     = aws_cloudwatch_log_group.app.name
+      }
+    }
   }
 }
 
@@ -101,4 +113,16 @@ resource "aws_security_group" "ecs_tasks" {
 resource "aws_cloudwatch_log_group" "app" {
   name              = "/ecs/${var.project_name}-${var.environment}"
   retention_in_days = 7
+  kms_key_id        = aws_kms_key.logs.arn
+}
+
+resource "aws_kms_key" "logs" {
+  description             = "KMS key for ECS cluster command and log encryption"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+}
+
+resource "aws_kms_alias" "logs" {
+  name          = "alias/${var.project_name}-${var.environment}-ecs-logs"
+  target_key_id = aws_kms_key.logs.key_id
 }

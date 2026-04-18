@@ -5,6 +5,7 @@
  * No DOM, no WebGL, pure data structure tests.
  */
 import { ObjectPool } from '../dataViz/objectPool';
+import { randomInt } from 'node:crypto';
 
 describe('ObjectPool', () => {
     it('creates new objects via factory when pool is empty', () => {
@@ -52,7 +53,7 @@ describe('ObjectPool', () => {
     it('calls reset function on release', () => {
         const resets: number[] = [];
         const pool = new ObjectPool(
-            () => ({ id: Math.random() }),
+            () => ({ id: randomInt(1_000_000) }),
             0,
             (obj) => { resets.push(obj.id); },
         );

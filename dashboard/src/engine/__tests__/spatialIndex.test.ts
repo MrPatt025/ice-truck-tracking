@@ -6,6 +6,7 @@
  */
 import { SpatialIndex, EntityMap } from '../dataViz/spatialIndex';
 import type { SpatialEntity, TruckTelemetry } from '../types';
+import { randomInt } from 'node:crypto';
 
 // ─── Helpers ───────────────────────────────────────────────────
 
@@ -35,7 +36,7 @@ function makeTruck(id: string, x: number, y: number): SpatialEntity {
 function makeEntities(count: number): SpatialEntity[] {
     const entities: SpatialEntity[] = [];
     for (let i = 0; i < count; i++) {
-        entities.push(makeTruck(`T${i}`, Math.random() * 1000, Math.random() * 1000));
+        entities.push(makeTruck(`T${i}`, randomInt(1000), randomInt(1000)));
     }
     return entities;
 }

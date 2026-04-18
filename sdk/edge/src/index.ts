@@ -24,6 +24,30 @@ export const calculateDistance = (
 }
 
 export const validateEmail = (email: string): boolean => {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return re.test(email)
+  if (email.length === 0 || email !== email.trim()) {
+    return false
+  }
+
+  const atIndex = email.indexOf('@')
+  if (atIndex <= 0 || atIndex !== email.lastIndexOf('@') || atIndex === email.length - 1) {
+    return false
+  }
+
+  const localPart = email.slice(0, atIndex)
+  const domainPart = email.slice(atIndex + 1)
+
+  if (
+    localPart.startsWith('.')
+    || localPart.endsWith('.')
+    || domainPart.startsWith('.')
+    || domainPart.endsWith('.')
+    || localPart.includes(' ')
+    || domainPart.includes(' ')
+    || !domainPart.includes('.')
+    || domainPart.includes('..')
+  ) {
+    return false
+  }
+
+  return localPart.length <= 64 && domainPart.length <= 255
 }

@@ -8,7 +8,7 @@ RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
 WORKDIR /usr/src/app
 
 # Copy package files
-COPY package.json ./
+COPY --chown=node:node package.json ./
 
 # Configure NPM network retry settings to prevent ECONNRESET timeouts
 ENV NPM_CONFIG_FETCH_RETRIES=5
@@ -18,8 +18,8 @@ ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 # Development stage
 FROM base AS development
 RUN npm install --ignore-scripts
-COPY index.js swagger.json ./
-COPY src ./src
+COPY --chown=node:node index.js swagger.json ./
+COPY --chown=node:node src ./src
 EXPOSE 5000
 USER node
 CMD ["dumb-init", "npm", "run", "dev"]
@@ -38,11 +38,11 @@ RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
 WORKDIR /usr/src/app
 
 # Copy production dependencies
-COPY --from=dependencies /usr/src/app/node_modules ./node_modules
+COPY --from=dependencies --chown=node:node /usr/src/app/node_modules ./node_modules
 
 # Copy application code
-COPY index.js swagger.json ./
-COPY src ./src
+COPY --chown=node:node index.js swagger.json ./
+COPY --chown=node:node src ./src
 
 # Set environment variables
 ENV NODE_ENV=production

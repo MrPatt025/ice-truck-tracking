@@ -6,7 +6,7 @@ function trimPathTrailingSlashes(url: URL): void {
 
 function normalizeApiRoot(configuredApiRoot: string): string {
   const trimmed = configuredApiRoot.trim()
-  const candidate = /^[a-z]+:\/\//i.test(trimmed)
+  const candidate = trimmed.startsWith('http://') || trimmed.startsWith('https://')
     ? trimmed
     : `http://${trimmed}`
 
@@ -41,7 +41,8 @@ export function resolveApiBaseV1(): string {
 
   if (
     globalThis.window !== undefined
-    && /^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)
+    && (globalThis.window.location.hostname === 'localhost'
+      || globalThis.window.location.hostname === '127.0.0.1')
   ) {
     return '/api/v1'
   }
@@ -61,7 +62,8 @@ export function resolveMetricsIngestUrl(): string {
 
   if (
     globalThis.window !== undefined
-    && /^(localhost|127\.0\.0\.1)$/i.test(globalThis.window.location.hostname)
+    && (globalThis.window.location.hostname === 'localhost'
+      || globalThis.window.location.hostname === '127.0.0.1')
   ) {
     return '/metrics'
   }

@@ -11,7 +11,9 @@ function trimPathTrailingSlashes(url: URL): void {
 }
 
 function normalizeBackendOrigin(rawUrl: string): string {
-  const candidate = /^[a-z]+:\/\//i.test(rawUrl) ? rawUrl : `http://${rawUrl}`
+  const candidate = rawUrl.startsWith('http://') || rawUrl.startsWith('https://')
+    ? rawUrl
+    : `http://${rawUrl}`
   const url = new URL(candidate)
 
   trimPathTrailingSlashes(url)
@@ -167,6 +169,18 @@ const nextConfig: NextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
           },
           {
             key: 'Strict-Transport-Security',

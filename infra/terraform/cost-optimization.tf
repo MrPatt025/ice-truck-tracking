@@ -9,6 +9,85 @@ variable "docker_image_dashboard" {
   type        = string
 }
 
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "alerts" {
+  description             = "KMS key for Ice Truck alerting and logging resources"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_kms_alias" "alerts" {
+  name          = "alias/ice-truck-alerts-${var.environment}"
+  target_key_id = aws_kms_key.alerts.key_id
+}
+
+resource "aws_s3_bucket" "alb_access_logs" {
+  bucket = "ice-truck-alb-access-logs-${var.environment}-${data.aws_caller_identity.current.account_id}"
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "alb_access_logs" {
+  bucket = aws_s3_bucket.alb_access_logs.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "alb_access_logs" {
+  bucket = aws_s3_bucket.alb_access_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.alerts.arn
+      sse_algorithm     = "aws:kms"
+    }
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_policy" "alb_access_logs" {
+  bucket = aws_s3_bucket.alb_access_logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AWSLogDeliveryWrite"
+        Effect = "Allow"
+        Principal = {
+          Service = "logdelivery.elasticloadbalancing.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "${aws_s3_bucket.alb_access_logs.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
+      },
+      {
+        Sid    = "AWSLogDeliveryAclCheck"
+        Effect = "Allow"
+        Principal = {
+          Service = "logdelivery.elasticloadbalancing.amazonaws.com"
+        }
+        Action   = "s3:GetBucketAcl"
+        Resource = aws_s3_bucket.alb_access_logs.arn
+      }
+    ]
+  })
+}
+
 # ECS Cluster with Spot Instances
 resource "aws_ecs_cluster" "main" {
   name = "ice-truck-cluster"
@@ -32,6 +111,12 @@ resource "aws_lb" "main" {
   subnets            = aws_subnet.public[*].id
 
   enable_deletion_protection = false
+
+  access_logs {
+    bucket  = aws_s3_bucket.alb_access_logs.id
+    prefix  = "alb"
+    enabled = true
+  }
 
   tags = {
     Environment = var.environment
@@ -103,7 +188,8 @@ resource "aws_cloudwatch_metric_alarm" "billing" {
 }
 
 resource "aws_sns_topic" "billing_alerts" {
-  name = "ice-truck-billing-alerts"
+  name              = "ice-truck-billing-alerts"
+  kms_master_key_id = aws_kms_key.alerts.arn
 }
 
 # Auto Scaling with Spot Instances

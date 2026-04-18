@@ -1,5 +1,4 @@
 /* eslint-disable no-undef */
-// NOSONAR - k6 platform does not provide crypto module; Math.random() acceptable for load test data generation
 import http from 'k6/http';
 import { check, sleep, group } from 'k6';
 import { Rate, Trend, Counter } from 'k6/metrics';
@@ -119,12 +118,14 @@ export default function vuFunction(data) { // NOSONAR — k6 VU function receive
 
     // Simulate telemetry ingestion (POST)
     group('Telemetry Ingestion', () => {
+      const seed = Math.trunc((((__VU + 1) * 0x45d9f3b) ^ ((__ITER + 1) * 0x9e3779b9) ^ 0x7f4a7c15));
+      const nextRandom = createDeterministicRandom(seed);
         const payload = JSON.stringify({
-            truck_id: `truck-${String(Math.floor(Math.random() * 10) + 1).padStart(3, '0')}`,
-            latitude: 13.7563 + (Math.random() - 0.5) * 0.02,
-            longitude: 100.5018 + (Math.random() - 0.5) * 0.02,
-            speed: Math.round(Math.random() * 60),
-            temperature: -10 + Math.random() * 5,
+          truck_id: `truck-${String(Math.floor(nextRandom() * 10) + 1).padStart(3, '0')}`,
+          latitude: 13.7563 + (nextRandom() - 0.5) * 0.02,
+          longitude: 100.5018 + (nextRandom() - 0.5) * 0.02,
+          speed: Math.round(nextRandom() * 60),
+          temperature: -10 + nextRandom() * 5,
             timestamp: new Date().toISOString(),
         });
 
@@ -153,4 +154,13 @@ export function handleSummary(data) { // NOSONAR — k6 lifecycle function
 function textSummary(data, _opts) { // NOSONAR
     // Minimal summary fallback (k6 provides built-in textSummary)
     return JSON.stringify(data.metrics, null, 2);
+}
+
+function createDeterministicRandom(seed) {
+  let state = Math.trunc(seed);
+
+  return () => {
+    state = Math.trunc((Math.imul(state, 1664525) + 1013904223) % 4294967296);
+    return (state >>> 0) / 4294967296;
+  };
 }
