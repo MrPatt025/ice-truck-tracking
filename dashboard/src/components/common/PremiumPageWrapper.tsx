@@ -45,6 +45,18 @@ const CONTENT_VARIANTS = {
   },
 }
 
+const CHILDREN_VARIANTS = {
+  hidden: { opacity: 0, y: 10 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.32,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
+  },
+}
+
 const PremiumPageWrapper = memo(function PremiumPageWrapper({
   children,
   className,
@@ -73,6 +85,16 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
       )}
       style={{ contain: 'layout style paint' }}
     >
+      <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(66rem_36rem_at_18%_-12%,rgba(56,189,248,.16),transparent),radial-gradient(78rem_40rem_at_90%_108%,rgba(16,185,129,.14),transparent)]' />
+      <div
+        aria-hidden='true'
+        className='pointer-events-none absolute inset-0 -z-10 opacity-[0.025] mix-blend-overlay'
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23noise)'/%3E%3C/svg%3E\")",
+          backgroundSize: '90px 90px',
+        }}
+      />
       <motion.div
         variants={CONTENT_VARIANTS}
         className={cn(
@@ -101,7 +123,13 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
             <div className='pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-cyan-200/20 shadow-[inset_0_0_35px_-20px_rgba(56,189,248,.95)]' />
           </>
         ) : null}
-        {children}
+        <motion.div
+          variants={CHILDREN_VARIANTS}
+          className='relative z-[1]'
+          style={{ contain: 'layout style paint' }}
+        >
+          {children}
+        </motion.div>
       </motion.div>
     </motion.section>
   )
