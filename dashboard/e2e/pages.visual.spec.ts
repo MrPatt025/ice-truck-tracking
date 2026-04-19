@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { setE2EAuthCookies } from './support/auth';
 
 /* ================================================================
    Visual Regression Tests
@@ -20,17 +21,6 @@ const HYDRATION_TIMEOUT = 20_000;
 
 const waitForHydration = async (page: Page) => {
     await page.waitForTimeout(2_000);
-};
-
-/** Set auth cookie so middleware allows dashboard access */
-const setAuthCookie = async (page: Page, baseURL: string) => {
-    await page.context().addCookies([
-        {
-            name: 'access_token',
-            value: 'e2e-test-token',
-            url: baseURL,
-        },
-    ]);
 };
 
 /** Disable animations for deterministic screenshots */
@@ -100,7 +90,7 @@ test.describe('Visual — Login Page', () => {
 // ───────────────────────────────────────────────────────────────
 test.describe('Visual — Dashboard', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
     });
 
     test('dashboard full layout', async ({ page }) => {
@@ -145,7 +135,7 @@ test.describe('Visual — Dashboard', () => {
 // ───────────────────────────────────────────────────────────────
 test.describe('Visual — Responsive', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
     });
 
     test('dashboard at tablet width (768px)', async ({ page }) => {

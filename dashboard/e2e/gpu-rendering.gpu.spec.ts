@@ -6,20 +6,10 @@
  * ✓ Three.js scene renders truck markers
  */
 import { test, expect } from '@playwright/test';
+import { setE2EAuthCookies } from './support/auth';
 
 const setAuthCookie = async (page: import('@playwright/test').Page, baseURL: string) => {
-    await page.context().addCookies([
-        {
-            name: 'auth-token',
-            value: 'e2e-test-token',
-            url: baseURL,
-        },
-        {
-            name: 'access_token',
-            value: 'e2e-test-token',
-            url: baseURL,
-        },
-    ]);
+    await setE2EAuthCookies(page, baseURL, true);
 };
 
 const waitForDashboardCanvas = async (page: import('@playwright/test').Page): Promise<void> => {

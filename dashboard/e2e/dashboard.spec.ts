@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { setE2EAuthCookies } from './support/auth';
 
 /* ================================================================
    Dashboard Page — End-to-End Tests
@@ -14,26 +15,12 @@ const waitForHydration = async (page: Page) => {
     await page.waitForTimeout(1_500);
 };
 
-/**
- * The Next.js middleware guards /dashboard with an access_token cookie.
- * In E2E tests we set a synthetic token so the middleware lets us through.
- */
-const setAuthCookie = async (page: Page, baseURL: string) => {
-    await page.context().addCookies([
-        {
-            name: 'access_token',
-            value: 'e2e-test-token',
-          url: baseURL,
-      },
-  ]);
-};
-
 // ===============================================================
 // 1. PAGE LOADING & BASIC STRUCTURE
 // ===============================================================
 test.describe('Dashboard — Page Load', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
   });
 
     test('should load dashboard page with correct URL', async ({ page }) => {
@@ -63,7 +50,7 @@ test.describe('Dashboard — Page Load', () => {
 // ===============================================================
 test.describe('Dashboard — Header', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
         await page.goto('/dashboard');
         await waitForHydration(page);
     });
@@ -104,7 +91,7 @@ test.describe('Dashboard — Header', () => {
 // ===============================================================
 test.describe('Dashboard — Controls', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
         await page.goto('/dashboard');
         await waitForHydration(page);
     });
@@ -147,7 +134,7 @@ test.describe('Dashboard — Controls', () => {
 // ===============================================================
 test.describe('Dashboard — Metrics', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
         await page.goto('/dashboard');
         await waitForHydration(page);
     });
@@ -202,7 +189,7 @@ test.describe('Dashboard — Metrics', () => {
 // ===============================================================
 test.describe('Dashboard — Charts', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
         await page.goto('/dashboard');
         await waitForHydration(page);
     });
@@ -255,7 +242,7 @@ test.describe('Dashboard — Charts', () => {
 // ===============================================================
 test.describe('Dashboard — Toolbar', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
         await page.goto('/dashboard');
         await waitForHydration(page);
     });
@@ -291,7 +278,7 @@ test.describe('Dashboard — Toolbar', () => {
 // ===============================================================
 test.describe('Dashboard — Interactions', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
         await page.goto('/dashboard');
         await waitForHydration(page);
     });
@@ -335,7 +322,7 @@ test.describe('Dashboard — Interactions', () => {
 // ===============================================================
 test.describe('Dashboard — Responsive', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
     });
 
     test('should render on mobile viewport', async ({ page }) => {
@@ -384,7 +371,7 @@ test.describe('Dashboard — Auth Middleware', () => {
         page,
         baseURL,
     }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
         await page.goto('/dashboard');
         await expect(page).toHaveURL(/\/dashboard/);
     });
@@ -395,7 +382,7 @@ test.describe('Dashboard — Auth Middleware', () => {
 // ===============================================================
 test.describe('Dashboard — Accessibility', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
     });
 
     test('should have lang attribute on html', async ({ page }) => {

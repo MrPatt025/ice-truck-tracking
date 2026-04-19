@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { setE2EAuthCookies } from './support/auth';
 
 /**
  * Accessibility Audit — E2E Tests
@@ -6,13 +7,6 @@ import { test, expect, type Page } from '@playwright/test';
  *
  * Prerequisite: pnpm add -D @axe-core/playwright
  */
-
-// Helper: set auth cookie for protected pages
-const setAuthCookie = async (page: Page, baseURL: string) => {
-    await page.context().addCookies([
-        { name: 'access_token', value: 'e2e-test-token', url: baseURL },
-    ]);
-};
 
 // ─── Axe runner helper ─────────────────────────────────────────
 async function runAxeAudit(page: Page) {
@@ -103,7 +97,7 @@ test.describe('A11Y — Login Page', () => {
 // ===============================================================
 test.describe('A11Y — Dashboard Page', () => {
     test.beforeEach(async ({ page, baseURL }) => {
-        await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
     });
 
     test('dashboard page passes WCAG 2.1 AA audit', async ({ page }) => {

@@ -1,20 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
+import { setE2EAuthCookies } from './support/auth';
 
 const HYDRATION_TIMEOUT_MS = 20_000;
-
-async function setAuthCookie(page: Page, baseURL: string): Promise<void> {
-  const origin = new URL(baseURL);
-  await page.context().addCookies([
-    {
-      name: 'access_token',
-      value: 'e2e-test-token',
-      domain: origin.hostname,
-      path: '/',
-      secure: origin.protocol === 'https:',
-      sameSite: 'Lax',
-    },
-  ]);
-}
 
 async function gotoDashboardWithRetry(page: Page): Promise<void> {
   const MAX_ATTEMPTS = 3;
@@ -34,7 +21,7 @@ async function gotoDashboardWithRetry(page: Page): Promise<void> {
 
 test.describe('Dashboard feature polish', () => {
   test.beforeEach(async ({ page, baseURL }) => {
-    await setAuthCookie(page, baseURL ?? 'http://localhost:3000');
+    await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
     await gotoDashboardWithRetry(page);
     await expect(page.getByTestId('mission-control-surface')).toBeVisible({ timeout: HYDRATION_TIMEOUT_MS });
   });

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { setE2EAuthCookies } from './support/auth';
 
 /* ================================================================
    Landing Page — End-to-End Tests
@@ -395,13 +396,7 @@ test.describe('Navigation Flow', () => {
         baseURL,
     }) => {
         // Set auth cookie so the middleware lets us through to /dashboard
-        await page.context().addCookies([
-            {
-                name: 'access_token',
-                value: 'e2e-test-token',
-                url: baseURL ?? 'http://localhost:3000',
-            },
-        ]);
+        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
 
         await page.goto('/');
         await waitForAnimations(page);
