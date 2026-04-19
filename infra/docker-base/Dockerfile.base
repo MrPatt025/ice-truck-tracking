@@ -27,14 +27,50 @@ RUN npm ci --only=production --ignore-scripts && npm cache clean --force
 # Development stage
 FROM base AS development
 RUN npm ci --ignore-scripts
-COPY . .
+COPY backend ./backend
+COPY dashboard ./dashboard
+COPY docs ./docs
+COPY infra ./infra
+COPY mobile-app ./mobile-app
+COPY monitoring ./monitoring
+COPY nginx ./nginx
+COPY scripts ./scripts
+COPY sdk ./sdk
+COPY src ./src
+COPY tests ./tests
+COPY .dockerignore ./
+COPY eslint.config.mjs ./
+COPY index.js ./
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+COPY tsconfig.json ./
+COPY turbo.json ./
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
 
 # Build stage
 FROM base AS builder
 RUN npm ci --ignore-scripts
-COPY . .
+COPY backend ./backend
+COPY dashboard ./dashboard
+COPY docs ./docs
+COPY infra ./infra
+COPY mobile-app ./mobile-app
+COPY monitoring ./monitoring
+COPY nginx ./nginx
+COPY scripts ./scripts
+COPY sdk ./sdk
+COPY src ./src
+COPY tests ./tests
+COPY .dockerignore ./
+COPY eslint.config.mjs ./
+COPY index.js ./
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+COPY tsconfig.json ./
+COPY turbo.json ./
 RUN npm run build
 
 # Production stage

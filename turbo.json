@@ -93,7 +93,8 @@
         "DOCKER_PASSWORD",
         "COMPRESSION_ENABLED",
         "COMPRESSION_LEVEL",
-        "HTTP2_ENABLED"
+        "HTTP2_ENABLED",
+        "SALT_ROUNDS"
       ],
       "dependsOn": ["^build", "type-check", "lint"],
       "outputs": ["dist/**", ".next/**", "build/**", "lib/**", "out/**"],

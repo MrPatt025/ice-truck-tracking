@@ -62,6 +62,23 @@ resource "aws_s3_bucket_logging" "alb_access_logs" {
   target_prefix = "s3-access/"
 }
 
+resource "aws_s3_bucket_lifecycle_configuration" "alb_access_logs" {
+  bucket = aws_s3_bucket.alb_access_logs.id
+
+  rule {
+    id     = "retain-access-logs-90-days"
+    status = "Enabled"
+
+    filter {
+      prefix = ""
+    }
+
+    expiration {
+      days = 90
+    }
+  }
+}
+
 resource "aws_s3_bucket_policy" "alb_access_logs" {
   bucket = aws_s3_bucket.alb_access_logs.id
 

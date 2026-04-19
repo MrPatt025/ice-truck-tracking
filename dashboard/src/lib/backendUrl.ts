@@ -6,9 +6,12 @@ function trimPathTrailingSlashes(url: URL): void {
 
 function normalizeApiRoot(configuredApiRoot: string): string {
   const trimmed = configuredApiRoot.trim()
-  const candidate = trimmed.startsWith('http://') || trimmed.startsWith('https://')
-    ? trimmed
-    : `http://${trimmed}`
+  const isLocalHostLike = /^(localhost|127\.0\.0\.1)(:|\/|$)/i.test(trimmed)
+  let candidate = trimmed
+
+  if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+    candidate = `${isLocalHostLike ? 'http' : 'https'}://${trimmed}`
+  }
 
   const url = new URL(candidate)
   trimPathTrailingSlashes(url)

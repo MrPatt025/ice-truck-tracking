@@ -39,6 +39,40 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
 
+function trimTrailingSlashes(url: URL): void {
+  while (url.pathname.length > 1 && url.pathname.endsWith('/')) {
+    url.pathname = url.pathname.slice(0, -1)
+  }
+}
+
+function isLocalHostLike(rawUrl: string): boolean {
+  return /^(localhost|127\.0\.0\.1)(:|\/|$)/i.test(rawUrl)
+}
+
+function toWebSocketProtocol(url: URL): string {
+  if (url.protocol === 'http:') {
+    url.protocol = 'ws:'
+  } else if (url.protocol === 'https:') {
+    url.protocol = 'wss:'
+  }
+
+  trimTrailingSlashes(url)
+  return url.toString()
+}
+
+function parseWebSocketCandidate(candidate: string): string | null {
+  try {
+    return toWebSocketProtocol(new URL(candidate))
+  } catch {
+    try {
+      const scheme = isLocalHostLike(candidate) ? 'http' : 'https'
+      return toWebSocketProtocol(new URL(`${scheme}://${candidate}`))
+    } catch {
+      return null
+    }
+  }
+}
+
 function summarizeFleetTelemetry(trucks: readonly FleetTruck[]): {
   temperatureC: number
   fogDensity: number
@@ -63,26 +97,7 @@ function toWebSocketUrl(rawUrl: string): string {
   const trimmed = rawUrl.trim()
   if (!trimmed) return 'ws://localhost:5000'
 
-  try {
-    const url = new URL(trimmed)
-    if (url.protocol === 'http:') url.protocol = 'ws:'
-    else if (url.protocol === 'https:') url.protocol = 'wss:'
-    while (url.pathname.length > 1 && url.pathname.endsWith('/')) {
-      url.pathname = url.pathname.slice(0, -1)
-    }
-    return url.toString()
-  } catch {
-    try {
-      const url = new URL(`http://${trimmed}`)
-      url.protocol = 'ws:'
-      while (url.pathname.length > 1 && url.pathname.endsWith('/')) {
-        url.pathname = url.pathname.slice(0, -1)
-      }
-      return url.toString()
-    } catch {
-      return 'ws://localhost:5000'
-    }
-  }
+  return parseWebSocketCandidate(trimmed) ?? 'ws://localhost:5000'
 }
 
 function resolveWebSocketUrl(): string {
