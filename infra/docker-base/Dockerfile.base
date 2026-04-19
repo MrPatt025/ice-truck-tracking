@@ -17,9 +17,9 @@ ENV NPM_CONFIG_FETCH_RETRIES=5
 ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000
 ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 
-# Copy package files
-COPY --chown=node:node package.json ./
-COPY --chown=node:node turbo.json ./
+# Copy package files (owned by root, read-only)
+COPY package.json ./
+COPY turbo.json ./
 
 # Install dependencies
 RUN npm ci --only=production --ignore-scripts && npm cache clean --force
@@ -27,14 +27,14 @@ RUN npm ci --only=production --ignore-scripts && npm cache clean --force
 # Development stage
 FROM base AS development
 RUN npm ci --ignore-scripts
-COPY --chown=node:node . .
+COPY . .
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
 
 # Build stage
 FROM base AS builder
 RUN npm ci --ignore-scripts
-COPY --chown=node:node . .
+COPY . .
 RUN npm run build
 
 # Production stage
