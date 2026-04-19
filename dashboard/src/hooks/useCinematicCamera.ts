@@ -1,15 +1,16 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import {
     useMotionValue,
     useMotionValueEvent,
     useScroll,
     useTransform,
 } from 'framer-motion'
-import { setThreeCameraFov } from '@/engine'
 
 type CinematicPhase = 'idle' | 'outro' | 'intro'
+
+const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
 
 export function useCinematicCamera(
     canvas: HTMLCanvasElement | null,
@@ -17,6 +18,7 @@ export function useCinematicCamera(
     phase: CinematicPhase,
     progress: number
 ) {
+    const setCameraFovRef = useRef<(fov: number) => void>(() => { })
     const { scrollYProgress } = useScroll()
     const transitionProgress = useMotionValue(0)
     const cinematicDriver = useTransform(
@@ -32,12 +34,31 @@ export function useCinematicCamera(
     const cinematicOpacity = useTransform(cinematicDriver, [0, 1], [0.28, 0.84])
 
     useEffect(() => {
+        if (E2E_LIGHT_MODE) return
+
+        let mounted = true
+        void import('@/engine/orchestrator')
+            .then(mod => {
+                if (!mounted) return
+                setCameraFovRef.current = mod.setThreeCameraFov
+            })
+            .catch(() => {
+                setCameraFovRef.current = () => { }
+            })
+
+        return () => {
+            mounted = false
+            setCameraFovRef.current = () => { }
+        }
+    }, [])
+
+    useEffect(() => {
         transitionProgress.set(progress)
     }, [progress, transitionProgress])
 
     useMotionValueEvent(cinematicFov, 'change', latest => {
         const clamped = Math.min(68, Math.max(36, latest))
-        setThreeCameraFov(clamped)
+        setCameraFovRef.current(clamped)
         if (!canvas) return
         canvas.style.setProperty('--camera-fov', clamped.toFixed(2))
     })
@@ -52,7 +73,7 @@ export function useCinematicCamera(
         if (!canvas) return
 
         const reset = () => {
-            setThreeCameraFov(45)
+            setCameraFovRef.current(45)
             canvas.style.opacity = '0.32'
             canvas.style.transform = 'translate3d(0, 0, 0) scale(1)'
             canvas.style.filter = 'saturate(1.06) contrast(1.03) blur(0px)'
