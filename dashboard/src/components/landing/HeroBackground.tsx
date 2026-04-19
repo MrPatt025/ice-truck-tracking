@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Canvas as OffscreenCanvas } from '@react-three/offscreen'
+import dynamic from 'next/dynamic'
 import {
   useMotionValue,
   useMotionValueEvent,
@@ -16,7 +16,6 @@ import { useCameraSelectionStore } from '@/stores/cameraSelectionStore'
 import { dispatchWsHealthEvent } from '@/lib/healthEvents'
 import { secureRandomInt } from '@/lib/secureRandom'
 import { parseFleetLivePacket } from '@/lib/schemas/telemetry'
-import { registerCinematicWorkerWithMap } from '@/engine/orchestrator'
 import type {
   CinematicTransitionPhase,
   CinematicWorkerMessage,
@@ -30,6 +29,11 @@ type HeroBackgroundProps = {
 }
 
 const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
+
+const OffscreenCanvas = dynamic(
+  () => import('@react-three/offscreen').then(mod => mod.Canvas),
+  { ssr: false }
+)
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
@@ -123,6 +127,9 @@ function HeroBackground({
   React.useEffect(() => {
     if (E2E_LIGHT_MODE) return
 
+    let mounted = true
+    let registerWorkerWithMap: ((worker: Worker | null) => void) | null = null
+
     const worker = new Worker(
       new URL(
         '../../workers/cinematicScene.worker.bootstrap.ts',
@@ -134,8 +141,16 @@ function HeroBackground({
     workerRef.current = worker
     setWorker(worker)
 
-    // Register worker with map layer for interactive camera tracking
-    registerCinematicWorkerWithMap(worker)
+    // Register worker with map layer lazily to avoid loading map/deck stack on landing startup.
+    void import('@/engine/orchestrator')
+      .then(mod => {
+        if (!mounted) return
+        registerWorkerWithMap = mod.registerCinematicWorkerWithMap
+        registerWorkerWithMap(worker)
+      })
+      .catch(() => {
+        registerWorkerWithMap = null
+      })
 
     const sendViewport = () => {
       const msg: CinematicWorkerMessage = {
@@ -153,6 +168,7 @@ function HeroBackground({
     globalThis.addEventListener('resize', sendViewport, { passive: true })
 
     return () => {
+      mounted = false
       globalThis.removeEventListener('resize', sendViewport)
       // Send cleanup message to worker to dispose GPU resources
       try {
@@ -163,7 +179,7 @@ function HeroBackground({
       worker.terminate()
       workerRef.current = null
       setWorker(null)
-      registerCinematicWorkerWithMap(null)
+      registerWorkerWithMap?.(null)
     }
   }, [])
 
@@ -278,7 +294,7 @@ function HeroBackground({
       clearReconnectTimer()
 
       const backoff = Math.min(10000, 1000 * 2 ** reconnectAttemptRef.current)
-        const jitter = secureRandomInt(250)
+      const jitter = secureRandomInt(250)
       const nextAttempt = reconnectAttemptRef.current + 1
       reconnectAttemptRef.current = nextAttempt
 

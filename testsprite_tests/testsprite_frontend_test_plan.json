@@ -1,0 +1,38 @@
+[
+  {
+    "id": "TC001",
+    "title": "Landing page renders and CTA is visible",
+    "description": "Verify the landing page loads and primary call-to-action is present.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      "Navigate to /",
+      "Verify main heading is visible",
+      "Verify Open Dashboard CTA is visible"
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Protected route redirects when unauthenticated",
+    "description": "Verify dashboard route redirects to login when no auth session is set.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      "Navigate to /dashboard without auth cookies",
+      "Verify browser is redirected to /login",
+      "Verify login form fields are visible"
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Fleet page shell loads",
+    "description": "Verify fleet page layout shell renders for authenticated route handling.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      "Navigate to /fleet",
+      "Verify page main content region is visible",
+      "Verify no fatal runtime error is shown"
+    ]
+  }
+]
