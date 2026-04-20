@@ -196,7 +196,7 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <PremiumPageWrapper mode='none' className='w-full'>
+    <PremiumPageWrapper mode='glass' className='w-full' denseNoise>
       <Suspense fallback={<div className="flex items-center justify-center min-h-[200px]"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
         <ResetPasswordContent />
       </Suspense>

@@ -39,6 +39,7 @@ const MapModeToggle = memo(function MapModeToggle({
           onClick={() => onModeChange('live')}
           aria-label='Switch to live fleet mode'
           aria-pressed={isLiveMode}
+          data-testid='map-mode-live'
           className={`${baseButtonClass} ${isLiveMode ? 'text-white' : 'text-slate-300 hover:bg-white/10'}`}
         >
           Live Fleet
@@ -57,6 +58,7 @@ const MapModeToggle = memo(function MapModeToggle({
           onClick={() => onModeChange('historical')}
           aria-label='Switch to historical heatmap mode'
           aria-pressed={isHistoricalMode}
+          data-testid='map-mode-historical'
           className={`${baseButtonClass} ${isHistoricalMode ? 'text-white' : 'text-slate-300 hover:bg-white/10'}`}
         >
           Historical Heatmap

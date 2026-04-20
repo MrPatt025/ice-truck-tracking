@@ -2,37 +2,76 @@
   {
     "id": "TC001",
     "title": "Landing page renders and CTA is visible",
-    "description": "Verify the landing page loads and primary call-to-action is present.",
+    "description": "Verify the landing page loads and the primary call-to-action is present.",
     "category": "functional",
     "priority": "High",
     "steps": [
       "Navigate to /",
-      "Verify main heading is visible",
-      "Verify Open Dashboard CTA is visible"
+      "Verify the main heading is visible",
+      "Verify the Open Dashboard CTA is visible"
     ]
   },
   {
     "id": "TC002",
-    "title": "Protected route redirects when unauthenticated",
-    "description": "Verify dashboard route redirects to login when no auth session is set.",
-    "category": "security",
+    "title": "Login page renders with form controls",
+    "description": "Verify the login page loads and the auth form fields are visible.",
+    "category": "functional",
     "priority": "High",
     "steps": [
-      "Navigate to /dashboard without auth cookies",
-      "Verify browser is redirected to /login",
-      "Verify login form fields are visible"
+      "Navigate to /login",
+      "Verify email input is visible",
+      "Verify password input is visible",
+      "Verify the sign in button is visible"
     ]
   },
   {
     "id": "TC003",
-    "title": "Fleet page shell loads",
-    "description": "Verify fleet page layout shell renders for authenticated route handling.",
+    "title": "Protected dashboard route redirects unauthenticated users",
+    "description": "Verify the dashboard route redirects to the login page when no auth session is set.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      "Navigate to /dashboard without auth cookies",
+      "Verify the browser is redirected to /login",
+      "Verify the login form fields are visible"
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Forgot password page renders",
+    "description": "Verify the password recovery request page loads.",
     "category": "functional",
     "priority": "Medium",
     "steps": [
-      "Navigate to /fleet",
-      "Verify page main content region is visible",
-      "Verify no fatal runtime error is shown"
+      "Navigate to /forgot-password",
+      "Verify the recovery email input is visible",
+      "Verify the send reset link button is visible"
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Reset password page renders",
+    "description": "Verify the password reset confirmation page loads.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      "Navigate to /reset-password",
+      "Verify the new password input is visible",
+      "Verify the confirm password input is visible"
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Register page renders and shows sign up form",
+    "description": "Verify the registration page loads and displays the sign up form fields.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      "Navigate to /register",
+      "Verify the name input is visible",
+      "Verify the email input is visible",
+      "Verify the password input is visible",
+      "Verify the create account button is visible"
     ]
   }
 ]

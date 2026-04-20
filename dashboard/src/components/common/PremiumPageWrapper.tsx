@@ -10,6 +10,7 @@ type PremiumPageWrapperProps = Readonly<{
   contentClassName?: string
   mode?: 'glass' | 'none'
   animate?: boolean
+  denseNoise?: boolean
 }>
 
 const ENTRY_TRANSITION = {
@@ -75,6 +76,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
   contentClassName,
   mode = 'glass',
   animate = true,
+  denseNoise = false,
 }: PremiumPageWrapperProps) {
   const prefersReducedMotion = useReducedMotion()
   const [isMounted, setIsMounted] = useState(false)
@@ -98,9 +100,13 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
       style={{ contain: 'layout style paint' }}
     >
       <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(66rem_36rem_at_18%_-12%,rgba(56,189,248,.16),transparent),radial-gradient(78rem_40rem_at_90%_108%,rgba(16,185,129,.14),transparent)]' />
+      <div className='pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(120deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0)_40%)]' />
       <div
         aria-hidden='true'
-        className='pointer-events-none absolute inset-0 -z-10 opacity-[0.025] mix-blend-overlay'
+        className={cn(
+          'pointer-events-none absolute inset-0 -z-10 mix-blend-overlay',
+          denseNoise ? 'opacity-[0.04]' : 'opacity-[0.025]'
+        )}
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23noise)'/%3E%3C/svg%3E\")",
@@ -116,7 +122,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         variants={CONTENT_VARIANTS}
         className={cn(
           mode === 'glass' &&
-            'premium-surface relative overflow-hidden rounded-3xl border border-white/20 bg-slate-900/35 shadow-[0_30px_90px_-50px_rgba(56,189,248,0.8),0_12px_40px_-28px_rgba(16,185,129,0.75)] backdrop-blur-2xl supports-[backdrop-filter]:backdrop-saturate-150',
+            'premium-surface relative overflow-hidden rounded-3xl border border-white/20 bg-slate-900/35 shadow-[0_30px_90px_-50px_rgba(56,189,248,0.8),0_12px_40px_-28px_rgba(16,185,129,0.75),inset_0_1px_0_rgba(255,255,255,0.35)] backdrop-blur-2xl supports-[backdrop-filter]:backdrop-saturate-150',
           contentClassName
         )}
         style={{ contain: 'layout style paint' }}
@@ -129,6 +135,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
             />
             <div className='pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-80' />
             <div className='pointer-events-none absolute inset-y-6 left-0 w-px bg-gradient-to-b from-transparent via-cyan-200/25 to-transparent opacity-70' />
+            <div className='pointer-events-none absolute inset-y-6 right-0 w-px bg-gradient-to-b from-transparent via-emerald-200/20 to-transparent opacity-70' />
             <div
               aria-hidden='true'
               className='pointer-events-none absolute inset-0 rounded-3xl opacity-[0.035] mix-blend-overlay'

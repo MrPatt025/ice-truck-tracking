@@ -3,8 +3,8 @@ import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
 
 export default function Home() {
   return (
-    <PremiumPageWrapper mode='none'>
+    <PremiumPageWrapper mode='glass' denseNoise>
       <LandingPage />
     </PremiumPageWrapper>
-  );
+  )
 }

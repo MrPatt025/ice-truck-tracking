@@ -3,7 +3,7 @@ import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 
 export default function Custom500Page() {
   return (
-    <PremiumPageWrapper mode='none' className='w-full'>
+    <PremiumPageWrapper mode='glass' className='w-full' denseNoise>
       <main className='relative min-h-screen overflow-hidden px-6 py-20 text-slate-100'>
         <div className='pointer-events-none absolute inset-0 opacity-35'>
           <div className='absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-400/20 blur-3xl' />

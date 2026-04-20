@@ -71,6 +71,56 @@ function mergeTruckPatch(
   }
 }
 
+function hasTruckChanged(previous: FleetTruck | undefined, next: FleetTruck): boolean {
+  if (!previous) return true
+  return (
+    previous.lat !== next.lat ||
+    previous.lon !== next.lon ||
+    previous.tempC !== next.tempC ||
+    previous.heading !== next.heading ||
+    previous.status !== next.status
+  )
+}
+
+function applyReplaceMode(
+  currentById: Map<string, FleetTruck>,
+  previousTrucks: readonly FleetTruck[],
+  patches: readonly FleetLiveTruckPatch[]
+): readonly FleetTruck[] | null {
+  const nextTrucks: FleetTruck[] = []
+
+  for (const patch of patches) {
+    const nextTruck = mergeTruckPatch(currentById.get(patch.id), patch)
+    if (nextTruck) {
+      nextTrucks.push(nextTruck)
+    }
+  }
+
+  const isUnchanged =
+    nextTrucks.length === previousTrucks.length &&
+    nextTrucks.every((truck, index) => !hasTruckChanged(previousTrucks[index], truck))
+
+  return isUnchanged ? null : nextTrucks
+}
+
+function applyUpsertMode(
+  currentById: Map<string, FleetTruck>,
+  patches: readonly FleetLiveTruckPatch[]
+): readonly FleetTruck[] | null {
+  let hasAnyUpdate = false
+
+  for (const patch of patches) {
+    const previousTruck = currentById.get(patch.id)
+    const nextTruck = mergeTruckPatch(previousTruck, patch)
+    if (nextTruck && hasTruckChanged(previousTruck, nextTruck)) {
+      currentById.set(nextTruck.id, nextTruck)
+      hasAnyUpdate = true
+    }
+  }
+
+  return hasAnyUpdate ? Array.from(currentById.values()) : null
+}
+
 export const useFleetTelemetryStore = create<FleetTelemetryState>()(
   subscribeWithSelector(set => ({
     trucks: [],
@@ -88,31 +138,17 @@ export const useFleetTelemetryStore = create<FleetTelemetryState>()(
 
         const currentById = new Map(state.trucks.map(truck => [truck.id, truck]))
 
-        if (mode === 'replace') {
-          const nextTrucks: FleetTruck[] = []
+        const nextTrucks =
+          mode === 'replace'
+            ? applyReplaceMode(currentById, state.trucks, patches)
+            : applyUpsertMode(currentById, patches)
 
-          for (const patch of patches) {
-            const nextTruck = mergeTruckPatch(currentById.get(patch.id), patch)
-            if (nextTruck) {
-              nextTrucks.push(nextTruck)
-            }
-          }
-
-          return {
-            trucks: nextTrucks,
-            updatedAt: Date.now(),
-          }
-        }
-
-        for (const patch of patches) {
-          const nextTruck = mergeTruckPatch(currentById.get(patch.id), patch)
-          if (nextTruck) {
-            currentById.set(nextTruck.id, nextTruck)
-          }
+        if (!nextTrucks) {
+          return { updatedAt: Date.now() }
         }
 
         return {
-          trucks: Array.from(currentById.values()),
+          trucks: nextTrucks,
           updatedAt: Date.now(),
         }
       }),
