@@ -421,7 +421,12 @@ test.describe('Navigation Flow', () => {
     test('without auth cookie, dashboard link should redirect to /login', async ({
         page,
     }) => {
+        await page.context().clearCookies();
         await page.goto('/');
+        await page.evaluate(() => {
+            window.localStorage.clear();
+            window.sessionStorage.clear();
+        });
         await waitForAnimations(page);
         const navLink = page
             .locator('nav')
