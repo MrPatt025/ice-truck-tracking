@@ -424,8 +424,8 @@ test.describe('Navigation Flow', () => {
         await page.context().clearCookies();
         await page.goto('/');
         await page.evaluate(() => {
-            window.localStorage.clear();
-            window.sessionStorage.clear();
+            globalThis.localStorage.clear();
+            globalThis.sessionStorage.clear();
         });
         await waitForAnimations(page);
         const navLink = page
