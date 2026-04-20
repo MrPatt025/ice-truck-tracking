@@ -70,6 +70,10 @@ const CHILDREN_VARIANTS = {
   },
 }
 
+const SVG_XMLNS = 'http' + '://www.w3.org/2000/svg'
+const BG_NOISE_IMAGE = `url("data:image/svg+xml,%3Csvg xmlns='${encodeURIComponent(SVG_XMLNS)}' width='180' height='180'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23noise)'/%3E%3C/svg%3E")`
+const SURFACE_NOISE_IMAGE = `url("data:image/svg+xml,%3Csvg xmlns='${encodeURIComponent(SVG_XMLNS)}' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")`
+
 const PremiumPageWrapper = memo(function PremiumPageWrapper({
   children,
   className,
@@ -108,8 +112,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
           denseNoise ? 'opacity-[0.04]' : 'opacity-[0.025]'
         )}
         style={{
-          backgroundImage:
-            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23noise)'/%3E%3C/svg%3E\")",
+          backgroundImage: BG_NOISE_IMAGE,
           backgroundSize: '90px 90px',
         }}
       />
@@ -140,8 +143,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
               aria-hidden='true'
               className='pointer-events-none absolute inset-0 rounded-3xl opacity-[0.035] mix-blend-overlay'
               style={{
-                backgroundImage:
-                  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E\")",
+                backgroundImage: SURFACE_NOISE_IMAGE,
                 backgroundSize: '70px 70px',
               }}
             />

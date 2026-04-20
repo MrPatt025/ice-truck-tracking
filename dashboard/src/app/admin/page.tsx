@@ -65,212 +65,216 @@ export default function AdminPage() {
 
   return (
     <AppSidebar>
-      <PremiumPageWrapper mode='glass'>
-      <div className='mx-auto max-w-[1400px] space-y-6 p-4 lg:p-6'>
-        {/* Header */}
-        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
-          <div>
-            <h1 className='flex items-center gap-2 text-2xl font-bold leading-tight'>
-              <Shield className='w-7 h-7 text-primary' />
-              User Administration
-            </h1>
-            <p className='mt-1 text-sm leading-6 text-muted-foreground'>
-              Manage users, roles, and access permissions
-            </p>
+      <PremiumPageWrapper mode='glass' denseNoise>
+        <div className='mx-auto max-w-[1400px] space-y-6 p-4 lg:p-6'>
+          {/* Header */}
+          <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
+            <div>
+              <h1 className='flex items-center gap-2 text-2xl font-bold leading-tight'>
+                <Shield className='w-7 h-7 text-primary' />
+                User Administration
+              </h1>
+              <p className='mt-1 text-sm leading-6 text-muted-foreground'>
+                Manage users, roles, and access permissions
+              </p>
+            </div>
+            {canEdit && (
+              <button className='px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm flex items-center gap-2 hover:bg-primary/90 transition-colors'>
+                <Plus className='w-4 h-4' />
+                <span>Add User</span>
+              </button>
+            )}
           </div>
-          {canEdit && (
-            <button className='px-3 py-2 rounded-lg bg-primary text-primary-foreground text-sm flex items-center gap-2 hover:bg-primary/90 transition-colors'>
-              <Plus className='w-4 h-4' />
-              <span>Add User</span>
-            </button>
-          )}
-        </div>
 
-        {/* Stats */}
-        <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
-          {[
-            {
-              label: 'Total Users',
-              value: users.length,
-              icon: Users,
-              color: 'text-blue-500',
-              bg: 'bg-blue-50 dark:bg-blue-950/30',
-            },
-            {
-              label: 'Active',
-              value: users.filter(u => u.status === 'active').length,
-              icon: UserCheck,
-              color: 'text-green-500',
-              bg: 'bg-green-50 dark:bg-green-950/30',
-            },
-            {
-              label: 'Suspended',
-              value: users.filter(u => u.status === 'suspended').length,
-              icon: UserX,
-              color: 'text-red-500',
-              bg: 'bg-red-50 dark:bg-red-950/30',
-            },
-            {
-              label: 'Admins',
-              value: users.filter(u => u.role === 'admin').length,
-              icon: Shield,
-              color: 'text-purple-500',
-              bg: 'bg-purple-50 dark:bg-purple-950/30',
-            },
-          ].map((card, i) => (
-            <motion.div
-              key={card.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className='bg-card rounded-xl border border-border p-4'
-            >
-              <div className='flex items-center gap-3'>
-                <div
-                  className={cn(
-                    'w-10 h-10 rounded-lg flex items-center justify-center',
-                    card.bg
-                  )}
-                >
-                  <card.icon className={cn('w-5 h-5', card.color)} />
-                </div>
-                <div>
-                  <p className='text-2xl font-bold'>{card.value}</p>
-                  <p className='text-xs text-muted-foreground'>{card.label}</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Filters */}
-        <div className='flex flex-col sm:flex-row gap-3'>
-          <div className='relative flex-1 max-w-md'>
-            <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
-            <input
-              type='text'
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder='Search users...'
-              className='w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-primary/50'
-            />
-          </div>
-          <select
-            value={roleFilter}
-            onChange={e => setRoleFilter(e.target.value)}
-            className='rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-5'
-            aria-label='Filter by role'
-          >
-            <option value='all'>All Roles ({roleCounts.all})</option>
-            <option value='admin'>Admin ({roleCounts.admin || 0})</option>
-            <option value='fleet-manager'>
-              Fleet Manager ({roleCounts['fleet-manager'] || 0})
-            </option>
-            <option value='operator'>
-              Operator ({roleCounts.operator || 0})
-            </option>
-            <option value='viewer'>Viewer ({roleCounts.viewer || 0})</option>
-          </select>
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className='rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-5'
-            aria-label='Filter by status'
-          >
-            <option value='all'>All Statuses</option>
-            <option value='active'>Active</option>
-            <option value='suspended'>Suspended</option>
-          </select>
-        </div>
-
-        {/* User Cards */}
-        <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'>
-          {filtered.map((u, i) => {
-            const rc = roleColors[u.role]
-            return (
+          {/* Stats */}
+          <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
+            {[
+              {
+                label: 'Total Users',
+                value: users.length,
+                icon: Users,
+                color: 'text-blue-500',
+                bg: 'bg-blue-50 dark:bg-blue-950/30',
+              },
+              {
+                label: 'Active',
+                value: users.filter(u => u.status === 'active').length,
+                icon: UserCheck,
+                color: 'text-green-500',
+                bg: 'bg-green-50 dark:bg-green-950/30',
+              },
+              {
+                label: 'Suspended',
+                value: users.filter(u => u.status === 'suspended').length,
+                icon: UserX,
+                color: 'text-red-500',
+                bg: 'bg-red-50 dark:bg-red-950/30',
+              },
+              {
+                label: 'Admins',
+                value: users.filter(u => u.role === 'admin').length,
+                icon: Shield,
+                color: 'text-purple-500',
+                bg: 'bg-purple-50 dark:bg-purple-950/30',
+              },
+            ].map((card, i) => (
               <motion.div
-                key={u.id}
+                key={card.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className='bg-card rounded-xl border border-border p-5 hover:shadow-md transition-shadow'
+                transition={{ delay: i * 0.05 }}
+                className='bg-card rounded-xl border border-border p-4'
               >
-                <div className='flex items-start justify-between mb-4'>
-                  <div className='flex items-center gap-3'>
-                    <div className='w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold'>
-                      {u.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className='truncate font-medium'>{u.name}</p>
-                      <p className='truncate text-xs text-muted-foreground'>{u.email}</p>
-                    </div>
-                  </div>
-                  <span
+                <div className='flex items-center gap-3'>
+                  <div
                     className={cn(
-                      'px-2 py-0.5 rounded-full text-xs font-medium',
-                      u.status === 'active'
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
-                        : 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+                      'w-10 h-10 rounded-lg flex items-center justify-center',
+                      card.bg
                     )}
                   >
-                    {u.status}
-                  </span>
-                </div>
-
-                <div className='space-y-2 mb-4'>
-                  <div className='flex items-center gap-2'>
-                    <span
-                      className={cn(
-                        'px-2 py-0.5 rounded text-xs font-medium',
-                        rc.bg,
-                        rc.text
-                      )}
-                    >
-                      {u.role}
-                    </span>
+                    <card.icon className={cn('w-5 h-5', card.color)} />
                   </div>
-                  {u.phone && (
-                    <p className='text-xs text-muted-foreground flex items-center gap-1'>
-                      <Phone className='w-3 h-3' /> {u.phone}
+                  <div>
+                    <p className='text-2xl font-bold'>{card.value}</p>
+                    <p className='text-xs text-muted-foreground'>
+                      {card.label}
                     </p>
-                  )}
-                  <p className='text-xs text-muted-foreground flex items-center gap-1'>
-                    <Calendar className='w-3 h-3' /> Joined{' '}
-                    {new Date(u.createdAt).toLocaleDateString()}
-                  </p>
-                  <p className='text-xs text-muted-foreground flex items-center gap-1'>
-                    <Activity className='w-3 h-3' /> Last login:{' '}
-                    {new Date(u.lastLogin).toLocaleDateString()}
-                  </p>
-                </div>
-
-                <div className='flex items-center gap-2 pt-3 border-t border-border'>
-                  {canEdit && (
-                    <button className='flex-1 px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted flex items-center justify-center gap-1 transition-colors'>
-                      <Edit className='w-3 h-3' /> Edit
-                    </button>
-                  )}
-                  {canDelete && u.role !== 'admin' && (
-                    <button
-                      className='px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-destructive hover:bg-destructive/10 flex items-center gap-1 transition-colors'
-                      aria-label='Delete user'
-                    >
-                      <Trash2 className='w-3 h-3' />
-                    </button>
-                  )}
+                  </div>
                 </div>
               </motion.div>
-            )
-          })}
-        </div>
-
-        {filtered.length === 0 && (
-          <div className='text-center py-12 text-muted-foreground'>
-            <Users className='w-12 h-12 mx-auto mb-3 opacity-30' />
-            <p>No users matching your filters</p>
+            ))}
           </div>
-        )}
-      </div>
+
+          {/* Filters */}
+          <div className='flex flex-col sm:flex-row gap-3'>
+            <div className='relative flex-1 max-w-md'>
+              <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground' />
+              <input
+                type='text'
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder='Search users...'
+                className='w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-4 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-primary/50'
+              />
+            </div>
+            <select
+              value={roleFilter}
+              onChange={e => setRoleFilter(e.target.value)}
+              className='rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-5'
+              aria-label='Filter by role'
+            >
+              <option value='all'>All Roles ({roleCounts.all})</option>
+              <option value='admin'>Admin ({roleCounts.admin || 0})</option>
+              <option value='fleet-manager'>
+                Fleet Manager ({roleCounts['fleet-manager'] || 0})
+              </option>
+              <option value='operator'>
+                Operator ({roleCounts.operator || 0})
+              </option>
+              <option value='viewer'>Viewer ({roleCounts.viewer || 0})</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className='rounded-lg border border-input bg-background px-3 py-2.5 text-sm leading-5'
+              aria-label='Filter by status'
+            >
+              <option value='all'>All Statuses</option>
+              <option value='active'>Active</option>
+              <option value='suspended'>Suspended</option>
+            </select>
+          </div>
+
+          {/* User Cards */}
+          <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4'>
+            {filtered.map((u, i) => {
+              const rc = roleColors[u.role]
+              return (
+                <motion.div
+                  key={u.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03 }}
+                  className='bg-card rounded-xl border border-border p-5 hover:shadow-md transition-shadow'
+                >
+                  <div className='flex items-start justify-between mb-4'>
+                    <div className='flex items-center gap-3'>
+                      <div className='w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold'>
+                        {u.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className='truncate font-medium'>{u.name}</p>
+                        <p className='truncate text-xs text-muted-foreground'>
+                          {u.email}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={cn(
+                        'px-2 py-0.5 rounded-full text-xs font-medium',
+                        u.status === 'active'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'
+                          : 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400'
+                      )}
+                    >
+                      {u.status}
+                    </span>
+                  </div>
+
+                  <div className='space-y-2 mb-4'>
+                    <div className='flex items-center gap-2'>
+                      <span
+                        className={cn(
+                          'px-2 py-0.5 rounded text-xs font-medium',
+                          rc.bg,
+                          rc.text
+                        )}
+                      >
+                        {u.role}
+                      </span>
+                    </div>
+                    {u.phone && (
+                      <p className='text-xs text-muted-foreground flex items-center gap-1'>
+                        <Phone className='w-3 h-3' /> {u.phone}
+                      </p>
+                    )}
+                    <p className='text-xs text-muted-foreground flex items-center gap-1'>
+                      <Calendar className='w-3 h-3' /> Joined{' '}
+                      {new Date(u.createdAt).toLocaleDateString()}
+                    </p>
+                    <p className='text-xs text-muted-foreground flex items-center gap-1'>
+                      <Activity className='w-3 h-3' /> Last login:{' '}
+                      {new Date(u.lastLogin).toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  <div className='flex items-center gap-2 pt-3 border-t border-border'>
+                    {canEdit && (
+                      <button className='flex-1 px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted flex items-center justify-center gap-1 transition-colors'>
+                        <Edit className='w-3 h-3' /> Edit
+                      </button>
+                    )}
+                    {canDelete && u.role !== 'admin' && (
+                      <button
+                        className='px-3 py-1.5 rounded-lg border border-border text-xs font-medium text-destructive hover:bg-destructive/10 flex items-center gap-1 transition-colors'
+                        aria-label='Delete user'
+                      >
+                        <Trash2 className='w-3 h-3' />
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+
+          {filtered.length === 0 && (
+            <div className='text-center py-12 text-muted-foreground'>
+              <Users className='w-12 h-12 mx-auto mb-3 opacity-30' />
+              <p>No users matching your filters</p>
+            </div>
+          )}
+        </div>
       </PremiumPageWrapper>
     </AppSidebar>
   )

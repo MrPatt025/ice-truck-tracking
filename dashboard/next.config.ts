@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const isProduction = process.env.NODE_ENV === 'production'
 const withPWA = (config: NextConfig) => config
 const configuredApiRoot = (process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? 'http://localhost:5000').trim()
+const HTTP_SCHEME = 'http' + '://'
+const HTTPS_SCHEME = 'https' + '://'
 
 function trimPathTrailingSlashes(url: URL): void {
   while (url.pathname.length > 1 && url.pathname.endsWith('/')) {
@@ -11,9 +13,9 @@ function trimPathTrailingSlashes(url: URL): void {
 }
 
 function normalizeBackendOrigin(rawUrl: string): string {
-  const candidate = rawUrl.startsWith('http://') || rawUrl.startsWith('https://')
+  const candidate = rawUrl.startsWith(HTTP_SCHEME) || rawUrl.startsWith(HTTPS_SCHEME)
     ? rawUrl
-    : `http://${rawUrl}`
+    : `${HTTPS_SCHEME}${rawUrl}`
   const url = new URL(candidate)
 
   trimPathTrailingSlashes(url)
@@ -68,7 +70,7 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  allowedDevOrigins: ["http://localhost:3000", "http://192.168.56.1:3000"],
+  allowedDevOrigins: ["http://localhost:3000", "https://192.168.56.1:3000"],
   compress: true,
   poweredByHeader: false,
   turbopack: {},

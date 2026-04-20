@@ -203,114 +203,114 @@ export default function FleetManagementPage() {
 
   return (
     <AppSidebar>
-      <PremiumPageWrapper mode='glass'>
-      <div className='mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>
-        <header className='flex flex-col gap-3 rounded-2xl border border-white/15 bg-slate-900/40 p-5 backdrop-blur-2xl md:flex-row md:items-center md:justify-between'>
-          <div>
-            <h1 className='flex items-center gap-2 text-2xl font-bold text-slate-100'>
-              <Truck className='h-7 w-7 text-cyan-300' />
-              Fleet Management
-            </h1>
-            <p className='mt-1 text-sm text-slate-400'>
-              High-density live telemetry grid with virtualization and micro
-              trend charts.
-            </p>
-            {error ? (
-              <p className='mt-2 text-xs text-amber-300'>
-                Running in graceful degraded mode: {error}
+      <PremiumPageWrapper mode='glass' denseNoise>
+        <div className='mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>
+          <header className='flex flex-col gap-3 rounded-2xl border border-white/15 bg-slate-900/40 p-5 backdrop-blur-2xl md:flex-row md:items-center md:justify-between'>
+            <div>
+              <h1 className='flex items-center gap-2 text-2xl font-bold text-slate-100'>
+                <Truck className='h-7 w-7 text-cyan-300' />
+                Fleet Management
+              </h1>
+              <p className='mt-1 text-sm text-slate-400'>
+                High-density live telemetry grid with virtualization and micro
+                trend charts.
               </p>
-            ) : null}
-          </div>
+              {error ? (
+                <p className='mt-2 text-xs text-amber-300'>
+                  Running in graceful degraded mode: {error}
+                </p>
+              ) : null}
+            </div>
 
-          <div className='flex items-center gap-2'>
-            <button
-              type='button'
-              className='inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 transition hover:bg-white/[0.08]'
-            >
-              <Download className='h-4 w-4' />
-              Export
-            </button>
-            {canEdit ? (
+            <div className='flex items-center gap-2'>
               <button
                 type='button'
-                className='inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400'
+                className='inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 transition hover:bg-white/[0.08]'
               >
-                <Plus className='h-4 w-4' />
-                Add Vehicle
+                <Download className='h-4 w-4' />
+                Export
               </button>
-            ) : null}
-          </div>
-        </header>
-
-        <section className='rounded-2xl border border-white/15 bg-slate-900/40 p-4 backdrop-blur-2xl'>
-          <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
-            <div className='flex flex-wrap items-center gap-2'>
-              {ALL_FILTERS.map(filter => (
+              {canEdit ? (
                 <button
-                  key={filter}
                   type='button'
-                  onClick={() => setStatusFilter(filter)}
-                  className={cn(
-                    'rounded-full px-3 py-1.5 text-sm font-medium transition',
-                    statusFilter === filter
-                      ? 'bg-cyan-400 text-slate-950'
-                      : 'bg-white/5 text-slate-300 hover:bg-white/10'
-                  )}
+                  className='inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400'
                 >
-                  {filter === 'all'
-                    ? 'All'
-                    : `${filter[0].toUpperCase()}${filter.slice(1)}`}
-                  <span className='ml-1 opacity-70'>
-                    ({statusCounts[filter]})
-                  </span>
+                  <Plus className='h-4 w-4' />
+                  Add Vehicle
                 </button>
-              ))}
+              ) : null}
             </div>
+          </header>
 
-            <div className='relative w-full lg:w-[440px]'>
-              <Search className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400' />
-              <input
-                type='text'
-                value={search}
-                onChange={event => setSearch(event.target.value)}
-                placeholder='Search by truck, plate, driver, route...'
-                className='w-full rounded-lg border border-white/15 bg-slate-950/60 py-2.5 pl-10 pr-4 text-sm text-slate-100 outline-none transition focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-500/35'
-                data-testid='fleet-grid-search'
+          <section className='rounded-2xl border border-white/15 bg-slate-900/40 p-4 backdrop-blur-2xl'>
+            <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
+              <div className='flex flex-wrap items-center gap-2'>
+                {ALL_FILTERS.map(filter => (
+                  <button
+                    key={filter}
+                    type='button'
+                    onClick={() => setStatusFilter(filter)}
+                    className={cn(
+                      'rounded-full px-3 py-1.5 text-sm font-medium transition',
+                      statusFilter === filter
+                        ? 'bg-cyan-400 text-slate-950'
+                        : 'bg-white/5 text-slate-300 hover:bg-white/10'
+                    )}
+                  >
+                    {filter === 'all'
+                      ? 'All'
+                      : `${filter[0].toUpperCase()}${filter.slice(1)}`}
+                    <span className='ml-1 opacity-70'>
+                      ({statusCounts[filter]})
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div className='relative w-full lg:w-[440px]'>
+                <Search className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400' />
+                <input
+                  type='text'
+                  value={search}
+                  onChange={event => setSearch(event.target.value)}
+                  placeholder='Search by truck, plate, driver, route...'
+                  className='w-full rounded-lg border border-white/15 bg-slate-950/60 py-2.5 pl-10 pr-4 text-sm text-slate-100 outline-none transition focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-500/35'
+                  data-testid='fleet-grid-search'
+                />
+              </div>
+            </div>
+          </section>
+
+          <SectionErrorBoundary title='Fleet grid'>
+            {loading ? (
+              <FleetGridSkeleton />
+            ) : (
+              <VirtualizedFleetGrid
+                rows={filteredRows}
+                canEdit={canEdit}
+                canDelete={canDelete}
+                onSelectRow={setSelectedRow}
               />
-            </div>
-          </div>
-        </section>
+            )}
+          </SectionErrorBoundary>
 
-        <SectionErrorBoundary title='Fleet grid'>
-          {loading ? (
-            <FleetGridSkeleton />
-          ) : (
-            <VirtualizedFleetGrid
-              rows={filteredRows}
-              canEdit={canEdit}
-              canDelete={canDelete}
-              onSelectRow={setSelectedRow}
-            />
-          )}
-        </SectionErrorBoundary>
-
-        <section className='rounded-2xl border border-white/15 bg-slate-900/40 p-4 backdrop-blur-2xl'>
-          <p className='text-sm text-slate-300'>
-            Showing{' '}
-            <span className='font-semibold text-slate-100'>
-              {filteredRows.length}
-            </span>{' '}
-            validated rows
-            {selectedRow ? (
-              <span>
-                {' '}
-                • Selected:{' '}
-                <span className='font-mono text-cyan-300'>{selectedRow}</span>
-              </span>
-            ) : null}
-          </p>
-        </section>
-      </div>
+          <section className='rounded-2xl border border-white/15 bg-slate-900/40 p-4 backdrop-blur-2xl'>
+            <p className='text-sm text-slate-300'>
+              Showing{' '}
+              <span className='font-semibold text-slate-100'>
+                {filteredRows.length}
+              </span>{' '}
+              validated rows
+              {selectedRow ? (
+                <span>
+                  {' '}
+                  • Selected:{' '}
+                  <span className='font-mono text-cyan-300'>{selectedRow}</span>
+                </span>
+              ) : null}
+            </p>
+          </section>
+        </div>
       </PremiumPageWrapper>
     </AppSidebar>
   )

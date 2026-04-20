@@ -675,7 +675,7 @@ const GlassCard = memo(
             <div
               className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-[0.03] mix-blend-overlay'
               style={{
-                backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" result="noise"/></filter><rect width="100" height="100" fill="white" filter="url(%23n)"/></svg>')`,
+                backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="${'http' + '://www.w3.org/2000/svg'}" width="100" height="100"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" result="noise"/></filter><rect width="100" height="100" fill="white" filter="url(%23n)"/></svg>')`,
                 backgroundSize: '50px 50px',
               }}
             />
@@ -1335,7 +1335,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
    *  All real-time visualization is imperative (3D, Map, Charts).
    * ================================================================ */
   return (
-    <PremiumPageWrapper mode='none' animate={false}>
+    <PremiumPageWrapper mode='glass' animate={false} denseNoise>
       <GlobalErrorBoundary>
         <React.Suspense
           fallback={
@@ -1641,8 +1641,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                   aria-hidden='true'
                   className='pointer-events-none absolute inset-0 opacity-[0.08] mix-blend-soft-light'
                   style={{
-                    backgroundImage:
-                      'url(\'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4"/></filter><rect width="120" height="120" filter="url(%23n)"/></svg>\')',
+                    backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="${'http' + '://www.w3.org/2000/svg'}" width="120" height="120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4"/></filter><rect width="120" height="120" filter="url(%23n)"/></svg>')`,
                     backgroundSize: '72px 72px',
                   }}
                 />

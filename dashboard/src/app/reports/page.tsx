@@ -127,110 +127,112 @@ export default function ReportsPage() {
 
   return (
     <AppSidebar>
-      <PremiumPageWrapper mode='glass'>
-      <div className='mx-auto max-w-[1600px] space-y-6 p-4 lg:p-6'>
-        {/* Header */}
-        <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
-          <div>
-            <h1 className='flex items-center gap-2 text-2xl font-bold leading-tight'>
-              <BarChart3 className='w-7 h-7 text-primary' />
-              Reports & Analytics
-            </h1>
-            <p className='mt-1 text-sm leading-6 text-muted-foreground'>
-              Fleet performance insights and historical analysis
-            </p>
-          </div>
-          <div className='flex items-center gap-2'>
-            {/* Time Range Picker */}
-            <div className='flex items-center rounded-lg border border-border overflow-hidden'>
-              {(['24h', '7d', '30d', '90d'] as TimeRange[]).map(range => (
-                <button
-                  key={range}
-                  onClick={() => setTimeRange(range)}
-                  className={cn(
-                    'px-3 py-1.5 text-sm font-medium leading-5 transition-colors',
-                    timeRange === range
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted text-muted-foreground'
-                  )}
-                >
-                  {range}
-                </button>
-              ))}
+      <PremiumPageWrapper mode='glass' denseNoise>
+        <div className='mx-auto max-w-[1600px] space-y-6 p-4 lg:p-6'>
+          {/* Header */}
+          <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
+            <div>
+              <h1 className='flex items-center gap-2 text-2xl font-bold leading-tight'>
+                <BarChart3 className='w-7 h-7 text-primary' />
+                Reports & Analytics
+              </h1>
+              <p className='mt-1 text-sm leading-6 text-muted-foreground'>
+                Fleet performance insights and historical analysis
+              </p>
             </div>
-            <button className='px-3 py-2 rounded-lg border border-border hover:bg-muted text-sm flex items-center gap-2 transition-colors'>
-              <Download className='w-4 h-4' />
-              <span className='hidden sm:inline'>Export</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
-          {summaryCards.map((card, i) => (
-            <motion.div
-              key={card.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className='bg-card rounded-xl border border-border p-4'
-            >
-              <div className='flex items-center justify-between mb-3'>
-                <div
-                  className={cn(
-                    'w-10 h-10 rounded-lg flex items-center justify-center',
-                    card.bg
-                  )}
-                >
-                  <card.icon className={cn('w-5 h-5', card.color)} />
-                </div>
-                <span
-                  className={cn(
-                    'flex items-center gap-0.5 text-xs font-medium',
-                    card.trend === 'up' ? 'text-green-500' : 'text-red-500'
-                  )}
-                >
-                  {card.trend === 'up' ? (
-                    <TrendingUp className='w-3 h-3' />
-                  ) : (
-                    <TrendingDown className='w-3 h-3' />
-                  )}
-                  {card.change}
-                </span>
+            <div className='flex items-center gap-2'>
+              {/* Time Range Picker */}
+              <div className='flex items-center rounded-lg border border-border overflow-hidden'>
+                {(['24h', '7d', '30d', '90d'] as TimeRange[]).map(range => (
+                  <button
+                    key={range}
+                    onClick={() => setTimeRange(range)}
+                    className={cn(
+                      'px-3 py-1.5 text-sm font-medium leading-5 transition-colors',
+                      timeRange === range
+                        ? 'bg-primary text-primary-foreground'
+                        : 'hover:bg-muted text-muted-foreground'
+                    )}
+                  >
+                    {range}
+                  </button>
+                ))}
               </div>
-              <p className='text-2xl font-bold tabular-nums'>{card.value}</p>
-              <p className='text-xs text-muted-foreground mt-1'>{card.label}</p>
-            </motion.div>
-          ))}
-        </div>
+              <button className='px-3 py-2 rounded-lg border border-border hover:bg-muted text-sm flex items-center gap-2 transition-colors'>
+                <Download className='w-4 h-4' />
+                <span className='hidden sm:inline'>Export</span>
+              </button>
+            </div>
+          </div>
 
-        {/* Tab Navigation */}
-        <div className='flex items-center gap-1 border-b border-border'>
-          {tabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={cn(
-                'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
-                activeTab === tab.key
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+          {/* Summary Cards */}
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+            {summaryCards.map((card, i) => (
+              <motion.div
+                key={card.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className='bg-card rounded-xl border border-border p-4'
+              >
+                <div className='flex items-center justify-between mb-3'>
+                  <div
+                    className={cn(
+                      'w-10 h-10 rounded-lg flex items-center justify-center',
+                      card.bg
+                    )}
+                  >
+                    <card.icon className={cn('w-5 h-5', card.color)} />
+                  </div>
+                  <span
+                    className={cn(
+                      'flex items-center gap-0.5 text-xs font-medium',
+                      card.trend === 'up' ? 'text-green-500' : 'text-red-500'
+                    )}
+                  >
+                    {card.trend === 'up' ? (
+                      <TrendingUp className='w-3 h-3' />
+                    ) : (
+                      <TrendingDown className='w-3 h-3' />
+                    )}
+                    {card.change}
+                  </span>
+                </div>
+                <p className='text-2xl font-bold tabular-nums'>{card.value}</p>
+                <p className='text-xs text-muted-foreground mt-1'>
+                  {card.label}
+                </p>
+              </motion.div>
+            ))}
+          </div>
 
-        {/* Chart Content */}
-        <ReportsCharts
-          activeTab={activeTab}
-          deliveryData={deliveryData}
-          fleetDistribution={fleetDistribution}
-          fuelData={fuelData}
-          temperatureData={temperatureData}
-        />
-      </div>
+          {/* Tab Navigation */}
+          <div className='flex items-center gap-1 border-b border-border'>
+            {tabs.map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={cn(
+                  'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+                  activeTab === tab.key
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Chart Content */}
+          <ReportsCharts
+            activeTab={activeTab}
+            deliveryData={deliveryData}
+            fleetDistribution={fleetDistribution}
+            fuelData={fuelData}
+            temperatureData={temperatureData}
+          />
+        </div>
       </PremiumPageWrapper>
     </AppSidebar>
   )
