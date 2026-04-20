@@ -76,7 +76,11 @@ export default function RegisterPage() {
   const displayError = validationError || error;
 
   return (
-    <PremiumPageWrapper mode='glass' denseNoise>
+    <PremiumPageWrapper
+      mode='glass'
+      denseNoise
+      contentClassName='mx-auto w-full max-w-[40rem] border-white/30 bg-slate-950/48 shadow-[0_42px_145px_-78px_rgba(99,102,241,0.95)]'
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

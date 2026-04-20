@@ -187,7 +187,12 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <PremiumPageWrapper mode='glass' className='w-full' denseNoise>
+    <PremiumPageWrapper
+      mode='glass'
+      className='w-full'
+      denseNoise
+      contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(56,189,248,0.95)]'
+    >
       <Suspense
         fallback={
           <div className='flex items-center justify-center min-h-[200px]'>

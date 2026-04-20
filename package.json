@@ -173,7 +173,10 @@
       "axios@<1.15.0": ">=1.15.0",
       "next@>=13.0.0 <15.5.15": ">=15.5.15",
       "follow-redirects@<=1.15.11": ">=1.16.0",
-      "axios@>=1.0.0 <1.15.0": ">=1.15.0"
+      "axios@>=1.0.0 <1.15.0": ">=1.15.0",
+      "protobufjs@<7.5.5": ">=7.5.5",
+      "protobufjs": ">=7.5.5",
+      "protocol-buffers-schema": ">=3.6.1"
     },
     "ignoredBuiltDependencies": [
       "@scarf/scarf",

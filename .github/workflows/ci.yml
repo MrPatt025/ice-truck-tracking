@@ -34,7 +34,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: pnpm/action-setup@71c92474e7e4f5bca283fb17ef80fba9cdb2b4b1
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
@@ -51,7 +51,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: pnpm/action-setup@71c92474e7e4f5bca283fb17ef80fba9cdb2b4b1
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
@@ -72,7 +72,7 @@ jobs:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: pnpm/action-setup@71c92474e7e4f5bca283fb17ef80fba9cdb2b4b1
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
@@ -99,7 +99,7 @@ jobs:
       USE_FAKE_DB: 'true'
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: pnpm/action-setup@71c92474e7e4f5bca283fb17ef80fba9cdb2b4b1
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
@@ -125,7 +125,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: pnpm/action-setup@71c92474e7e4f5bca283fb17ef80fba9cdb2b4b1
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
@@ -143,7 +143,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: pnpm/action-setup@71c92474e7e4f5bca283fb17ef80fba9cdb2b4b1
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
@@ -166,7 +166,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: pnpm/action-setup@71c92474e7e4f5bca283fb17ef80fba9cdb2b4b1
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
@@ -174,7 +174,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'pnpm'
       - name: Restore Playwright browser cache
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml', 'dashboard/playwright.light.config.ts') }}
@@ -203,7 +203,7 @@ jobs:
       NEXT_PUBLIC_WS_URL: ws://localhost:5000
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: pnpm/action-setup@71c92474e7e4f5bca283fb17ef80fba9cdb2b4b1
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
@@ -238,7 +238,7 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+      - uses: pnpm/action-setup@71c92474e7e4f5bca283fb17ef80fba9cdb2b4b1
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444

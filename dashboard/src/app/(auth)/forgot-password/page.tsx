@@ -28,7 +28,11 @@ export default function ForgotPasswordPage() {
   }, [email, forgotPassword, clearError]);
 
   return (
-    <PremiumPageWrapper mode='glass' denseNoise>
+    <PremiumPageWrapper
+      mode='glass'
+      denseNoise
+      contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(16,185,129,0.95)]'
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

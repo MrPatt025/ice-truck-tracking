@@ -196,10 +196,21 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <PremiumPageWrapper mode='glass' className='w-full' denseNoise>
-      <Suspense fallback={<div className="flex items-center justify-center min-h-[200px]"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
+    <PremiumPageWrapper
+      mode='glass'
+      className='w-full'
+      denseNoise
+      contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(14,165,233,0.95)]'
+    >
+      <Suspense
+        fallback={
+          <div className='flex items-center justify-center min-h-[200px]'>
+            <Loader2 className='w-6 h-6 animate-spin text-primary' />
+          </div>
+        }
+      >
         <ResetPasswordContent />
       </Suspense>
     </PremiumPageWrapper>
-  );
+  )
 }

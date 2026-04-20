@@ -72,7 +72,11 @@ export default function SettingsPage() {
 
   return (
     <AppSidebar>
-      <PremiumPageWrapper mode='glass' denseNoise>
+      <PremiumPageWrapper
+        mode='glass'
+        denseNoise
+        contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(99,102,241,0.95)]'
+      >
         <div className='mx-auto max-w-[1200px] p-4 lg:p-6'>
           {/* Header */}
           <div className='mb-6'>

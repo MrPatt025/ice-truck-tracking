@@ -1335,7 +1335,12 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
    *  All real-time visualization is imperative (3D, Map, Charts).
    * ================================================================ */
   return (
-    <PremiumPageWrapper mode='glass' animate={false} denseNoise>
+    <PremiumPageWrapper
+      mode='glass'
+      animate={false}
+      denseNoise
+      contentClassName='border-white/30 bg-slate-950/40 shadow-[0_46px_160px_-86px_rgba(34,211,238,0.95)]'
+    >
       <GlobalErrorBoundary>
         <React.Suspense
           fallback={

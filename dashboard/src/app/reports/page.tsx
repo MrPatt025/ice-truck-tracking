@@ -127,7 +127,11 @@ export default function ReportsPage() {
 
   return (
     <AppSidebar>
-      <PremiumPageWrapper mode='glass' denseNoise>
+      <PremiumPageWrapper
+        mode='glass'
+        denseNoise
+        contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(14,165,233,0.95)]'
+      >
         <div className='mx-auto max-w-[1600px] space-y-6 p-4 lg:p-6'>
           {/* Header */}
           <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>

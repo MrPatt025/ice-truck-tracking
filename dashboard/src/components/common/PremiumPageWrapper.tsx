@@ -58,6 +58,17 @@ const ORNAMENT_VARIANTS = {
   },
 }
 
+const SHIMMER_VARIANTS = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      duration: 0.55,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
+  },
+}
+
 const CHILDREN_VARIANTS = {
   hidden: { opacity: 0, y: 10 },
   show: {
@@ -105,6 +116,11 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
     >
       <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(66rem_36rem_at_18%_-12%,rgba(56,189,248,.16),transparent),radial-gradient(78rem_40rem_at_90%_108%,rgba(16,185,129,.14),transparent)]' />
       <div className='pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(120deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0)_40%)]' />
+      <motion.div
+        aria-hidden='true'
+        variants={SHIMMER_VARIANTS}
+        className='pointer-events-none absolute inset-0 -z-10 bg-[conic-gradient(from_210deg_at_50%_50%,rgba(56,189,248,.06),transparent_26%,rgba(16,185,129,.05)_56%,transparent_78%,rgba(56,189,248,.06))]'
+      />
       <div
         aria-hidden='true'
         className={cn(
@@ -149,12 +165,17 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
             />
             <div className='pointer-events-none absolute -left-8 -top-8 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl' />
             <div className='pointer-events-none absolute -bottom-10 -right-10 h-44 w-44 rounded-full bg-emerald-300/15 blur-3xl' />
+            <motion.div
+              aria-hidden='true'
+              variants={SHIMMER_VARIANTS}
+              className='pointer-events-none absolute inset-0 rounded-3xl bg-[linear-gradient(105deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.02)_28%,rgba(255,255,255,0)_44%)]'
+            />
             <div className='pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-cyan-200/20 shadow-[inset_0_0_35px_-20px_rgba(56,189,248,.95)]' />
           </>
         ) : null}
         <motion.div
           variants={CHILDREN_VARIANTS}
-          className='relative z-[1] antialiased [text-wrap:balance]'
+          className='relative z-[1] antialiased [font-kerning:normal] [font-variant-ligatures:common-ligatures] [text-wrap:balance]'
           style={{ contain: 'layout style paint' }}
         >
           {children}
