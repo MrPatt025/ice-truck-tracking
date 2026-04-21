@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, type ReactNode, useState, useEffect } from 'react'
+import { memo, type ReactNode } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -94,14 +94,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
   denseNoise = false,
 }: PremiumPageWrapperProps) {
   const prefersReducedMotion = useReducedMotion()
-  const [isMounted, setIsMounted] = useState(false)
-
-  // Prevent hydration mismatch: only animate after mount on client
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  const shouldAnimate = isMounted && animate && !prefersReducedMotion
+  const shouldAnimate = animate && !prefersReducedMotion
 
   return (
     <motion.section
@@ -109,13 +102,15 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
       animate={shouldAnimate ? 'show' : undefined}
       variants={CONTAINER_VARIANTS}
       className={cn(
-        'premium-page-shell relative isolate min-h-[100svh] overflow-visible premium-rhythm motion-safe:transform-gpu',
+        'premium-page-shell relative isolate min-h-[100svh] overflow-visible premium-rhythm motion-safe:transform-gpu [transform:translateZ(0)]',
         className
       )}
       style={{ contain: 'layout style paint' }}
     >
+      <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120rem_58rem_at_50%_-25%,rgba(56,189,248,.12),transparent_56%),radial-gradient(104rem_44rem_at_12%_108%,rgba(45,212,191,.13),transparent_62%)]' />
       <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(66rem_36rem_at_18%_-12%,rgba(56,189,248,.16),transparent),radial-gradient(78rem_40rem_at_90%_108%,rgba(16,185,129,.14),transparent)]' />
       <div className='pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(120deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0)_40%)]' />
+      <div className='pointer-events-none absolute inset-0 -z-10 opacity-[0.07] [background-image:linear-gradient(to_right,rgba(148,163,184,0.14)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.12)_1px,transparent_1px)] [background-size:40px_40px]' />
       <motion.div
         aria-hidden='true'
         variants={SHIMMER_VARIANTS}
@@ -152,6 +147,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
               variants={ORNAMENT_VARIANTS}
               className='pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(74rem_30rem_at_10%_-24%,rgba(56,189,248,.26),transparent),radial-gradient(84rem_34rem_at_96%_115%,rgba(16,185,129,.18),transparent)]'
             />
+            <div className='pointer-events-none absolute inset-0 rounded-3xl opacity-[0.16] [background-image:linear-gradient(to_right,rgba(148,163,184,0.18)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.16)_1px,transparent_1px)] [background-size:24px_24px]' />
             <div className='pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-80' />
             <div className='pointer-events-none absolute inset-y-6 left-0 w-px bg-gradient-to-b from-transparent via-cyan-200/25 to-transparent opacity-70' />
             <div className='pointer-events-none absolute inset-y-6 right-0 w-px bg-gradient-to-b from-transparent via-emerald-200/20 to-transparent opacity-70' />
