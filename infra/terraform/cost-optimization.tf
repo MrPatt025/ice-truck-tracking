@@ -34,8 +34,25 @@ resource "aws_s3_bucket" "alb_access_logs" {
   }
 }
 
+resource "aws_s3_bucket" "alb_access_logs_target" {
+  bucket = "ice-truck-s3-access-logs-${var.environment}-${data.aws_caller_identity.current.account_id}"
+
+  tags = {
+    Environment = var.environment
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "alb_access_logs" {
   bucket = aws_s3_bucket.alb_access_logs.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_public_access_block" "alb_access_logs_target" {
+  bucket = aws_s3_bucket.alb_access_logs_target.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -55,22 +72,34 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "alb_access_logs" 
   }
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "alb_access_logs_target" {
+  bucket = aws_s3_bucket.alb_access_logs_target.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.alerts.arn
+      sse_algorithm     = "aws:kms"
+    }
+    bucket_key_enabled = true
+  }
+}
+
 resource "aws_s3_bucket_logging" "alb_access_logs" {
   bucket = aws_s3_bucket.alb_access_logs.id
 
-  target_bucket = aws_s3_bucket.alb_access_logs.id
-  target_prefix = "s3-access/"
+  target_bucket = aws_s3_bucket.alb_access_logs_target.id
+  target_prefix = "alb-access/"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "alb_access_logs" {
-  bucket = aws_s3_bucket.alb_access_logs.id
+  bucket = aws_s3_bucket.alb_access_logs_target.id
 
   rule {
     id     = "retain-access-logs-90-days"
     status = "Enabled"
 
     filter {
-      prefix = ""
+      prefix = "alb-access/"
     }
 
     expiration {
