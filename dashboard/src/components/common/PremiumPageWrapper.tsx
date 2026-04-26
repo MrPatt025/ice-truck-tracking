@@ -172,7 +172,12 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         <motion.div
           variants={CHILDREN_VARIANTS}
           className='relative z-[1] antialiased [font-kerning:normal] [font-variant-ligatures:common-ligatures] [text-wrap:balance]'
-          style={{ contain: 'layout style paint' }}
+          style={{
+            contain: 'layout style paint',
+            contentVisibility: 'auto',
+            containIntrinsicSize: '1px 960px',
+            willChange: 'transform, opacity',
+          }}
         >
           {children}
         </motion.div>
