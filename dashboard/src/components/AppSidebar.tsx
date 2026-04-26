@@ -5,11 +5,24 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, Truck, BarChart3, Bell, Settings,
-  ChevronLeft, ChevronRight, LogOut, User, Shield,
-  Menu, X, Snowflake,
+  LayoutDashboard,
+  Truck,
+  BarChart3,
+  Bell,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  User,
+  Shield,
+  Route,
+  RadioTower,
+  ShieldCheck,
+  Menu,
+  X,
+  Snowflake,
   type LucideIcon,
-} from 'lucide-react';
+} from 'lucide-react'
 import { useAuthStore, hasPermission } from '@/stores/authStore';
 import { cn } from '@/lib/utils';
 
@@ -22,13 +35,56 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, permission: 'dashboard:view' },
-  { label: 'Fleet Management', href: '/fleet', icon: Truck, permission: 'fleet:view' },
-  { label: 'Reports', href: '/reports', icon: BarChart3, permission: 'reports:view' },
-  { label: 'Alerts & Rules', href: '/alerts', icon: Bell, permission: 'alerts:view' },
-  { label: 'Settings', href: '/settings', icon: Settings, permission: 'settings:view' },
+  {
+    label: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+    permission: 'dashboard:view',
+  },
+  {
+    label: 'Fleet Management',
+    href: '/fleet',
+    icon: Truck,
+    permission: 'fleet:view',
+  },
+  {
+    label: 'Live Tracking',
+    href: '/tracking',
+    icon: Route,
+    permission: 'fleet:view',
+  },
+  {
+    label: 'Operations',
+    href: '/operations',
+    icon: RadioTower,
+    permission: 'reports:view',
+  },
+  {
+    label: 'Reports',
+    href: '/reports',
+    icon: BarChart3,
+    permission: 'reports:view',
+  },
+  {
+    label: 'Alerts & Rules',
+    href: '/alerts',
+    icon: Bell,
+    permission: 'alerts:view',
+  },
+  {
+    label: 'Compliance',
+    href: '/compliance',
+    icon: ShieldCheck,
+    permission: 'alerts:view',
+  },
+  {
+    label: 'Settings',
+    href: '/settings',
+    icon: Settings,
+    permission: 'settings:view',
+  },
   { label: 'Admin', href: '/admin', icon: Shield, permission: 'users:view' },
-];
+]
 
 export default function AppSidebar({
   children,

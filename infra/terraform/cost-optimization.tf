@@ -91,6 +91,56 @@ resource "aws_s3_bucket_logging" "alb_access_logs" {
   target_prefix = "alb-access/"
 }
 
+resource "aws_s3_bucket_policy" "alb_access_logs_target" {
+  bucket = aws_s3_bucket.alb_access_logs_target.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "S3ServerAccessLogsWrite"
+        Effect = "Allow"
+        Principal = {
+          Service = "logging.s3.amazonaws.com"
+        }
+        Action   = "s3:PutObject"
+        Resource = "${aws_s3_bucket.alb_access_logs_target.arn}/alb-access/*"
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
+      },
+      {
+        Sid    = "S3ServerAccessLogsAclCheck"
+        Effect = "Allow"
+        Principal = {
+          Service = "logging.s3.amazonaws.com"
+        }
+        Action   = "s3:GetBucketAcl"
+        Resource = aws_s3_bucket.alb_access_logs_target.arn
+      },
+      {
+        Sid    = "DenyInsecureTransport"
+        Effect = "Deny"
+        Principal = {
+          AWS = "*"
+        }
+        Action = "s3:*"
+        Resource = [
+          aws_s3_bucket.alb_access_logs_target.arn,
+          "${aws_s3_bucket.alb_access_logs_target.arn}/*"
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      }
+    ]
+  })
+}
+
 resource "aws_s3_bucket_lifecycle_configuration" "alb_access_logs" {
   bucket = aws_s3_bucket.alb_access_logs_target.id
 
