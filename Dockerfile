@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Monorepo
-FROM node:25-alpine AS deps
-RUN npm install -g pnpm@10.30.3 --ignore-scripts
+FROM node:24-alpine AS deps
+RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY turbo.json ./
@@ -11,8 +11,8 @@ COPY sdk/edge/package.json ./sdk/edge/
 COPY sdk/mobile/package.json ./sdk/mobile/
 RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
-FROM node:25-alpine AS builder
-RUN npm install -g pnpm@10.30.3 --ignore-scripts
+FROM node:24-alpine AS builder
+RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
@@ -27,7 +27,7 @@ COPY sdk/mobile ./sdk/mobile
 COPY src ./src
 RUN pnpm run build
 
-FROM node:25-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV production
 COPY --from=builder /app/node_modules ./node_modules
