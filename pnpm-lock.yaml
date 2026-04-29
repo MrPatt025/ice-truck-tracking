@@ -542,7 +542,7 @@ importers:
   sdk/edge:
     dependencies:
       axios:
-        specifier: ^1.15.2
+        specifier: ^1.13.5
         version: 1.15.2
       cors:
         specifier: ^2.8.6
@@ -563,7 +563,7 @@ importers:
         specifier: ^8.1.0
         version: 8.1.0
       lodash:
-        specifier: ^4.18.1
+        specifier: ^4.18.0
         version: 4.18.1
       twilio:
         specifier: ^6.0.0
@@ -19481,9 +19481,7 @@ snapshots:
       metro-runtime: 0.84.3
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.83.6': {}
 

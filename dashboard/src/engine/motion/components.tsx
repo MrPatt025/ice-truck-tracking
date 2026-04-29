@@ -32,6 +32,10 @@ import {
 import type { SpringConfig } from '../types';
 import { frameScheduler } from '../frameScheduler';
 
+interface MutableValueRef<T> {
+  current: T;
+}
+
 function createStableId(prefix: string): string {
   if (globalThis.crypto?.randomUUID) {
     return `${prefix}-${globalThis.crypto.randomUUID()}`
@@ -70,7 +74,7 @@ export function useSpring(
   initial: number,
   options: UseSpringOptions = {}
 ): [
-  React.MutableRefObject<number>,
+  MutableValueRef<number>,
   (target: number) => void,
   (value: number) => void,
 ] {
@@ -125,7 +129,7 @@ export function useSpring2D(
   config: Partial<SpringConfig> = {},
   onUpdate?: (x: number, y: number) => void
 ): [
-  React.MutableRefObject<{ x: number; y: number }>,
+  MutableValueRef<{ x: number; y: number }>,
   (x: number, y: number) => void,
 ] {
   const springRef = useRef<Spring2D | null>(null)

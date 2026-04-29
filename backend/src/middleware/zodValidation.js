@@ -85,18 +85,18 @@ function stripHtmlTags(value) {
 }
 
 // ── Reusable Schemas ───────────────────────────────────────
-const uuidSchema = z.string().uuid();
+const uuidSchema = z.uuid();
 
 const paginationSchema = z.object({
-    page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(20),
+    page: z.coerce.number().int().min(1, { message: 'page must be at least 1' }).default(1),
+    limit: z.coerce.number().int().min(1, { message: 'limit must be at least 1' }).max(100, { message: 'limit must be at most 100' }).default(20),
     sort: z.string().optional(),
     order: z.enum(['asc', 'desc']).default('desc'),
 });
 
 const coordinateSchema = z.object({
-    latitude: z.coerce.number().min(-90).max(90),
-    longitude: z.coerce.number().min(-180).max(180),
+    latitude: z.coerce.number().min(-90, { message: 'latitude must be >= -90' }).max(90, { message: 'latitude must be <= 90' }),
+    longitude: z.coerce.number().min(-180, { message: 'longitude must be >= -180' }).max(180, { message: 'longitude must be <= 180' }),
 });
 
 const dateRangeSchema = z.object({
@@ -109,21 +109,21 @@ const dateRangeSchema = z.object({
 
 // ── Auth Schemas ───────────────────────────────────────────
 const loginSchema = z.object({
-    username: z.string().min(3).max(50).trim(),
-    password: z.string().min(8).max(128),
+    username: z.string().min(3, { message: 'username must be at least 3 characters' }).max(50, { message: 'username must be at most 50 characters' }).trim(),
+    password: z.string().min(8, { message: 'password must be at least 8 characters' }).max(128, { message: 'password must be at most 128 characters' }),
 });
 
 const registerSchema = z.object({
-    username: z.string().min(3).max(50).trim().refine(isSafeUsername, {
+    username: z.string().min(3, { message: 'username must be at least 3 characters' }).max(50, { message: 'username must be at most 50 characters' }).trim().refine(isSafeUsername, {
         message: 'Username may only contain letters, numbers, hyphens, and underscores',
     }),
-    email: z.string().email().max(255).toLowerCase(),
-    password: z.string().min(8).max(128)
+    email: z.string().email({ message: 'invalid email address' }).max(255, { message: 'email must be at most 255 characters' }).toLowerCase(),
+    password: z.string().min(8, { message: 'password must be at least 8 characters' }).max(128, { message: 'password must be at most 128 characters' })
         .refine(hasPasswordComplexity, {
             message: 'Password must include uppercase, lowercase, digit, and special character',
         }),
-    full_name: z.string().min(1).max(100).trim(),
-    phone: z.string().max(20).optional(),
+    full_name: z.string().min(1, { message: 'full_name is required' }).max(100, { message: 'full_name must be at most 100 characters' }).trim(),
+    phone: z.string().max(20, { message: 'phone must be at most 20 characters' }).optional(),
     role: z.enum(['admin', 'manager', 'dispatcher', 'driver', 'viewer']).default('viewer'),
 });
 
@@ -132,21 +132,21 @@ const refreshTokenSchema = z.object({
 });
 
 const authRouteRegisterSchema = z.object({
-    username: z.string().min(3).max(50).trim().refine(isSafeUsername, {
+    username: z.string().min(3, { message: 'username must be at least 3 characters' }).max(50, { message: 'username must be at most 50 characters' }).trim().refine(isSafeUsername, {
         message: 'Username may only contain letters, numbers, hyphens, and underscores',
     }),
-    password: z.string().min(8).max(128),
+    password: z.string().min(8, { message: 'password must be at least 8 characters' }).max(128, { message: 'password must be at most 128 characters' }),
     role: z.enum(['admin', 'owner', 'manager', 'dispatcher', 'driver', 'viewer']),
-    full_name: z.string().min(1).max(100).trim(),
-    email: z.string().email().max(255).toLowerCase(),
-    phone: z.string().min(1).max(20).trim(),
+    full_name: z.string().min(1, { message: 'full_name is required' }).max(100, { message: 'full_name must be at most 100 characters' }).trim(),
+    email: z.string().email({ message: 'invalid email address' }).max(255, { message: 'email must be at most 255 characters' }).toLowerCase(),
+    phone: z.string().min(1, { message: 'phone is required' }).max(20, { message: 'phone must be at most 20 characters' }).trim(),
 });
 
 // ── Truck Schemas ──────────────────────────────────────────
 const createTruckSchema = z.object({
-    license_plate: z.string().min(1).max(20).trim(),
-    model: z.string().max(50).optional(),
-    capacity_kg: z.coerce.number().positive().optional(),
+    license_plate: z.string().min(1, { message: 'license_plate is required' }).max(20, { message: 'license_plate must be at most 20 characters' }).trim(),
+    model: z.string().max(50, { message: 'model must be at most 50 characters' }).optional(),
+    capacity_kg: z.coerce.number().positive({ message: 'capacity_kg must be greater than 0' }).optional(),
 });
 
 const updateTruckSchema = createTruckSchema.partial().extend({
@@ -155,9 +155,9 @@ const updateTruckSchema = createTruckSchema.partial().extend({
 
 // ── Driver Schemas ─────────────────────────────────────────
 const createDriverSchema = z.object({
-    license_no: z.string().min(1).max(30).trim(),
-    full_name: z.string().min(1).max(100).trim(),
-    phone: z.string().max(20).optional(),
+    license_no: z.string().min(1, { message: 'license_no is required' }).max(30, { message: 'license_no must be at most 30 characters' }).trim(),
+    full_name: z.string().min(1, { message: 'full_name is required' }).max(100, { message: 'full_name must be at most 100 characters' }).trim(),
+    phone: z.string().max(20, { message: 'phone must be at most 20 characters' }).optional(),
     user_id: z.string().uuid().optional(),
     assigned_truck: z.string().uuid().optional(),
 });
@@ -169,13 +169,13 @@ const updateDriverSchema = createDriverSchema.partial().extend({
 // ── Telemetry Schemas ──────────────────────────────────────
 const telemetrySchema = z.object({
     truck_id: uuidSchema,
-    latitude: z.coerce.number().min(-90).max(90),
-    longitude: z.coerce.number().min(-180).max(180),
-    speed: z.coerce.number().min(0).max(300).optional(),
-    heading: z.coerce.number().int().min(0).max(360).optional(),
-    temperature: z.coerce.number().min(-50).max(100).optional(),
-    humidity: z.coerce.number().min(0).max(100).optional(),
-    battery: z.coerce.number().min(0).max(100).optional(),
+    latitude: z.coerce.number().min(-90, { message: 'latitude must be >= -90' }).max(90, { message: 'latitude must be <= 90' }),
+    longitude: z.coerce.number().min(-180, { message: 'longitude must be >= -180' }).max(180, { message: 'longitude must be <= 180' }),
+    speed: z.coerce.number().min(0, { message: 'speed must be >= 0' }).max(300, { message: 'speed must be <= 300' }).optional(),
+    heading: z.coerce.number().int().min(0, { message: 'heading must be >= 0' }).max(360, { message: 'heading must be <= 360' }).optional(),
+    temperature: z.coerce.number().min(-50, { message: 'temperature must be >= -50' }).max(100, { message: 'temperature must be <= 100' }).optional(),
+    humidity: z.coerce.number().min(0, { message: 'humidity must be >= 0' }).max(100, { message: 'humidity must be <= 100' }).optional(),
+    battery: z.coerce.number().min(0, { message: 'battery must be >= 0' }).max(100, { message: 'battery must be <= 100' }).optional(),
     door_open: z.boolean().optional(),
     payload: z.record(z.unknown()).optional(),
 });
@@ -190,32 +190,32 @@ const createAlertSchema = z.object({
         'battery_low', 'door_opened',
     ]),
     severity: z.enum(['info', 'warning', 'critical', 'emergency']).default('warning'),
-    message: z.string().min(1).max(500),
-    latitude: z.coerce.number().min(-90).max(90).optional(),
-    longitude: z.coerce.number().min(-180).max(180).optional(),
+    message: z.string().min(1, { message: 'message is required' }).max(500, { message: 'message must be at most 500 characters' }),
+    latitude: z.coerce.number().min(-90, { message: 'latitude must be >= -90' }).max(90, { message: 'latitude must be <= 90' }).optional(),
+    longitude: z.coerce.number().min(-180, { message: 'longitude must be >= -180' }).max(180, { message: 'longitude must be <= 180' }).optional(),
     metadata: z.record(z.unknown()).optional(),
 });
 
 const acknowledgeAlertSchema = z.object({
-    alert_ids: z.array(uuidSchema).min(1).max(100),
+    alert_ids: z.array(uuidSchema).min(1, { message: 'at least one alert id is required' }).max(100, { message: 'no more than 100 alert ids are allowed' }),
 });
 
 // ── Shop Schemas ───────────────────────────────────────────
 const createShopSchema = z.object({
-    name: z.string().min(1).max(100).trim(),
-    address: z.string().max(500).optional(),
-    latitude: z.coerce.number().min(-90).max(90),
-    longitude: z.coerce.number().min(-180).max(180),
-    phone: z.string().max(20).optional(),
+    name: z.string().min(1, { message: 'name is required' }).max(100, { message: 'name must be at most 100 characters' }).trim(),
+    address: z.string().max(500, { message: 'address must be at most 500 characters' }).optional(),
+    latitude: z.coerce.number().min(-90, { message: 'latitude must be >= -90' }).max(90, { message: 'latitude must be <= 90' }),
+    longitude: z.coerce.number().min(-180, { message: 'longitude must be >= -180' }).max(180, { message: 'longitude must be <= 180' }),
+    phone: z.string().max(20, { message: 'phone must be at most 20 characters' }).optional(),
 });
 
 const trackingInsertSchema = z.object({
-    shop_id: z.string().min(1).max(50).trim(),
-    latitude: z.coerce.number().min(-90).max(90),
-    longitude: z.coerce.number().min(-180).max(180),
-    truck_id: z.string().min(1).max(50).trim(),
-    driver_id: z.string().min(1).max(50).trim(),
-    gps_code: z.string().min(1).max(100).trim(),
+    shop_id: z.string().min(1, { message: 'shop_id is required' }).max(50, { message: 'shop_id must be at most 50 characters' }).trim(),
+    latitude: z.coerce.number().min(-90, { message: 'latitude must be >= -90' }).max(90, { message: 'latitude must be <= 90' }),
+    longitude: z.coerce.number().min(-180, { message: 'longitude must be >= -180' }).max(180, { message: 'longitude must be <= 180' }),
+    truck_id: z.string().min(1, { message: 'truck_id is required' }).max(50, { message: 'truck_id must be at most 50 characters' }).trim(),
+    driver_id: z.string().min(1, { message: 'driver_id is required' }).max(50, { message: 'driver_id must be at most 50 characters' }).trim(),
+    gps_code: z.string().min(1, { message: 'gps_code is required' }).max(100, { message: 'gps_code must be at most 100 characters' }).trim(),
 });
 
 // ── Middleware Factory ──────────────────────────────────────
@@ -240,7 +240,11 @@ function validate(schema, source = 'body') {
                 errors,
             });
         }
-        req[source] = result.data; // Overwrite with parsed + sanitized data
+        if (source === 'query') {
+            Object.assign(req.query || {}, result.data);
+        } else {
+            req[source] = result.data; // Overwrite with parsed + sanitized data
+        }
         next();
     };
 }
@@ -271,7 +275,10 @@ function sanitize(req, _res, next) {
     };
 
     if (req.body) req.body = deepSanitize(req.body);
-    if (req.query) req.query = deepSanitize(req.query);
+    if (req.query) {
+        const sanitized = deepSanitize(req.query);
+        Object.assign(req.query, sanitized);
+    }
     next();
 }
 

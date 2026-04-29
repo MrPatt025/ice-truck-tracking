@@ -247,7 +247,7 @@ if (process.env.NODE_ENV === 'development') {
 // Return 204 for favicon requests to avoid noisy errors
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
-app.all('*', (req, res, next) => {
+app.use((req, res, next) => {
   const err = new Error(`Can't find ${req.originalUrl} on this server!`);
   err.status = 'fail';
   err.statusCode = 404;

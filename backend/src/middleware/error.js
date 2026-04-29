@@ -21,16 +21,19 @@ const handleDuplicateFieldsDB = err => {
   const errmsg = typeof err.errmsg === 'string' ? err.errmsg : '';
   const singleQuoteIndex = errmsg.indexOf("'");
   const doubleQuoteIndex = errmsg.indexOf('"');
-  const startIndex =
-    singleQuoteIndex === -1
-      ? doubleQuoteIndex
-      : doubleQuoteIndex === -1
-        ? singleQuoteIndex
-        : Math.min(singleQuoteIndex, doubleQuoteIndex);
+  let startIndex;
+
+  if (singleQuoteIndex === -1) {
+    startIndex = doubleQuoteIndex;
+  } else if (doubleQuoteIndex === -1) {
+    startIndex = singleQuoteIndex;
+  } else {
+    startIndex = Math.min(singleQuoteIndex, doubleQuoteIndex);
+  }
 
   let value = 'duplicate value';
 
-  if (startIndex >= 0) {
+  if (typeof startIndex === 'number' && startIndex >= 0) {
     const quoteChar = errmsg[startIndex];
     const endIndex = errmsg.indexOf(quoteChar, startIndex + 1);
 

@@ -46,7 +46,7 @@ export default function RegisterPage() {
   const strengthLabel = ['', 'Weak', 'Fair', 'Good', 'Strong'][passwordStrength] || '';
   const strengthColor = ['', 'bg-red-500', 'bg-amber-500', 'bg-blue-500', 'bg-green-500'][passwordStrength] || '';
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     setValidationError('');
     clearError();

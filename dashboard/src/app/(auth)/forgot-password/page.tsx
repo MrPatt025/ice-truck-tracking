@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, type SyntheticEvent } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Snowflake, Loader2, AlertCircle, ArrowLeft, Mail } from 'lucide-react';
@@ -16,7 +16,7 @@ export default function ForgotPasswordPage() {
   const error = useAuthStore((s) => s.error);
   const clearError = useAuthStore((s) => s.clearError);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     clearError();
     if (!email.trim()) return;
