@@ -99,7 +99,7 @@ jobs:
       USE_FAKE_DB: 'true'
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      - uses: pnpm/action-setup@71c92474e7e4f5bca283fb17ef80fba9cdb2b4b1
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
