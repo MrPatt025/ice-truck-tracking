@@ -26,7 +26,7 @@ export const Tooltip = memo(function Tooltip({
   const [isVisible, setIsVisible] = useState(false)
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
   const triggerRef = useRef<HTMLButtonElement>(null)
-  const timeoutRef = useRef<NodeJS.Timeout>()
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const tooltipId = useId()
 
   const showTooltip = () => {
@@ -63,8 +63,9 @@ export const Tooltip = memo(function Tooltip({
   }
 
   const hideTooltip = () => {
-    if (timeoutRef.current) {
+    if (timeoutRef.current !== null) {
       clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
     }
     setIsVisible(false)
   }
