@@ -23,6 +23,7 @@ import React, {
     type ReactNode,
     type CSSProperties,
 } from 'react';
+import { cn } from '@/lib/utils'
 import {
     SpringValue,
     Spring2D,
@@ -32,9 +33,7 @@ import {
 import type { SpringConfig } from '../types';
 import { frameScheduler } from '../frameScheduler';
 
-interface MutableValueRef<T> {
-  current: T;
-}
+type MutableValueRef<T> = { current: T }
 
 function createStableId(prefix: string): string {
   if (globalThis.crypto?.randomUUID) {
@@ -243,7 +242,7 @@ export function MagneticButton({
   return (
     <button
       ref={ref}
-      className={`${className ?? ''} will-change-transform`}
+      className={cn(className, 'will-change-transform')}
       style={style}
       onClick={onClick}
       disabled={disabled}
@@ -299,9 +298,11 @@ export function InertiaPanel({
       let x = state.offsetX
       let y = state.offsetY
 
-      // Axis constraint
-      if (axis === 'x') y = 0
-      if (axis === 'y') x = 0
+      const isXAxis = axis === 'x'
+      const isYAxis = axis === 'y'
+
+      if (isXAxis) y = 0
+      if (isYAxis) x = 0
 
       // Clamp
       x = Math.max(-maxDistance, Math.min(maxDistance, x))
@@ -344,13 +345,12 @@ export function InertiaPanel({
       el.removeEventListener('pointerup', handlePointerUp)
       el.removeEventListener('pointercancel', handlePointerUp)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [axis, snapBack, maxDistance])
+  }, [axis, snapBack, maxDistance, onDrag, springConfig])
 
   return (
     <div
       ref={ref}
-      className={`${className ?? ''} touch-none cursor-grab will-change-transform`}
+      className={cn(className, 'touch-none cursor-grab will-change-transform')}
       style={style}
     >
       {children}
@@ -401,18 +401,17 @@ export function SpringNumber({
     return () => {
       frameScheduler.unregister(id)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [config, format, value])
 
-  // Update target when prop changes (no re-render needed)
+  // Update target when prop changes without re-rendering the counter.
   useEffect(() => {
-    springRef.current?.setTarget(value)
+    if (springRef.current) {
+      springRef.current.setTarget(value)
+    }
   }, [value])
 
   return (
-    <span ref={ref} className={`${className ?? ''} tabular-nums`} style={style}>
-      {' '}
-      {/* NOSONAR — passed-through style prop */}
+    <span ref={ref} className={cn(className, 'tabular-nums')} style={style}>
       {format(value)}
     </span>
   )
