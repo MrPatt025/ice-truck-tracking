@@ -34,7 +34,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -51,7 +51,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -72,7 +72,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -99,7 +99,7 @@ jobs:
       USE_FAKE_DB: 'true'
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      - uses: pnpm/action-setup@71c92474e7e4f5bca283fb17ef80fba9cdb2b4b1
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
@@ -125,7 +125,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -143,7 +143,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -166,7 +166,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -203,7 +203,7 @@ jobs:
       NEXT_PUBLIC_WS_URL: ws://localhost:5000
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -238,7 +238,7 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
+      - uses: pnpm/action-setup@8912a9102ac27614460f54aedde9e1e7f9aec20d
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
