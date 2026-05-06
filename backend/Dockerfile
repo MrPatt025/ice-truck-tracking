@@ -32,7 +32,7 @@ RUN npm install --omit=dev --ignore-scripts
 FROM node:24-alpine AS production
 
 # Install security updates and dumb-init
-RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
+RUN apk update && apk upgrade && apk add --no-cache dumb-init
 
 # Set working directory
 WORKDIR /usr/src/app

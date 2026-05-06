@@ -16,8 +16,8 @@ export default function ForgotPasswordPage() {
   const error = useAuthStore((s) => s.error);
   const clearError = useAuthStore((s) => s.clearError);
 
-  const handleSubmit = useCallback<React.ComponentProps<'form'>['onSubmit']>(
-    e => {
+  const handleSubmit = useCallback(
+    (e: React.SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault()
       clearError()
       if (!email.trim()) return
@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
           <p className='text-muted-foreground mt-1'>
             {sent
               ? 'We sent a password reset link to your email'
-              : "Enter your email and we'll send you a reset link"}
+              : `Enter your email and we'll send you a reset link`}
           </p>
         </div>
 

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * E2E Navigation Tests — All 14 Pages
- * 
+ *
  * Verifies that all 14 dashboard pages render successfully with:
  * - Page load (200 status / no navigation errors)
  * - PremiumPageWrapper presence
@@ -133,7 +133,7 @@ test('All 14 pages load successfully in sequence', async ({ page }) => {
 // ── Smoke Test: Basic Navigation Flow ──
 test('Navigation flow: Home → Dashboard → Alerts → Settings', async ({ page }) => {
   const routes = ['/', '/dashboard', '/alerts', '/settings'];
-  
+
   for (const route of routes) {
     await verifyPageLoad(page, route);
   }
