@@ -6,6 +6,14 @@
 
 const { z } = require('zod');
 
+function isUuid(value) {
+    return typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function isEmailAddress(value) {
+    return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 function isSafeUsername(value) {
     if (typeof value !== 'string' || value.length < 3 || value.length > 50) {
         return false;
@@ -85,7 +93,9 @@ function stripHtmlTags(value) {
 }
 
 // ── Reusable Schemas ───────────────────────────────────────
-const uuidSchema = z.uuid();
+const uuidSchema = z.string().refine(isUuid, {
+    message: 'invalid UUID',
+});
 
 const paginationSchema = z.object({
     page: z.coerce.number().int().min(1, { message: 'page must be at least 1' }).default(1),
@@ -117,7 +127,7 @@ const registerSchema = z.object({
     username: z.string().min(3, { message: 'username must be at least 3 characters' }).max(50, { message: 'username must be at most 50 characters' }).trim().refine(isSafeUsername, {
         message: 'Username may only contain letters, numbers, hyphens, and underscores',
     }),
-    email: z.string().email({ message: 'invalid email address' }).max(255, { message: 'email must be at most 255 characters' }).toLowerCase(),
+    email: z.string().refine(isEmailAddress, { message: 'invalid email address' }).max(255, { message: 'email must be at most 255 characters' }).toLowerCase(),
     password: z.string().min(8, { message: 'password must be at least 8 characters' }).max(128, { message: 'password must be at most 128 characters' })
         .refine(hasPasswordComplexity, {
             message: 'Password must include uppercase, lowercase, digit, and special character',
@@ -138,7 +148,7 @@ const authRouteRegisterSchema = z.object({
     password: z.string().min(8, { message: 'password must be at least 8 characters' }).max(128, { message: 'password must be at most 128 characters' }),
     role: z.enum(['admin', 'owner', 'manager', 'dispatcher', 'driver', 'viewer']),
     full_name: z.string().min(1, { message: 'full_name is required' }).max(100, { message: 'full_name must be at most 100 characters' }).trim(),
-    email: z.string().email({ message: 'invalid email address' }).max(255, { message: 'email must be at most 255 characters' }).toLowerCase(),
+    email: z.string().refine(isEmailAddress, { message: 'invalid email address' }).max(255, { message: 'email must be at most 255 characters' }).toLowerCase(),
     phone: z.string().min(1, { message: 'phone is required' }).max(20, { message: 'phone must be at most 20 characters' }).trim(),
 });
 
@@ -158,8 +168,8 @@ const createDriverSchema = z.object({
     license_no: z.string().min(1, { message: 'license_no is required' }).max(30, { message: 'license_no must be at most 30 characters' }).trim(),
     full_name: z.string().min(1, { message: 'full_name is required' }).max(100, { message: 'full_name must be at most 100 characters' }).trim(),
     phone: z.string().max(20, { message: 'phone must be at most 20 characters' }).optional(),
-    user_id: z.string().uuid().optional(),
-    assigned_truck: z.string().uuid().optional(),
+    user_id: z.string().refine(isUuid, { message: 'user_id must be a valid UUID' }).optional(),
+    assigned_truck: z.string().refine(isUuid, { message: 'assigned_truck must be a valid UUID' }).optional(),
 });
 
 const updateDriverSchema = createDriverSchema.partial().extend({

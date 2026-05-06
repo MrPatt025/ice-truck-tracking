@@ -1,7 +1,7 @@
 'use client'
 
 import { memo, type ReactNode } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion, useReducedMotion, type Variants } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 type PremiumPageWrapperProps = Readonly<{
@@ -18,7 +18,7 @@ const ENTRY_TRANSITION = {
   ease: [0.22, 1, 0.36, 1] as const,
 }
 
-const CONTAINER_VARIANTS = {
+const CONTAINER_VARIANTS: Variants = {
   hidden: { opacity: 0, y: 18 },
   show: {
     opacity: 1,
@@ -31,7 +31,7 @@ const CONTAINER_VARIANTS = {
   },
 }
 
-const CONTENT_VARIANTS = {
+const CONTENT_VARIANTS: Variants = {
   hidden: { opacity: 0, y: 8, scale: 0.995 },
   show: {
     opacity: 1,
@@ -46,7 +46,7 @@ const CONTENT_VARIANTS = {
   },
 }
 
-const ORNAMENT_VARIANTS = {
+const ORNAMENT_VARIANTS: Variants = {
   hidden: { opacity: 0, scale: 0.96 },
   show: {
     opacity: 1,
@@ -58,7 +58,7 @@ const ORNAMENT_VARIANTS = {
   },
 }
 
-const SHIMMER_VARIANTS = {
+const SHIMMER_VARIANTS: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -69,7 +69,7 @@ const SHIMMER_VARIANTS = {
   },
 }
 
-const CHILDREN_VARIANTS = {
+const CHILDREN_VARIANTS: Variants = {
   hidden: { opacity: 0, y: 10 },
   show: {
     opacity: 1,

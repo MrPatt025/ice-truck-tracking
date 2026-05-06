@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, Suspense, type SyntheticEvent } from 'react';
+import React, { useState, useCallback, Suspense } from 'react'
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -27,20 +27,22 @@ function LoginContent() {
   const isTransitioning = useTransitionStore(s => s.isTransitioning)
   const startTransition = useTransitionStore(s => s.startTransition)
 
-  const handleSubmit = useCallback(
-    async (e: SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmit = useCallback<React.ComponentProps<'form'>['onSubmit']>(
+    e => {
       e.preventDefault()
       clearError()
 
       if (!email.trim() || !password.trim()) return
 
-      const success = await login(email.trim(), password)
-      if (success) {
-        startTransition()
-        globalThis.setTimeout(() => {
-          router.push(redirect)
-        }, 820)
-      }
+      void (async () => {
+        const success = await login(email.trim(), password)
+        if (success) {
+          startTransition()
+          globalThis.setTimeout(() => {
+            router.push(redirect)
+          }, 820)
+        }
+      })()
     },
     [email, password, login, clearError, router, redirect, startTransition]
   )

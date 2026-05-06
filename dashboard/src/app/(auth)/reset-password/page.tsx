@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, Suspense, type SyntheticEvent } from 'react';
+import React, { useState, useCallback, Suspense } from 'react'
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -24,30 +24,37 @@ function ResetPasswordContent() {
   const error = useAuthStore((s) => s.error);
   const clearError = useAuthStore((s) => s.clearError);
 
-  const handleSubmit = useCallback(async (e: SyntheticEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setValidationError('');
-    clearError();
+  const handleSubmit = useCallback<React.ComponentProps<'form'>['onSubmit']>(
+    e => {
+      e.preventDefault()
+      setValidationError('')
+      clearError()
 
-    if (password.length < 8) {
-      setValidationError('Password must be at least 8 characters');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setValidationError('Passwords do not match');
-      return;
-    }
-    if (!token) {
-      setValidationError('Invalid reset token. Please request a new reset link.');
-      return;
-    }
+      if (password.length < 8) {
+        setValidationError('Password must be at least 8 characters')
+        return
+      }
+      if (password !== confirmPassword) {
+        setValidationError('Passwords do not match')
+        return
+      }
+      if (!token) {
+        setValidationError(
+          'Invalid reset token. Please request a new reset link.'
+        )
+        return
+      }
 
-    const ok = await resetPassword(token, password);
-    if (ok) {
-      setSuccess(true);
-      setTimeout(() => router.push('/login'), 3000);
-    }
-  }, [password, confirmPassword, token, resetPassword, clearError, router]);
+      void (async () => {
+        const ok = await resetPassword(token, password)
+        if (ok) {
+          setSuccess(true)
+          setTimeout(() => router.push('/login'), 3000)
+        }
+      })()
+    },
+    [password, confirmPassword, token, resetPassword, clearError, router]
+  )
 
   const displayError = validationError || error;
 

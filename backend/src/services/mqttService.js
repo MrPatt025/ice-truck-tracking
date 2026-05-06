@@ -8,7 +8,7 @@ class MqttService {
     client = null;
     handlers = new Map();
 
-    telemetryPayloadSchema = z.object({
+    telemetryPayloadSchema = z.looseObject({
         latitude: z.coerce.number().min(-90).max(90),
         longitude: z.coerce.number().min(-180).max(180),
         temperature: z.coerce.number().min(-80).max(120),
@@ -17,7 +17,7 @@ class MqttService {
         humidity: z.coerce.number().min(0).max(100).nullable().optional(),
         heading: z.coerce.number().min(0).max(360).nullable().optional(),
         timestamp: z.union([z.coerce.date(), z.coerce.number().int().positive()]).optional(),
-    }).passthrough();
+    });
 
     /**
      * Connect to MQTT broker and subscribe to truck telemetry topics
@@ -91,8 +91,8 @@ class MqttService {
         let data;
         try {
             data = JSON.parse(payload.toString());
-        } catch {
-            logger.warn({ topic }, 'MQTT non-JSON payload');
+        } catch (err) {
+            logger.warn({ topic, err: err?.message ?? String(err) }, 'MQTT non-JSON payload');
             return;
         }
 

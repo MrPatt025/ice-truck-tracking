@@ -172,7 +172,8 @@ if (process.env.USE_FAKE_DB === 'true') {
         const pkt = { type: 'trucks', trucks: mem.trucks, alerts: mem.alerts };
         for (const c of globalThis.wss.clients) c.send(JSON.stringify(pkt));
       }
-    } catch {
+    } catch (err) {
+      logger.warn('Simulation broadcast error: ' + (err?.message ?? String(err)));
       return;
     }
   }, 2000).unref?.();
@@ -193,7 +194,8 @@ if (process.env.USE_FAKE_DB === 'true') {
       if (globalThis.wss?.clients) {
         for (const c of globalThis.wss.clients) c.send(JSON.stringify({ type: 'alert', payload: a }));
       }
-    } catch {
+    } catch (err) {
+      logger.warn('Simulation alert broadcast error: ' + (err?.message ?? String(err)));
       return res.json(a);
     }
     res.json(a);
@@ -228,7 +230,8 @@ if (process.env.USE_FAKE_DB === 'true') {
       if (globalThis.wss?.clients) {
         for (const c of globalThis.wss.clients) c.send(JSON.stringify({ type: 'trucks', payload: mem.trucks }));
       }
-    } catch {
+    } catch (err) {
+      logger.warn('Simulation trucks broadcast error: ' + (err?.message ?? String(err)));
       return res.json(mem.trucks);
     }
     res.json(mem.trucks);

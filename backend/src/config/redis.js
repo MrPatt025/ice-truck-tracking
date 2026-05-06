@@ -40,7 +40,8 @@ const cacheOrFetch = async (key, fetchFn, ttl = 60) => {
             recordCacheOp('get', 'hit');
             return JSON.parse(cached);
         }
-    } catch {
+    } catch (err) {
+        logger.debug('Redis cache get error: ' + (err?.message ?? String(err)));
         // Redis down — fall through to fetch
     }
 
@@ -50,7 +51,8 @@ const cacheOrFetch = async (key, fetchFn, ttl = 60) => {
     try {
         await redis.setex(key, ttl, JSON.stringify(data));
         recordCacheOp('set', 'ok');
-    } catch {
+    } catch (err) {
+        logger.debug('Redis cache set error: ' + (err?.message ?? String(err)));
         // Redis down — ignore
     }
 
@@ -67,7 +69,8 @@ const invalidate = async (pattern) => {
         } else {
             await redis.del(pattern);
         }
-    } catch {
+    } catch (err) {
+        logger.debug('Redis invalidate error: ' + (err?.message ?? String(err)));
         // Redis down — ignore
     }
 };
@@ -77,7 +80,8 @@ const publish = async (channel, message) => {
     const redis = getClient();
     try {
         await redis.publish(channel, JSON.stringify(message));
-    } catch {
+    } catch (err) {
+        logger.debug('Redis publish error: ' + (err?.message ?? String(err)));
         // ignore
     }
 };

@@ -24,7 +24,13 @@
 
 import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
 import dynamic from 'next/dynamic'
-import { animate, motion, useMotionValue, useTransform } from 'framer-motion'
+import {
+  animate,
+  motion,
+  useMotionValue,
+  useTransform,
+  type Variants,
+} from 'framer-motion'
 import {
   Truck,
   ThermometerSun,
@@ -103,7 +109,7 @@ const WebGLCanvasSkeleton = () => (
   />
 )
 
-const PANEL_STAGGER = {
+const PANEL_STAGGER: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -114,7 +120,7 @@ const PANEL_STAGGER = {
   },
 }
 
-const PANEL_SPRING = {
+const PANEL_SPRING: Variants = {
   hidden: { opacity: 0, y: 20, scale: 0.985 },
   show: {
     opacity: 1,
@@ -129,7 +135,7 @@ const PANEL_SPRING = {
   },
 }
 
-const METRIC_CARD_VARIANT = {
+const METRIC_CARD_VARIANT: Variants = {
   hidden: { opacity: 0, y: 20, scale: 0.96 },
   show: {
     opacity: 1,

@@ -25,6 +25,8 @@ module.exports = function authorize(roles = []) {
       return res.status(401).json({ message: '⚠️ ไม่ได้รับ Token ในคำขอ' });
     }
 
+    const logger = require('../src/config/logger');
+
     try {
       const decoded = jwt.verify(token, SECRET_KEY);
       req.user = {
@@ -39,7 +41,8 @@ module.exports = function authorize(roles = []) {
       }
 
       next(); // ผ่าน token และ role -> ไป middleware ถัดไป
-    } catch {
+    } catch (err) {
+      logger.warn('JWT verify error: ' + (err?.message ?? String(err)));
       return res.status(401).json({ message: '❌ Token ไม่ถูกต้อง หรือหมดอายุ' });
     }
   };

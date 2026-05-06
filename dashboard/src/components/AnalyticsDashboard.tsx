@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactElement } from 'react'
 import {
   Bar,
   BarChart,
@@ -114,7 +114,7 @@ function StatCard({
   title: string
   value: string
   hint: string
-}>): JSX.Element {
+}>): ReactElement {
   return (
     <div className='rounded-2xl border border-white/15 bg-slate-900/60 p-4'>
       <p className='text-xs uppercase tracking-wider text-slate-400'>{title}</p>
@@ -124,7 +124,7 @@ function StatCard({
   )
 }
 
-function AnalyticsSkeleton(): JSX.Element {
+function AnalyticsSkeleton(): ReactElement {
   return (
     <div className='space-y-6 animate-pulse' aria-hidden='true'>
       <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
@@ -141,7 +141,7 @@ function AnalyticsSkeleton(): JSX.Element {
   )
 }
 
-export function AnalyticsDashboard(): JSX.Element {
+export function AnalyticsDashboard(): ReactElement {
   const [timeRange, setTimeRange] = useState<TimeRange>('7d')
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)

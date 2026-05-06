@@ -193,10 +193,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Check for known vulnerabilities
-        run: npx audit-ci --high
+        run: pnpm dlx audit-ci@7.1.0 --high
         continue-on-error: true
       - name: License compliance check
-        run: npx license-checker --failOn 'GPL-3.0;AGPL-3.0' --summary
+        run: pnpm dlx license-checker@25.0.1 --failOn 'GPL-3.0;AGPL-3.0' --summary
         continue-on-error: true
 
   # ── Security Gate (summary) ───────────────────────────────

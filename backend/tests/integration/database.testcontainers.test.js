@@ -28,15 +28,19 @@ let pool;
  * Retries SELECT 1 every 500 ms for up to `maxAttempts` attempts.
  */
 async function waitForPostgres(pg, maxAttempts = 20) {
+    let lastError;
     for (let i = 0; i < maxAttempts; i++) {
         try {
             await pg.query('SELECT 1');
             return; // connected
-        } catch {
+        } catch (err) {
+            lastError = err;
             await new Promise((r) => setTimeout(r, 500));
         }
     }
-    throw new Error(`PostgreSQL did not become ready after ${maxAttempts * 500} ms`);
+    throw new Error(`PostgreSQL did not become ready after ${maxAttempts * 500} ms`, {
+        cause: lastError,
+    });
 }
 
 /**
