@@ -108,7 +108,7 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: JWT_SECRET="$(openssl rand -hex 32)" pnpm --filter @ice-truck/backend run test -- --ci --coverage=false --forceExit --testTimeout=15000
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@v4
         with:
           name: backend-coverage
           path: backend/coverage/
@@ -152,7 +152,7 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm --filter @ice-truck/dashboard run test -- --ci --coverage=false
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@v4
         with:
           name: dashboard-coverage
           path: dashboard/coverage/
@@ -180,12 +180,12 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml', 'dashboard/playwright.light.config.ts') }}
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Install Playwright browsers
-        run: pnpm --ignore-scripts --filter @ice-truck/dashboard exec playwright install --with-deps chromium firefox
+        run: pnpm --filter @ice-truck/dashboard exec playwright install --with-deps chromium firefox
       - name: Run E2E Light Tests (no GPU)
         run: pnpm --filter @ice-truck/dashboard run test:e2e:light
         env:
           E2E_LIGHT: 'true'
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report-light

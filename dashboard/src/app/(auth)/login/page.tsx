@@ -28,7 +28,7 @@ function LoginContent() {
   const startTransition = useTransitionStore(s => s.startTransition)
 
   const handleSubmit = useCallback(
-    (e: React.SyntheticEvent<HTMLFormElement>) => {
+    (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault()
       clearError()
 

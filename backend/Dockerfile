@@ -17,7 +17,7 @@ ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 
 # Development stage
 FROM base AS development
-RUN npm install --ignore-scripts
+RUN npm ci --ignore-scripts
 COPY index.js swagger.json ./
 COPY src ./src
 EXPOSE 5000
@@ -26,7 +26,7 @@ CMD ["dumb-init", "npm", "run", "dev"]
 
 # Production dependencies stage
 FROM base AS dependencies
-RUN npm install --omit=dev --ignore-scripts
+RUN npm ci --omit=dev --ignore-scripts
 
 # Production stage
 FROM node:24-alpine AS production

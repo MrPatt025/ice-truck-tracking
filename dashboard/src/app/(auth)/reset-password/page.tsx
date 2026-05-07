@@ -25,7 +25,7 @@ function ResetPasswordContent() {
   const clearError = useAuthStore((s) => s.clearError);
 
   const handleSubmit = useCallback(
-    (e: React.SyntheticEvent<HTMLFormElement>) => {
+    (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault()
       setValidationError('')
       clearError()
