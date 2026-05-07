@@ -180,7 +180,8 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml', 'dashboard/playwright.light.config.ts') }}
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Install Playwright browsers
-        run: pnpm --filter @ice-truck/dashboard exec playwright install --with-deps chromium firefox
+        working-directory: dashboard
+        run: npx playwright install --with-deps chromium firefox
       - name: Run E2E Light Tests (no GPU)
         run: pnpm --filter @ice-truck/dashboard run test:e2e:light
         env:

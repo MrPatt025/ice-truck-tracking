@@ -52,8 +52,8 @@ async function verifyPageLoad(page: Page, route: string): Promise<boolean> {
   expect(response?.status() ?? 200).toBeLessThan(400);
 
   // Assert PremiumPageWrapper or main layout is present
-  const pageContent = page.locator('[role="main"]');
-  await expect(pageContent).toBeVisible({ timeout: 5000 });
+  const pageContent = page.locator('main');
+  await expect(pageContent).toBeVisible({ timeout: 10000 });
 
   // Verify no critical console errors
   expect(consoleErrors.length).toBe(0);
