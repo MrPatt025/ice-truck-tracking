@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page, ConsoleMessage } from '@playwright/test';
 
 /**
  * E2E Navigation Tests — All 14 Pages
@@ -36,10 +36,10 @@ const dashboardRoutes = [
 const allRoutes = [...authRoutes, ...dashboardRoutes];
 
 // Helper: Check page loaded successfully and PremiumPageWrapper exists
-async function verifyPageLoad(page, route) {
+async function verifyPageLoad(page: Page, route: string): Promise<boolean> {
   const consoleErrors: string[] = [];
 
-  page.on('console', (msg) => {
+  page.on('console', (msg: ConsoleMessage) => {
     if (msg.type() === 'error') {
       consoleErrors.push(msg.text());
     }
