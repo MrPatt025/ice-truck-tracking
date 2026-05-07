@@ -461,7 +461,8 @@
     "COMPRESSION_ENABLED",
     "COMPRESSION_LEVEL",
     "HTTP2_ENABLED",
-    "RENDER_DEPLOY_HOOK_URL"
+    "RENDER_DEPLOY_HOOK_URL",
+    "SALT_ROUNDS"
   ],
   "remoteCache": {
     "enabled": true
