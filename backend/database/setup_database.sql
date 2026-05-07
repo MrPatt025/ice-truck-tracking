@@ -1,7 +1,7 @@
 -- NOSONAR
 -- =============================================
 -- สคริปต์สร้างฐานข้อมูลระบบติดตามรถส่งน้ำแข็ง
--- พร้อมผู้ใช้ Admin: admin001 / 123456
+-- พร้อมผู้ใช้ Admin: admin001 (set secure password at runtime)
 -- =============================================
 -- sonarqube:disable S1192
 
@@ -371,7 +371,7 @@ CREATE INDEX idx_notifications_created_at ON notifications(created_at);
 -- เพิ่มข้อมูลตัวอย่าง
 -- =============================================
 
--- เพิ่มผู้ใช้ admin001 (รหัสผ่าน: 123456)
+-- เพิ่มผู้ใช้ admin001 (password set by application/runtime)
 INSERT INTO users (username, password, role) VALUES -- NOSONAR
 ('admin001', '__REVOKED_HASH_SET_VIA_APP_RUNTIME__', 'admin'); -- NOSONAR
 

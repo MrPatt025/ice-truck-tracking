@@ -2,8 +2,8 @@
 
 ## 📋 ข้อมูลการเข้าสู่ระบบ Admin
 
-- **Username**: `admin001`
-- **Password**: `123456`
+- **Username**: `admin001` (example)
+- **Password**: **SET A SECURE PASSWORD** (do not commit real credentials)
 - **Role**: `admin`
 
 ## 🚀 วิธีติดตั้งฐานข้อมูล
@@ -100,8 +100,8 @@ DB_USER=root
 DB_PASSWORD=
 DB_NAME=ice_tracking
 
-# JWT Secret
-JWT_SECRET=your_jwt_secret_key_here_123456
+# JWT Secret (set in production via environment variables or secret manager)
+JWT_SECRET=REDACTED_JWT_SECRET
 
 # Server Configuration
 PORT=5000
@@ -141,10 +141,10 @@ SELECT * FROM users WHERE username = 'admin001';
 ### 2. ทดสอบ API
 
 ```bash
-# ทดสอบการเข้าสู่ระบบ
+# ทดสอบการเข้าสู่ระบบ (ตัวอย่าง - DO NOT use real credentials in repo)
 curl -X POST http://localhost:5000/api/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin001","password":"123456"}'
+  -d '{"username":"admin001","password":"<YOUR_ADMIN_PASSWORD>"}'
 ```
 
 ### 3. ทดสอบ Frontend
