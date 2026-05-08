@@ -41,7 +41,10 @@ jobs:
 
       - name: Install Playwright with Chrome
         working-directory: dashboard
-        run: pnpm exec playwright install --with-deps chromium
+        run: |
+          # Runs the trusted Microsoft Playwright installation script.
+          # Script execution is necessary to download Chrome browser binaries.
+          pnpm exec playwright install --with-deps chromium
 
       - name: Run GPU E2E Tests
         run: pnpm --filter @ice-truck/dashboard run test:e2e:gpu

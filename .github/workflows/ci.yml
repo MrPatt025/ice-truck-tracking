@@ -181,7 +181,10 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Install Playwright browsers
         working-directory: dashboard
-        run: pnpm exec playwright install --with-deps chromium firefox
+        run: |
+          # Runs the trusted Microsoft Playwright installation script.
+          # Script execution is necessary to download cross-browser binaries.
+          pnpm exec playwright install --with-deps chromium firefox
       - name: Run E2E Light Tests (no GPU)
         run: pnpm --filter @ice-truck/dashboard run test:e2e:light
         env:
