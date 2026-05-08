@@ -41,7 +41,7 @@ jobs:
 
       - name: Install Playwright with Chrome
         working-directory: dashboard
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Run GPU E2E Tests
         run: pnpm --filter @ice-truck/dashboard run test:e2e:gpu

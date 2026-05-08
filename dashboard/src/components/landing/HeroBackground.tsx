@@ -139,6 +139,35 @@ function HeroBackground({
   const activeTransitionProgress =
     transitionProgress ?? fallbackTransitionProgress
 
+  const postScrollProgress = React.useCallback((progress: number) => {
+    if (!workerRef.current) return
+
+    const msg: CinematicWorkerMessage = {
+      type: 'cinematic:scroll',
+      payload: { progress: clamp(progress, 0, 1) },
+    }
+
+    workerRef.current.postMessage(msg)
+  }, [])
+
+  const postTransitionState = React.useCallback(
+    (progress: number, active: boolean) => {
+      if (!workerRef.current) return
+
+      const msg: CinematicWorkerMessage = {
+        type: 'cinematic:transition',
+        payload: {
+          phase: transitionPhase,
+          progress: clamp(progress, 0, 1),
+          isActive: active,
+        },
+      }
+
+      workerRef.current.postMessage(msg)
+    },
+    [transitionPhase]
+  )
+
   React.useEffect(() => {
     if (E2E_LIGHT_MODE) return
 
@@ -180,6 +209,8 @@ function HeroBackground({
     }
 
     sendViewport()
+    postScrollProgress(activeScrollProgress.get())
+    postTransitionState(activeTransitionProgress.get(), isTransitioning)
     globalThis.addEventListener('resize', sendViewport, { passive: true })
 
     return () => {
@@ -404,46 +435,19 @@ function HeroBackground({
 
   useMotionValueEvent(activeScrollProgress, 'change', latest => {
     const normalized = clamp(latest, 0, 1)
-    if (!workerRef.current) return
     if (Math.abs(normalized - latestScrollRef.current) < 0.002) return
 
     latestScrollRef.current = normalized
-    const msg: CinematicWorkerMessage = {
-      type: 'cinematic:scroll',
-      payload: { progress: normalized },
-    }
-    workerRef.current.postMessage(msg)
+    postScrollProgress(normalized)
   })
 
   useMotionValueEvent(activeTransitionProgress, 'change', latest => {
-    if (!workerRef.current) return
-
-    const msg: CinematicWorkerMessage = {
-      type: 'cinematic:transition',
-      payload: {
-        phase: transitionPhase,
-        progress: clamp(latest, 0, 1),
-        isActive: isTransitioning,
-      },
-    }
-
-    workerRef.current.postMessage(msg)
+    postTransitionState(latest, isTransitioning)
   })
 
   React.useEffect(() => {
-    if (!workerRef.current) return
-
-    const msg: CinematicWorkerMessage = {
-      type: 'cinematic:transition',
-      payload: {
-        phase: transitionPhase,
-        progress: 0,
-        isActive: isTransitioning,
-      },
-    }
-
-    workerRef.current.postMessage(msg)
-  }, [isTransitioning, transitionPhase])
+    postTransitionState(0, isTransitioning)
+  }, [isTransitioning, postTransitionState, transitionPhase])
 
   return (
     <div className='absolute inset-0 -z-20 overflow-hidden'>

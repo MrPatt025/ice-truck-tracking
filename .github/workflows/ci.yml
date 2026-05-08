@@ -181,7 +181,7 @@ jobs:
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Install Playwright browsers
         working-directory: dashboard
-        run: npx playwright install --with-deps chromium firefox
+        run: pnpm exec playwright install --with-deps chromium firefox
       - name: Run E2E Light Tests (no GPU)
         run: pnpm --filter @ice-truck/dashboard run test:e2e:light
         env:
