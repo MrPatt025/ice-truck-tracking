@@ -168,6 +168,7 @@ function HeroBackground({
     [transitionPhase]
   )
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => {
     if (E2E_LIGHT_MODE) return
 
