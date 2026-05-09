@@ -12,6 +12,7 @@ title = "Ice Truck Tracking — Secret Scanning"
     '''docker-compose\.dev\.yml''',
     '''\.vscode/mcp\.json''',
     '''setup_database\.sql''',
+    '''backend/database/migrations/''',
     '''docs/''',
     '''\.md$''',
   ]

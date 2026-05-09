@@ -1,11 +1,11 @@
-const fs = require('fs');
+const fs = require('node:fs');
 
 const jestFiles = ['jest.config.js', 'backend/jest.config.js', 'dashboard/jest.config.js'];
 jestFiles.forEach(f => {
   if (fs.existsSync(f)) {
     let code = fs.readFileSync(f, 'utf8');
-    code = code.replace(/coverageProvider:\s*['"]babel['"],?/g, '');
-    code = code.replace(/coverageProvider:\s*['"]v8['"],?/g, '');
+    code = code.replaceAll(/coverageProvider:\s*['"]babel['"],?/g, '');
+    code = code.replaceAll(/coverageProvider:\s*['"]v8['"],?/g, '');
     if (code.match(/module\.exports\s*=\s*\{/)) {
       code = code.replace(/module\.exports\s*=\s*\{/, 'module.exports = {\n  coverageProvider: "v8",');
     } else if (code.match(/export default\s*\{/)) {

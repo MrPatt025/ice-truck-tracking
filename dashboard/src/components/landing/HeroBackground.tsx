@@ -46,7 +46,10 @@ function trimTrailingSlashes(url: URL): void {
 }
 
 function isLocalHostLike(rawUrl: string): boolean {
-  return /^(localhost|127\.0\.0\.1)(:|\/|$)/i.test(rawUrl)
+  const lower = rawUrl.toLowerCase()
+  return lower === 'localhost' || lower === '127.0.0.1'
+    || lower.startsWith('localhost:') || lower.startsWith('localhost/')
+    || lower.startsWith('127.0.0.1:') || lower.startsWith('127.0.0.1/')
 }
 
 function toWebSocketProtocol(url: URL): string {

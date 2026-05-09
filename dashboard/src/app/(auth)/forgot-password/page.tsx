@@ -17,8 +17,8 @@ export default function ForgotPasswordPage() {
   const error = useAuthStore((s) => s.error);
   const clearError = useAuthStore((s) => s.clearError);
 
-  const handleSubmit: React.FormEventHandler<HTMLFormElement> = useCallback(
-    (e) => {
+  const handleSubmit = useCallback(
+    (e: React.SyntheticEvent<HTMLFormElement>) => {
       e.preventDefault()
       clearError()
       if (!email.trim()) return

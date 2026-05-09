@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, type ReactNode } from 'react'
+import { memo, useState, useEffect, type ReactNode } from 'react'
 import { motion, useReducedMotion, type Variants } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -94,7 +94,11 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
   denseNoise = false,
 }: PremiumPageWrapperProps) {
   const prefersReducedMotion = useReducedMotion()
-  const shouldAnimate = animate && !prefersReducedMotion
+
+  // Defer animations until after hydration to prevent SSR/client style mismatch
+  const [hasMounted, setHasMounted] = useState(false)
+  useEffect(() => { setHasMounted(true) }, [])
+  const shouldAnimate = hasMounted && animate && !prefersReducedMotion
 
   return (
     <motion.main
@@ -149,8 +153,8 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
             />
               <div className='premium-visual premium-surface-grid pointer-events-none absolute inset-0 rounded-3xl opacity-[0.16] [background-image:linear-gradient(to_right,rgba(148,163,184,0.18)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.16)_1px,transparent_1px)] [background-size:24px_24px]' />
               <div className='premium-visual premium-topline pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-80' />
-              <div className='premium-visual premium-leftline pointer-events-none absolute inset-y-6 left-0 w-px bg-gradient-to-b from-transparent via-cyan-200/25 to-transparent opacity-70' />
-              <div className='premium-visual premium-rightline pointer-events-none absolute inset-y-6 right-0 w-px bg-gradient-to-b from-transparent via-emerald-200/20 to-transparent opacity-70' />
+              <div className='premium-visual premium-left-line pointer-events-none absolute inset-y-6 left-0 w-px bg-gradient-to-b from-transparent via-cyan-200/25 to-transparent opacity-70' />
+              <div className='premium-visual premium-right-line pointer-events-none absolute inset-y-6 right-0 w-px bg-gradient-to-b from-transparent via-emerald-200/20 to-transparent opacity-70' />
             <div
               aria-hidden='true'
                 className='premium-visual premium-noise pointer-events-none absolute inset-0 rounded-3xl opacity-[0.035] mix-blend-overlay'
@@ -175,7 +179,8 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
           style={{
             contain: 'layout style paint',
             contentVisibility: 'auto',
-            containIntrinsicSize: '1px 960px',
+            containIntrinsicBlockSize: '960px',
+            containIntrinsicInlineSize: '1px',
             willChange: 'transform, opacity',
           }}
         >
