@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useRef } from 'react'
 
@@ -81,7 +81,9 @@ export function useWebVitals() {
           page_path: globalThis.window?.location.pathname,
         })
 
-        console.log(`[Web Vitals] ${metric.name}: ${metric.value.toFixed(2)}ms`)
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[Web Vitals] ${metric.name}: ${metric.value.toFixed(2)}ms`)
+        }
       })
     })
 

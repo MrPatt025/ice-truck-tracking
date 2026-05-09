@@ -102,6 +102,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
 
   return (
     <motion.main
+      data-testid="premium-wrapper"
       initial={shouldAnimate ? 'hidden' : false}
       animate={shouldAnimate ? 'show' : undefined}
       variants={CONTAINER_VARIANTS}

@@ -59,8 +59,8 @@ async function verifyPageLoad(page: Page, route: string): Promise<void> {
   // Assert page loaded successfully
   expect(response?.status() ?? 200).toBeLessThan(400);
 
-  // Assert PremiumPageWrapper or main layout is present — resilient to 3D load
-  const pageContent = page.locator('main, [role="main"], body').first();
+  // Assert PremiumPageWrapper is present — bulletproof testid-based locator
+  const pageContent = page.locator('[data-testid="premium-wrapper"]');
   await expect(pageContent).toBeVisible({ timeout: 15000 });
 
   // Verify no critical console errors (filter out benign 3D/WebGL warnings)

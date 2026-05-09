@@ -195,7 +195,7 @@ export class PredictiveRenderer {
     if (!target || target.loaded || !this._config.enabled) return;
     if (this._loadingCount >= this._config.maxConcurrent) return;
 
-    console.debug(`[Predictive] ${signal} → preloading "${targetId}"`);
+    if (process.env.NODE_ENV === 'development') console.debug(`[Predictive] ${signal} → preloading "${targetId}"`);
 
     this._loadingCount++;
     try {

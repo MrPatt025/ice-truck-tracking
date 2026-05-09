@@ -113,7 +113,7 @@ export function bootEngine(config?: Partial<WorkerConfig>): void {
     adaptiveCtrl.onScale((decision) => {
         // Apply scaling to 3D layer
         threeLayer?.applyScaling(decision);
-        console.debug('[Adaptive] Scaling applied:', decision.reason);
+        if (process.env.NODE_ENV === 'development') console.debug('[Adaptive] Scaling applied:', decision.reason);
     });
 
     // 2) Spatial index for fast range queries
@@ -163,7 +163,7 @@ export function bootEngine(config?: Partial<WorkerConfig>): void {
         perceptionEngine?.tick(dt);
     });
 
-    console.log('[IoT Engine] Booted with Masterpiece Architecture ✓');
+    if (process.env.NODE_ENV === 'development') console.debug('[IoT Engine] Booted with Masterpiece Architecture ✓');
 
     // ── CRAFT LAYER BOOT ──────────────────────────────────────────
     // Scene graph (central nervous system)
@@ -213,7 +213,7 @@ export function bootEngine(config?: Partial<WorkerConfig>): void {
         budgetGovernor?.reportFPS(60);
     });
 
-    console.log('[IoT Engine] Craft Layer v5.0 mounted ✓');
+    if (process.env.NODE_ENV === 'development') console.debug('[IoT Engine] Craft Layer v5.0 mounted ✓');
 }
 
 /** Shutdown the engine. Call on unmount. */
@@ -275,7 +275,7 @@ export function shutdownEngine(): void {
     layoutDensity = null;
     frameScheduler.unregister('craft-budget');
 
-    console.log('[IoT Engine] Shutdown ✓');
+    if (process.env.NODE_ENV === 'development') console.debug('[IoT Engine] Shutdown ✓');
 }
 
 // ─── Layer mounting (called by React refs) ─────────────────────
@@ -505,7 +505,7 @@ function handleWorkerMessage(msg: WorkerOutbound): void {
             break;
 
         case 'geofence-event':
-            console.debug('[Geofence]', msg.payload);
+            if (process.env.NODE_ENV === 'development') console.debug('[Geofence]', msg.payload);
             break;
 
         case 'chart-delta': {

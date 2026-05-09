@@ -284,7 +284,7 @@ export class AnimationBudgetGovernor {
       document.documentElement.dataset.budgetLevel = String(this._state.reductionLevel);
     }
 
-    console.debug(`[Budget] Degraded to level ${this._state.reductionLevel}, actions:`, [...this._state.activeActions]);
+    if (process.env.NODE_ENV === 'development') console.debug(`[Budget] Degraded to level ${this._state.reductionLevel}, actions:`, [...this._state.activeActions]);
   }
 
   private _recover(): void {
@@ -308,7 +308,7 @@ export class AnimationBudgetGovernor {
       document.documentElement.dataset.budgetLevel = String(this._state.reductionLevel);
     }
 
-    console.debug(`[Budget] Recovered to level ${this._state.reductionLevel}`);
+    if (process.env.NODE_ENV === 'development') console.debug(`[Budget] Recovered to level ${this._state.reductionLevel}`);
   }
 
   /** Apply CSS-level hints for budget actions */

@@ -208,6 +208,298 @@ resource "aws_s3_bucket_policy" "alb_access_logs" {
   })
 }
 
+# ============================================================================
+# APPLICATION DATA BUCKET (SonarQube S3 Hotspot Fix #1 & #2)
+# ============================================================================
+
+resource "aws_s3_bucket" "app_data" {
+  bucket = "ice-truck-app-data-${var.environment}-${data.aws_caller_identity.current.account_id}"
+
+  tags = {
+    Environment = var.environment
+    Purpose     = "Application data storage"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "app_data" {
+  bucket = aws_s3_bucket.app_data.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "app_data" {
+  bucket = aws_s3_bucket.app_data.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "app_data" {
+  bucket = aws_s3_bucket.app_data.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.alerts.arn
+      sse_algorithm     = "aws:kms"
+    }
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_logging" "app_data" {
+  bucket = aws_s3_bucket.app_data.id
+
+  target_bucket = aws_s3_bucket.alb_access_logs_target.id
+  target_prefix = "app-data-logs/"
+}
+
+resource "aws_s3_bucket_policy" "app_data" {
+  bucket = aws_s3_bucket.app_data.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "DenyInsecureTransport"
+        Effect = "Deny"
+        Principal = {
+          AWS = "*"
+        }
+        Action = "s3:*"
+        Resource = [
+          aws_s3_bucket.app_data.arn,
+          "${aws_s3_bucket.app_data.arn}/*"
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      },
+      {
+        Sid    = "DenyUnencryptedObjectUploads"
+        Effect = "Deny"
+        Principal = {
+          AWS = "*"
+        }
+        Action = "s3:PutObject"
+        Resource = "${aws_s3_bucket.app_data.arn}/*"
+        Condition = {
+          StringNotEquals = {
+            "s3:x-amz-server-side-encryption" = "aws:kms"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# ============================================================================
+# ARTIFACTS BUCKET (SonarQube S3 Hotspot Fix #3)
+# ============================================================================
+
+resource "aws_s3_bucket" "artifacts" {
+  bucket = "ice-truck-artifacts-${var.environment}-${data.aws_caller_identity.current.account_id}"
+
+  tags = {
+    Environment = var.environment
+    Purpose     = "Backup and artifacts storage"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_versioning" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.alerts.arn
+      sse_algorithm     = "aws:kms"
+    }
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_logging" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+
+  target_bucket = aws_s3_bucket.alb_access_logs_target.id
+  target_prefix = "artifacts-logs/"
+}
+
+resource "aws_s3_bucket_policy" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "DenyInsecureTransport"
+        Effect = "Deny"
+        Principal = {
+          AWS = "*"
+        }
+        Action = "s3:*"
+        Resource = [
+          aws_s3_bucket.artifacts.arn,
+          "${aws_s3_bucket.artifacts.arn}/*"
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      },
+      {
+        Sid    = "DenyUnencryptedObjectUploads"
+        Effect = "Deny"
+        Principal = {
+          AWS = "*"
+        }
+        Action = "s3:PutObject"
+        Resource = "${aws_s3_bucket.artifacts.arn}/*"
+        Condition = {
+          StringNotEquals = {
+            "s3:x-amz-server-side-encryption" = "aws:kms"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "artifacts" {
+  bucket = aws_s3_bucket.artifacts.id
+
+  rule {
+    id     = "retain-artifacts-1-year"
+    status = "Enabled"
+
+    expiration {
+      days = 365
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+  }
+}
+
+# ============================================================================
+# CACHE BUCKET (SonarQube S3 Hotspot Fix #4)
+# ============================================================================
+
+resource "aws_s3_bucket" "cache" {
+  bucket = "ice-truck-cache-${var.environment}-${data.aws_caller_identity.current.account_id}"
+
+  tags = {
+    Environment = var.environment
+    Purpose     = "Application cache and temporary data"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "cache" {
+  bucket = aws_s3_bucket.cache.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "cache" {
+  bucket = aws_s3_bucket.cache.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = aws_kms_key.alerts.arn
+      sse_algorithm     = "aws:kms"
+    }
+    bucket_key_enabled = true
+  }
+}
+
+resource "aws_s3_bucket_logging" "cache" {
+  bucket = aws_s3_bucket.cache.id
+
+  target_bucket = aws_s3_bucket.alb_access_logs_target.id
+  target_prefix = "cache-logs/"
+}
+
+resource "aws_s3_bucket_policy" "cache" {
+  bucket = aws_s3_bucket.cache.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "DenyInsecureTransport"
+        Effect = "Deny"
+        Principal = {
+          AWS = "*"
+        }
+        Action = "s3:*"
+        Resource = [
+          aws_s3_bucket.cache.arn,
+          "${aws_s3_bucket.cache.arn}/*"
+        ]
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      },
+      {
+        Sid    = "DenyUnencryptedObjectUploads"
+        Effect = "Deny"
+        Principal = {
+          AWS = "*"
+        }
+        Action = "s3:PutObject"
+        Resource = "${aws_s3_bucket.cache.arn}/*"
+        Condition = {
+          StringNotEquals = {
+            "s3:x-amz-server-side-encryption" = "aws:kms"
+          }
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "cache" {
+  bucket = aws_s3_bucket.cache.id
+
+  rule {
+    id     = "expire-cache-30-days"
+    status = "Enabled"
+
+    expiration {
+      days = 30
+    }
+  }
+}
+
 # ECS Cluster with Spot Instances
 resource "aws_ecs_cluster" "main" {
   name = "ice-truck-cluster"

@@ -1,4 +1,4 @@
-﻿import { io, Socket } from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 
 export interface TruckLocation {
   id: string
@@ -36,12 +36,12 @@ class SocketService {
     })
 
     this.socket.on('connect', () => {
-      console.log('Socket connected')
+      if (process.env.NODE_ENV === 'development') console.debug('[Socket] connected')
       this.reconnectAttempts = 0
     })
 
     this.socket.on('disconnect', () => {
-      console.log('Socket disconnected')
+      if (process.env.NODE_ENV === 'development') console.debug('[Socket] disconnected')
     })
 
     this.socket.on('connect_error', error => {
