@@ -35,15 +35,15 @@ services:
 
   dashboard:
     build:
-      context: ./dashboard
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: dashboard/Dockerfile
       target: builder
     environment:
       NODE_ENV: development
     volumes:
-      - ./dashboard/src:/app/src
-      - ./dashboard/pages:/app/pages
-      - ./dashboard/public:/app/public
+      - ./dashboard/src:/app/dashboard/src
+      - ./dashboard/pages:/app/dashboard/pages
+      - ./dashboard/public:/app/dashboard/public
       - node_modules_cache:/app/node_modules
     command: npm run dev
     restart: unless-stopped

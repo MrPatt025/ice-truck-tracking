@@ -1,8 +1,6 @@
 # Docker Compose Production Override
 # Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-version: '3.8'
-
 services:
   postgres:
     deploy:
@@ -23,7 +21,7 @@ services:
           cpus: '1'
           memory: 1G
         reservations:
-          cpus: '512m'
+          cpus: '0.5'
           memory: 512M
     command: redis-server --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru --requirepass ${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}
 
@@ -60,7 +58,7 @@ services:
           cpus: '1'
           memory: 512M
         reservations:
-          cpus: '512m'
+          cpus: '0.5'
           memory: 256M
     environment:
       NODE_ENV: production
@@ -73,6 +71,6 @@ services:
           cpus: '1'
           memory: 512M
         reservations:
-          cpus: '256m'
+          cpus: '0.25'
           memory: 256M
     restart: always

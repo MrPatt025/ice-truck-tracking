@@ -232,8 +232,8 @@ services:
   # ── Dashboard (Next.js) ─────────────────────────────────
   dashboard:
     build:
-      context: ./dashboard
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: dashboard/Dockerfile
     environment:
       <<: *common-env
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5000}

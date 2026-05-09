@@ -161,8 +161,8 @@ services:
   # ── Frontend Dashboard ──────────────────────────────────
   dashboard:
     build:
-      context: ./dashboard
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: dashboard/Dockerfile
     container_name: ice-truck-dashboard
     ports:
       - '${DASHBOARD_PORT:-3000}:3000'

@@ -1,55 +1,78 @@
+# ============================================================================
+# Dashboard Dockerfile — Monorepo-Aware Multi-Stage Build
+# Context: repository root (.)
+# ============================================================================
+
 FROM node:24-alpine AS base
 
-# Install dependencies only when needed
+# ── Dependencies stage ─────────────────────────────────
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
+
+# Pin pnpm version to satisfy SonarQube docker:S8543 strict versioning
+RUN npm install -g pnpm@10.32.1 --ignore-scripts
 
 # Configure NPM network retry settings to prevent ECONNRESET timeouts
 ENV NPM_CONFIG_FETCH_RETRIES=5
 ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000
 ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 
-# Install dependencies
-COPY package.json ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile --ignore-scripts
+# Copy workspace-level dependency manifests (monorepo root)
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY dashboard/package.json ./dashboard/
 
-# Rebuild the source code only when needed
+# Install dependencies with frozen lockfile (now resolvable from root)
+RUN pnpm install --frozen-lockfile --filter @ice-truck/dashboard...
+
+# ── Builder stage ──────────────────────────────────────
 FROM base AS builder
+RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
+
+# Copy installed node_modules from deps
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json next.config.ts tsconfig.json tailwind.config.ts postcss.config.js cypress.config.ts jest.config.js jest.setup.js playwright.a11y.config.ts playwright.config.ts playwright.gpu.config.ts playwright.light.config.ts playwright.visual.config.ts next-env.d.ts ./
-COPY public ./public
-COPY src ./src
-COPY e2e ./e2e
+COPY --from=deps /app/dashboard/node_modules ./dashboard/node_modules
 
-# Build the application
-RUN npm run build
+# Copy workspace config
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
-# Production image, copy all the files and run next
+# Copy dashboard source and config files
+COPY dashboard/package.json dashboard/next.config.ts dashboard/tsconfig.json ./dashboard/
+COPY dashboard/postcss.config.js ./dashboard/
+COPY dashboard/jest.config.js ./dashboard/
+COPY dashboard/next-env.d.ts ./dashboard/
+COPY dashboard/public ./dashboard/public
+COPY dashboard/src ./dashboard/src
+
+# Build the Next.js application
+WORKDIR /app/dashboard
+RUN pnpm run build
+
+# ── Production runner ──────────────────────────────────
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+COPY --from=builder /app/dashboard/public ./public
 
 # Set the correct permission for prerender cache
 RUN mkdir .next \
     && chown nextjs:nodejs .next
 
 # Automatically leverage output traces to reduce image size
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/dashboard/.next/standalone ./
+COPY --from=builder /app/dashboard/.next/static ./.next/static
 
 USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]
