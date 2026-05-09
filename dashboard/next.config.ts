@@ -73,7 +73,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["http://localhost:3000", "https://192.168.56.1:3000"],
   compress: true,
   poweredByHeader: false,
-  transpilePackages: ['@react-three/offscreen', '@react-three/fiber', 'three'],
+  transpilePackages: ['@react-three/offscreen', '@babel/runtime', '@react-three/fiber', 'three'],
   turbopack: {},
   /**
    * Core Web Vitals optimization:

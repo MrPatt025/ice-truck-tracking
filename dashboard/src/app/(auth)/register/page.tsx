@@ -79,6 +79,8 @@ export default function RegisterPage() {
   return (
     <ScrollytellingCanvas>
       <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
+    <ScrollytellingCanvas>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <PremiumPageWrapper
       mode='glass'
       denseNoise
@@ -280,6 +282,8 @@ export default function RegisterPage() {
         </div>
       </motion.div>
     </PremiumPageWrapper>
+        </motion.div>
+    </ScrollytellingCanvas>
         </motion.div>
     </ScrollytellingCanvas>
   )

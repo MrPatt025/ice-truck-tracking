@@ -11,7 +11,7 @@ function isUuid(value) {
 }
 
 function isEmailAddress(value) {
-    return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    return typeof value === 'string' && /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value);
 }
 
 function isSafeUsername(value) {

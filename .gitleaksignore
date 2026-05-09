@@ -7,3 +7,6 @@
 #
 # Example fingerprint format:
 # <commit>:<file>:<rule-id>:<line>
+
+docker-compose.dev.yml
+backend/database/setup_database.sql
