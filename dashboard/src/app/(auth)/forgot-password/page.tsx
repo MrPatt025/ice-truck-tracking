@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react'
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Snowflake, Loader2, AlertCircle, ArrowLeft, Mail } from 'lucide-react';
@@ -33,6 +34,8 @@ export default function ForgotPasswordPage() {
   )
 
   return (
+    <ScrollytellingCanvas>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <PremiumPageWrapper
       mode='glass'
       denseNoise
@@ -148,5 +151,7 @@ export default function ForgotPasswordPage() {
         </div>
       </motion.div>
     </PremiumPageWrapper>
+        </motion.div>
+    </ScrollytellingCanvas>
   )
 }

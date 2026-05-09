@@ -142,7 +142,7 @@ services:
       - mosquitto-log:/mosquitto/log
       - ./certs:/mosquitto/certs:ro
     ports:
-      - '1883:1883'
+      - '1884:1883'
       - '8883:8883'
       - '9001:9001'
     networks:

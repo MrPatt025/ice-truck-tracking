@@ -29,17 +29,15 @@ const { sanitize } = require('./src/middleware/zodValidation');
 // Import services
 const websocketService = require('./src/services/websocketService');
 
-// Import IoT / caching services (lazy — only when real DB is used)
+// Import IoT / caching services
 let mqttService, telemetryIngestion, redisClient;
-if (process.env.USE_FAKE_DB !== 'true') {
-  try {
-    mqttService = require('./src/services/mqttService');
-    telemetryIngestion = require('./src/services/telemetryIngestion');
-    redisClient = require('./src/config/redis');
-  } catch (err) {
-    // Services are optional during tests or when infra is unavailable
-    logger.warn('Optional services not loaded: ' + err.message);
-  }
+try {
+  mqttService = require('./src/services/mqttService');
+  telemetryIngestion = require('./src/services/telemetryIngestion');
+  redisClient = require('./src/config/redis');
+} catch (err) {
+  // Services are optional during tests or when infra is unavailable
+  logger.warn('Optional services not loaded: ' + err.message);
 }
 
 // Import API routes
@@ -127,117 +125,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// ---- DEV mock data for frontend ----
-if (process.env.USE_FAKE_DB === 'true') {
-  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
-  const rand = () => randomInt(0, 1_000_000) / 1_000_000;
-  const randBetween = (min, max) => min + rand() * (max - min);
-
-  let mem = {
-    trucks: [
-      { id: 'truck-001', latitude: 13.7563, longitude: 100.5018, driver_name: 'Somchai', speed: 32, temp: -8, updatedAt: new Date().toISOString() },
-      { id: 'truck-002', latitude: 13.75, longitude: 100.49, driver_name: 'Suda', speed: 28, temp: -12, updatedAt: new Date().toISOString() },
-      { id: 'truck-003', latitude: 13.762, longitude: 100.515, driver_name: 'Anan', speed: 40, temp: -6, updatedAt: new Date().toISOString() },
-    ],
-    alerts: [
-      { id: String(Date.now()), level: 'info', message: 'System boot', ts: new Date().toISOString() }
-    ]
-  };
-
-  // simple simulation
-  setInterval(() => {
-    mem.trucks = mem.trucks.map(t => ({
-      ...t,
-      latitude: t.latitude + (rand() - 0.5) * 0.002,
-      longitude: t.longitude + (rand() - 0.5) * 0.002,
-      speed: clamp((t.speed ?? 30) + (rand() - 0.5) * 5, 0, 70),
-      temp: clamp((t.temp ?? -8) + (rand() - 0.5) * 0.5, -20, 5),
-      updatedAt: new Date().toISOString(),
-    }));
-
-    // สุ่ม alert บ้าง
-    if (rand() < 0.2) {
-      mem.alerts.unshift({
-        id: String(Date.now()),
-        level: ['info', 'warn', 'critical'][randomInt(0, 3)],
-        message: `Ping from ${mem.trucks[randomInt(0, mem.trucks.length)].id}`,
-        ts: new Date().toISOString()
-      });
-      mem.alerts = mem.alerts.slice(0, 50);
-    }
-
-    // ถ้ามี WebSocket service อยู่แล้วก็ส่ง event แบบหลวม ๆ
-    try {
-      if (globalThis.wss?.clients) {
-        const pkt = { type: 'trucks', trucks: mem.trucks, alerts: mem.alerts };
-        for (const c of globalThis.wss.clients) c.send(JSON.stringify(pkt));
-      }
-    } catch (err) {
-      logger.warn('Simulation broadcast error: ' + (err?.message ?? String(err)));
-      return;
-    }
-  }, 2000).unref?.();
-
-  app.get('/api/v1/trucks', (req, res) => res.json(mem.trucks));
-  app.get('/api/v1/alerts', (req, res) => res.json(mem.alerts));
-  // Quick test endpoint to inject an alert into the mock alerts list and broadcast to WS clients
-  app.post('/api/v1/alerts/test', (req, res) => {
-    const a = {
-      id: String(Date.now()),
-      level: req.query.level || 'warn',
-      message: req.query.msg || 'Test alert',
-      ts: new Date().toISOString()
-    };
-    mem.alerts.unshift(a);
-    mem.alerts = mem.alerts.slice(0, 50);
-    try {
-      if (globalThis.wss?.clients) {
-        for (const c of globalThis.wss.clients) c.send(JSON.stringify({ type: 'alert', payload: a }));
-      }
-    } catch (err) {
-      logger.warn('Simulation alert broadcast error: ' + (err?.message ?? String(err)));
-      return res.json(a);
-    }
-    res.json(a);
-  });
-
-  // Clear all mock alerts
-  app.post('/api/v1/alerts/clear', (req, res) => {
-    mem.alerts = [];
-    try {
-      if (globalThis.wss?.clients) {
-        for (const c of globalThis.wss.clients) c.send(JSON.stringify({ type: 'alerts', payload: mem.alerts }));
-      }
-    } catch {
-      return res.json({ ok: true });
-    }
-    res.json({ ok: true });
-  });
-
-  // Seed test trucks for map testing
-  app.post('/api/v1/trucks/test', (req, res) => {
-    const n = Number(req.query.count || 5);
-    mem.trucks = Array.from({ length: n }, (_, i) => ({
-      id: `truck-${String(i + 1).padStart(3, '0')}`,
-      latitude: 13.7563 + (rand() - 0.5) * 0.02,
-      longitude: 100.5018 + (rand() - 0.5) * 0.02,
-      driver_name: `Driver ${i + 1}`,
-      speed: Math.round(randBetween(0, 60)),
-      temp: randBetween(-10, -5),
-      updatedAt: new Date().toISOString(),
-    }));
-    try {
-      if (globalThis.wss?.clients) {
-        for (const c of globalThis.wss.clients) c.send(JSON.stringify({ type: 'trucks', payload: mem.trucks }));
-      }
-    } catch (err) {
-      logger.warn('Simulation trucks broadcast error: ' + (err?.message ?? String(err)));
-      return res.json(mem.trucks);
-    }
-    res.json(mem.trucks);
-  });
-}
-// ---- /DEV mock data ----
 
 // Mount API v1 routes (after mock data so mock endpoints take precedence in dev)
 app.use('/api/v1', apiV1Routes);
@@ -293,14 +180,21 @@ async function onServerStarted() {
   logger.info(`Metrics: http://localhost:${PORT}/metrics`);
   logger.info('WebSocket enabled for real-time updates');
 
-  // Connect MQTT and register telemetry handlers
+  // Connect Kafka Event Bus, Telemetry Worker, and MQTT
   if (mqttService && telemetryIngestion) {
     try {
+      const { eventBus } = require('./src/services/eventBus');
+      const { startTelemetryWorker } = require('./src/workers/telemetryWorker');
+      
+      await eventBus.connect();
+      await startTelemetryWorker();
+
       await mqttService.connect();
       telemetryIngestion.registerHandlers(mqttService);
-      logger.info('MQTT connected — telemetry ingestion active');
+      
+      logger.info('Kafka and MQTT connected — telemetry ingestion active');
     } catch (err) {
-      logger.error('MQTT connection failed: ' + err.message);
+      logger.error('Telemetry pipeline initialization failed: ' + err.message);
     }
   }
 

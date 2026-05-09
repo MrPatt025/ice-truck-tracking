@@ -12,7 +12,7 @@ ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 
 # Install dependencies
 COPY package.json ./
-RUN npm ci --legacy-peer-deps --ignore-scripts
+RUN npm install -g pnpm && pnpm install --frozen-lockfile --ignore-scripts
 
 # Rebuild the source code only when needed
 FROM base AS builder

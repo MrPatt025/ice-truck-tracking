@@ -1,14 +1,9 @@
 // MQTT → TimescaleDB telemetry ingestion handler
 const { z } = require('zod');
-const db = require('../config/database');
 const logger = require('../config/logger');
-const { invalidate } = require('../config/redis');
-const websocketService = require('./websocketService');
+const { eventBus, TOPICS } = require('./eventBus');
 const {
     recordTelemetryIngestion,
-    recordAlert,
-    recordDbQuery,
-    recordTelemetryDbInsert,
     recordMqttMessage,
 } = require('../middleware/observability');
 
@@ -97,72 +92,12 @@ const registerHandlers = (mqttService) => {
 
         const ingestionStartTime = process.hrtime.bigint();
         try {
-            // Insert into TimescaleDB hypertable (auto-partitioned by time)
-            const insertStartTime = process.hrtime.bigint();
-            await db.query(
-                `INSERT INTO telemetry (
-           time,
-           truck_id,
-           latitude,
-           longitude,
-           temperature,
-           speed,
-           battery,
-           humidity,
-           heading
-         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-                [
-                    observedAt,
-                    truckId,
-                    telemetry.latitude,
-                    telemetry.longitude,
-                    telemetry.temperature,
-                    telemetry.speed,
-                    telemetry.battery ?? null,
-                    telemetry.humidity ?? null,
-                    telemetry.heading ?? null,
-                ],
-            );
-            const insertElapsed = Number(process.hrtime.bigint() - insertStartTime) / 1e9;
-            recordDbQuery('insert', insertElapsed);
-            recordTelemetryDbInsert(insertElapsed);
-
-            // Update materialised "latest position" cache in Redis
-            await invalidate(`truck:${truckId}:latest`);
-
-            // Fan-out to WebSocket clients
-            websocketService.broadcast('truck-update', {
-                id: truckId,
+            // Publish raw telemetry to Kafka for processing by workers
+            await eventBus.publish(TOPICS.TELEMETRY_RAW, truckId, {
                 truckId,
-                latitude: telemetry.latitude,
-                longitude: telemetry.longitude,
-                lat: telemetry.latitude,
-                lng: telemetry.longitude,
-                temperature: telemetry.temperature,
-                speed: telemetry.speed,
-                heading: telemetry.heading ?? 0,
-                battery: telemetry.battery ?? null,
-                humidity: telemetry.humidity ?? null,
-                timestamp: observedAt.toISOString(),
+                telemetry,
+                observedAt,
             });
-
-            // Check temperature thresholds → generate alert
-            if (telemetry.temperature > -2 || telemetry.temperature < -25) {
-                const alertData = {
-                    truck_id: truckId,
-                    alert_type: 'temperature',
-                    message: `Temperature out of range: ${telemetry.temperature}°C`,
-                    severity: telemetry.temperature > 0 ? 'critical' : 'warning',
-                };
-                await db.query(
-                    `INSERT INTO alerts (truck_id, alert_type, message, severity)
-           VALUES ($1, $2, $3, $4)`,
-                    [alertData.truck_id, alertData.alert_type, alertData.message, alertData.severity],
-                );
-                websocketService.broadcast('alert', alertData);
-                mqttService.publishMessage(`trucks/${truckId}/alerts`, alertData);
-                recordAlert(alertData.severity);
-            }
 
             // Record ingestion metrics
             const elapsed = Number(process.hrtime.bigint() - ingestionStartTime) / 1e9;
@@ -178,12 +113,10 @@ const registerHandlers = (mqttService) => {
     mqttService.on('trucks/+/status', async (data, params) => {
         const truckId = params.p1;
         try {
-            await db.query(
-                `UPDATE trucks SET status = $1, updated_at = NOW() WHERE truck_code = $2`,
-                [data.status, truckId],
-            );
-            await invalidate(`truck:${truckId}:*`);
-            websocketService.broadcast('truck-status', { id: truckId, ...data });
+            await eventBus.publish(TOPICS.TRUCK_STATUS, truckId, {
+                truckId,
+                status: data.status,
+            });
         } catch (err) {
             logger.error({ truckId, err: err.message }, 'Status update error');
         }

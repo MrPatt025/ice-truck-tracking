@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
 import { motion } from 'framer-motion';
 import {
   Settings, User, Shield, Key, Bell, Palette,
@@ -71,6 +72,8 @@ export default function SettingsPage() {
   ];
 
   return (
+    <ScrollytellingCanvas>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <AppSidebar>
       <PremiumPageWrapper
         mode='glass'
@@ -536,5 +539,7 @@ export default function SettingsPage() {
         </div>
       </PremiumPageWrapper>
     </AppSidebar>
+        </motion.div>
+    </ScrollytellingCanvas>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
 import { ShieldCheck, FileBadge2, Siren, ClipboardCheck } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
@@ -34,6 +35,8 @@ const CONTROL_ROWS = [
 
 export default function CompliancePage() {
   return (
+    <ScrollytellingCanvas>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <AppSidebar>
       <PremiumPageWrapper
         mode='glass'
@@ -113,5 +116,7 @@ export default function CompliancePage() {
         </main>
       </PremiumPageWrapper>
     </AppSidebar>
+        </motion.div>
+    </ScrollytellingCanvas>
   )
 }

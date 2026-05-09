@@ -1,6 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import { motion } from 'framer-motion';
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
 import { useEffect, useMemo, useState } from 'react'
 import { Download, Plus, Search, Truck } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
@@ -202,6 +204,8 @@ export default function FleetManagementPage() {
   }, [rows])
 
   return (
+    <ScrollytellingCanvas>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <AppSidebar>
       <PremiumPageWrapper
         mode='glass'
@@ -317,5 +321,7 @@ export default function FleetManagementPage() {
         </div>
       </PremiumPageWrapper>
     </AppSidebar>
+        </motion.div>
+    </ScrollytellingCanvas>
   )
 }

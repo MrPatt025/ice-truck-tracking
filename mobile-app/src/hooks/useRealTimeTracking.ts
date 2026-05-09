@@ -1,102 +1,65 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import io, { Socket } from 'socket.io-client'
 
 interface Truck {
   id: string
   latitude: number
   longitude: number
-  driver_name: string
+  driver_name?: string
   temperature: number
   speed: number
-  status: 'active' | 'inactive'
-}
-
-function secureRandomUnit(): number {
-  const cryptoSource = globalThis as {
-    crypto?: {
-      getRandomValues?: (array: Uint32Array) => Uint32Array
-    }
-  }
-
-  if (cryptoSource.crypto?.getRandomValues) {
-    const values = new Uint32Array(1)
-    cryptoSource.crypto.getRandomValues(values)
-    return values[0] / 4294967296
-  }
-
-  return 0.5
-}
-
-function randomCentered(scale: number): number {
-  return (secureRandomUnit() - 0.5) * scale
-}
-
-function createMockTrucks(): Truck[] {
-  return [
-    {
-      id: 'truck-001',
-      latitude: 13.7563 + randomCentered(0.01),
-      longitude: 100.5018 + randomCentered(0.01),
-      driver_name: 'John Doe',
-      temperature: -2.5,
-      speed: 45,
-      status: 'active',
-    },
-    {
-      id: 'truck-002',
-      latitude: 13.76 + randomCentered(0.01),
-      longitude: 100.51 + randomCentered(0.01),
-      driver_name: 'Jane Smith',
-      temperature: -1.8,
-      speed: 32,
-      status: 'active',
-    },
-    {
-      id: 'truck-003',
-      latitude: 13.765 + randomCentered(0.01),
-      longitude: 100.52 + randomCentered(0.01),
-      driver_name: 'Mike Johnson',
-      temperature: -3.2,
-      speed: 0,
-      status: 'inactive',
-    },
-  ]
-}
-
-function updateTruckPosition(truck: Truck): Truck {
-  return {
-    ...truck,
-    latitude: truck.latitude + randomCentered(0.001),
-    longitude: truck.longitude + randomCentered(0.001),
-    speed: Math.max(0, truck.speed + randomCentered(10)),
-    temperature: truck.temperature + randomCentered(0.5),
-  }
-}
-
-function updateTruckBatch(trucks: Truck[]): Truck[] {
-  return trucks.map(updateTruckPosition)
+  status: 'active' | 'inactive' | 'offline' | 'maintenance'
 }
 
 export function useRealTimeTracking() {
   const [trucks, setTrucks] = useState<Truck[]>([])
   const [isConnected, setIsConnected] = useState(false)
-  const { user } = useAuth()
+  const { user, token } = useAuth()
 
   useEffect(() => {
-    if (!user) return
+    if (!user || !token) return
 
-    setIsConnected(true)
-    setTrucks(createMockTrucks())
+    // Connect to WebSocket server using the real backend URL (or fallback)
+    const WEBSOCKET_URL = process.env.EXPO_PUBLIC_API_URL || 'ws://localhost:5000'
+    const socket: Socket = io(WEBSOCKET_URL, {
+      auth: { token },
+      transports: ['websocket'],
+    })
 
-    const interval = setInterval(() => {
-      setTrucks(updateTruckBatch)
-    }, 5000)
+    socket.on('connect', () => {
+      setIsConnected(true)
+    })
+
+    socket.on('disconnect', () => {
+      setIsConnected(false)
+    })
+
+    // Listen for initial batch or list of trucks
+    socket.on('trucks', (payload: Truck[]) => {
+      if (Array.isArray(payload)) {
+        setTrucks(payload)
+      }
+    })
+
+    // Listen for real-time truck updates
+    socket.on('truck-update', (payload: Truck) => {
+      setTrucks((prev) => {
+        const idx = prev.findIndex((t) => t.id === payload.id)
+        if (idx >= 0) {
+          const next = [...prev]
+          next[idx] = { ...next[idx], ...payload }
+          return next
+        }
+        return [...prev, payload]
+      })
+    })
 
     return () => {
-      clearInterval(interval)
+      socket.disconnect()
       setIsConnected(false)
     }
-  }, [user])
+  }, [user, token])
 
   return {
     trucks,

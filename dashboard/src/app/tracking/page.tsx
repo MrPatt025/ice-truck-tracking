@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
 import { Route, Thermometer, Gauge, MapPinned } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
@@ -14,6 +15,8 @@ const TRACKING_LANES = [
 
 export default function TrackingPage() {
   return (
+    <ScrollytellingCanvas>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <AppSidebar>
       <PremiumPageWrapper
         mode='glass'
@@ -89,5 +92,7 @@ export default function TrackingPage() {
         </main>
       </PremiumPageWrapper>
     </AppSidebar>
+        </motion.div>
+    </ScrollytellingCanvas>
   )
 }

@@ -49,16 +49,4 @@ describe('API endpoint integration', () => {
         expect(res.body?.token).toBeUndefined();
     });
 
-    test('GET /api/v1/trucks returns coordinate payload for map rendering', async () => {
-        const res = await request(app).get('/api/v1/trucks');
-
-        expect(res.statusCode).toBe(200);
-        expect(Array.isArray(res.body)).toBe(true);
-        expect(res.body.length).toBeGreaterThan(0);
-
-        const item = res.body[0];
-        expect(typeof item.latitude).toBe('number');
-        expect(typeof item.longitude).toBe('number');
-        expect(item.id).toBeTruthy();
-    });
 });

@@ -1,0 +1,61 @@
+# Docker Compose Development Override
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+version: '3.8'
+
+services:
+  postgres:
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_PASSWORD: '[REDACTED_BY_SECURITY_POLICY]'
+
+  redis:
+    ports:
+      - '6379:6379'
+
+  mosquitto:
+    ports:
+      - '1883:1883'
+      - '9001:9001'
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+    volumes:
+      - ./backend/src:/app/backend/src
+      - ./backend/index.js:/app/backend/index.js
+      - node_modules_cache:/app/node_modules
+    command: |
+      sh -c "npm install -g nodemon && nodemon --exec 'node' backend/index.js"
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+      target: builder
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./dashboard/src:/app/src
+      - ./dashboard/pages:/app/pages
+      - ./dashboard/public:/app/public
+      - node_modules_cache:/app/node_modules
+    command: npm run dev
+    restart: unless-stopped
+
+  prometheus:
+    profiles: []
+
+  grafana:
+    profiles: []
+
+volumes:
+  node_modules_cache:
+    driver: local

@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
 import { RadioTower, Waves, Clock3, CircleGauge } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
@@ -14,6 +15,8 @@ const OPS_STREAMS = [
 
 export default function OperationsPage() {
   return (
+    <ScrollytellingCanvas>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <AppSidebar>
       <PremiumPageWrapper
         mode='glass'
@@ -89,5 +92,7 @@ export default function OperationsPage() {
         </main>
       </PremiumPageWrapper>
     </AppSidebar>
+        </motion.div>
+    </ScrollytellingCanvas>
   )
 }

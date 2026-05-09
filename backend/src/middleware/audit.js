@@ -26,18 +26,16 @@ async function logAudit({ userId, action, resource, resourceId, ip, userAgent, o
     const resourceLabel = resourceId ? ':' + resourceId : '';
     logger.info({ audit: entry }, `AUDIT: ${action} ${resource}${resourceLabel}`);
 
-    // Persist to DB when available
-    if (process.env.USE_FAKE_DB !== 'true') {
-        try {
-            const database = require('../config/database');
-            await database.query(
-                `INSERT INTO audit_log (user_id, action, resource, resource_id, ip_address, user_agent, old_value, new_value)
-         VALUES ($1, $2, $3, $4, $5::inet, $6, $7::jsonb, $8::jsonb)`,
-                [entry.user_id, entry.action, entry.resource, entry.resource_id, entry.ip_address, entry.user_agent, entry.old_value, entry.new_value]
-            );
-        } catch (/** @type {*} */ err) {
-            logger.error({ err }, 'Failed to persist audit log');
-        }
+    // Persist to DB
+    try {
+        const database = require('../config/database');
+        await database.query(
+            `INSERT INTO audit_log (user_id, action, resource, resource_id, ip_address, user_agent, old_value, new_value)
+     VALUES ($1, $2, $3, $4, $5::inet, $6, $7::jsonb, $8::jsonb)`,
+            [entry.user_id, entry.action, entry.resource, entry.resource_id, entry.ip_address, entry.user_agent, entry.old_value, entry.new_value]
+        );
+    } catch (/** @type {*} */ err) {
+        logger.error({ err }, 'Failed to persist audit log');
     }
 }
 

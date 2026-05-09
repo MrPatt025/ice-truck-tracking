@@ -168,7 +168,6 @@ function HeroBackground({
     [transitionPhase]
   )
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => {
     if (E2E_LIGHT_MODE) return
 
@@ -210,8 +209,6 @@ function HeroBackground({
     }
 
     sendViewport()
-    postScrollProgress(activeScrollProgress.get())
-    postTransitionState(activeTransitionProgress.get(), isTransitioning)
     globalThis.addEventListener('resize', sendViewport, { passive: true })
 
     return () => {
@@ -229,6 +226,19 @@ function HeroBackground({
       registerWorkerWithMap?.(null)
     }
   }, [])
+
+  React.useEffect(() => {
+    if (E2E_LIGHT_MODE) return
+
+    postScrollProgress(activeScrollProgress.get())
+    postTransitionState(activeTransitionProgress.get(), isTransitioning)
+  }, [
+    activeScrollProgress,
+    activeTransitionProgress,
+    isTransitioning,
+    postScrollProgress,
+    postTransitionState,
+  ])
 
   React.useEffect(() => {
     if (E2E_LIGHT_MODE) return
@@ -262,7 +272,9 @@ function HeroBackground({
       if (selectedTruckId) {
         const selectedTruck = trucks.find(t => t.id === selectedTruckId)
         if (selectedTruck) {
-          useCameraSelectionStore.getState().updateCameraTarget(selectedTruck.lat, selectedTruck.lon)
+          useCameraSelectionStore
+            .getState()
+            .updateCameraTarget(selectedTruck.lat, selectedTruck.lon)
         }
       }
     }

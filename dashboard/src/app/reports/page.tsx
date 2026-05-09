@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import {
@@ -126,6 +127,8 @@ export default function ReportsPage() {
   ] as const;
 
   return (
+    <ScrollytellingCanvas>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <AppSidebar>
       <PremiumPageWrapper
         mode='glass'
@@ -239,5 +242,7 @@ export default function ReportsPage() {
         </div>
       </PremiumPageWrapper>
     </AppSidebar>
+        </motion.div>
+    </ScrollytellingCanvas>
   )
 }

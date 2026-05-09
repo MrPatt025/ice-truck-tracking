@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, Suspense } from 'react'
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -203,6 +204,8 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
+    <ScrollytellingCanvas>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <PremiumPageWrapper
       mode='glass'
       className='w-full'
@@ -219,5 +222,7 @@ export default function ResetPasswordPage() {
         <ResetPasswordContent />
       </Suspense>
     </PremiumPageWrapper>
+        </motion.div>
+    </ScrollytellingCanvas>
   )
 }

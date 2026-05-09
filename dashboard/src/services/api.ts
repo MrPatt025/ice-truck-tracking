@@ -54,14 +54,14 @@ function isMutationMethod(method: string): method is MutationMethod {
   return method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE';
 }
 
-function shouldQueueOfflineMutation(endpoint: string, method: string): boolean {
+export interface ApiRequestOptions extends RequestInit {
+  queueOffline?: boolean;
+}
+
+function shouldQueueOfflineMutation(method: string, options: ApiRequestOptions): boolean {
   if (!isMutationMethod(method)) return false;
   if (!canUseBrowserStorage()) return false;
-
-  const isTruckMutation = /^\/trucks(\/|$)/.test(endpoint);
-  const isFeatureFlagMutation = /^\/feature-flags(\/|$)/.test(endpoint);
-
-  return isTruckMutation || isFeatureFlagMutation;
+  return options.queueOffline === true;
 }
 
 function readQueuedMutations(): QueuedMutation[] {
@@ -209,7 +209,7 @@ async function getAuthToken(): Promise<string | null> {
 
 async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: ApiRequestOptions = {}
 ): Promise<T> {
   ensureOfflineMutationSync();
 
@@ -233,7 +233,7 @@ async function apiRequest<T>(
       credentials: 'include',
     });
   } catch {
-    if (shouldQueueOfflineMutation(endpoint, resolvedMethod)) {
+    if (shouldQueueOfflineMutation(resolvedMethod, options)) {
       enqueueOfflineMutation({
         endpoint,
         method: resolvedMethod as MutationMethod,
@@ -294,8 +294,8 @@ export const fleetApi = {
   getTruck: (id: string) =>
     apiRequest<TruckResponse>(`/trucks/${id}`),
 
-  updateTruck: (id: string, data: Partial<TruckResponse>) =>
-    apiRequest<TruckResponse>(`/trucks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  updateTruck: async (id: string, data: Partial<TruckResponse>) =>
+    apiRequest<TruckResponse>(`/trucks/${id}`, { method: 'PUT', body: JSON.stringify(data), queueOffline: true }),
 
   updateTruckStatus: (id: string, status: TruckStatus) =>
     apiRequest<TruckResponse>(`/trucks/${id}`, {

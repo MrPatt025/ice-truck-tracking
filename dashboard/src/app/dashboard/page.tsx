@@ -23,6 +23,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
 import dynamic from 'next/dynamic'
 import {
   animate,
@@ -1341,6 +1342,8 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
    *  All real-time visualization is imperative (3D, Map, Charts).
    * ================================================================ */
   return (
+    <ScrollytellingCanvas>
+      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <PremiumPageWrapper
       mode='glass'
       animate={false}
@@ -2290,5 +2293,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
         </React.Suspense>
       </GlobalErrorBoundary>
     </PremiumPageWrapper>
+        </motion.div>
+    </ScrollytellingCanvas>
   )
 }

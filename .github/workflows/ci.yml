@@ -98,7 +98,7 @@ jobs:
       NODE_ENV: test
       USE_FAKE_DB: 'true'
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -182,9 +182,7 @@ jobs:
       - name: Install Playwright browsers
         working-directory: dashboard
         run: |
-          # Runs the trusted Microsoft Playwright installation script.
-          # Script execution is necessary to download cross-browser binaries.
-          pnpm exec playwright install --with-deps chromium firefox
+          pnpm dlx --ignore-scripts playwright install --with-deps chromium firefox
       - name: Run E2E Light Tests (no GPU)
         run: pnpm --filter @ice-truck/dashboard run test:e2e:light
         env:

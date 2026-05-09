@@ -17,7 +17,7 @@ ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 
 # Development stage
 FROM base AS development
-RUN npm ci --ignore-scripts
+RUN npm install -g pnpm && pnpm install --frozen-lockfile --ignore-scripts
 COPY index.js swagger.json ./
 COPY src ./src
 EXPOSE 5000
