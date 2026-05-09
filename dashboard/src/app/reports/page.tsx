@@ -129,8 +129,6 @@ export default function ReportsPage() {
   return (
     <ScrollytellingCanvas>
       <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
-    <ScrollytellingCanvas>
-      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <AppSidebar>
       <PremiumPageWrapper
         mode='glass'
@@ -244,8 +242,6 @@ export default function ReportsPage() {
         </div>
       </PremiumPageWrapper>
     </AppSidebar>
-        </motion.div>
-    </ScrollytellingCanvas>
         </motion.div>
     </ScrollytellingCanvas>
   )

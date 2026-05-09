@@ -1344,8 +1344,6 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
   return (
     <ScrollytellingCanvas>
       <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
-    <ScrollytellingCanvas>
-      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <PremiumPageWrapper
       mode='glass'
       animate={false}
@@ -2295,9 +2293,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
         </React.Suspense>
       </GlobalErrorBoundary>
     </PremiumPageWrapper>
-        </motion.div>
-    </ScrollytellingCanvas>
-        </motion.div>
+      </motion.div>
     </ScrollytellingCanvas>
   )
 }

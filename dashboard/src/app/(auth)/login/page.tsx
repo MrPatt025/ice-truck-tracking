@@ -192,8 +192,6 @@ export default function LoginPage() {
   return (
     <ScrollytellingCanvas>
       <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
-    <ScrollytellingCanvas>
-      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <PremiumPageWrapper
       mode='glass'
       className='w-full'
@@ -210,9 +208,7 @@ export default function LoginPage() {
         <LoginContent />
       </Suspense>
     </PremiumPageWrapper>
-        </motion.div>
-    </ScrollytellingCanvas>
-        </motion.div>
+      </motion.div>
     </ScrollytellingCanvas>
   )
 }

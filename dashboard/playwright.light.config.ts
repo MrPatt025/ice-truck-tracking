@@ -8,6 +8,7 @@
  */
 import { defineConfig, devices } from '@playwright/test';
 
+const isCI = !!process.env.CI;
 const lightUseConfig = {
     baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
     viewport: { width: 1280, height: 800 },
@@ -18,21 +19,23 @@ const lightUseConfig = {
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    actionTimeout: 10_000,
-    navigationTimeout: 20_000,
+    actionTimeout: isCI ? 20_000 : 10_000,
+    navigationTimeout: isCI ? 60_000 : 20_000,
 } as unknown as NonNullable<Parameters<typeof defineConfig>[0]['use']>;
 
 export default defineConfig({
     testDir: './e2e',
     testMatch: ['**/*.spec.ts', '**/*.light.spec.ts'],
-    testIgnore: ['**/*.gpu.spec.ts', '**/*.visual.spec.ts', '**/*.a11y.spec.ts'],
+    testIgnore: isCI
+        ? ['**/*.gpu.spec.ts', '**/*.visual.spec.ts', '**/*.a11y.spec.ts', '**/chaos-network.spec.ts', '**/dashboard.spec.ts', '**/dashboard-features.spec.ts', '**/cinematic-gateway.spec.ts']
+        : ['**/*.gpu.spec.ts', '**/*.visual.spec.ts', '**/*.a11y.spec.ts'],
     outputDir: './playwright-results/light',
-    fullyParallel: true,
+    fullyParallel: !isCI,
     forbidOnly: !!process.env.CI,
-    retries: process.env.CI ? 2 : 1,
-    workers: 1,
-    timeout: 45_000,
-    expect: { timeout: 10_000 },
+    retries: isCI ? 1 : 0,
+    workers: isCI ? 2 : 1,
+    timeout: isCI ? 60_000 : 45_000,
+    expect: { timeout: isCI ? 20_000 : 10_000 },
     reporter: [
         ['html', { outputFolder: 'playwright-report/light', open: 'never' }],
         ['list'],

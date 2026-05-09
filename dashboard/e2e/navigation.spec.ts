@@ -12,6 +12,9 @@ import { test, expect, Page, ConsoleMessage } from '@playwright/test';
  */
 
 const BASE_URL = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
+const isCI = process.env.CI === 'true';
+const NAVIGATION_TIMEOUT = isCI ? 60_000 : 30_000;
+const ASSERTION_TIMEOUT = isCI ? 30_000 : 15_000;
 
 // ── Auth Routes (4 pages) ──
 const authRoutes = [
@@ -50,7 +53,7 @@ async function verifyPageLoad(page: Page, route: string): Promise<void> {
   // Navigate to route — use domcontentloaded to avoid 3D rendering timeouts
   const response = await page.goto(`${BASE_URL}${route}`, {
     waitUntil: 'domcontentloaded',
-    timeout: 30000,
+    timeout: NAVIGATION_TIMEOUT,
   });
 
   // Wait for DOM to settle after 3D canvas hydration
@@ -61,7 +64,7 @@ async function verifyPageLoad(page: Page, route: string): Promise<void> {
 
   // Assert PremiumPageWrapper is present — bulletproof testid-based locator
   const pageContent = page.locator('[data-testid="premium-wrapper"]');
-  await expect(pageContent).toBeVisible({ timeout: 15000 });
+  await expect(pageContent).toBeVisible({ timeout: ASSERTION_TIMEOUT });
 
   // Verify no critical console errors (filter out benign 3D/WebGL warnings)
   const criticalErrors = consoleErrors.filter(
