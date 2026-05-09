@@ -97,7 +97,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
   const shouldAnimate = animate && !prefersReducedMotion
 
   return (
-    <motion.section
+    <motion.main
       initial={shouldAnimate ? 'hidden' : false}
       animate={shouldAnimate ? 'show' : undefined}
       variants={CONTAINER_VARIANTS}
@@ -182,7 +182,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
           {children}
         </motion.div>
       </motion.div>
-    </motion.section>
+    </motion.main>
   )
 })
 

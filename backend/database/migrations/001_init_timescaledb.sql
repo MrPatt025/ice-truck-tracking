@@ -394,8 +394,8 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 -- ============================================================================
--- SEED: Default admin user (password: [REDACTED_BY_SECURITY_POLICY])
--- password hash provided at runtime
+-- SEED: Default admin user
+-- password hash provided at runtime via environment variable
 -- ============================================================================
 INSERT INTO
     users (

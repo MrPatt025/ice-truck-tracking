@@ -60,7 +60,6 @@ for (const file of files) {
     if (lastReturnIndex !== -1) {
       const returnStart = lastReturnIndex;
       let isParen = content.slice(returnStart, returnStart + 8) === 'return (';
-      let _contentToWrap = '';
       let endOfReturn = -1;
 
       if (isParen) {

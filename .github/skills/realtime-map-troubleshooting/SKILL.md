@@ -25,36 +25,36 @@ Provides a deterministic workflow to isolate and fix dashboard rendering and tel
    - Capture exact route, browser, hardware profile, and repeatable scenario.
    - Record expected FPS and observed FPS floor.
 
-1. Establish a clean baseline.
+2. Establish a clean baseline.
    - Rebuild dashboard artifacts to avoid stale bundles before profiling.
    - Reproduce with minimal background activity and fixed test data if possible.
 
-1. Profile frame budget and render hotspots.
+3. Profile frame budget and render hotspots.
    - Inspect frame timeline and isolate CPU vs GPU bottlenecks.
    - Check for render storms from state updates in high-frequency paths.
    - Verify map layers are GPU-instanced and not per-item React renders.
 
-1. Verify OffscreenCanvas and worker synchronization.
+4. Verify OffscreenCanvas and worker synchronization.
    - Inspect message channel ordering and dropped worker messages.
    - Confirm camera state, transform state, and telemetry snapshots use a single authoritative timeline.
    - Ensure heavy update loops stay in worker or offscreen paths.
 
-1. Audit transition pipeline and motion coupling.
+5. Audit transition pipeline and motion coupling.
    - Validate camera FOV transitions and DOM opacity transitions are clocked together.
    - Remove non-essential transition effects that increase frame time variance.
    - Confirm reduced-motion behavior for non-essential cinematic effects.
 
-1. Diagnose websocket telemetry health.
+6. Diagnose websocket telemetry health.
    - Check reconnect frequency, burst behavior, and queue growth.
    - Validate sequence or timestamp handling to prevent stale overwrite.
    - Confirm throttling or coalescing strategy avoids flooding UI updates.
 
-1. Apply fixes with minimal surface area.
+7. Apply fixes with minimal surface area.
    - Replace state-based hot-path updates with refs or transient subscriptions.
    - Move expensive calculations out of render paths.
    - Introduce bounded buffering and backpressure-safe update cadence.
 
-1. Verify and regress.
+8. Verify and regress.
    - Re-run target scenario and compare FPS, jank, and packet integrity metrics.
    - Execute project checks:
      - `pnpm --filter @ice-truck/dashboard lint`
