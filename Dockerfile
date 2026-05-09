@@ -57,13 +57,13 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
 # Copy runtime dependencies only
-COPY --from=deps --chown=nodejs:nodejs /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
 
 # Copy built artifacts
-COPY --from=builder --chown=nodejs:nodejs /app/backend ./backend
-COPY --from=builder --chown=nodejs:nodejs /app/dashboard/.next ./dashboard/.next
-COPY --from=builder --chown=nodejs:nodejs /app/sdk ./sdk
-COPY --from=builder --chown=nodejs:nodejs /app/src ./src
+COPY --from=builder /app/backend ./backend
+COPY --from=builder /app/dashboard/.next ./dashboard/.next
+COPY --from=builder /app/sdk ./sdk
+COPY --from=builder /app/src ./src
 
 # Copy only essential package files (no build tools)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./

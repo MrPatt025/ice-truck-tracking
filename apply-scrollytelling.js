@@ -1,5 +1,4 @@
 const fs = require('fs');
-const path = require('path');
 
 const files = [
   'dashboard/src/app/(auth)/forgot-password/page.tsx',
@@ -61,7 +60,7 @@ for (const file of files) {
     if (lastReturnIndex !== -1) {
       const returnStart = lastReturnIndex;
       let isParen = content.slice(returnStart, returnStart + 8) === 'return (';
-      let contentToWrap = '';
+      let _contentToWrap = '';
       let endOfReturn = -1;
 
       if (isParen) {

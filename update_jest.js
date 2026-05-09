@@ -1,5 +1,4 @@
 const fs = require('fs');
-const path = require('path');
 
 const jestFiles = ['jest.config.js', 'backend/jest.config.js', 'dashboard/jest.config.js'];
 jestFiles.forEach(f => {

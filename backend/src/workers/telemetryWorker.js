@@ -19,7 +19,7 @@ const {
 async function startTelemetryWorker() {
     logger.info('Starting Telemetry Worker...');
     
-    await eventBus.subscribe(TOPICS.TELEMETRY_RAW, 'telemetry-db-writer', async (payload, key, headers) => {
+    await eventBus.subscribe(TOPICS.TELEMETRY_RAW, 'telemetry-db-writer', async (payload, _key, _headers) => {
         const { truckId, telemetry, observedAt } = payload;
         
         try {

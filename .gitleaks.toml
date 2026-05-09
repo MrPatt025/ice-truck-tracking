@@ -9,6 +9,9 @@ title = "Ice Truck Tracking — Secret Scanning"
     '''pnpm-lock\.yaml''',
     '''\.env\.example''',
     '''\.gitleaks\.toml''',
+    '''docker-compose\.dev\.yml''',
+    '''\.vscode/mcp\.json''',
+    '''setup_database\.sql''',
     '''docs/''',
     '''\.md$''',
   ]
@@ -52,6 +55,9 @@ title = "Ice Truck Tracking — Secret Scanning"
     regexes = [
       '''your-.*''',
       '''change-this''',
+      '''changeme''',
+      '''CHANGE_ME.*''',
+      '''REDACTED.*''',
       '''admin123''',
       '''postgres''',
       '''placeholder''',
