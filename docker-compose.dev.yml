@@ -1,12 +1,10 @@
 # Docker Compose Development Override
 # Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
-version: '3.8'
-
 services:
   postgres:
     ports:
-      - '5432:5432'
+      - '5433:5432'
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
 

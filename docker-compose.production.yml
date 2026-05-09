@@ -2,7 +2,6 @@
 # Ice Truck Tracking — Production Docker Compose
 # Cloud-Native IoT Platform with full observability stack
 # ============================================================================
-version: '3.9'
 
 x-common-env: &common-env
   NODE_ENV: production
@@ -45,7 +44,7 @@ services:
       - pg-data:/var/lib/postgresql/data
       - ./backend/database/migrations:/docker-entrypoint-initdb.d:ro
     ports:
-      - '5432:5432'
+      - '5433:5432'
     networks:
       - ice-truck-network
     restart: unless-stopped
