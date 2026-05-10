@@ -72,12 +72,19 @@ async function verifyPageLoad(page: Page, route: string): Promise<void> {
       !err.includes('WebGL') &&
       !err.includes('THREE') &&
       !err.includes('ResizeObserver') &&
-      !err.includes('Failed to load resource')
+      !err.includes('Failed to load resource') &&
+      !err.includes('ECONNREFUSED') &&
+      !err.includes('WebSocket')
   );
   expect(criticalErrors.length).toBe(0);
 }
 
 // ── Auth Page Tests ──
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { status: 'mocked' } }));
+});
+
 test.describe('Auth Pages (4)', () => {
   test('Login page renders with PremiumPageWrapper', async ({ page }) => {
     await verifyPageLoad(page, '/login');

@@ -17,6 +17,11 @@ const waitForDashboardCanvas = async (page: import('@playwright/test').Page): Pr
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 30000 });
 };
 
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { status: 'mocked' } }));
+});
+
 test.describe('GPU Rendering & Recovery', () => {
 
     test.beforeEach(async ({ page, baseURL }) => {

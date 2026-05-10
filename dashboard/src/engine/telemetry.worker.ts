@@ -58,8 +58,6 @@ let batchTimer: ReturnType<typeof setInterval> | null = null;
 /** Retry state */
 let retryCount = 0;
 const MAX_RETRIES = 10;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-let retryTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // ─── Simulation (when no real backend) ─────────────────────────
 let simInterval: ReturnType<typeof setInterval> | null = null;
@@ -210,7 +208,7 @@ function scheduleReconnect(): void {
     retryCount++;
     post({ type: 'connection-status', payload: 'reconnecting' });
     const delay = Math.min(1000 * Math.pow(2, retryCount), 30_000);
-    retryTimeout = setTimeout(connectWebSocket, delay);
+    setTimeout(connectWebSocket, delay);
 }
 
 // ─── Message parsing ───────────────────────────────────────────

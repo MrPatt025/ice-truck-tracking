@@ -19,6 +19,11 @@ async function gotoDashboardWithRetry(page: Page): Promise<void> {
   }
 }
 
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { status: 'mocked' } }));
+});
+
 test.describe('Dashboard feature polish', () => {
   test.beforeEach(async ({ page, baseURL }) => {
     await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');

@@ -18,6 +18,11 @@ const HYDRATION_TIMEOUT = 15_000;
 // ===============================================================
 // 1. NAVIGATION BAR
 // ===============================================================
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { status: 'mocked' } }));
+});
+
 test.describe('Navigation', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/');

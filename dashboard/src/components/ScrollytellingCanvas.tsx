@@ -59,7 +59,7 @@ export function ScrollytellingCanvas({ children }: { children: React.ReactNode }
     <div ref={containerRef} className="relative w-full min-h-screen">
       {/* 3D Background */}
       <motion.div
-        className="fixed top-0 left-0 w-full h-screen -z-10 pointer-events-none"
+        className="absolute top-0 left-0 w-full h-screen -z-10 pointer-events-none"
         style={{ opacity, scale }}
       >
         <Canvas shadows dpr={[1, 2]} gl={{ antialias: false }} frameloop="always">

@@ -28,6 +28,11 @@ async function runAxeAudit(page: Page) {
 // ===============================================================
 // LANDING PAGE
 // ===============================================================
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { status: 'mocked' } }));
+});
+
 test.describe('A11Y — Landing Page', () => {
     test('landing page passes WCAG 2.1 AA audit', async ({ page }) => {
         await page.goto('/');

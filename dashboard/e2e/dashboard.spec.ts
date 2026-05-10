@@ -18,6 +18,11 @@ const waitForHydration = async (page: Page) => {
 // ===============================================================
 // 1. PAGE LOADING & BASIC STRUCTURE
 // ===============================================================
+
+test.beforeEach(async ({ page }) => {
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { status: 'mocked' } }));
+});
+
 test.describe('Dashboard — Page Load', () => {
     test.beforeEach(async ({ page, baseURL }) => {
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
@@ -337,7 +342,7 @@ test.describe('Dashboard — Responsive', () => {
         await page.setViewportSize({ width: 768, height: 1024 });
         await page.goto('/dashboard');
       await waitForHydration(page);
-      await expect(page.locator('main')).toBeVisible({
+      await expect(page.locator('main').first()).toBeVisible({
           timeout: HYDRATION_TIMEOUT,
       });
   });

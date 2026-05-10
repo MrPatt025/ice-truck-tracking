@@ -91,7 +91,7 @@ for (const viewport of VIEWPORTS) {
             );
             
             const filteredWarnings = runtime.warnings.filter(warn =>
-                !warn.includes('THREE.Clock') &&
+                !warn.includes('THREE.Timer') &&
                 !warn.includes('THREE.WebGLShadowMap') &&
                 !warn.includes('eval() is not supported')
             );

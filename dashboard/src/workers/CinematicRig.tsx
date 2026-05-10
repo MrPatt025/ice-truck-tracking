@@ -7,7 +7,7 @@ import {
   BufferAttribute,
   BufferGeometry,
   Color,
-  PCFSoftShadowMap,
+  PCFShadowMap,
   PMREMGenerator,
   Group,
   InstancedMesh,
@@ -175,7 +175,7 @@ function AdaptiveLightingEnvironment({
     scene.environment = environmentRenderTarget.texture
     scene.environmentIntensity = 0.92
     gl.shadowMap.enabled = true
-    gl.shadowMap.type = PCFSoftShadowMap
+    gl.shadowMap.type = PCFShadowMap
 
     return () => {
       scene.environment = previousEnvironment
