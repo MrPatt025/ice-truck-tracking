@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('node:fs');
 
 const files = [
   'dashboard/src/app/(auth)/forgot-password/page.tsx',

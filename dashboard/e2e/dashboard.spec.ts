@@ -20,7 +20,7 @@ const waitForHydration = async (page: Page) => {
 // ===============================================================
 
 test.beforeEach(async ({ page }) => {
-  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { status: 'mocked' } }));
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { data: [], status: 'success', meta: { total: 0 } } }));
 });
 
 test.describe('Dashboard — Page Load', () => {
@@ -40,7 +40,7 @@ test.describe('Dashboard — Page Load', () => {
 
     test('should display the <main> content area', async ({ page }) => {
         await page.goto('/dashboard');
-        const main = page.locator('main');
+        const main = page.locator('main').first();
         await expect(main).toBeVisible({ timeout: HYDRATION_TIMEOUT });
     });
 
@@ -342,7 +342,7 @@ test.describe('Dashboard — Responsive', () => {
         await page.setViewportSize({ width: 768, height: 1024 });
         await page.goto('/dashboard');
       await waitForHydration(page);
-      await expect(page.locator('main').first()).toBeVisible({
+      await expect(page.locator('main').first().first()).toBeVisible({
           timeout: HYDRATION_TIMEOUT,
       });
   });

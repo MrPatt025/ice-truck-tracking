@@ -36,7 +36,7 @@ const CONTROL_ROWS = [
 export default function CompliancePage() {
   return (
     <ScrollytellingCanvas>
-      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
+      <motion.div suppressHydrationWarning initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <AppSidebar>
       <PremiumPageWrapper
         mode='glass'

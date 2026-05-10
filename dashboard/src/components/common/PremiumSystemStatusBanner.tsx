@@ -52,7 +52,7 @@ const PremiumSystemStatusBanner = memo(function PremiumSystemStatusBanner({
       aria-live='polite'
       aria-atomic='true'
       role='status'
-      className={`fixed right-4 top-20 z-[75] w-[min(92vw,26rem)] space-y-2 ${className}`}
+      className={`fixed right-4 top-20 z-[110] w-[min(92vw,26rem)] space-y-2 pointer-events-none ${className}`}
       data-testid='system-status-banner'
     >
       <div className='rounded-2xl border border-white/15 bg-slate-950/55 p-3 backdrop-blur-2xl'>

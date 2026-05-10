@@ -18,16 +18,11 @@ const files = [
 ];
 
 for (const file of files) {
-  const content = fs.readFileSync(file, 'utf8');
-  const defaultExportMatch = content.match(/export default function\s+\w+\s*\([^)]*\)\s*\{/);
-  if (defaultExportMatch) {
-    const startIndex = defaultExportMatch.index;
-    const bodyStr = content.slice(startIndex);
-    const returnIndex = bodyStr.lastIndexOf('return (');
-    if (returnIndex !== -1) {
-        console.log(file, 'Last return is at', (returnIndex / bodyStr.length).toFixed(2), '% of the export block. Ends with:', bodyStr.slice(bodyStr.length - 20).replace(/\n/g, '\\n'));
-    } else {
-        console.log(file, 'No "return (" found in export default function');
-    }
-  }
+  if (!fs.existsSync(file)) continue;
+  let content = fs.readFileSync(file, 'utf8');
+
+  content = content.replace(/<motion\.div initial={{ opacity: 0, y: 20 }}/g, '<motion.div suppressHydrationWarning initial={{ opacity: 0, y: 20 }}');
+
+  fs.writeFileSync(file, content);
+  console.log('Added hydration flag to', file);
 }

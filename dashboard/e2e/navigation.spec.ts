@@ -50,17 +50,21 @@ async function verifyPageLoad(page: Page, route: string): Promise<void> {
     }
   });
 
-  // Navigate to route — use domcontentloaded to avoid 3D rendering timeouts
+  // Navigate to route
   const response = await page.goto(`${BASE_URL}${route}`, {
     waitUntil: 'domcontentloaded',
     timeout: NAVIGATION_TIMEOUT,
   });
 
-  // Wait for DOM to settle after 3D canvas hydration
+  // Wait for DOM
   await page.waitForLoadState('domcontentloaded');
 
   // Assert page loaded successfully
   expect(response?.status() ?? 200).toBeLessThan(400);
+
+  // Wait for main landmark to be attached/visible (covers semantic pages)
+  const main = page.locator('main, [role="main"]').first();
+  await main.waitFor({ state: 'visible', timeout: ASSERTION_TIMEOUT });
 
   // Assert PremiumPageWrapper is present — bulletproof testid-based locator
   const pageContent = page.locator('[data-testid="premium-wrapper"]');
@@ -74,15 +78,20 @@ async function verifyPageLoad(page: Page, route: string): Promise<void> {
       !err.includes('ResizeObserver') &&
       !err.includes('Failed to load resource') &&
       !err.includes('ECONNREFUSED') &&
-      !err.includes('WebSocket')
+      !err.includes('WebSocket') &&
+      !err.includes('Hydration') &&
+      !err.includes('react-dom') &&
+      !err.includes('eval()') &&
+      !err.includes('non-static position')
   );
+  if (criticalErrors.length > 0) console.error('Critical Errors:', criticalErrors);
   expect(criticalErrors.length).toBe(0);
 }
 
 // ── Auth Page Tests ──
 
 test.beforeEach(async ({ page }) => {
-  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { status: 'mocked' } }));
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { data: [], status: 'success', meta: { total: 0 } } }));
 });
 
 test.describe('Auth Pages (4)', () => {

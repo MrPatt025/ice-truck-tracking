@@ -102,6 +102,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
 
   return (
     <motion.main
+      suppressHydrationWarning
       data-testid="premium-wrapper"
       initial={shouldAnimate ? 'hidden' : false}
       animate={shouldAnimate ? 'show' : undefined}
@@ -130,6 +131,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         style={{
           backgroundImage: BG_NOISE_IMAGE,
           backgroundSize: '90px 90px',
+          pointerEvents: 'none'
         }}
       />
       <motion.div

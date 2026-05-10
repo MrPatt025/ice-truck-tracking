@@ -11,7 +11,7 @@ import { defineConfig, devices } from '@playwright/test';
 const isCI = !!process.env.CI;
 const lightUseConfig = {
     baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
-    viewport: { width: 1280, height: 800 },
+    viewport: { width: 1920, height: 1080 },
     reducedMotion: 'reduce',
     launchOptions: {
         args: ['--force-prefers-reduced-motion'],
@@ -48,7 +48,7 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: `node -e "try{require('fs').rmSync('.next/cache',{recursive:true,force:true})}catch(e){}" && pnpm run dev --port 3000`,
+        command: `node -e "try{require('node:fs').rmSync('.next/cache',{recursive:true,force:true})}catch(e){}" && pnpm run dev --port 3000`,
         url: 'http://localhost:3000',
         reuseExistingServer: true,
         timeout: 180_000,

@@ -20,7 +20,7 @@ const HYDRATION_TIMEOUT = 15_000;
 // ===============================================================
 
 test.beforeEach(async ({ page }) => {
-  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { status: 'mocked' } }));
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { data: [], status: 'success', meta: { total: 0 } } }));
 });
 
 test.describe('Navigation', () => {
@@ -30,7 +30,7 @@ test.describe('Navigation', () => {
     });
 
     test('should display the brand logo and name', async ({ page }) => {
-        const brand = page.locator('nav').getByText('Ice Truck');
+        const brand = page.locator('nav').first().getByText('Ice Truck');
         await expect(brand).toBeVisible({ timeout: HYDRATION_TIMEOUT });
     });
 
@@ -54,7 +54,7 @@ test.describe('Navigation', () => {
         test.skip(!!isMobile, 'Desktop-only nav links');
         for (const label of ['Features', 'Performance', 'Tech Stack']) {
             await expect(
-                page.locator('nav').getByRole('link', { name: label }),
+                page.locator('nav').first().getByRole('link', { name: label }),
             ).toBeVisible();
         }
     });
@@ -74,7 +74,7 @@ test.describe('Navigation', () => {
     }) => {
         await page.evaluate(() => window.scrollTo(0, 1200));
         await page.waitForTimeout(300);
-        const nav = page.locator('nav');
+        const nav = page.locator('nav').first();
         await expect(nav).toBeVisible();
         const box = await nav.boundingBox();
         expect(box).toBeTruthy();

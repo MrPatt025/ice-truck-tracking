@@ -42,7 +42,7 @@ const disableAnimations = async (page: Page) => {
 // ───────────────────────────────────────────────────────────────
 
 test.beforeEach(async ({ page }) => {
-  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { status: 'mocked' } }));
+  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { data: [], status: 'success', meta: { total: 0 } } }));
 });
 
 test.describe('Visual — Landing Page', () => {

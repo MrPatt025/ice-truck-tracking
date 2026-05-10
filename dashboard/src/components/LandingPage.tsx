@@ -37,7 +37,9 @@ import PremiumSystemStatusBanner, {
   type StatusIssue,
 } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
+import { cn } from '@/lib/utils'
 
+const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
 const EASE_STANDARD: [number, number, number, number] = [0.22, 1, 0.36, 1]
 const EASE_OUTRO: [number, number, number, number] = [0.68, 0, 0.12, 1]
 
@@ -287,7 +289,7 @@ export default function LandingPage() {
         willChange: 'opacity, transform',
         contain: 'layout paint style',
       }}
-      className='mission-control-shell min-h-screen overflow-hidden text-white'
+      className='mission-control-shell relative min-h-screen overflow-hidden text-white'
     >
       <PremiumSystemStatusBanner issues={statusIssues} className='top-24' />
 
@@ -296,10 +298,11 @@ export default function LandingPage() {
 
       {/* ── Nav ─────────────────────────────────────────────── */}
       <motion.nav
+        suppressHydrationWarning
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.45, ease: EASE_STANDARD }}
-        className='glass-panel sticky top-0 z-50 border-b border-cyan-200/20 bg-slate-950/65 backdrop-blur-2xl shadow-[0_20px_70px_-35px_rgba(34,211,238,0.5)] transform-gpu'
+        className='glass-panel sticky top-0 z-[100] border-b border-cyan-200/20 bg-slate-950/65 backdrop-blur-2xl shadow-[0_20px_70px_-35px_rgba(34,211,238,0.5)] transform-gpu'
       >
         <div className='mx-auto flex h-16 max-w-7xl items-center justify-between px-6'>
           <div className='flex items-center gap-2'>

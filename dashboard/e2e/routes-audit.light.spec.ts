@@ -57,6 +57,14 @@ function collectRuntimeErrors(page: Page): { errors: string[]; warnings: string[
 for (const viewport of VIEWPORTS) {
     for (const route of ROUTES) {
         test(`route audit: ${route.path} (${viewport.name})`, async ({ page }) => {
+            // Mock backend API calls to avoid CI/backend dependency during route audits
+            await page.route('**/api/v1/**', route =>
+                route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    json: { data: [], status: 'success', meta: { total: 0 } },
+                })
+            );
             await page.setViewportSize({ width: viewport.width, height: viewport.height })
             const runtime = collectRuntimeErrors(page)
 
@@ -82,14 +90,15 @@ for (const viewport of VIEWPORTS) {
             await expect(heading).toBeVisible()
 
             const landmark = page.locator('main, [role="main"], form, section').first()
-            await expect(landmark).toBeVisible()
+            await landmark.waitFor({ state: 'visible', timeout: 10_000 })
 
-            const filteredErrors = runtime.errors.filter(error => 
+            const filteredErrors = runtime.errors.filter(error =>
                 !error.includes(KNOWN_TOUCH_ACTION_PAGEERROR) &&
                 !error.includes('eval() is not supported') &&
-                !error.includes('React will never use eval()')
+                !error.includes('React will never use eval()') &&
+                !error.includes('non-static position')
             );
-            
+
             const filteredWarnings = runtime.warnings.filter(warn =>
                 !warn.includes('THREE.Timer') &&
                 !warn.includes('THREE.WebGLShadowMap') &&

@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('node:fs');
 
 const files = [
   'dashboard/src/app/(auth)/forgot-password/page.tsx',
@@ -112,13 +112,13 @@ for (const file of files) {
             
             let isParen = content.slice(mainReturnStart, mainReturnStart + 8) === 'return (';
             if (isParen) {
-                const newReturnStartStr = `return (\n    <ScrollytellingCanvas>\n      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">`;
+                const newReturnStartStr = `return (\n    <ScrollytellingCanvas>\n      <motion.div suppressHydrationWarning initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">`;
                 const newReturnEndStr = `      </motion.div>\n    </ScrollytellingCanvas>\n  )`;
                 
                 content = content.slice(0, mainReturnStart) + newReturnStartStr + content.slice(mainReturnStart + 8, j) + newReturnEndStr + content.slice(j + 1);
             } else {
                 // 'return <Component'
-                const newReturnStartStr = `return (\n    <ScrollytellingCanvas>\n      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">\n        <`;
+                const newReturnStartStr = `return (\n    <ScrollytellingCanvas>\n      <motion.div suppressHydrationWarning initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">\n        <`;
                 const newReturnEndStr = `      </motion.div>\n    </ScrollytellingCanvas>\n  )`;
                 content = content.slice(0, mainReturnStart) + newReturnStartStr + content.slice(mainReturnStart + 8, j + 1) + '\n' + newReturnEndStr + content.slice(j + 1);
             }

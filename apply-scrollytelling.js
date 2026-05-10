@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('node:fs');
 
 const files = [
   'dashboard/src/app/(auth)/forgot-password/page.tsx',
@@ -80,7 +80,7 @@ for (const file of files) {
          
          const newReturn = `return (
     <ScrollytellingCanvas>
-      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
+      <motion.div suppressHydrationWarning initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
         ${innerContent.trim()}
       </motion.div>
     </ScrollytellingCanvas>
@@ -94,7 +94,7 @@ for (const file of files) {
 
          const newReturn = `return (
     <ScrollytellingCanvas>
-      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
+      <motion.div suppressHydrationWarning initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
         ${innerContent.trim()}
       </motion.div>
     </ScrollytellingCanvas>

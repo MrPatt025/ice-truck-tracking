@@ -94,6 +94,9 @@ import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary'
 import MapModeToggle from '@/components/MapModeToggle'
 import OfflineBanner from '@/components/OfflineBanner'
+import { cn } from '@/lib/utils'
+
+const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
 
 const API_BASE = resolveApiBaseV1()
 
@@ -1343,7 +1346,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
    * ================================================================ */
   return (
     <ScrollytellingCanvas>
-      <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
+      <motion.div suppressHydrationWarning initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="w-full">
     <PremiumPageWrapper
       mode='glass'
       animate={false}
@@ -1422,7 +1425,10 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
             )}
 
             {/* ── Sticky Header ── */}
-            <header className='glass-panel sticky top-0 z-50 bg-slate-950/45 backdrop-blur-[24px] ring-1 ring-cyan-200/25 shadow-[0_24px_90px_-45px_rgba(34,211,238,0.6)] [background-image:linear-gradient(110deg,rgba(34,211,238,0.08),rgba(255,255,255,0.02)_42%,rgba(99,102,241,0.08))]'>
+            <header
+              suppressHydrationWarning
+              className='glass-panel sticky top-0 z-[100] bg-slate-950/45 backdrop-blur-[24px] ring-1 ring-cyan-200/25 shadow-[0_24px_90px_-45px_rgba(34,211,238,0.6)] [background-image:linear-gradient(110deg,rgba(34,211,238,0.08),rgba(255,255,255,0.02)_42%,rgba(99,102,241,0.08))]'
+            >
               <div className='mx-auto max-w-[120rem] px-4 sm:px-6'>
                 <div className='flex items-center justify-between py-4'>
                   {/* Logo + Title */}
