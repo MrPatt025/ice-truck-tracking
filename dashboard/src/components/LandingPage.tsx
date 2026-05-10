@@ -37,8 +37,10 @@ import PremiumSystemStatusBanner, {
   type StatusIssue,
 } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { cn } from '@/lib/utils'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
 const EASE_STANDARD: [number, number, number, number] = [0.22, 1, 0.36, 1]
 const EASE_OUTRO: [number, number, number, number] = [0.68, 0, 0.12, 1]

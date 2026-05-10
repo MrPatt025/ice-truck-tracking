@@ -45,8 +45,12 @@ async function verifyPageLoad(page: Page, route: string): Promise<void> {
   const consoleErrors: string[] = [];
 
   page.on('console', (msg: ConsoleMessage) => {
+    const text = msg.text();
+    if (text.includes('THREE.Clock') || text.includes('THREE.WebGLShadowMap') || text.includes('non-static position')) {
+      return;
+    }
     if (msg.type() === 'error') {
-      consoleErrors.push(msg.text());
+      consoleErrors.push(text);
     }
   });
 

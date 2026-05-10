@@ -94,8 +94,10 @@ import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary'
 import MapModeToggle from '@/components/MapModeToggle'
 import OfflineBanner from '@/components/OfflineBanner'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { cn } from '@/lib/utils'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
 
 const API_BASE = resolveApiBaseV1()

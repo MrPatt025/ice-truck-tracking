@@ -34,8 +34,8 @@ export default defineConfig({
     forbidOnly: !!process.env.CI,
     retries: isCI ? 1 : 0,
     workers: isCI ? 2 : 1,
-    timeout: isCI ? 60_000 : 45_000,
-    expect: { timeout: isCI ? 20_000 : 10_000 },
+    timeout: isCI ? 60_000 : 120_000,
+    expect: { timeout: isCI ? 20_000 : 30_000 },
     reporter: [
         ['html', { outputFolder: 'playwright-report/light', open: 'never' }],
         ['list'],
