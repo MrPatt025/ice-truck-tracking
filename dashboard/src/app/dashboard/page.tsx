@@ -94,7 +94,6 @@ import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary'
 import MapModeToggle from '@/components/MapModeToggle'
 import OfflineBanner from '@/components/OfflineBanner'
-const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
 
 const API_BASE = resolveApiBaseV1()
 
