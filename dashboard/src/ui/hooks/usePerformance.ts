@@ -16,15 +16,7 @@ export function usePerformanceMonitor(componentName: string) {
     mountTime.current = performance.now()
 
     return () => {
-      const unmountTime = performance.now()
-      const totalLifetime = unmountTime - mountTime.current
-
-      // Log performance metrics
-      if (process.env.NODE_ENV === 'development') {
-        console.log(
-          `[Performance] ${componentName} lifetime: ${totalLifetime.toFixed(2)}ms`
-        )
-      }
+      // Cleanup: no console logging or unused lifetime calculations
     }
   }, [componentName])
 
@@ -81,9 +73,7 @@ export function useWebVitals() {
           page_path: globalThis.window?.location.pathname,
         })
 
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[Web Vitals] ${metric.name}: ${metric.value.toFixed(2)}ms`)
-        }
+        // Web Vitals forwarded to analytics; no console logging to satisfy SonarQube
       })
     })
 

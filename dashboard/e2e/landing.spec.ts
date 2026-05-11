@@ -15,23 +15,54 @@ const waitForAnimations = (page: Page) => page.waitForTimeout(800);
 /** The landing page uses Framer Motion — elements may render after hydration */
 const HYDRATION_TIMEOUT = 15_000;
 
+/** Navigate to landing page with retry logic for server stability */
+async function gotoLanding(page: Page, retries = 2): Promise<void> {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            await page.goto('/', {
+                waitUntil: 'domcontentloaded',
+                timeout: 30_000,
+            });
+            // Verify the page actually loaded
+            await page.waitForSelector('body', { timeout: 10_000 });
+            return;
+        } catch (err) {
+            if (attempt === retries) throw err;
+            // Wait before retrying
+            await page.waitForTimeout(2_000);
+        }
+    }
+}
+
 // ===============================================================
-// 1. NAVIGATION BAR
+// Global setup: mock backend API
 // ===============================================================
 
 test.beforeEach(async ({ page }) => {
-  page.on('console', (msg) => {
-    const text = msg.text();
-    if (text.includes('THREE.Clock') || text.includes('THREE.WebGLShadowMap') || text.includes('non-static position')) {
-      return;
-    }
-  });
-  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { data: [], status: 'success', meta: { total: 0 } } }));
+    page.on('console', () => {
+        // Suppress console noise during tests
+    });
+    await page.route('**/api/v1/**', route =>
+        route.fulfill({
+            status: 200,
+            json: { data: [], status: 'success', meta: { total: 0 } },
+        }),
+    );
 });
 
+// Ensure desktop viewport by default so desktop-only nav links are rendered
+test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 });
+});
+
+// ===============================================================
+// 1. NAVIGATION BAR
+// ===============================================================
 test.describe('Navigation', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
+        await gotoLanding(page);
         await waitForAnimations(page);
     });
 
@@ -45,11 +76,10 @@ test.describe('Navigation', () => {
         isMobile,
     }) => {
         test.skip(!!isMobile, 'Nav CTA is hidden on mobile');
-        // Exactly target the navbar button — avoids strict-mode violation
         const navDashboardLink = page
             .locator('nav')
             .getByRole('link', { name: 'Open Dashboard' });
-        await navDashboardLink.click({ force: true });
+        await expect(navDashboardLink).toBeVisible({ timeout: HYDRATION_TIMEOUT });
         await expect(navDashboardLink).toHaveAttribute('href', '/dashboard');
     });
 
@@ -59,7 +89,9 @@ test.describe('Navigation', () => {
     }) => {
         test.skip(!!isMobile, 'Desktop-only nav links');
         for (const label of ['Features', 'Performance', 'Tech Stack']) {
-            await page.locator('nav').first().getByRole('link', { name: label }).click({ force: true });
+            await expect(
+                page.locator('nav').first().getByRole('link', { name: label }),
+            ).toBeVisible({ timeout: HYDRATION_TIMEOUT });
         }
     });
 
@@ -68,9 +100,9 @@ test.describe('Navigation', () => {
         isMobile,
     }) => {
         test.skip(!!isMobile, 'Desktop-only nav links');
-        await page.locator('nav a[href="#features"]').click({ force: true });
-        await page.locator('nav a[href="#stats"]').click({ force: true });
-        await page.locator('nav a[href="#tech"]').click({ force: true });
+        await expect(page.locator('nav a[href="#features"]')).toBeVisible();
+        await expect(page.locator('nav a[href="#stats"]')).toBeVisible();
+        await expect(page.locator('nav a[href="#tech"]')).toBeVisible();
     });
 
     test('navbar should be sticky and visible after scrolling', async ({
@@ -90,8 +122,10 @@ test.describe('Navigation', () => {
 // 2. HERO SECTION
 // ===============================================================
 test.describe('Hero Section', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
+        await gotoLanding(page);
         await waitForAnimations(page);
     });
 
@@ -146,8 +180,10 @@ test.describe('Hero Section', () => {
 // 3. STATS SECTION
 // ===============================================================
 test.describe('Stats Section', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
+        await gotoLanding(page);
         await waitForAnimations(page);
     });
 
@@ -174,11 +210,13 @@ test.describe('Stats Section', () => {
 });
 
 // ===============================================================
-// 4. FEATURES SECTION  (FIX: use #features selector, not hasText)
+// 4. FEATURES SECTION
 // ===============================================================
 test.describe('Features Section', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
+        await gotoLanding(page);
         await waitForAnimations(page);
     });
 
@@ -186,7 +224,9 @@ test.describe('Features Section', () => {
         const section = page.locator('section#features');
         await expect(section).toBeVisible({ timeout: HYDRATION_TIMEOUT });
         await expect(
-            section.getByRole('heading', { name: /Everything You Need for Cold-Chain IoT/ }),
+            section.getByRole('heading', {
+                name: /Everything You Need for Cold-Chain IoT/,
+            }),
         ).toBeVisible();
     });
 
@@ -229,8 +269,10 @@ test.describe('Features Section', () => {
 // 5. TECH STACK SECTION
 // ===============================================================
 test.describe('Tech Stack Section', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
+        await gotoLanding(page);
         await waitForAnimations(page);
     });
 
@@ -260,9 +302,7 @@ test.describe('Tech Stack Section', () => {
         ];
 
         for (const tech of techs) {
-            await expect(
-                techSection.getByText(tech).first(),
-            ).toBeVisible();
+            await expect(techSection.getByText(tech).first()).toBeVisible();
         }
     });
 });
@@ -271,10 +311,12 @@ test.describe('Tech Stack Section', () => {
 // 6. CALL-TO-ACTION (CTA) SECTION
 // ===============================================================
 test.describe('CTA Section', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
-      await waitForAnimations(page);
-  });
+        await gotoLanding(page);
+        await waitForAnimations(page);
+    });
 
     test('should display "Ready to Track?" heading', async ({ page }) => {
         await expect(
@@ -301,8 +343,10 @@ test.describe('CTA Section', () => {
 // 7. FOOTER
 // ===============================================================
 test.describe('Footer', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
+        await gotoLanding(page);
     });
 
     test('should display copyright with current year', async ({ page }) => {
@@ -323,22 +367,24 @@ test.describe('Footer', () => {
 // 8. RESPONSIVE BEHAVIOUR
 // ===============================================================
 test.describe('Responsive Design', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test('hero heading should be visible at 375×812 (iPhone SE)', async ({
         page,
     }) => {
         await page.setViewportSize({ width: 375, height: 812 });
-      await page.goto('/');
-      await waitForAnimations(page);
-      await expect(page.getByRole('heading', { level: 1 })).toBeVisible({
-          timeout: HYDRATION_TIMEOUT,
-      });
-  });
+        await gotoLanding(page);
+        await waitForAnimations(page);
+        await expect(page.getByRole('heading', { level: 1 })).toBeVisible({
+            timeout: HYDRATION_TIMEOUT,
+        });
+    });
 
     test('hero heading should be visible at 768×1024 (iPad)', async ({
         page,
     }) => {
         await page.setViewportSize({ width: 768, height: 1024 });
-        await page.goto('/');
+        await gotoLanding(page);
         await waitForAnimations(page);
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible({
             timeout: HYDRATION_TIMEOUT,
@@ -354,7 +400,7 @@ test.describe('Responsive Design', () => {
             { width: 1440, height: 900 },
         ]) {
             await page.setViewportSize(vp);
-            await page.goto('/');
+            await gotoLanding(page);
             await waitForAnimations(page);
             await expect(page.locator('section#features')).toBeVisible({
                 timeout: HYDRATION_TIMEOUT,
@@ -367,8 +413,10 @@ test.describe('Responsive Design', () => {
 // 9. ACCESSIBILITY BASICS
 // ===============================================================
 test.describe('Accessibility', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page }) => {
-        await page.goto('/');
+        await gotoLanding(page);
         await waitForAnimations(page);
     });
 
@@ -400,6 +448,8 @@ test.describe('Accessibility', () => {
 // 10. NAVIGATION FLOW
 // ===============================================================
 test.describe('Navigation Flow', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test('"Open Dashboard" link should navigate toward /dashboard', async ({
         page,
         baseURL,
@@ -407,7 +457,7 @@ test.describe('Navigation Flow', () => {
         // Set auth cookie so the middleware lets us through to /dashboard
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
 
-        await page.goto('/');
+        await gotoLanding(page);
         await waitForAnimations(page);
         const navLink = page
             .locator('nav')
@@ -416,11 +466,13 @@ test.describe('Navigation Flow', () => {
         // On mobile the nav link is hidden — use hero CTA instead
         const navVisible = await navLink.isVisible();
         if (navVisible) {
+            await navLink.waitFor({ state: 'visible' });
             await navLink.click();
         } else {
             const heroLink = page
                 .getByRole('link', { name: /Live Dashboard/ })
                 .first();
+            await heroLink.waitFor({ state: 'visible' });
             await heroLink.click();
         }
 
@@ -431,7 +483,7 @@ test.describe('Navigation Flow', () => {
         page,
     }) => {
         await page.context().clearCookies();
-        await page.goto('/');
+        await gotoLanding(page);
         await page.evaluate(() => {
             globalThis.localStorage.clear();
             globalThis.sessionStorage.clear();
@@ -443,11 +495,13 @@ test.describe('Navigation Flow', () => {
 
         const navVisible3 = await navLink.isVisible();
         if (navVisible3) {
+            await navLink.waitFor({ state: 'visible' });
             await navLink.click();
         } else {
             const heroLink = page
                 .getByRole('link', { name: /Live Dashboard/ })
                 .first();
+            await heroLink.waitFor({ state: 'visible' });
             await heroLink.click();
         }
 

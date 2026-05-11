@@ -8,13 +8,14 @@ async function gotoDashboardWithRetry(page: Page): Promise<void> {
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
-      await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+      await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 30_000 });
+      await page.waitForSelector('body', { timeout: 10_000 });
       return;
     } catch (error) {
       if (attempt === MAX_ATTEMPTS) {
         throw error;
       }
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(2_000);
     }
   }
 }

@@ -301,10 +301,10 @@ export default function LandingPage() {
       {/* ── Nav ─────────────────────────────────────────────── */}
       <motion.nav
         suppressHydrationWarning
-        initial={{ y: -40, opacity: 0 }}
+        initial={false}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.45, ease: EASE_STANDARD }}
-        className='glass-panel sticky top-0 z-[100] border-b border-cyan-200/20 bg-slate-950/65 backdrop-blur-2xl shadow-[0_20px_70px_-35px_rgba(34,211,238,0.5)] transform-gpu'
+        className='glass-panel relative z-[999] sticky top-0 border-b border-cyan-200/20 bg-slate-950/65 backdrop-blur-2xl shadow-[0_20px_70px_-35px_rgba(34,211,238,0.5)] transform-gpu'
       >
         <div className='mx-auto flex h-16 max-w-7xl items-center justify-between px-6'>
           <div className='flex items-center gap-2'>

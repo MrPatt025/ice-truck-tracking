@@ -67,10 +67,9 @@ export default function AdminPage() {
   return (
     <ScrollytellingCanvas>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className='w-full'
+        initial={false}
+        animate={{ opacity: 1, y: 0 }}
+        className='relative w-full'
       >
         <AppSidebar>
           <PremiumPageWrapper

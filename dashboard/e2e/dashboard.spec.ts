@@ -15,37 +15,61 @@ const waitForHydration = async (page: Page) => {
     await page.waitForTimeout(1_500);
 };
 
+/** Navigate to dashboard page with retry logic */
+async function gotoDashboard(page: Page, retries = 2): Promise<void> {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            await page.goto('/dashboard', {
+                waitUntil: 'domcontentloaded',
+                timeout: 30_000,
+            });
+            await page.waitForSelector('body', { timeout: 10_000 });
+            return;
+        } catch (err) {
+            if (attempt === retries) throw err;
+            await page.waitForTimeout(2_000);
+        }
+    }
+}
+
 // ===============================================================
 // 1. PAGE LOADING & BASIC STRUCTURE
 // ===============================================================
 
 test.beforeEach(async ({ page }) => {
-  await page.route('**/api/v1/**', route => route.fulfill({ status: 200, json: { data: [], status: 'success', meta: { total: 0 } } }));
+    await page.route('**/api/v1/**', route =>
+        route.fulfill({
+            status: 200,
+            json: { data: [], status: 'success', meta: { total: 0 } },
+        }),
+    );
 });
 
 test.describe('Dashboard — Page Load', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page, baseURL }) => {
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
-  });
+    });
 
     test('should load dashboard page with correct URL', async ({ page }) => {
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await expect(page).toHaveURL(/dashboard/);
     });
 
     test('should render the page body', async ({ page }) => {
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await expect(page.locator('body')).toBeVisible();
     });
 
     test('should display the <main> content area', async ({ page }) => {
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         const main = page.locator('main').first();
         await expect(main).toBeVisible({ timeout: HYDRATION_TIMEOUT });
     });
 
     test('page title should contain "Ice Truck"', async ({ page }) => {
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await expect(page).toHaveTitle(/Ice Truck/i);
     });
 });
@@ -54,9 +78,11 @@ test.describe('Dashboard — Page Load', () => {
 // 2. HEADER & BRANDING
 // ===============================================================
 test.describe('Dashboard — Header', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page, baseURL }) => {
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await waitForHydration(page);
     });
 
@@ -71,18 +97,13 @@ test.describe('Dashboard — Header', () => {
         ).toBeVisible({ timeout: HYDRATION_TIMEOUT });
     });
 
-    test('should show "Fleet Sentinel Grid" subtitle', async ({
-        page,
-    }) => {
-        await expect(
-            page.getByText(/Fleet Sentinel Grid/i),
-        ).toBeVisible({ timeout: HYDRATION_TIMEOUT });
+    test('should show "Fleet Sentinel Grid" subtitle', async ({ page }) => {
+        await expect(page.getByText(/Fleet Sentinel Grid/i)).toBeVisible({
+            timeout: HYDRATION_TIMEOUT,
+        });
     });
 
-    test('should display API status indicator', async ({
-        page,
-        isMobile,
-    }) => {
+    test('should display API status indicator', async ({ page, isMobile }) => {
         // API text has class "hidden sm:inline" — not visible on mobile
         test.skip(!!isMobile, 'API status text is hidden on mobile');
         await expect(
@@ -95,15 +116,19 @@ test.describe('Dashboard — Header', () => {
 // 3. TIME RANGE & THEME CONTROLS
 // ===============================================================
 test.describe('Dashboard — Controls', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page, baseURL }) => {
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await waitForHydration(page);
     });
 
     test('should display time range selector buttons', async ({ page }) => {
         for (const range of ['1h', '24h', '7d', '30d', '90d']) {
-            await expect(page.getByRole('button', { name: range })).toBeVisible({
+            await expect(
+                page.getByRole('button', { name: range }),
+            ).toBeVisible({
                 timeout: HYDRATION_TIMEOUT,
             });
         }
@@ -138,9 +163,11 @@ test.describe('Dashboard — Controls', () => {
 // 4. METRIC CARDS
 // ===============================================================
 test.describe('Dashboard — Metrics', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page, baseURL }) => {
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await waitForHydration(page);
     });
 
@@ -193,9 +220,11 @@ test.describe('Dashboard — Metrics', () => {
 // 5. CHART SECTIONS
 // ===============================================================
 test.describe('Dashboard — Charts', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page, baseURL }) => {
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await waitForHydration(page);
     });
 
@@ -246,9 +275,11 @@ test.describe('Dashboard — Charts', () => {
 // 6. TOOLBAR BUTTONS
 // ===============================================================
 test.describe('Dashboard — Toolbar', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page, baseURL }) => {
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await waitForHydration(page);
     });
 
@@ -282,9 +313,11 @@ test.describe('Dashboard — Toolbar', () => {
 // 7. INTERACTIVE BEHAVIOUR
 // ===============================================================
 test.describe('Dashboard — Interactions', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page, baseURL }) => {
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await waitForHydration(page);
     });
 
@@ -326,44 +359,48 @@ test.describe('Dashboard — Interactions', () => {
 // 8. RESPONSIVE DESIGN
 // ===============================================================
 test.describe('Dashboard — Responsive', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page, baseURL }) => {
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
     });
 
     test('should render on mobile viewport', async ({ page }) => {
         await page.setViewportSize({ width: 375, height: 812 });
-        await page.goto('/dashboard');
-      await waitForHydration(page);
-      const header = page.locator('header');
-      await expect(header).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-  });
+        await gotoDashboard(page);
+        await waitForHydration(page);
+        const header = page.locator('header');
+        await expect(header).toBeVisible({ timeout: HYDRATION_TIMEOUT });
+    });
 
     test('should render on tablet viewport', async ({ page }) => {
         await page.setViewportSize({ width: 768, height: 1024 });
-        await page.goto('/dashboard');
-      await waitForHydration(page);
-      await expect(page.locator('main').first().first()).toBeVisible({
-          timeout: HYDRATION_TIMEOUT,
-      });
-  });
+        await gotoDashboard(page);
+        await waitForHydration(page);
+        await expect(page.locator('main').first()).toBeVisible({
+            timeout: HYDRATION_TIMEOUT,
+        });
+    });
 
     test('header should remain visible after scrolling', async ({ page }) => {
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await waitForHydration(page);
         await page.evaluate(() => window.scrollTo(0, 2000));
         await page.waitForTimeout(300);
         const header = page.locator('header');
-      await expect(header).toBeVisible();
-      const box = await header.boundingBox();
-      expect(box).toBeTruthy();
-      expect(box!.y).toBeLessThanOrEqual(10);
-  });
+        await expect(header).toBeVisible();
+        const box = await header.boundingBox();
+        expect(box).toBeTruthy();
+        expect(box!.y).toBeLessThanOrEqual(10);
+    });
 });
 
 // ===============================================================
 // 9. AUTH MIDDLEWARE
 // ===============================================================
 test.describe('Dashboard — Auth Middleware', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test('should redirect to /login when no auth cookie is set', async ({
         page,
     }) => {
@@ -377,7 +414,7 @@ test.describe('Dashboard — Auth Middleware', () => {
         baseURL,
     }) => {
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await expect(page).toHaveURL(/\/dashboard/);
     });
 });
@@ -386,18 +423,20 @@ test.describe('Dashboard — Auth Middleware', () => {
 // 10. ACCESSIBILITY
 // ===============================================================
 test.describe('Dashboard — Accessibility', () => {
+    test.describe.configure({ mode: 'serial' });
+
     test.beforeEach(async ({ page, baseURL }) => {
         await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
     });
 
     test('should have lang attribute on html', async ({ page }) => {
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         const lang = await page.locator('html').getAttribute('lang');
         expect(lang).toBe('en');
     });
 
     test('should have at least one heading', async ({ page }) => {
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await waitForHydration(page);
         const headings = page.getByRole('heading');
         const count = await headings.count();
@@ -407,7 +446,7 @@ test.describe('Dashboard — Accessibility', () => {
     test('interactive elements should be keyboard-focusable', async ({
         page,
     }) => {
-        await page.goto('/dashboard');
+        await gotoDashboard(page);
         await waitForHydration(page);
         await page.keyboard.press('Tab');
         const focusedTag = await page.evaluate(() =>

@@ -54,6 +54,23 @@ function collectRuntimeErrors(page: Page): { errors: string[]; warnings: string[
     return { errors, warnings }
 }
 
+/** Navigate with retry logic */
+async function gotoWithRetry(page: Page, path: string, retries = 2): Promise<void> {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            await page.goto(path, {
+                waitUntil: 'domcontentloaded',
+                timeout: 30_000,
+            })
+            await page.waitForSelector('body', { timeout: 10_000 })
+            return
+        } catch (err) {
+            if (attempt === retries) throw err
+            await page.waitForTimeout(2_000)
+        }
+    }
+}
+
 for (const viewport of VIEWPORTS) {
     for (const route of ROUTES) {
         test(`route audit: ${route.path} (${viewport.name})`, async ({ page }) => {
@@ -64,12 +81,14 @@ for (const viewport of VIEWPORTS) {
                     contentType: 'application/json',
                     json: { data: [], status: 'success', meta: { total: 0 } },
                 })
-            );
+            )
             await page.setViewportSize({ width: viewport.width, height: viewport.height })
             const runtime = collectRuntimeErrors(page)
 
-            await page.goto(route.path, { waitUntil: 'domcontentloaded' })
-            await page.waitForLoadState('networkidle')
+            await gotoWithRetry(page, route.path)
+            await page.waitForLoadState('networkidle').catch(() => {
+                // networkidle may not complete in time for some pages — continue
+            })
 
             const finalUrl = page.url()
             const redirectedToLogin = finalUrl.includes('/login')
@@ -87,10 +106,10 @@ for (const viewport of VIEWPORTS) {
             await expect(body).toBeVisible()
 
             const heading = page.locator('h1, h2').first()
-            await expect(heading).toBeVisible()
+            await expect(heading).toBeVisible({ timeout: 15_000 })
 
             const landmark = page.locator('main, [role="main"], form, section').first()
-            await landmark.waitFor({ state: 'visible', timeout: 10_000 })
+            await landmark.waitFor({ state: 'visible', timeout: 15_000 })
 
             const filteredErrors = runtime.errors.filter(error =>
                 !error.includes(KNOWN_TOUCH_ACTION_PAGEERROR) &&

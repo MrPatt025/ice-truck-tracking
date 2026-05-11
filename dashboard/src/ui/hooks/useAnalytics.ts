@@ -33,10 +33,7 @@ export function useAnalytics() {
       ...event.custom_parameters,
     })
 
-    // Development logging
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Analytics]', event)
-    }
+    // Avoid development console logs in hooks; analytics events are sent to GA4
   }, [])
 
   const trackPageView = useCallback(

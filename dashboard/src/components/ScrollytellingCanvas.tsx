@@ -63,7 +63,7 @@ export function ScrollytellingCanvas({ children }: { children: React.ReactNode }
         className="absolute inset-0 -z-10 pointer-events-none"
         style={{ opacity, scale }}
       >
-        <Canvas shadows dpr={[1, 2]} gl={{ antialias: false }} frameloop="always">
+        <Canvas shadows={{ type: THREE.PCFShadowMap }} dpr={[1, 2]} gl={{ antialias: false }} frameloop="always">
           <ScrollytellingGrid />
         </Canvas>
       </motion.div>
