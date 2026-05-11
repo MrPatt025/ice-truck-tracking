@@ -28,6 +28,7 @@ export default [
             '**/next-env.d.ts',
             'lint-result.json',
             'lint-output.*',
+            'ui-ux-pro-max-skill/**',
         ],
     },
 
