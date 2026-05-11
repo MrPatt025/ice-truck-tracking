@@ -37,8 +37,6 @@ import PremiumSystemStatusBanner, {
   type StatusIssue,
 } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { cn } from '@/lib/utils'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'

@@ -44,8 +44,12 @@ async function verifyPageLoad(page: Page, route: string): Promise<void> {
     const consoleErrors: string[] = [];
 
     page.on('console', (msg: ConsoleMessage) => {
+        const text = msg.text()
+        // Ignore noisy Three.js/PCF deprecation messages from dependencies
+        if (text.includes('THREE.Clock') || text.includes('PCFSoftShadowMap'))
+          return
         if (msg.type() === 'error') {
-            consoleErrors.push(msg.text());
+            consoleErrors.push(text)
         }
     });
 

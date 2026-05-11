@@ -78,6 +78,9 @@ export default defineConfig({
         NODE_OPTIONS: '--max_old_space_size=4096',
         // Suppress noisy Node deprecation warnings in CI/light runs so test logs stay focused
         NODE_NO_WARNINGS: '1',
+        // Ensure non-interactive build on Windows and disable Next telemetry prompts
+        CI: '1',
+        NEXT_TELEMETRY_DISABLED: '1',
     },
   },
 })

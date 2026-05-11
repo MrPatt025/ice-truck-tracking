@@ -22,7 +22,7 @@
  * ================================================================ */
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react'
+import React, { useEffect, useRef, useCallback, useMemo, memo } from 'react'
 import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
 import dynamic from 'next/dynamic'
 import {
