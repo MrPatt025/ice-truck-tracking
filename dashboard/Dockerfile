@@ -3,7 +3,7 @@
 # Context: repository root (.)
 # ============================================================================
 
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 
 # ── Dependencies stage ─────────────────────────────────
 FROM base AS deps
