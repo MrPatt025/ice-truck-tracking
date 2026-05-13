@@ -40,9 +40,9 @@ async function gotoLanding(page: Page, retries = 2): Promise<void> {
 
 test.beforeEach(async ({ page }) => {
     page.on('console', msg => {
-      // Suppress specific Three.js deprecation spam coming from dependencies
+      // Suppress internal 3D/Motion warnings from 3rd party libs
       const text = msg.text()
-      if (text.includes('THREE.Clock') || text.includes('PCFSoftShadowMap'))
+      if (text.includes('THREE.') || text.includes('non-static position') || text.includes('Reduced Motion'))
         return
     })
     await page.route('**/api/v1/**', route =>

@@ -1695,7 +1695,7 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                     />
                     <div className='pointer-events-none absolute inset-0 rounded-[inherit] border border-white/10' />
                     <div className='pointer-events-none absolute -inset-20 bg-[radial-gradient(80rem_30rem_at_20%_-20%,rgba(34,211,238,.28),transparent),radial-gradient(90rem_34rem_at_80%_140%,rgba(139,92,246,.24),transparent)] opacity-85 transition-opacity duration-700 group-hover:opacity-100' />
-                    <div className='relative flex min-h-[4.75rem] flex-wrap items-center justify-between gap-4'>
+                    <div className='relative z-50 pointer-events-auto flex min-h-[4.75rem] flex-wrap items-center justify-between gap-4'>
                       <MapModeToggle
                         isLiveMode={isLiveMode}
                         onModeChange={setMapMode}

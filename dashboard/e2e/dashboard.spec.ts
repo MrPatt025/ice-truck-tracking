@@ -37,6 +37,11 @@ async function gotoDashboard(page: Page, retries = 2): Promise<void> {
 // ===============================================================
 
 test.beforeEach(async ({ page }) => {
+    page.on('console', msg => {
+      // Suppress internal 3D/Motion warnings from 3rd party libs
+      const text = msg.text();
+      if (text.includes('THREE.') || text.includes('non-static position') || text.includes('Reduced Motion')) return;
+    });
     await page.setViewportSize({ width: 1280, height: 720 })
     await page.route('**/api/v1/**', route =>
         route.fulfill({
