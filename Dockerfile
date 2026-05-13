@@ -2,7 +2,7 @@
 # Build optimized for layer caching and minimal image size
 
 # ── Dependencies stage ──────────────────────────────
-FROM node:24-alpine AS deps
+FROM node:26-alpine AS deps
 RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
 
@@ -19,7 +19,7 @@ RUN pnpm install --frozen-lockfile --prod --ignore-scripts && \
     pnpm store prune
 
 # ── Builder stage ───────────────────────────────────
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
 ENV NODE_ENV production
@@ -46,7 +46,7 @@ COPY src ./src
 RUN pnpm run build
 
 # ── Runtime stage ──────────────────────────────────
-FROM node:24-alpine AS runner
+FROM node:26-alpine AS runner
 RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
