@@ -65,7 +65,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm run build && pnpm run start',
+    command: 'pnpm run build && node scripts/start-standalone.js',
     url: 'http://localhost:3000',
     reuseExistingServer: !isCI,
     timeout: 300_000,

@@ -42,7 +42,7 @@ jobs:
       - name: Install Playwright with Chrome
         working-directory: dashboard
         run: |
-          pnpm dlx playwright install --with-deps chromium # NOSONAR
+          pnpm exec playwright install --with-deps chromium # NOSONAR
 
       - name: Run GPU E2E Tests
         run: pnpm --filter @ice-truck/dashboard run test:e2e:gpu

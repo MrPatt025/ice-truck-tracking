@@ -50,9 +50,12 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'pnpm exec next dev -p 3310 --turbopack',
+        command: 'pnpm run build && node scripts/start-standalone.js',
         url: 'http://localhost:3310',
         reuseExistingServer: !process.env.CI,
         timeout: 600_000,
+        env: {
+            PORT: '3310',
+        },
     },
 });

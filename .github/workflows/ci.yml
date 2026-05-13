@@ -182,7 +182,7 @@ jobs:
       - name: Install Playwright browsers
         working-directory: dashboard
         run: |
-          pnpm dlx playwright install --with-deps chromium firefox # NOSONAR
+          pnpm exec playwright install --with-deps chromium firefox # NOSONAR
       - name: Run E2E Light Tests (no GPU)
         run: pnpm --filter @ice-truck/dashboard run test:e2e:light
         env:

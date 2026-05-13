@@ -42,13 +42,13 @@ test.describe('Dashboard feature polish', () => {
     await expect(liveButton).toHaveAttribute('aria-pressed', 'true');
     await expect(historicalButton).toHaveAttribute('aria-pressed', 'false');
 
-    await historicalButton.click({ force: true });
-    await expect(historicalButton).toHaveAttribute('aria-pressed', 'true');
-    await expect(liveButton).toHaveAttribute('aria-pressed', 'false');
+    await historicalButton.click();
+    await expect(historicalButton).toHaveAttribute('aria-pressed', 'true', { timeout: 10_000 });
+    await expect(liveButton).toHaveAttribute('aria-pressed', 'false', { timeout: 10_000 });
 
-    await liveButton.click({ force: true });
-    await expect(liveButton).toHaveAttribute('aria-pressed', 'true');
-    await expect(historicalButton).toHaveAttribute('aria-pressed', 'false');
+    await liveButton.click();
+    await expect(liveButton).toHaveAttribute('aria-pressed', 'true', { timeout: 10_000 });
+    await expect(historicalButton).toHaveAttribute('aria-pressed', 'false', { timeout: 10_000 });
   });
 
   test('shows offline fallback banner when browser goes offline', async ({ page }) => {

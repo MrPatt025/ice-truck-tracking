@@ -44,7 +44,7 @@ export default defineConfig({
         },
     ],
     webServer: {
-        command: 'pnpm run build && (node .next/standalone/dashboard/server.js || node .next/standalone/server.js)',
+        command: 'pnpm run build && node scripts/start-standalone.js',
         url: 'http://localhost:3000',
         reuseExistingServer: !process.env.CI,
         timeout: 600_000,
