@@ -8,16 +8,6 @@ import * as Location from 'expo-location'
 import { useRealTimeTracking } from '../hooks/useRealTimeTracking'
 import { ConnectionStatus } from '../components/ConnectionStatus'
 
-interface Truck {
-  id: string
-  latitude: number
-  longitude: number
-  driver_name: string
-  temperature: number
-  speed: number
-  status: 'active' | 'inactive'
-}
-
 export function MapScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null)
   const [mapType, setMapType] = useState<'standard' | 'satellite'>('standard')
@@ -62,14 +52,14 @@ export function MapScreen() {
         showsUserLocation
         showsMyLocationButton
       >
-        {trucks.map((truck: Truck) => (
+        {trucks.map((truck) => (
           <Marker
             key={truck.id}
             coordinate={{
               latitude: truck.latitude,
               longitude: truck.longitude,
             }}
-            title={truck.driver_name}
+            title={truck.driver_name || 'Unknown Driver'}
           >
             <View
               style={[
@@ -85,7 +75,7 @@ export function MapScreen() {
 
             <Callout style={styles.callout}>
               <View style={styles.calloutContent}>
-                <Text style={styles.calloutTitle}>{truck.driver_name}</Text>
+                <Text style={styles.calloutTitle}>{truck.driver_name || 'Unknown Driver'}</Text>
                 <Text style={styles.calloutText}>ID: {truck.id}</Text>
                 <Text style={styles.calloutText}>
                   Speed: {truck.speed} km/h

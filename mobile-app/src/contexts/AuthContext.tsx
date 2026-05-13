@@ -19,6 +19,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null
+  token: string | null
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
@@ -30,6 +31,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -38,13 +40,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   const checkAuthState = async () => {
     try {
-      const token = await SecureStore.getItemAsync('auth_token')
-      if (token) {
-        const userData = await authService.validateToken(token)
+      const storedToken = await SecureStore.getItemAsync('auth_token')
+      if (storedToken) {
+        const userData = await authService.validateToken(storedToken)
         setUser(userData)
+        setToken(storedToken)
       }
     } catch (error) {
-      console.error('Auth check failed:', error)
+      // Silently fail auth check
       await SecureStore.deleteItemAsync('auth_token')
     } finally {
       setIsLoading(false)
@@ -55,39 +58,43 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     const response = await authService.login(email, password)
     await SecureStore.setItemAsync('auth_token', response.token)
     setUser(response.user)
+    setToken(response.token)
   }, [])
 
   const logout = useCallback(async () => {
     try {
       await SecureStore.deleteItemAsync('auth_token')
       setUser(null)
+      setToken(null)
     } catch (error) {
-      console.error('Logout error:', error)
+      // Silently fail logout
     }
   }, [])
 
   const refreshToken = useCallback(async () => {
     try {
-      const token = await SecureStore.getItemAsync('auth_token')
-      if (token) {
-        const response = await authService.refreshToken(token)
+      const storedToken = await SecureStore.getItemAsync('auth_token')
+      if (storedToken) {
+        const response = await authService.refreshToken(storedToken)
         await SecureStore.setItemAsync('auth_token', response.token)
         setUser(response.user)
+        setToken(response.token)
       }
     } catch (error) {
-      console.error('Token refresh failed:', error)
+      // Silent fail
       await logout()
     }
   }, [logout])
 
   const value = useMemo<AuthContextType>(() => ({
     user,
+    token,
     isAuthenticated: !!user,
     isLoading,
     login,
     logout,
     refreshToken,
-  }), [user, isLoading, login, logout, refreshToken])
+  }), [user, token, isLoading, login, logout, refreshToken])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
