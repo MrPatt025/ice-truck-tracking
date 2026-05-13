@@ -204,9 +204,9 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <ScrollytellingCanvas>
-      <motion.div suppressHydrationWarning initial={false} animate={{ opacity: 1, y: 0 }} className="relative w-full">
-    <PremiumPageWrapper
+    <>
+      <ScrollytellingCanvas />
+      <PremiumPageWrapper
       mode='glass'
       className='w-full'
       denseNoise
@@ -222,7 +222,6 @@ export default function ResetPasswordPage() {
         <ResetPasswordContent />
       </Suspense>
     </PremiumPageWrapper>
-      </motion.div>
-    </ScrollytellingCanvas>
+    </>
   )
 }

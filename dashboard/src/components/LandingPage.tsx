@@ -320,7 +320,7 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <div className='hidden items-center gap-6 md:flex'>
+          <div className='flex items-center gap-4 sm:gap-6'>
             <a
               href='#features'
               className='text-sm text-slate-300 hover:text-white transition'

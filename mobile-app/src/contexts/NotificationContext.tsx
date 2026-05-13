@@ -43,15 +43,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         // Handle deep linking based on notification data
         if (typeof data?.screen === 'string') {
           // Navigate to specific screen
-          console.log('Navigate to:', data.screen)
         }
       }
     )
 
     // Handle deep links
     const handleDeepLink = (url: string) => {
-      const { path, queryParams } = Linking.parse(url)
-      console.log('Deep link:', path, queryParams)
+      // Parse URL for deep linking logic
+      Linking.parse(url)
     }
 
     const linkingSubscription = Linking.addEventListener('url', ({ url }) => {

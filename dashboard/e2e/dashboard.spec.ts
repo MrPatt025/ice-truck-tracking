@@ -37,6 +37,7 @@ async function gotoDashboard(page: Page, retries = 2): Promise<void> {
 // ===============================================================
 
 test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 720 })
     await page.route('**/api/v1/**', route =>
         route.fulfill({
             status: 200,
@@ -106,9 +107,10 @@ test.describe('Dashboard — Header', () => {
     test('should display API status indicator', async ({ page, isMobile }) => {
         // API text has class "hidden sm:inline" — not visible on mobile
         test.skip(!!isMobile, 'API status text is hidden on mobile');
-        await expect(
-            page.getByText(/API\s+(Online|Offline|Checking)/i),
-        ).toBeVisible({ timeout: HYDRATION_TIMEOUT });
+        await page.setViewportSize({ width: 1280, height: 720 })
+        await expect(page.getByTestId('api-status-indicator')).toBeVisible({
+          timeout: HYDRATION_TIMEOUT,
+        })
     });
 });
 
@@ -348,7 +350,11 @@ test.describe('Dashboard — Interactions', () => {
         isMobile,
     }) => {
         test.skip(!!isMobile, 'Search input hidden on mobile');
-        const searchInput = page.getByPlaceholder(/Search trucks/i);
+        await page.setViewportSize({ width: 1280, height: 720 })
+        const searchInput = page.getByTestId('dashboard-search-input')
+        await expect(page.getByTestId('dashboard-search-toolbar')).toBeVisible({
+          timeout: HYDRATION_TIMEOUT,
+        })
         await expect(searchInput).toBeVisible({ timeout: HYDRATION_TIMEOUT });
         await searchInput.fill('ICE-001');
         await expect(searchInput).toHaveValue('ICE-001');

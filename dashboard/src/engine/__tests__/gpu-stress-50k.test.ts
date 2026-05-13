@@ -73,31 +73,37 @@ describe('GPU Stress Test — 50,000 Entities', () => {
     jest.setTimeout(30_000);
 
     test('SharedCanvasPool handles 50k entity draw calls without crash', () => {
-        const pool = SharedCanvasPool.getInstance();
-        const { gl } = pool.acquire('stress-main', { width: 1920, height: 1080 }, true);
-        expect(gl).toBeTruthy();
+      const pool = SharedCanvasPool.getInstance()
+      const { gl } = pool.acquire(
+        'stress-main',
+        { width: 1920, height: 1080 },
+        true
+      )
+      expect(gl).toBeTruthy()
 
-        const ENTITY_COUNT = 50_000;
-        const BATCH_SIZE = 1_000;
-        const batches = Math.ceil(ENTITY_COUNT / BATCH_SIZE);
+      const ENTITY_COUNT = 50_000
+      const BATCH_SIZE = 1_000
+      const batches = Math.ceil(ENTITY_COUNT / BATCH_SIZE)
 
-        const start = performance.now();
-        for (let b = 0; b < batches; b++) {
-            // Simulate buffer upload per batch
-            mockGL.createBuffer();
-            mockGL.bindBuffer(mockGL.ARRAY_BUFFER, {});
-            mockGL.bufferData(mockGL.ARRAY_BUFFER, new Float32Array(BATCH_SIZE * 6), mockGL.STATIC_DRAW);
+      const start = performance.now()
+      for (let b = 0; b < batches; b++) {
+        // Simulate buffer upload per batch
+        mockGL.createBuffer()
+        mockGL.bindBuffer(mockGL.ARRAY_BUFFER, {})
+        mockGL.bufferData(
+          mockGL.ARRAY_BUFFER,
+          new Float32Array(BATCH_SIZE * 6),
+          mockGL.STATIC_DRAW
+        )
 
-            // Simulate draw call
-            mockGL.drawArrays(mockGL.TRIANGLES, 0, BATCH_SIZE * 3);
-        }
-        const elapsed = performance.now() - start;
+        // Simulate draw call
+        mockGL.drawArrays(mockGL.TRIANGLES, 0, BATCH_SIZE * 3)
+      }
+      const elapsed = performance.now() - start
 
-        expect(mockGL.drawArrays).toHaveBeenCalledTimes(batches);
-        expect(elapsed).toBeLessThan(5_000); // Should complete under 5s
-        console.log(`  50k entities in ${batches} batches: ${elapsed.toFixed(1)}ms`);
-
-        pool.release('stress-main');
+      expect(mockGL.drawArrays).toHaveBeenCalledTimes(batches)
+      expect(elapsed).toBeLessThan(5_000) // Should complete under 5s
+      pool.release('stress-main')
     });
 
     test('GPU Memory Guard stays within budget at 50k entities', () => {
@@ -142,7 +148,6 @@ describe('GPU Stress Test — 50,000 Entities', () => {
         }
         const elapsed = performance.now() - start;
 
-        console.log(`  ${CYCLES} acquire/release cycles (${CYCLES * ENTITIES_PER_CYCLE} total entities): ${elapsed.toFixed(1)}ms`);
         expect(elapsed).toBeLessThan(10_000);
     });
 

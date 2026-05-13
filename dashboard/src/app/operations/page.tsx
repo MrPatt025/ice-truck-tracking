@@ -15,8 +15,9 @@ const OPS_STREAMS = [
 
 export default function OperationsPage() {
   return (
-    <ScrollytellingCanvas>
-      <motion.div suppressHydrationWarning initial={false} animate={{ opacity: 1, y: 0 }} className="relative w-full">
+    <>
+      <ScrollytellingCanvas />
+      <motion.main suppressHydrationWarning initial={false} animate={{ opacity: 1, y: 0 }} className="relative w-full">
     <AppSidebar>
       <PremiumPageWrapper
         mode='glass'
@@ -92,7 +93,7 @@ export default function OperationsPage() {
         </main>
       </PremiumPageWrapper>
     </AppSidebar>
-        </motion.div>
-    </ScrollytellingCanvas>
+        </motion.main>
+    </>
   )
 }

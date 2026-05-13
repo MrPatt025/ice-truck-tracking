@@ -105,7 +105,6 @@ class AlertService {
         'INSERT INTO alerts (truck_code, type, message, alert_time, location_data) VALUES (?, ?, ?, ?, ?)',
         [truck_code, type, message, new Date(), locationData]
       );
-      console.log(`System alert created: ${type} for truck ${truck_code}`);
     } catch (error) {
       console.error('Error creating system alert:', error);
     }

@@ -76,24 +76,32 @@ test.describe('Navigation', () => {
     });
 
     test('should show "Open Dashboard" link in navbar (desktop)', async ({
-        page,
-        isMobile,
+      page,
+      isMobile,
+      baseURL,
     }) => {
-        test.skip(!!isMobile, 'Nav CTA is hidden on mobile');
-        const navDashboardLink = page.locator('a[href="/dashboard"]').first();
-        await navDashboardLink.waitFor({ state: 'visible', timeout: HYDRATION_TIMEOUT });
-        await navDashboardLink.click({ force: true });
-        await expect(page).toHaveURL(/\/dashboard/);
-    });
+      test.skip(!!isMobile, 'Nav CTA is hidden on mobile')
+      // Inject valid mock auth cookie before clicking to ensure it reaches /dashboard
+      await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000')
+      await gotoLanding(page)
+      await waitForAnimations(page)
+      await page.setViewportSize({ width: 1280, height: 720 })
+      
+      // Use bulletproof locator as requested
+      const navDashboardLink = page.locator('a[href="/dashboard"]').first()
+      await expect(navDashboardLink).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+      await navDashboardLink.click()
+      await expect(page).toHaveURL(/\/dashboard/)
+    })
 
     test('should contain Features, Performance and Tech Stack nav links (desktop)', async ({
         page,
         isMobile,
     }) => {
         test.skip(!!isMobile, 'Desktop-only nav links');
+        await page.setViewportSize({ width: 1280, height: 720 })
         for (const label of ['Features', 'Performance', 'Tech Stack']) {
-            const locator = page.locator(`a:has-text("${label}")`).first();
-            await locator.waitFor({ state: 'visible', timeout: HYDRATION_TIMEOUT });
+            const locator = page.locator(`a:has-text("${label}")`).first()
             await locator.click({ force: true });
             // navigate back to landing for next iteration
             await gotoLanding(page);
@@ -106,10 +114,10 @@ test.describe('Navigation', () => {
         isMobile,
     }) => {
         test.skip(!!isMobile, 'Desktop-only nav links');
+        await page.setViewportSize({ width: 1280, height: 720 })
         const anchors = ['#features', '#stats', '#tech'];
         for (const a of anchors) {
-            const an = page.locator(`a[href="${a}"]`).first();
-            await an.waitFor({ state: 'visible', timeout: HYDRATION_TIMEOUT });
+            const an = page.locator(`a[href="${a}"]`).first()
             await an.click({ force: true });
             // quick sanity: URL may include the anchor
             await expect(page).toHaveURL(new RegExp(`${a.replace('#', '#')}`));
@@ -516,8 +524,8 @@ test.describe('Navigation Flow', () => {
             await heroLink.click();
         }
 
-        // In production the edge proxy redirects to /login. In light test mode,
-        // middleware/proxy can be bypassed, so /dashboard is also acceptable.
-        await expect(page).toHaveURL(/\/(login|dashboard)/);
+        // In production and high-security CI, auth middleware MUST enforce redirect to login.
+        // We assert strictly on /login to ensure the security seal is intact.
+        await expect(page).toHaveURL(/\/login/);
     });
 });

@@ -22,7 +22,14 @@
  * ================================================================ */
 "use client";
 
-import React, { useEffect, useRef, useCallback, useMemo, memo } from 'react'
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+  memo,
+} from 'react'
 import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
 import dynamic from 'next/dynamic'
 import {
@@ -158,6 +165,16 @@ const PremiumSystemStatusBanner = dynamic(
     loading: () => null,
   }
 )
+
+const REFRESH_SPEED_VALUES = ['fast', 'normal', 'slow'] as const
+
+function isRefreshSpeed(
+  value: string
+): value is (typeof REFRESH_SPEED_VALUES)[number] {
+  return REFRESH_SPEED_VALUES.includes(
+    value as (typeof REFRESH_SPEED_VALUES)[number]
+  )
+}
 
 const DASHBOARD_TITLE = 'Ice Truck Tracking Dashboard | Mission Control'
 
@@ -1342,14 +1359,9 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
    *  All real-time visualization is imperative (3D, Map, Charts).
    * ================================================================ */
   return (
-    <ScrollytellingCanvas>
-      <motion.div
-        suppressHydrationWarning
-        initial={false}
-        animate={{ opacity: 1, y: 0 }}
-        className='relative w-full'
-      >
-        <PremiumPageWrapper
+    <>
+      <ScrollytellingCanvas />
+      <PremiumPageWrapper
           mode='glass'
           animate={false}
           denseNoise
@@ -1468,9 +1480,13 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                       {/* Toolbar */}
                       <div className='flex items-center gap-2 sm:gap-3'>
                         {/* Search (desktop only) */}
-                        <div className='hidden lg:flex items-center gap-2 rounded-xl bg-white/5 ring-1 ring-white/10 px-3 py-2'>
+                        <div
+                          data-testid='dashboard-search-toolbar'
+                          className='flex items-center gap-2 rounded-xl bg-white/5 ring-1 ring-white/10 px-3 py-2'
+                        >
                           <Search className='h-4 w-4 text-slate-400' />
                           <input
+                            data-testid='dashboard-search-input'
                             type='text'
                             placeholder='Search trucks...'
                             value={searchTerm}
@@ -1572,12 +1588,17 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                         {/* API Status */}
                         <FpsTargetMonitor />
 
-                        <Pill intent={resolveApiHealthIntent(apiHealthy)}>
-                          {resolveApiHealthIcon(apiHealthy)}
-                          <span className='hidden sm:inline'>
-                            {resolveApiHealthLabel(apiHealthy)}
-                          </span>
-                        </Pill>
+                        <div
+                          data-testid='api-status-indicator'
+                          className='inline-flex'
+                        >
+                          <Pill intent={resolveApiHealthIntent(apiHealthy)}>
+                            {resolveApiHealthIcon(apiHealthy)}
+                            <span className='hidden sm:inline'>
+                              {resolveApiHealthLabel(apiHealthy)}
+                            </span>
+                          </Pill>
+                        </div>
                       </div>
                     </div>
 
@@ -1625,11 +1646,12 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
                           <span>Refresh:</span>
                           <select
                             value={refreshSpeed}
-                            onChange={e =>
-                              setRefreshSpeed(
-                                e.target.value as 'fast' | 'normal' | 'slow'
-                              )
-                            }
+                            onChange={e => {
+                              const nextSpeed = e.currentTarget.value
+                              if (isRefreshSpeed(nextSpeed)) {
+                                setRefreshSpeed(nextSpeed)
+                              }
+                            }}
                             className='bg-white/5 rounded-lg px-2 py-1 text-xs ring-1 ring-white/10 outline-none text-slate-300'
                             aria-label='Refresh speed'
                           >
@@ -2335,7 +2357,6 @@ export default function Dashboard() { // NOSONAR - intentional orchestrator comp
             </React.Suspense>
           </GlobalErrorBoundary>
         </PremiumPageWrapper>
-      </motion.div>
-    </ScrollytellingCanvas>
+    </>
   )
 }

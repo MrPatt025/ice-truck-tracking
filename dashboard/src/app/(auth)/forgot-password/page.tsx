@@ -34,9 +34,9 @@ export default function ForgotPasswordPage() {
   )
 
   return (
-    <ScrollytellingCanvas>
-      <motion.div suppressHydrationWarning initial={false} animate={{ opacity: 1, y: 0 }} className="relative w-full">
-    <PremiumPageWrapper
+    <>
+      <ScrollytellingCanvas />
+      <PremiumPageWrapper
       mode='glass'
       denseNoise
       contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(16,185,129,0.95)]'
@@ -150,8 +150,7 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
       </motion.div>
-    </PremiumPageWrapper>
-      </motion.div>
-    </ScrollytellingCanvas>
+      </PremiumPageWrapper>
+    </>
   )
 }

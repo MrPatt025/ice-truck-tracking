@@ -15,8 +15,9 @@ const TRACKING_LANES = [
 
 export default function TrackingPage() {
   return (
-    <ScrollytellingCanvas>
-      <motion.div suppressHydrationWarning initial={false} animate={{ opacity: 1, y: 0 }} className="relative w-full">
+    <>
+      <ScrollytellingCanvas />
+      <motion.main suppressHydrationWarning initial={false} animate={{ opacity: 1, y: 0 }} className="relative w-full">
     <AppSidebar>
       <PremiumPageWrapper
         mode='glass'
@@ -92,7 +93,7 @@ export default function TrackingPage() {
         </main>
       </PremiumPageWrapper>
     </AppSidebar>
-        </motion.div>
-    </ScrollytellingCanvas>
+        </motion.main>
+    </>
   )
 }

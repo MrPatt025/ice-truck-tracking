@@ -65,8 +65,9 @@ export default function AdminPage() {
   }, [users]);
 
   return (
-    <ScrollytellingCanvas>
-      <motion.div
+    <>
+      <ScrollytellingCanvas />
+      <motion.main
         initial={false}
         animate={{ opacity: 1, y: 0 }}
         className='relative w-full'
@@ -182,7 +183,9 @@ export default function AdminPage() {
                   <option value='operator'>
                     Operator ({roleCounts.operator || 0})
                   </option>
-                  <option value='viewer'>Viewer ({roleCounts.viewer || 0})</option>
+                  <option value='viewer'>
+                    Viewer ({roleCounts.viewer || 0})
+                  </option>
                 </select>
                 <select
                   value={statusFilter}
@@ -288,7 +291,7 @@ export default function AdminPage() {
             </div>
           </PremiumPageWrapper>
         </AppSidebar>
-      </motion.div>
-    </ScrollytellingCanvas>
+      </motion.main>
+    </>
   )
 }

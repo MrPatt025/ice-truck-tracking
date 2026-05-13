@@ -44,34 +44,22 @@ function ScrollytellingGrid() {
  * Zero-Render Architecture: all animation state lives in useRef /
  * useFrame — no useState in the scroll or animation loops.
  */
-export function ScrollytellingCanvas({ children }: { children: React.ReactNode }) {
-  const containerRef = useRef<HTMLDivElement>(null);
+export function ScrollytellingCanvas() {
+  const { scrollYProgress } = useScroll();
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  });
-
-  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.4]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
+  // Optimized transformations for background depth
+  const opacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [1, 0.45, 0.45, 1]);
+  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.12]);
 
   return (
-    <div ref={containerRef} className="relative w-full min-h-screen">
-      {/* 3D Background */}
-      <motion.div
-        suppressHydrationWarning
-        className="absolute inset-0 -z-10 pointer-events-none"
-        style={{ opacity, scale }}
-      >
-        <Canvas shadows={{ type: THREE.PCFShadowMap }} dpr={[1, 2]} gl={{ antialias: false }} frameloop="always">
-          <ScrollytellingGrid />
-        </Canvas>
-      </motion.div>
-
-      {/* Scrollytelling Foreground Content */}
-      <div className="relative z-10 w-full">
-        {children}
-      </div>
-    </div>
+    <motion.div
+      suppressHydrationWarning
+      className="absolute inset-0 -z-10 pointer-events-none"
+      style={{ opacity, scale }}
+    >
+      <Canvas shadows={{ type: THREE.PCFShadowMap }} dpr={[1, 2]} gl={{ antialias: false }} frameloop="always">
+        <ScrollytellingGrid />
+      </Canvas>
+    </motion.div>
   );
 }

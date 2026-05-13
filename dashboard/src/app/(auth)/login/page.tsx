@@ -190,25 +190,24 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <ScrollytellingCanvas>
-      <motion.div suppressHydrationWarning initial={false} animate={{ opacity: 1, y: 0 }} className="relative w-full">
-    <PremiumPageWrapper
-      mode='glass'
-      className='w-full'
-      denseNoise
-      contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(56,189,248,0.95)]'
-    >
-      <Suspense
-        fallback={
-          <div className='flex items-center justify-center min-h-[200px]'>
-            <Loader2 className='w-6 h-6 animate-spin text-primary' />
-          </div>
-        }
-      >
-        <LoginContent />
-      </Suspense>
-    </PremiumPageWrapper>
-      </motion.div>
-    </ScrollytellingCanvas>
+    <>
+      <ScrollytellingCanvas />
+      <PremiumPageWrapper
+          mode='glass'
+          className='w-full'
+          denseNoise
+          contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(56,189,248,0.95)]'
+        >
+          <Suspense
+            fallback={
+              <div className='flex items-center justify-center min-h-[200px]'>
+                <Loader2 className='w-6 h-6 animate-spin text-primary' />
+              </div>
+            }
+          >
+            <LoginContent />
+          </Suspense>
+        </PremiumPageWrapper>
+    </>
   )
 }
