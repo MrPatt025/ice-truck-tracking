@@ -49,6 +49,7 @@ RUN pnpm run build
 FROM node:24-alpine AS runner
 RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV NODE_ENV production
 ENV PORT 5000
 

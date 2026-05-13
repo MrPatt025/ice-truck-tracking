@@ -47,7 +47,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         setToken(storedToken)
       }
     } catch (error) {
-      // Silently fail auth check
+      console.error('[AuthContext Error]:', error)
       await SecureStore.deleteItemAsync('auth_token')
     } finally {
       setIsLoading(false)
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       setUser(null)
       setToken(null)
     } catch (error) {
-      // Silently fail logout
+      console.error('[AuthContext Error]:', error)
     }
   }, [])
 
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         setToken(response.token)
       }
     } catch (error) {
-      // Silent fail
+      console.error('[AuthContext Error]:', error)
       await logout()
     }
   }, [logout])

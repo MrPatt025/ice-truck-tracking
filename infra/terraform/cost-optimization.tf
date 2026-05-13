@@ -84,6 +84,13 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "alb_access_logs_t
   }
 }
 
+resource "aws_s3_bucket_logging" "alb_access_logs_target" {
+  bucket = aws_s3_bucket.alb_access_logs_target.id
+
+  target_bucket = aws_s3_bucket.alb_access_logs_target.id
+  target_prefix = "self-logs/"
+}
+
 resource "aws_s3_bucket_logging" "alb_access_logs" {
   bucket = aws_s3_bucket.alb_access_logs.id
 
