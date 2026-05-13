@@ -383,4 +383,3 @@ export function AnalyticsDashboard(): ReactElement {
     </SectionErrorBoundary>
   )
 }
-

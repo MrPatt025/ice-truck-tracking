@@ -2,10 +2,10 @@
 
 import { useEffect, useRef } from 'react'
 import {
-    useMotionValue,
-    useMotionValueEvent,
-    useScroll,
-    useTransform,
+  useMotionValue,
+  useMotionValueEvent,
+  useScroll,
+  useTransform,
 } from 'framer-motion'
 
 type CinematicPhase = 'idle' | 'outro' | 'intro'
@@ -13,101 +13,101 @@ type CinematicPhase = 'idle' | 'outro' | 'intro'
 const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
 
 export function useCinematicCamera(
-    canvas: HTMLCanvasElement | null,
-    isTransitioning: boolean,
-    phase: CinematicPhase,
-    progress: number
+  canvas: HTMLCanvasElement | null,
+  isTransitioning: boolean,
+  phase: CinematicPhase,
+  progress: number
 ) {
-    const setCameraFovRef = useRef<(fov: number) => void>(() => { })
-    const { scrollYProgress } = useScroll()
-    const transitionProgress = useMotionValue(0)
-    const cinematicDriver = useTransform(
-        [scrollYProgress, transitionProgress],
-        (values: number[]) => {
-            const [scroll, transition] = values
-            const clampedScroll = Math.min(1, Math.max(0, scroll * 0.92))
-            const clampedTransition = Math.min(1, Math.max(0, transition))
-            return Math.min(1, clampedScroll * 0.38 + clampedTransition * 0.82)
-        }
-    )
-    const cinematicFov = useTransform(cinematicDriver, [0, 1], [45, 66])
-    const cinematicOpacity = useTransform(cinematicDriver, [0, 1], [0.28, 0.84])
+  const setCameraFovRef = useRef<(fov: number) => void>(() => {})
+  const { scrollYProgress } = useScroll()
+  const transitionProgress = useMotionValue(0)
+  const cinematicDriver = useTransform(
+    [scrollYProgress, transitionProgress],
+    (values: number[]) => {
+      const [scroll, transition] = values
+      const clampedScroll = Math.min(1, Math.max(0, scroll * 0.92))
+      const clampedTransition = Math.min(1, Math.max(0, transition))
+      return Math.min(1, clampedScroll * 0.38 + clampedTransition * 0.82)
+    }
+  )
+  const cinematicFov = useTransform(cinematicDriver, [0, 1], [45, 66])
+  const cinematicOpacity = useTransform(cinematicDriver, [0, 1], [0.28, 0.84])
 
-    useEffect(() => {
-        if (E2E_LIGHT_MODE) return
+  useEffect(() => {
+    if (E2E_LIGHT_MODE) return
 
-        let mounted = true
-        void import('@/engine/orchestrator')
-            .then(mod => {
-                if (!mounted) return
-                setCameraFovRef.current = mod.setThreeCameraFov
-            })
-            .catch(() => {
-                setCameraFovRef.current = () => { }
-            })
+    let mounted = true
+    void import('@/engine/orchestrator')
+      .then(mod => {
+        if (!mounted) return
+        setCameraFovRef.current = mod.setThreeCameraFov
+      })
+      .catch(() => {
+        setCameraFovRef.current = () => {}
+      })
 
-        return () => {
-            mounted = false
-            setCameraFovRef.current = () => { }
-        }
-    }, [])
+    return () => {
+      mounted = false
+      setCameraFovRef.current = () => {}
+    }
+  }, [])
 
-    useEffect(() => {
-        transitionProgress.set(progress)
-    }, [progress, transitionProgress])
+  useEffect(() => {
+    transitionProgress.set(progress)
+  }, [progress, transitionProgress])
 
-    useMotionValueEvent(cinematicFov, 'change', latest => {
-        const clamped = Math.min(68, Math.max(36, latest))
-        setCameraFovRef.current(clamped)
-        if (!canvas) return
-        canvas.style.setProperty('--camera-fov', clamped.toFixed(2))
-    })
+  useMotionValueEvent(cinematicFov, 'change', latest => {
+    const clamped = Math.min(68, Math.max(36, latest))
+    setCameraFovRef.current(clamped)
+    if (!canvas) return
+    canvas.style.setProperty('--camera-fov', clamped.toFixed(2))
+  })
 
-    useMotionValueEvent(cinematicOpacity, 'change', latest => {
-        if (!canvas) return
-        const clamped = Math.min(0.9, Math.max(0.18, latest))
-        canvas.style.opacity = clamped.toFixed(3)
-    })
+  useMotionValueEvent(cinematicOpacity, 'change', latest => {
+    if (!canvas) return
+    const clamped = Math.min(0.9, Math.max(0.18, latest))
+    canvas.style.opacity = clamped.toFixed(3)
+  })
 
-    useEffect(() => {
-        if (!canvas) return
+  useEffect(() => {
+    if (!canvas) return
 
-        const reset = () => {
-            setCameraFovRef.current(45)
-            canvas.style.opacity = '0.32'
-            canvas.style.transform = 'translate3d(0, 0, 0) scale(1)'
-            canvas.style.filter = 'saturate(1.06) contrast(1.03) blur(0px)'
-            canvas.style.setProperty('--camera-fov', '45')
-            canvas.style.setProperty('--transition-progress', '0')
-        }
+    const reset = () => {
+      setCameraFovRef.current(45)
+      canvas.style.opacity = '0.32'
+      canvas.style.transform = 'translate3d(0, 0, 0) scale(1)'
+      canvas.style.filter = 'saturate(1.06) contrast(1.03) blur(0px)'
+      canvas.style.setProperty('--camera-fov', '45')
+      canvas.style.setProperty('--transition-progress', '0')
+    }
 
-        if (!isTransitioning || phase === 'idle') {
-            reset()
-            return
-        }
+    if (!isTransitioning || phase === 'idle') {
+      reset()
+      return
+    }
 
-        const normalized = Math.min(1, Math.max(0, progress))
+    const normalized = Math.min(1, Math.max(0, progress))
 
-        const eased =
-            normalized < 0.5
-                ? 4 * normalized * normalized * normalized
-                : 1 - Math.pow(-2 * normalized + 2, 3) / 2
+    const eased =
+      normalized < 0.5
+        ? 4 * normalized * normalized * normalized
+        : 1 - Math.pow(-2 * normalized + 2, 3) / 2
 
-        canvas.style.setProperty('--transition-progress', eased.toFixed(4))
+    canvas.style.setProperty('--transition-progress', eased.toFixed(4))
 
-        if (phase === 'outro') {
-            const scale = 1 + 0.16 * eased
-            const blur = 1.2 * eased
+    if (phase === 'outro') {
+      const scale = 1 + 0.16 * eased
+      const blur = 1.2 * eased
 
-            canvas.style.transform = `translate3d(0, ${-12 * eased}px, 0) scale(${scale.toFixed(4)})`
-            canvas.style.filter = `saturate(${(1.1 + 0.3 * eased).toFixed(3)}) contrast(${(1.04 + 0.2 * eased).toFixed(3)}) blur(${blur.toFixed(2)}px)`
-            return
-        }
+      canvas.style.transform = `translate3d(0, ${-12 * eased}px, 0) scale(${scale.toFixed(4)})`
+      canvas.style.filter = `saturate(${(1.1 + 0.3 * eased).toFixed(3)}) contrast(${(1.04 + 0.2 * eased).toFixed(3)}) blur(${blur.toFixed(2)}px)`
+      return
+    }
 
-        const scale = 1.16 - 0.16 * eased
-        const blur = 1.2 - 1.2 * eased
+    const scale = 1.16 - 0.16 * eased
+    const blur = 1.2 - 1.2 * eased
 
-        canvas.style.transform = `translate3d(0, ${-10 + 10 * eased}px, 0) scale(${scale.toFixed(4)})`
-        canvas.style.filter = `saturate(${(1.34 - 0.27 * eased).toFixed(3)}) contrast(${(1.24 - 0.21 * eased).toFixed(3)}) blur(${blur.toFixed(2)}px)`
-    }, [canvas, isTransitioning, phase, progress])
+    canvas.style.transform = `translate3d(0, ${-10 + 10 * eased}px, 0) scale(${scale.toFixed(4)})`
+    canvas.style.filter = `saturate(${(1.34 - 0.27 * eased).toFixed(3)}) contrast(${(1.24 - 0.21 * eased).toFixed(3)}) blur(${blur.toFixed(2)}px)`
+  }, [canvas, isTransitioning, phase, progress])
 }

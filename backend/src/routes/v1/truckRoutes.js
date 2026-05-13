@@ -37,16 +37,21 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-router.post('/', requirePermission('trucks:create'), validate(schemas.truck), async (req, res, next) => {
-  try {
-    const newTruck = await truckService.createTruck(req.body);
-    res.status(201).json({
-      status: 'success',
-      data: newTruck,
-    });
-  } catch (error) {
-    next(error);
+router.post(
+  '/',
+  requirePermission('trucks:create'),
+  validate(schemas.truck),
+  async (req, res, next) => {
+    try {
+      const newTruck = await truckService.createTruck(req.body);
+      res.status(201).json({
+        status: 'success',
+        data: newTruck,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 module.exports = router;

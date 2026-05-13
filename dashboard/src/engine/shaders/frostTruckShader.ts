@@ -8,7 +8,7 @@
  * - Performance optimized for 60 FPS (no branching, minimal math)
  */
 
-import { Color } from 'three';
+import { Color } from 'three'
 
 export const FROST_TRUCK_VERTEX_SHADER = `
   varying vec3 vNormal;
@@ -23,7 +23,7 @@ export const FROST_TRUCK_VERTEX_SHADER = `
 
     gl_Position = projectionMatrix * mvPosition;
   }
-`;
+`
 
 export const FROST_TRUCK_FRAGMENT_SHADER = `
   uniform vec3 uFrostColor;
@@ -56,21 +56,21 @@ export const FROST_TRUCK_FRAGMENT_SHADER = `
 
     gl_FragColor = vec4(finalColor * uFrostIntensity, alpha);
   }
-`;
+`
 
 export interface FrostShaderUniforms {
-    [uniform: string]: { value: unknown };
-    uFrostColor: { value: Color };
-  uFrostIntensity: { value: number };
-  uTime: { value: number };
+  [uniform: string]: { value: unknown }
+  uFrostColor: { value: Color }
+  uFrostIntensity: { value: number }
+  uTime: { value: number }
 }
 
 export function createFrostShaderUniforms(
   frostColor: [number, number, number] = [0.4, 0.88, 0.98]
 ): FrostShaderUniforms {
   return {
-      uFrostColor: { value: new Color(...frostColor) },
-      uFrostIntensity: { value: 1 },
-      uTime: { value: 0 },
-  };
+    uFrostColor: { value: new Color(...frostColor) },
+    uFrostIntensity: { value: 1 },
+    uTime: { value: 0 },
+  }
 }

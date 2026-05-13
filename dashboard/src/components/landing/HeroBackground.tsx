@@ -47,9 +47,14 @@ function trimTrailingSlashes(url: URL): void {
 
 function isLocalHostLike(rawUrl: string): boolean {
   const lower = rawUrl.toLowerCase()
-  return lower === 'localhost' || lower === '127.0.0.1'
-    || lower.startsWith('localhost:') || lower.startsWith('localhost/')
-    || lower.startsWith('127.0.0.1:') || lower.startsWith('127.0.0.1/')
+  return (
+    lower === 'localhost' ||
+    lower === '127.0.0.1' ||
+    lower.startsWith('localhost:') ||
+    lower.startsWith('localhost/') ||
+    lower.startsWith('127.0.0.1:') ||
+    lower.startsWith('127.0.0.1/')
+  )
 }
 
 function toWebSocketProtocol(url: URL): string {
@@ -118,7 +123,8 @@ function resolveWebSocketUrl(): string {
     return 'ws://localhost:5000'
   }
 
-  const protocol = globalThis.window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const protocol =
+    globalThis.window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   return `${protocol}//${globalThis.window.location.hostname}:5000`
 }
 
@@ -299,7 +305,11 @@ function HeroBackground({
   React.useEffect(() => {
     if (E2E_LIGHT_MODE) return
 
-    const sendCameraFlyTo = (target: ReturnType<typeof useCameraSelectionStore.getState>['cameraTarget']) => {
+    const sendCameraFlyTo = (
+      target: ReturnType<
+        typeof useCameraSelectionStore.getState
+      >['cameraTarget']
+    ) => {
       if (!workerRef.current) return
 
       const msg: CinematicWorkerMessage = {

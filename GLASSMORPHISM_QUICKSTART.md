@@ -73,7 +73,6 @@ export default function MyComponent() {
 
 ```jsx
 import { Tilt } from '@/app/dashboard/page'
-
 ;<Tilt>
   <GlassCard>
     <div className='p-6'>Tilt your mouse!</div>
@@ -86,7 +85,6 @@ import { Tilt } from '@/app/dashboard/page'
 ```jsx
 import { GlassCard } from '@/app/dashboard/page'
 import { motion } from 'framer-motion'
-
 ;<GlassCard layoutId='unique-id'>
   <motion.div
     initial={{ opacity: 0, y: 20 }}

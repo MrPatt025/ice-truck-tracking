@@ -32,9 +32,7 @@ export function useFocusTrap(isActive: boolean) {
 
     const handleEscapeKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        const closeButton = container.querySelector<HTMLElement>(
-          '[data-close]'
-        )
+        const closeButton = container.querySelector<HTMLElement>('[data-close]')
         closeButton?.click()
       }
     }
@@ -118,5 +116,3 @@ export function useKeyboardNavigation<T>(
 
   return currentIndex.current
 }
-
-

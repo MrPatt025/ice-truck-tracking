@@ -21,7 +21,8 @@ export function useRealTimeTracking() {
     if (!user || !token) return
 
     // Connect to WebSocket server using the real backend URL (or fallback)
-    const WEBSOCKET_URL = process.env.EXPO_PUBLIC_API_URL || 'ws://localhost:5000'
+    const WEBSOCKET_URL =
+      process.env.EXPO_PUBLIC_API_URL || 'ws://localhost:5000'
     const socket: Socket = io(WEBSOCKET_URL, {
       auth: { token },
       transports: ['websocket'],
@@ -44,8 +45,8 @@ export function useRealTimeTracking() {
 
     // Listen for real-time truck updates
     socket.on('truck-update', (payload: Truck) => {
-      setTrucks((prev) => {
-        const idx = prev.findIndex((t) => t.id === payload.id)
+      setTrucks(prev => {
+        const idx = prev.findIndex(t => t.id === payload.id)
         if (idx >= 0) {
           const next = [...prev]
           next[idx] = { ...next[idx], ...payload }

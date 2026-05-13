@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
 import { ShieldCheck, FileBadge2, Siren, ClipboardCheck } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'

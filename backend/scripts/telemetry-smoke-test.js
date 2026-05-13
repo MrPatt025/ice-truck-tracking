@@ -16,7 +16,7 @@ const PUBLISH_TIMEOUT_MS = 8000;
 const VERIFY_TIMEOUT_MS = 12000;
 
 async function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function waitForCount(expected) {
@@ -24,7 +24,7 @@ async function waitForCount(expected) {
   while (Date.now() - start < VERIFY_TIMEOUT_MS) {
     const rows = await db.query(
       'SELECT COUNT(*)::int AS total FROM telemetry WHERE truck_id = $1',
-      [TEST_TRUCK_ID],
+      [TEST_TRUCK_ID]
     );
     const total = rows?.[0]?.total ?? 0;
     if (total >= expected) return total;
@@ -33,7 +33,7 @@ async function waitForCount(expected) {
 
   const finalRows = await db.query(
     'SELECT COUNT(*)::int AS total FROM telemetry WHERE truck_id = $1',
-    [TEST_TRUCK_ID],
+    [TEST_TRUCK_ID]
   );
   return finalRows?.[0]?.total ?? 0;
 }
@@ -100,12 +100,14 @@ async function main() {
         timestamp: now + i,
       };
 
-      publishes.push(new Promise((resolve, reject) => {
-        publisher.publish(TELEMETRY_TOPIC, JSON.stringify(payload), { qos: 1 }, (err) => {
-          if (err) reject(err);
-          else resolve();
-        });
-      }));
+      publishes.push(
+        new Promise((resolve, reject) => {
+          publisher.publish(TELEMETRY_TOPIC, JSON.stringify(payload), { qos: 1 }, err => {
+            if (err) reject(err);
+            else resolve();
+          });
+        })
+      );
     }
 
     await Promise.all(publishes);
@@ -130,7 +132,7 @@ async function main() {
 
     if (!passed) {
       throw new Error(
-        `Pipeline verification failed. expected=${TOTAL_MESSAGES}, persisted=${persisted}, broadcast=${broadcastCount}`,
+        `Pipeline verification failed. expected=${TOTAL_MESSAGES}, persisted=${persisted}, broadcast=${broadcastCount}`
       );
     }
   } finally {

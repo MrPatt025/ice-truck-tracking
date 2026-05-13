@@ -1,17 +1,23 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
-import dynamic from 'next/dynamic';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react'
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
+import dynamic from 'next/dynamic'
+import { motion } from 'framer-motion'
 import {
-  BarChart3, Download, Truck, Thermometer,
-  TrendingUp, TrendingDown, Package, Fuel,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import AppSidebar from '@/components/AppSidebar';
-import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
-import type { ReportsTab } from '@/components/reports/ReportsCharts';
+  BarChart3,
+  Download,
+  Truck,
+  Thermometer,
+  TrendingUp,
+  TrendingDown,
+  Package,
+  Fuel,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import AppSidebar from '@/components/AppSidebar'
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
+import type { ReportsTab } from '@/components/reports/ReportsCharts'
 
 const MOCK_BASE_DATE = new Date('2026-01-01T00:00:00.000Z')
 
@@ -21,7 +27,8 @@ function seededNoise(seed: number): number {
 }
 
 const ReportsCharts = dynamic(
-  () => import('@/components/reports/ReportsCharts').then(mod => mod.ReportsCharts),
+  () =>
+    import('@/components/reports/ReportsCharts').then(mod => mod.ReportsCharts),
   {
     ssr: false,
     loading: () => (
@@ -55,7 +62,7 @@ const deliveryData = Array.from({ length: 7 }, (_, i) => {
     failed: Math.floor(seededNoise(i + 301) * 5),
     pending: 10 + Math.floor(seededNoise(i + 401) * 15),
   }
-});
+})
 
 const fuelData = Array.from({ length: 30 }, (_, i) => {
   const d = new Date(MOCK_BASE_DATE)
@@ -65,20 +72,20 @@ const fuelData = Array.from({ length: 30 }, (_, i) => {
     consumption: 200 + seededNoise(i + 501) * 100,
     cost: 8000 + seededNoise(i + 601) * 4000,
   }
-});
+})
 
 const fleetDistribution = [
   { name: 'Active', value: 35, color: '#10b981' },
   { name: 'Idle', value: 8, color: '#f59e0b' },
   { name: 'Maintenance', value: 4, color: '#f97316' },
   { name: 'Offline', value: 3, color: '#6b7280' },
-];
+]
 
-type TimeRange = '24h' | '7d' | '30d' | '90d';
+type TimeRange = '24h' | '7d' | '30d' | '90d'
 
 export default function ReportsPage() {
-  const [timeRange, setTimeRange] = useState<TimeRange>('7d');
-  const [activeTab, setActiveTab] = useState<ReportsTab>('overview');
+  const [timeRange, setTimeRange] = useState<TimeRange>('7d')
+  const [activeTab, setActiveTab] = useState<ReportsTab>('overview')
 
   const summaryCards = [
     {
@@ -117,14 +124,14 @@ export default function ReportsPage() {
       color: 'text-amber-500',
       bg: 'bg-amber-50 dark:bg-amber-950/30',
     },
-  ];
+  ]
 
   const tabs = [
     { key: 'overview', label: 'Overview' },
     { key: 'temperature', label: 'Temperature' },
     { key: 'delivery', label: 'Deliveries' },
     { key: 'fuel', label: 'Fuel & Costs' },
-  ] as const;
+  ] as const
 
   return (
     <>

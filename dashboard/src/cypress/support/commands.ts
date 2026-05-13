@@ -1,3 +1,1 @@
 ﻿// Cypress custom commands
-
-

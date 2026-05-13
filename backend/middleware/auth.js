@@ -17,9 +17,7 @@ module.exports = function authorize(roles = []) {
     const authHeader = req.headers.authorization;
 
     // รองรับทั้ง Bearer token และ token ธรรมดา
-    const token = authHeader?.startsWith('Bearer ')
-      ? authHeader.split(' ')[1]
-      : authHeader;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
 
     if (!token) {
       return res.status(401).json({ message: '⚠️ ไม่ได้รับ Token ในคำขอ' });
@@ -32,7 +30,7 @@ module.exports = function authorize(roles = []) {
       req.user = {
         id: decoded.id,
         role: decoded.role,
-        username: decoded.username || null
+        username: decoded.username || null,
       };
 
       // ตรวจสอบสิทธิ์ (role) ถ้ากำหนดไว้

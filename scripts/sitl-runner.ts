@@ -22,63 +22,63 @@
  */
 
 import {
-    SITLSimulator,
-    type SITLConfig,
-} from '../dashboard/src/engine/__tests__/fixtures/sitl-simulator';
+  SITLSimulator,
+  type SITLConfig,
+} from '../dashboard/src/engine/__tests__/fixtures/sitl-simulator'
 
 // ─── Argument Parsing ──────────────────────────────────────────
 
 function parseArgs(argv: string[]): {
-    trucks: number;
-    ticks: number;
-    mode: 'batch' | 'stream';
-    interval: number;
-    loss: number;
-    burst: boolean;
-    summary: boolean;
-    jsonArray: boolean;
+  trucks: number
+  ticks: number
+  mode: 'batch' | 'stream'
+  interval: number
+  loss: number
+  burst: boolean
+  summary: boolean
+  jsonArray: boolean
 } {
-    const args = argv.slice(2);
-    const opts = {
-        trucks: 100,
-        ticks: 10,
-        mode: 'batch' as 'batch' | 'stream',
-        interval: 500,
-        loss: 0.02,
-        burst: false,
-        summary: false,
-        jsonArray: false,
-    };
+  const args = argv.slice(2)
+  const opts = {
+    trucks: 100,
+    ticks: 10,
+    mode: 'batch' as 'batch' | 'stream',
+    interval: 500,
+    loss: 0.02,
+    burst: false,
+    summary: false,
+    jsonArray: false,
+  }
 
-    for (let i = 0; i < args.length; i++) {
-        switch (args[i]) {
-            case '--trucks':
-                opts.trucks = Number.parseInt(args[++i], 10);
-                break;
-            case '--ticks':
-                opts.ticks = Number.parseInt(args[++i], 10);
-                break;
-            case '--mode':
-                opts.mode = args[++i] as 'batch' | 'stream';
-                break;
-            case '--interval':
-                opts.interval = Number.parseInt(args[++i], 10);
-                break;
-            case '--loss':
-                opts.loss = Number.parseFloat(args[++i]);
-                break;
-            case '--burst':
-                opts.burst = true;
-                break;
-            case '--summary':
-                opts.summary = true;
-                break;
-            case '--json-array':
-                opts.jsonArray = true;
-                break;
-            case '--help':
-            case '-h':
-                console.log(`
+  for (let i = 0; i < args.length; i++) {
+    switch (args[i]) {
+      case '--trucks':
+        opts.trucks = Number.parseInt(args[++i], 10)
+        break
+      case '--ticks':
+        opts.ticks = Number.parseInt(args[++i], 10)
+        break
+      case '--mode':
+        opts.mode = args[++i] as 'batch' | 'stream'
+        break
+      case '--interval':
+        opts.interval = Number.parseInt(args[++i], 10)
+        break
+      case '--loss':
+        opts.loss = Number.parseFloat(args[++i])
+        break
+      case '--burst':
+        opts.burst = true
+        break
+      case '--summary':
+        opts.summary = true
+        break
+      case '--json-array':
+        opts.jsonArray = true
+        break
+      case '--help':
+      case '-h':
+        console.log(`
 SITL Simulator — Standalone CLI Runner
 
 Usage:
@@ -94,93 +94,103 @@ Options:
   --summary         Print summary statistics at end
   --json-array      Output as JSON array instead of NDJSON
   --help, -h        Show this help message
-`);
-                process.exit(0);
-        }
+`)
+        process.exit(0)
     }
-    return opts;
+  }
+  return opts
 }
 
 // ─── Main ──────────────────────────────────────────────────────
 
-function runBatchMode(sim: SITLSimulator, opts: ReturnType<typeof parseArgs>): void {
-    const allBatches: unknown[] = [];
+function runBatchMode(
+  sim: SITLSimulator,
+  opts: ReturnType<typeof parseArgs>
+): void {
+  const allBatches: unknown[] = []
 
-    for (let t = 0; t < opts.ticks; t++) {
-        if (opts.burst && t === 5) {
-            sim.triggerBurst();
-            process.stderr.write('[SITL] Burst triggered at tick 5\n');
-        }
-
-        const batch = sim.tick();
-        if (opts.jsonArray) {
-            allBatches.push(...batch);
-        } else {
-            for (const telemetry of batch) {
-                process.stdout.write(JSON.stringify(telemetry) + '\n');
-            }
-        }
+  for (let t = 0; t < opts.ticks; t++) {
+    if (opts.burst && t === 5) {
+      sim.triggerBurst()
+      process.stderr.write('[SITL] Burst triggered at tick 5\n')
     }
 
+    const batch = sim.tick()
     if (opts.jsonArray) {
-        process.stdout.write(JSON.stringify(allBatches, null, 2) + '\n');
+      allBatches.push(...batch)
+    } else {
+      for (const telemetry of batch) {
+        process.stdout.write(JSON.stringify(telemetry) + '\n')
+      }
     }
+  }
 
-    if (opts.summary) {
-        process.stderr.write(`\n[SITL] Summary:\n${JSON.stringify(sim.stats, null, 2)}\n`);
-    }
+  if (opts.jsonArray) {
+    process.stdout.write(JSON.stringify(allBatches, null, 2) + '\n')
+  }
+
+  if (opts.summary) {
+    process.stderr.write(
+      `\n[SITL] Summary:\n${JSON.stringify(sim.stats, null, 2)}\n`
+    )
+  }
 }
 
-function runStreamMode(sim: SITLSimulator, opts: ReturnType<typeof parseArgs>): void {
-    let tickCount = 0;
+function runStreamMode(
+  sim: SITLSimulator,
+  opts: ReturnType<typeof parseArgs>
+): void {
+  let tickCount = 0
 
-    sim.start((batch) => {
-        tickCount++;
-        for (const telemetry of batch) {
-            process.stdout.write(JSON.stringify(telemetry) + '\n');
-        }
+  sim.start(batch => {
+    tickCount++
+    for (const telemetry of batch) {
+      process.stdout.write(JSON.stringify(telemetry) + '\n')
+    }
 
-        if (opts.burst && tickCount === 5) {
-            sim.triggerBurst();
-            process.stderr.write('[SITL] Burst triggered at tick 5\n');
-        }
-    });
+    if (opts.burst && tickCount === 5) {
+      sim.triggerBurst()
+      process.stderr.write('[SITL] Burst triggered at tick 5\n')
+    }
+  })
 
-    const shutdown = () => {
-        sim.stop();
-        if (opts.summary) {
-            process.stderr.write(`\n[SITL] Summary:\n${JSON.stringify(sim.stats, null, 2)}\n`);
-        }
-        process.exit(0);
-    };
+  const shutdown = () => {
+    sim.stop()
+    if (opts.summary) {
+      process.stderr.write(
+        `\n[SITL] Summary:\n${JSON.stringify(sim.stats, null, 2)}\n`
+      )
+    }
+    process.exit(0)
+  }
 
-    process.on('SIGINT', shutdown);
-    process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown)
+  process.on('SIGTERM', shutdown)
 
-    process.stderr.write('[SITL] Streaming... Press Ctrl+C to stop.\n');
+  process.stderr.write('[SITL] Streaming... Press Ctrl+C to stop.\n')
 }
 
 function main(): void {
-    const opts = parseArgs(process.argv);
+  const opts = parseArgs(process.argv)
 
-    const config: Partial<SITLConfig> = {
-        truckCount: opts.trucks,
-        tickIntervalMs: opts.interval,
-        packetLossRate: opts.loss,
-    };
+  const config: Partial<SITLConfig> = {
+    truckCount: opts.trucks,
+    tickIntervalMs: opts.interval,
+    packetLossRate: opts.loss,
+  }
 
-    const sim = new SITLSimulator(config);
+  const sim = new SITLSimulator(config)
 
-    process.stderr.write(
-        `[SITL] Starting simulator: ${opts.trucks} trucks, mode=${opts.mode}, ` +
-        `interval=${opts.interval}ms, loss=${(opts.loss * 100).toFixed(1)}%\n`,
-    );
+  process.stderr.write(
+    `[SITL] Starting simulator: ${opts.trucks} trucks, mode=${opts.mode}, ` +
+      `interval=${opts.interval}ms, loss=${(opts.loss * 100).toFixed(1)}%\n`
+  )
 
-    if (opts.mode === 'batch') {
-        runBatchMode(sim, opts);
-    } else {
-        runStreamMode(sim, opts);
-    }
+  if (opts.mode === 'batch') {
+    runBatchMode(sim, opts)
+  } else {
+    runStreamMode(sim, opts)
+  }
 }
 
-main();
+main()

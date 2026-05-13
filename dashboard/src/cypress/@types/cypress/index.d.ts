@@ -9,11 +9,20 @@ declare namespace Cypress {
 
   interface Chainable<Subject = unknown> {
     visit(url: string): Chainable<Subject>
-    intercept(methodOrUrl: string, urlOrResponse?: unknown, response?: unknown): Chainable<Subject>
+    intercept(
+      methodOrUrl: string,
+      urlOrResponse?: unknown,
+      response?: unknown
+    ): Chainable<Subject>
     get(selector: string): Chainable<JQueryLike>
     wait(aliasOrTime: string | number): Chainable<unknown>
-    request(url: string): Chainable<{ status: number; body: Record<string, unknown> }>
-    request(method: string, url: string): Chainable<{ status: number; body: Record<string, unknown> }>
+    request(
+      url: string
+    ): Chainable<{ status: number; body: Record<string, unknown> }>
+    request(
+      method: string,
+      url: string
+    ): Chainable<{ status: number; body: Record<string, unknown> }>
     window(): Chainable<Window>
     focused(): Chainable<JQueryLike>
     reload(): Chainable<Subject>
@@ -32,12 +41,19 @@ declare namespace Cypress {
       config?: object
     ): Chainable<Subject>
     tab(options?: Partial<{ shift: boolean }>): Chainable<Subject>
-    should(chainers: string, value?: unknown, value2?: unknown): Chainable<Subject>
+    should(
+      chainers: string,
+      value?: unknown,
+      value2?: unknown
+    ): Chainable<Subject>
     click(): Chainable<Subject>
     first(): Chainable<Subject>
     rightclick(): Chainable<Subject>
     select(value: string): Chainable<Subject>
-    trigger(eventName: string, options?: Record<string, unknown>): Chainable<Subject>
+    trigger(
+      eventName: string,
+      options?: Record<string, unknown>
+    ): Chainable<Subject>
     then<TResult>(fn: (value: Subject) => TResult): Chainable<TResult>
     its(prop: 'performance'): Chainable<Performance>
     its(prop: string): Chainable<unknown>

@@ -6,140 +6,154 @@
 import {
   dispatchBackendHealthEvent,
   type BackendHealthStatus,
-} from '@/lib/healthEvents';
-import { resolveApiBaseV1 } from '@/lib/backendUrl';
+} from '@/lib/healthEvents'
+import { resolveApiBaseV1 } from '@/lib/backendUrl'
 
-const API_BASE = resolveApiBaseV1();
+const API_BASE = resolveApiBaseV1()
 
-let latestBackendHealthStatus: BackendHealthStatus | null = null;
+let latestBackendHealthStatus: BackendHealthStatus | null = null
 
-type MutationMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+type MutationMethod = 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 type QueuedMutation = Readonly<{
-  id: string;
-  endpoint: string;
-  method: MutationMethod;
-  body: string | null;
-  headers: Readonly<Record<string, string>>;
-  createdAt: number;
-}>;
+  id: string
+  endpoint: string
+  method: MutationMethod
+  body: string | null
+  headers: Readonly<Record<string, string>>
+  createdAt: number
+}>
 
-const OFFLINE_MUTATION_QUEUE_KEY = 'ice-truck:offline-mutation-queue:v1';
-const OFFLINE_SYNC_TAG = 'ice-truck-fleet-sync';
+const OFFLINE_MUTATION_QUEUE_KEY = 'ice-truck:offline-mutation-queue:v1'
+const OFFLINE_SYNC_TAG = 'ice-truck-fleet-sync'
 
-let isQueueFlushRunning = false;
-let onlineListenerAttached = false;
+let isQueueFlushRunning = false
+let onlineListenerAttached = false
 
 function createStableMutationId(): string {
-  const cryptoApi = globalThis.crypto;
+  const cryptoApi = globalThis.crypto
   if (cryptoApi?.randomUUID) {
-    return `${Date.now()}-${cryptoApi.randomUUID()}`;
+    return `${Date.now()}-${cryptoApi.randomUUID()}`
   }
 
   if (cryptoApi?.getRandomValues) {
-    const bytes = new Uint8Array(16);
-    cryptoApi.getRandomValues(bytes);
-    const token = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
-    return `${Date.now()}-${token}`;
+    const bytes = new Uint8Array(16)
+    cryptoApi.getRandomValues(bytes)
+    const token = Array.from(bytes, byte =>
+      byte.toString(16).padStart(2, '0')
+    ).join('')
+    return `${Date.now()}-${token}`
   }
 
-  return `${Date.now()}-offline`;
+  return `${Date.now()}-offline`
 }
 
 function canUseBrowserStorage(): boolean {
-  return globalThis.window !== undefined;
+  return globalThis.window !== undefined
 }
 
 function isMutationMethod(method: string): method is MutationMethod {
-  return method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE';
+  return (
+    method === 'POST' ||
+    method === 'PUT' ||
+    method === 'PATCH' ||
+    method === 'DELETE'
+  )
 }
 
 export interface ApiRequestOptions extends RequestInit {
-  queueOffline?: boolean;
+  queueOffline?: boolean
 }
 
-function shouldQueueOfflineMutation(method: string, options: ApiRequestOptions): boolean {
-  if (!isMutationMethod(method)) return false;
-  if (!canUseBrowserStorage()) return false;
-  return options.queueOffline === true;
+function shouldQueueOfflineMutation(
+  method: string,
+  options: ApiRequestOptions
+): boolean {
+  if (!isMutationMethod(method)) return false
+  if (!canUseBrowserStorage()) return false
+  return options.queueOffline === true
 }
 
 function readQueuedMutations(): QueuedMutation[] {
-  if (!canUseBrowserStorage()) return [];
+  if (!canUseBrowserStorage()) return []
 
   try {
-    const raw = globalThis.window.localStorage.getItem(OFFLINE_MUTATION_QUEUE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
+    const raw = globalThis.window.localStorage.getItem(
+      OFFLINE_MUTATION_QUEUE_KEY
+    )
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
     return parsed.filter((entry): entry is QueuedMutation => {
-      if (!entry || typeof entry !== 'object') return false;
-      const candidate = entry as Partial<QueuedMutation>;
+      if (!entry || typeof entry !== 'object') return false
+      const candidate = entry as Partial<QueuedMutation>
       return (
-        typeof candidate.id === 'string'
-        && typeof candidate.endpoint === 'string'
-        && typeof candidate.method === 'string'
-        && isMutationMethod(candidate.method)
-        && typeof candidate.createdAt === 'number'
-      );
-    });
+        typeof candidate.id === 'string' &&
+        typeof candidate.endpoint === 'string' &&
+        typeof candidate.method === 'string' &&
+        isMutationMethod(candidate.method) &&
+        typeof candidate.createdAt === 'number'
+      )
+    })
   } catch {
-    return [];
+    return []
   }
 }
 
 function writeQueuedMutations(queue: readonly QueuedMutation[]): void {
-  if (!canUseBrowserStorage()) return;
+  if (!canUseBrowserStorage()) return
   globalThis.window.localStorage.setItem(
     OFFLINE_MUTATION_QUEUE_KEY,
     JSON.stringify(queue)
-  );
+  )
 }
 
 async function tryRegisterBackgroundSync(): Promise<void> {
   if (globalThis.window === undefined || globalThis.navigator === undefined) {
-    return;
+    return
   }
 
-  if (!('serviceWorker' in globalThis.navigator)) return;
+  if (!('serviceWorker' in globalThis.navigator)) return
 
   try {
-    const registration = await globalThis.navigator.serviceWorker.ready;
+    const registration = await globalThis.navigator.serviceWorker.ready
     const syncCapable = registration as ServiceWorkerRegistration & {
-      sync?: { register: (tag: string) => Promise<void> };
-    };
+      sync?: { register: (tag: string) => Promise<void> }
+    }
 
     if (typeof syncCapable.sync?.register === 'function') {
-      await syncCapable.sync.register(OFFLINE_SYNC_TAG);
+      await syncCapable.sync.register(OFFLINE_SYNC_TAG)
     }
   } catch {
     // Background sync can be unsupported/blocked. Online replay fallback remains active.
   }
 }
 
-function enqueueOfflineMutation(item: Omit<QueuedMutation, 'id' | 'createdAt'>): void {
-  const queue = readQueuedMutations();
+function enqueueOfflineMutation(
+  item: Omit<QueuedMutation, 'id' | 'createdAt'>
+): void {
+  const queue = readQueuedMutations()
   const queuedItem: QueuedMutation = {
     id: createStableMutationId(),
     createdAt: Date.now(),
     ...item,
-  };
-  queue.push(queuedItem);
-  writeQueuedMutations(queue);
+  }
+  queue.push(queuedItem)
+  writeQueuedMutations(queue)
 }
 
 async function flushQueuedMutations(): Promise<void> {
-  if (!canUseBrowserStorage() || isQueueFlushRunning) return;
+  if (!canUseBrowserStorage() || isQueueFlushRunning) return
   if (globalThis.navigator?.onLine === false) {
-    return;
+    return
   }
 
-  const queue = readQueuedMutations();
-  if (queue.length === 0) return;
+  const queue = readQueuedMutations()
+  if (queue.length === 0) return
 
-  isQueueFlushRunning = true;
+  isQueueFlushRunning = true
 
-  const remaining: QueuedMutation[] = [];
+  const remaining: QueuedMutation[] = []
 
   for (const item of queue) {
     try {
@@ -151,30 +165,30 @@ async function flushQueuedMutations(): Promise<void> {
           ...item.headers,
         },
         credentials: 'include',
-      });
+      })
 
       if (!response.ok) {
-        remaining.push(item);
+        remaining.push(item)
       }
     } catch {
-      remaining.push(item);
-      break;
+      remaining.push(item)
+      break
     }
   }
 
-  writeQueuedMutations(remaining);
-  isQueueFlushRunning = false;
+  writeQueuedMutations(remaining)
+  isQueueFlushRunning = false
 }
 
 function ensureOfflineMutationSync(): void {
-  if (!canUseBrowserStorage() || onlineListenerAttached) return;
+  if (!canUseBrowserStorage() || onlineListenerAttached) return
 
-  onlineListenerAttached = true;
+  onlineListenerAttached = true
   globalThis.window.addEventListener('online', () => {
-    void flushQueuedMutations();
-  });
+    void flushQueuedMutations()
+  })
 
-  void flushQueuedMutations();
+  void flushQueuedMutations()
 }
 
 function notifyBackendHealth(
@@ -182,56 +196,60 @@ function notifyBackendHealth(
   statusCode?: number,
   reason?: string
 ): void {
-  if (latestBackendHealthStatus === status && statusCode === undefined && !reason) {
-    return;
+  if (
+    latestBackendHealthStatus === status &&
+    statusCode === undefined &&
+    !reason
+  ) {
+    return
   }
 
-  latestBackendHealthStatus = status;
+  latestBackendHealthStatus = status
   dispatchBackendHealthEvent({
     status,
     source: 'dashboard-api-service',
     statusCode,
     reason,
-  });
+  })
 }
 
 // ── Request Helpers ────────────────────────────────────────
 async function getAuthToken(): Promise<string | null> {
-  const cookie = globalThis.document?.cookie;
-  if (!cookie) return null;
+  const cookie = globalThis.document?.cookie
+  if (!cookie) return null
 
   const tokenPair = cookie
     .split('; ')
-    .find((pair) => pair.startsWith('access_token='));
+    .find(pair => pair.startsWith('access_token='))
 
-  return tokenPair ? tokenPair.slice('access_token='.length) : null;
+  return tokenPair ? tokenPair.slice('access_token='.length) : null
 }
 
 async function apiRequest<T>(
   endpoint: string,
   options: ApiRequestOptions = {}
 ): Promise<T> {
-  ensureOfflineMutationSync();
+  ensureOfflineMutationSync()
 
-  const token = await getAuthToken();
-  const resolvedMethod = (options.method ?? 'GET').toUpperCase();
+  const token = await getAuthToken()
+  const resolvedMethod = (options.method ?? 'GET').toUpperCase()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let res: Response;
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  let res: Response
   try {
     res = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
       method: resolvedMethod,
       headers,
       credentials: 'include',
-    });
+    })
   } catch {
     if (shouldQueueOfflineMutation(resolvedMethod, options)) {
       enqueueOfflineMutation({
@@ -239,63 +257,76 @@ async function apiRequest<T>(
         method: resolvedMethod as MutationMethod,
         body: typeof options.body === 'string' ? options.body : null,
         headers,
-      });
-      await tryRegisterBackgroundSync();
-      notifyBackendHealth('degraded', undefined, 'offline-queued');
+      })
+      await tryRegisterBackgroundSync()
+      notifyBackendHealth('degraded', undefined, 'offline-queued')
       return {
         queued: true,
         queuedAt: new Date().toISOString(),
-      } as T;
+      } as T
     }
 
-    notifyBackendHealth('degraded', undefined, 'network-error');
-    throw new ApiError(0, 'Network request failed');
+    notifyBackendHealth('degraded', undefined, 'network-error')
+    throw new ApiError(0, 'Network request failed')
   }
 
   if (res.status >= 500) {
-    notifyBackendHealth('degraded', res.status, 'server-error');
+    notifyBackendHealth('degraded', res.status, 'server-error')
   } else if (res.ok) {
-    notifyBackendHealth('healthy');
+    notifyBackendHealth('healthy')
   }
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Request failed' }));
-    throw new ApiError(res.status, err.message || 'Unknown error');
+    const err = await res.json().catch(() => ({ message: 'Request failed' }))
+    throw new ApiError(res.status, err.message || 'Unknown error')
   }
 
-  if (res.status === 204) return {} as T;
-  return res.json();
+  if (res.status === 204) return {} as T
+  return res.json()
 }
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-    this.name = 'ApiError';
+  constructor(
+    public status: number,
+    message: string
+  ) {
+    super(message)
+    this.name = 'ApiError'
   }
 }
 
 /** Build endpoint with optional query string */
 function withQuery(path: string, qs: string): string {
-  return qs ? `${path}?${qs}` : path;
+  return qs ? `${path}?${qs}` : path
 }
 
 // ── Fleet API ──────────────────────────────────────────────
 export const fleetApi = {
-  getTrucks: (params?: { status?: string; search?: string; page?: number; limit?: number }) => {
-    const searchParams = new URLSearchParams();
-    if (params?.status) searchParams.set('status', params.status);
-    if (params?.search) searchParams.set('search', params.search);
-    if (params?.page) searchParams.set('page', String(params.page));
-    if (params?.limit) searchParams.set('limit', String(params.limit));
-    const qs = searchParams.toString();
-    return apiRequest<{ trucks: TruckResponse[]; total: number; page: number }>(withQuery('/trucks', qs));
+  getTrucks: (params?: {
+    status?: string
+    search?: string
+    page?: number
+    limit?: number
+  }) => {
+    const searchParams = new URLSearchParams()
+    if (params?.status) searchParams.set('status', params.status)
+    if (params?.search) searchParams.set('search', params.search)
+    if (params?.page) searchParams.set('page', String(params.page))
+    if (params?.limit) searchParams.set('limit', String(params.limit))
+    const qs = searchParams.toString()
+    return apiRequest<{ trucks: TruckResponse[]; total: number; page: number }>(
+      withQuery('/trucks', qs)
+    )
   },
 
-  getTruck: (id: string) =>
-    apiRequest<TruckResponse>(`/trucks/${id}`),
+  getTruck: (id: string) => apiRequest<TruckResponse>(`/trucks/${id}`),
 
   updateTruck: async (id: string, data: Partial<TruckResponse>) =>
-    apiRequest<TruckResponse>(`/trucks/${id}`, { method: 'PUT', body: JSON.stringify(data), queueOffline: true }),
+    apiRequest<TruckResponse>(`/trucks/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+      queueOffline: true,
+    }),
 
   updateTruckStatus: (id: string, status: TruckStatus) =>
     apiRequest<TruckResponse>(`/trucks/${id}`, {
@@ -306,16 +337,16 @@ export const fleetApi = {
   addTruckNote: (
     id: string,
     payload: {
-      note: string;
-      author?: string;
-      createdAt?: string;
+      note: string
+      author?: string
+      createdAt?: string
     }
   ) =>
     apiRequest<{
-      id?: string;
-      note?: string;
-      queued?: boolean;
-      queuedAt?: string;
+      id?: string
+      note?: string
+      queued?: boolean
+      queuedAt?: string
     }>(`/trucks/${id}/notes`, {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -324,26 +355,38 @@ export const fleetApi = {
   deleteTruck: (id: string) =>
     apiRequest<void>(`/trucks/${id}`, { method: 'DELETE' }),
 
-  getTruckTelemetry: (id: string, params?: { from?: string; to?: string; interval?: string }) => {
-    const searchParams = new URLSearchParams();
-    if (params?.from) searchParams.set('from', params.from);
-    if (params?.to) searchParams.set('to', params.to);
-    if (params?.interval) searchParams.set('interval', params.interval);
-    const qs = searchParams.toString();
-    return apiRequest<{ data: TelemetryResponse[] }>(withQuery(`/trucks/${id}/telemetry`, qs));
+  getTruckTelemetry: (
+    id: string,
+    params?: { from?: string; to?: string; interval?: string }
+  ) => {
+    const searchParams = new URLSearchParams()
+    if (params?.from) searchParams.set('from', params.from)
+    if (params?.to) searchParams.set('to', params.to)
+    if (params?.interval) searchParams.set('interval', params.interval)
+    const qs = searchParams.toString()
+    return apiRequest<{ data: TelemetryResponse[] }>(
+      withQuery(`/trucks/${id}/telemetry`, qs)
+    )
   },
-};
+}
 
 // ── Alerts API ─────────────────────────────────────────────
 export const alertsApi = {
-  getAlerts: (params?: { severity?: string; status?: string; page?: number; limit?: number }) => {
-    const searchParams = new URLSearchParams();
-    if (params?.severity) searchParams.set('severity', params.severity);
-    if (params?.status) searchParams.set('status', params.status);
-    if (params?.page) searchParams.set('page', String(params.page));
-    if (params?.limit) searchParams.set('limit', String(params.limit));
-    const qs = searchParams.toString();
-    return apiRequest<{ alerts: AlertResponse[]; total: number }>(withQuery('/alerts', qs));
+  getAlerts: (params?: {
+    severity?: string
+    status?: string
+    page?: number
+    limit?: number
+  }) => {
+    const searchParams = new URLSearchParams()
+    if (params?.severity) searchParams.set('severity', params.severity)
+    if (params?.status) searchParams.set('status', params.status)
+    if (params?.page) searchParams.set('page', String(params.page))
+    if (params?.limit) searchParams.set('limit', String(params.limit))
+    const qs = searchParams.toString()
+    return apiRequest<{ alerts: AlertResponse[]; total: number }>(
+      withQuery('/alerts', qs)
+    )
   },
 
   acknowledgeAlert: (id: string) =>
@@ -356,46 +399,61 @@ export const alertsApi = {
     apiRequest<void>(`/alerts/${id}`, { method: 'DELETE' }),
 
   // Alert Rules
-  getRules: () =>
-    apiRequest<{ rules: AlertRuleResponse[] }>('/alerts/rules'),
+  getRules: () => apiRequest<{ rules: AlertRuleResponse[] }>('/alerts/rules'),
 
   createRule: (rule: CreateAlertRuleRequest) =>
-    apiRequest<AlertRuleResponse>('/alerts/rules', { method: 'POST', body: JSON.stringify(rule) }),
+    apiRequest<AlertRuleResponse>('/alerts/rules', {
+      method: 'POST',
+      body: JSON.stringify(rule),
+    }),
 
   updateRule: (id: string, rule: Partial<CreateAlertRuleRequest>) =>
-    apiRequest<AlertRuleResponse>(`/alerts/rules/${id}`, { method: 'PUT', body: JSON.stringify(rule) }),
+    apiRequest<AlertRuleResponse>(`/alerts/rules/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(rule),
+    }),
 
   deleteRule: (id: string) =>
     apiRequest<void>(`/alerts/rules/${id}`, { method: 'DELETE' }),
-};
+}
 
 // ── Reports API ────────────────────────────────────────────
 export const reportsApi = {
   getFleetSummary: (params?: { from?: string; to?: string }) => {
-    const searchParams = new URLSearchParams();
-    if (params?.from) searchParams.set('from', params.from);
-    if (params?.to) searchParams.set('to', params.to);
-    const qs = searchParams.toString();
-    return apiRequest<FleetSummaryResponse>(withQuery('/reports/fleet-summary', qs));
+    const searchParams = new URLSearchParams()
+    if (params?.from) searchParams.set('from', params.from)
+    if (params?.to) searchParams.set('to', params.to)
+    const qs = searchParams.toString()
+    return apiRequest<FleetSummaryResponse>(
+      withQuery('/reports/fleet-summary', qs)
+    )
   },
 
-  getTemperatureReport: (params?: { from?: string; to?: string; truckId?: string }) => {
-    const searchParams = new URLSearchParams();
-    if (params?.from) searchParams.set('from', params.from);
-    if (params?.to) searchParams.set('to', params.to);
-    if (params?.truckId) searchParams.set('truckId', params.truckId);
-    const qs = searchParams.toString();
-    return apiRequest<{ data: TemperatureReportRow[] }>(withQuery('/reports/temperature', qs));
+  getTemperatureReport: (params?: {
+    from?: string
+    to?: string
+    truckId?: string
+  }) => {
+    const searchParams = new URLSearchParams()
+    if (params?.from) searchParams.set('from', params.from)
+    if (params?.to) searchParams.set('to', params.to)
+    if (params?.truckId) searchParams.set('truckId', params.truckId)
+    const qs = searchParams.toString()
+    return apiRequest<{ data: TemperatureReportRow[] }>(
+      withQuery('/reports/temperature', qs)
+    )
   },
 
   getDeliveryReport: (params?: { from?: string; to?: string }) => {
-    const searchParams = new URLSearchParams();
-    if (params?.from) searchParams.set('from', params.from);
-    if (params?.to) searchParams.set('to', params.to);
-    const qs = searchParams.toString();
-    return apiRequest<{ data: DeliveryReportRow[] }>(withQuery('/reports/deliveries', qs));
+    const searchParams = new URLSearchParams()
+    if (params?.from) searchParams.set('from', params.from)
+    if (params?.to) searchParams.set('to', params.to)
+    const qs = searchParams.toString()
+    return apiRequest<{ data: DeliveryReportRow[] }>(
+      withQuery('/reports/deliveries', qs)
+    )
   },
-};
+}
 
 // ── Settings API ───────────────────────────────────────────
 export const settingsApi = {
@@ -419,125 +477,130 @@ export const settingsApi = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
-};
+}
 
 // ── Response Types ─────────────────────────────────────────
-export type SeverityLevel = 'critical' | 'warning' | 'info';
-export type AlertStatus = 'active' | 'acknowledged' | 'resolved';
-export type RuleCondition = 'gt' | 'lt' | 'eq' | 'gte' | 'lte' | 'between';
-export type TruckStatus = 'active' | 'idle' | 'maintenance' | 'offline' | 'alert';
+export type SeverityLevel = 'critical' | 'warning' | 'info'
+export type AlertStatus = 'active' | 'acknowledged' | 'resolved'
+export type RuleCondition = 'gt' | 'lt' | 'eq' | 'gte' | 'lte' | 'between'
+export type TruckStatus =
+  | 'active'
+  | 'idle'
+  | 'maintenance'
+  | 'offline'
+  | 'alert'
 
 export interface TruckResponse {
-  id: string;
-  name: string;
-  plateNumber: string;
-  status: TruckStatus;
-  driver: string;
-  temperature: number;
-  humidity: number;
-  speed: number;
-  fuelLevel: number;
-  batteryLevel: number;
-  lat: number;
-  lng: number;
-  lastUpdate: string;
-  totalDistance: number;
-  deliveries: number;
-  route?: string;
+  id: string
+  name: string
+  plateNumber: string
+  status: TruckStatus
+  driver: string
+  temperature: number
+  humidity: number
+  speed: number
+  fuelLevel: number
+  batteryLevel: number
+  lat: number
+  lng: number
+  lastUpdate: string
+  totalDistance: number
+  deliveries: number
+  route?: string
 }
 
 export interface TelemetryResponse {
-  timestamp: string;
-  temperature: number;
-  humidity: number;
-  speed: number;
-  fuelLevel: number;
-  batteryLevel: number;
-  lat: number;
-  lng: number;
-  doorOpen: boolean;
+  timestamp: string
+  temperature: number
+  humidity: number
+  speed: number
+  fuelLevel: number
+  batteryLevel: number
+  lat: number
+  lng: number
+  doorOpen: boolean
 }
 
 export interface AlertResponse {
-  id: string;
-  truckId: string;
-  truckName: string;
-  type: string;
-  severity: SeverityLevel;
-  message: string;
-  status: AlertStatus;
-  createdAt: string;
-  acknowledgedAt?: string;
-  resolvedAt?: string;
+  id: string
+  truckId: string
+  truckName: string
+  type: string
+  severity: SeverityLevel
+  message: string
+  status: AlertStatus
+  createdAt: string
+  acknowledgedAt?: string
+  resolvedAt?: string
 }
 
 export interface AlertRuleResponse {
-  id: string;
-  name: string;
-  metric: string;
-  condition: RuleCondition;
-  threshold: number;
-  thresholdMax?: number;
-  severity: SeverityLevel;
-  enabled: boolean;
-  notifyEmail: boolean;
-  notifySms: boolean;
-  createdAt: string;
+  id: string
+  name: string
+  metric: string
+  condition: RuleCondition
+  threshold: number
+  thresholdMax?: number
+  severity: SeverityLevel
+  enabled: boolean
+  notifyEmail: boolean
+  notifySms: boolean
+  createdAt: string
 }
 
 export interface CreateAlertRuleRequest {
-  name: string;
-  metric: string;
-  condition: RuleCondition;
-  threshold: number;
-  thresholdMax?: number;
-  severity: SeverityLevel;
-  notifyEmail?: boolean;
-  notifySms?: boolean;
+  name: string
+  metric: string
+  condition: RuleCondition
+  threshold: number
+  thresholdMax?: number
+  severity: SeverityLevel
+  notifyEmail?: boolean
+  notifySms?: boolean
 }
 
 export interface FleetSummaryResponse {
-  totalTrucks: number;
-  activeTrucks: number;
-  totalDeliveries: number;
-  avgTemperature: number;
-  totalDistance: number;
-  fuelConsumed: number;
-  uptime: number;
-  alerts: number;
+  totalTrucks: number
+  activeTrucks: number
+  totalDeliveries: number
+  avgTemperature: number
+  totalDistance: number
+  fuelConsumed: number
+  uptime: number
+  alerts: number
 }
 
 export interface TemperatureReportRow {
-  timestamp: string;
-  truckId: string;
-  truckName: string;
-  avgTemp: number;
-  minTemp: number;
-  maxTemp: number;
-  violations: number;
+  timestamp: string
+  truckId: string
+  truckName: string
+  avgTemp: number
+  minTemp: number
+  maxTemp: number
+  violations: number
 }
 
 export interface DeliveryReportRow {
-  date: string;
-  total: number;
-  completed: number;
-  failed: number;
-  avgDuration: number;
+  date: string
+  total: number
+  completed: number
+  failed: number
+  avgDuration: number
 }
 
 export interface ApiKeyResponse {
-  id: string;
-  name: string;
-  key: string;
-  permissions: string[];
-  lastUsed?: string;
-  createdAt: string;
+  id: string
+  name: string
+  key: string
+  permissions: string[]
+  lastUsed?: string
+  createdAt: string
 }
 
 export interface SecuritySettingsResponse {
-  twoFactorEnabled: boolean;
-  sessionTimeout: number;
-  ipWhitelist: string[];
-  loginAttempts: number;
-  passwordExpiry: number;
+  twoFactorEnabled: boolean
+  sessionTimeout: number
+  ipWhitelist: string[]
+  loginAttempts: number
+  passwordExpiry: number
 }

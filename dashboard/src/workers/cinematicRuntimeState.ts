@@ -219,8 +219,7 @@ export function updateCameraFlyToProgress(
   const startPitch = cameraFlyTo.startPitch as number
 
   // Interpolate camera position smoothly
-  const nextLatitude =
-    startLatitude + (targetLatitude - startLatitude) * eased
+  const nextLatitude = startLatitude + (targetLatitude - startLatitude) * eased
   const nextLongitude =
     startLongitude + (targetLongitude - startLongitude) * eased
   const nextZoom = startZoom + (targetZoom - startZoom) * eased

@@ -1,5 +1,5 @@
-import { test, expect, type Page } from '@playwright/test';
-import { setE2EAuthCookies } from './support/auth';
+import { test, expect, type Page } from '@playwright/test'
+import { setE2EAuthCookies } from './support/auth'
 
 /* ================================================================
    Landing Page — End-to-End Tests
@@ -10,28 +10,28 @@ import { setE2EAuthCookies } from './support/auth';
 // --------------- helpers ---------------
 
 /** Wait for Framer Motion animations to settle */
-const waitForAnimations = (page: Page) => page.waitForTimeout(800);
+const waitForAnimations = (page: Page) => page.waitForTimeout(800)
 
 /** The landing page uses Framer Motion — elements may render after hydration */
-const HYDRATION_TIMEOUT = 15_000;
+const HYDRATION_TIMEOUT = 15_000
 
 /** Navigate to landing page with retry logic for server stability */
 async function gotoLanding(page: Page, retries = 2): Promise<void> {
-    for (let attempt = 0; attempt <= retries; attempt++) {
-        try {
-            await page.goto('/', {
-                waitUntil: 'domcontentloaded',
-                timeout: 30_000,
-            });
-            // Verify the page actually loaded
-            await page.waitForSelector('body', { timeout: 10_000 });
-            return;
-        } catch (err) {
-            if (attempt === retries) throw err;
-            // Wait before retrying
-            await page.waitForTimeout(2_000);
-        }
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      await page.goto('/', {
+        waitUntil: 'domcontentloaded',
+        timeout: 30_000,
+      })
+      // Verify the page actually loaded
+      await page.waitForSelector('body', { timeout: 10_000 })
+      return
+    } catch (err) {
+      if (attempt === retries) throw err
+      // Wait before retrying
+      await page.waitForTimeout(2_000)
     }
+  }
 }
 
 // ===============================================================
@@ -39,493 +39,496 @@ async function gotoLanding(page: Page, retries = 2): Promise<void> {
 // ===============================================================
 
 test.beforeEach(async ({ page }) => {
-    page.on('console', msg => {
-      // Suppress internal 3D/Motion warnings from 3rd party libs
-      const text = msg.text()
-      if (text.includes('THREE.') || text.includes('non-static position') || text.includes('Reduced Motion'))
-        return
+  page.on('console', msg => {
+    // Suppress internal 3D/Motion warnings from 3rd party libs
+    const text = msg.text()
+    if (
+      text.includes('THREE.') ||
+      text.includes('non-static position') ||
+      text.includes('Reduced Motion')
+    )
+      return
+  })
+  await page.route('**/api/v1/**', route =>
+    route.fulfill({
+      status: 200,
+      json: { data: [], status: 'success', meta: { total: 0 } },
     })
-    await page.route('**/api/v1/**', route =>
-        route.fulfill({
-            status: 200,
-            json: { data: [], status: 'success', meta: { total: 0 } },
-        }),
-    );
-});
+  )
+})
 
 // Ensure desktop viewport by default so desktop-only nav links are rendered
 test.beforeEach(async ({ page }) => {
-    // Ensure consistent desktop viewport for desktop-only nav links
-    await page.setViewportSize({ width: 1280, height: 720 });
-});
+  // Ensure consistent desktop viewport for desktop-only nav links
+  await page.setViewportSize({ width: 1280, height: 720 })
+})
 
 // ===============================================================
 // 1. NAVIGATION BAR
 // ===============================================================
 test.describe('Navigation', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'serial' })
 
-    test.beforeEach(async ({ page }) => {
-        await gotoLanding(page);
-        await waitForAnimations(page);
-    });
+  test.beforeEach(async ({ page }) => {
+    await gotoLanding(page)
+    await waitForAnimations(page)
+  })
 
-    test('should display the brand logo and name', async ({ page }) => {
-        const brand = page.locator('nav').first().getByText('Ice Truck');
-        await expect(brand).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-    });
+  test('should display the brand logo and name', async ({ page }) => {
+    const brand = page.locator('nav').first().getByText('Ice Truck')
+    await expect(brand).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+  })
 
-    test('should show "Open Dashboard" link in navbar (desktop)', async ({
-      page,
-      isMobile,
-      baseURL,
-    }) => {
-      test.skip(!!isMobile, 'Nav CTA is hidden on mobile')
-      // Inject valid mock auth cookie before clicking to ensure it reaches /dashboard
-      await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000')
+  test('should show "Open Dashboard" link in navbar (desktop)', async ({
+    page,
+    isMobile,
+    baseURL,
+  }) => {
+    test.skip(!!isMobile, 'Nav CTA is hidden on mobile')
+    // Inject valid mock auth cookie before clicking to ensure it reaches /dashboard
+    await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000')
+    await gotoLanding(page)
+    await waitForAnimations(page)
+    await page.setViewportSize({ width: 1280, height: 720 })
+
+    // Use bulletproof locator as requested
+    const navDashboardLink = page.locator('a[href="/dashboard"]').first()
+    await expect(navDashboardLink).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+    await navDashboardLink.click()
+    await expect(page).toHaveURL(/\/dashboard/)
+  })
+
+  test('should contain Features, Performance and Tech Stack nav links (desktop)', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!!isMobile, 'Desktop-only nav links')
+    await page.setViewportSize({ width: 1280, height: 720 })
+    for (const label of ['Features', 'Performance', 'Tech Stack']) {
+      const locator = page.locator(`a:has-text("${label}")`).first()
+      await locator.click({ force: true })
+      // navigate back to landing for next iteration
       await gotoLanding(page)
       await waitForAnimations(page)
-      await page.setViewportSize({ width: 1280, height: 720 })
-      
-      // Use bulletproof locator as requested
-      const navDashboardLink = page.locator('a[href="/dashboard"]').first()
-      await expect(navDashboardLink).toBeVisible({ timeout: HYDRATION_TIMEOUT })
-      await navDashboardLink.click()
-      await expect(page).toHaveURL(/\/dashboard/)
-    })
+    }
+  })
 
-    test('should contain Features, Performance and Tech Stack nav links (desktop)', async ({
-        page,
-        isMobile,
-    }) => {
-        test.skip(!!isMobile, 'Desktop-only nav links');
-        await page.setViewportSize({ width: 1280, height: 720 })
-        for (const label of ['Features', 'Performance', 'Tech Stack']) {
-            const locator = page.locator(`a:has-text("${label}")`).first()
-            await locator.click({ force: true });
-            // navigate back to landing for next iteration
-            await gotoLanding(page);
-            await waitForAnimations(page);
-        }
-    });
+  test('nav links should have correct href anchors', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!!isMobile, 'Desktop-only nav links')
+    await page.setViewportSize({ width: 1280, height: 720 })
+    const anchors = ['#features', '#stats', '#tech']
+    for (const a of anchors) {
+      const an = page.locator(`a[href="${a}"]`).first()
+      await an.click({ force: true })
+      // quick sanity: URL may include the anchor
+      await expect(page).toHaveURL(new RegExp(`${a.replace('#', '#')}`))
+    }
+  })
 
-    test('nav links should have correct href anchors', async ({
-        page,
-        isMobile,
-    }) => {
-        test.skip(!!isMobile, 'Desktop-only nav links');
-        await page.setViewportSize({ width: 1280, height: 720 })
-        const anchors = ['#features', '#stats', '#tech'];
-        for (const a of anchors) {
-            const an = page.locator(`a[href="${a}"]`).first()
-            await an.click({ force: true });
-            // quick sanity: URL may include the anchor
-            await expect(page).toHaveURL(new RegExp(`${a.replace('#', '#')}`));
-        }
-    });
-
-    test('navbar should be sticky and visible after scrolling', async ({
-        page,
-    }) => {
-        await page.evaluate(() => window.scrollTo(0, 1200));
-        await page.waitForTimeout(300);
-        const nav = page.locator('nav').first();
-        await expect(nav).toBeVisible();
-        const box = await nav.boundingBox();
-        expect(box).toBeTruthy();
-        expect(box!.y).toBeLessThanOrEqual(10);
-    });
-});
+  test('navbar should be sticky and visible after scrolling', async ({
+    page,
+  }) => {
+    await page.evaluate(() => window.scrollTo(0, 1200))
+    await page.waitForTimeout(300)
+    const nav = page.locator('nav').first()
+    await expect(nav).toBeVisible()
+    const box = await nav.boundingBox()
+    expect(box).toBeTruthy()
+    expect(box!.y).toBeLessThanOrEqual(10)
+  })
+})
 
 // ===============================================================
 // 2. HERO SECTION
 // ===============================================================
 test.describe('Hero Section', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'serial' })
 
-    test.beforeEach(async ({ page }) => {
-        await gotoLanding(page);
-        await waitForAnimations(page);
-    });
+  test.beforeEach(async ({ page }) => {
+    await gotoLanding(page)
+    await waitForAnimations(page)
+  })
 
-    test('should display the main heading (h1)', async ({ page }) => {
-        const h1 = page.getByRole('heading', { level: 1 });
-        await expect(h1).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-        await expect(h1).toContainText('Cold-Chain Mission Control');
-    });
+  test('should display the main heading (h1)', async ({ page }) => {
+    const h1 = page.getByRole('heading', { level: 1 })
+    await expect(h1).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+    await expect(h1).toContainText('Cold-Chain Mission Control')
+  })
 
-    test('should show gradient-highlighted text "Real-Time Fleet Command"', async ({
-        page,
-    }) => {
-        await expect(page.getByText('Real-Time Fleet Command')).toBeVisible({
-            timeout: HYDRATION_TIMEOUT,
-        });
-    });
+  test('should show gradient-highlighted text "Real-Time Fleet Command"', async ({
+    page,
+  }) => {
+    await expect(page.getByText('Real-Time Fleet Command')).toBeVisible({
+      timeout: HYDRATION_TIMEOUT,
+    })
+  })
 
-    test('should display the hero subtitle', async ({ page }) => {
-        await expect(
-            page.getByText(/Track truck temperature, GPS, route health/i),
-        ).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-    });
+  test('should display the hero subtitle', async ({ page }) => {
+    await expect(
+      page.getByText(/Track truck temperature, GPS, route health/i)
+    ).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+  })
 
-    test('should show the mission telemetry badge', async ({ page }) => {
-        await expect(page.getByText(/Command Grid Online/i)).toBeVisible({
-            timeout: HYDRATION_TIMEOUT,
-        });
-    });
+  test('should show the mission telemetry badge', async ({ page }) => {
+    await expect(page.getByText(/Command Grid Online/i)).toBeVisible({
+      timeout: HYDRATION_TIMEOUT,
+    })
+  })
 
-    test('should have a "Live Dashboard" CTA button linking to /dashboard', async ({
-        page,
-    }) => {
-        const heroLink = page
-            .locator('section')
-            .getByRole('link', { name: /Live Dashboard/ });
-        await expect(heroLink).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-        await expect(heroLink).toHaveAttribute('href', '/dashboard');
-    });
+  test('should have a "Live Dashboard" CTA button linking to /dashboard', async ({
+    page,
+  }) => {
+    const heroLink = page
+      .locator('section')
+      .getByRole('link', { name: /Live Dashboard/ })
+    await expect(heroLink).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+    await expect(heroLink).toHaveAttribute('href', '/dashboard')
+  })
 
-    test('should have a visible "Login" CTA linking to /dashboard', async ({
-        page,
-    }) => {
-        const loginLink = page
-            .locator('section')
-            .getByRole('link', { name: /^Login$/ });
-        await expect(loginLink).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-        await expect(loginLink).toHaveAttribute('href', '/dashboard');
-    });
-});
+  test('should have a visible "Login" CTA linking to /dashboard', async ({
+    page,
+  }) => {
+    const loginLink = page
+      .locator('section')
+      .getByRole('link', { name: /^Login$/ })
+    await expect(loginLink).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+    await expect(loginLink).toHaveAttribute('href', '/dashboard')
+  })
+})
 
 // ===============================================================
 // 3. STATS SECTION
 // ===============================================================
 test.describe('Stats Section', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'serial' })
 
-    test.beforeEach(async ({ page }) => {
-        await gotoLanding(page);
-        await waitForAnimations(page);
-    });
+  test.beforeEach(async ({ page }) => {
+    await gotoLanding(page)
+    await waitForAnimations(page)
+  })
 
-    test('should display all four stat values', async ({ page }) => {
-        const statsSection = page.locator('#stats');
-        await expect(statsSection).toBeVisible({ timeout: HYDRATION_TIMEOUT });
+  test('should display all four stat values', async ({ page }) => {
+    const statsSection = page.locator('#stats')
+    await expect(statsSection).toBeVisible({ timeout: HYDRATION_TIMEOUT })
 
-        for (const value of ['99.9%', '<200ms', '10M+', '24/7']) {
-            await expect(statsSection.getByText(value)).toBeVisible();
-        }
-    });
+    for (const value of ['99.9%', '<200ms', '10M+', '24/7']) {
+      await expect(statsSection.getByText(value)).toBeVisible()
+    }
+  })
 
-    test('should show stat labels', async ({ page }) => {
-        const statsSection = page.locator('#stats');
-        for (const label of [
-            'Uptime SLA',
-            'Telemetry Latency',
-            'Data Points / Day',
-            'Monitoring',
-        ]) {
-            await expect(statsSection.getByText(label)).toBeVisible();
-        }
-    });
-});
+  test('should show stat labels', async ({ page }) => {
+    const statsSection = page.locator('#stats')
+    for (const label of [
+      'Uptime SLA',
+      'Telemetry Latency',
+      'Data Points / Day',
+      'Monitoring',
+    ]) {
+      await expect(statsSection.getByText(label)).toBeVisible()
+    }
+  })
+})
 
 // ===============================================================
 // 4. FEATURES SECTION
 // ===============================================================
 test.describe('Features Section', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'serial' })
 
-    test.beforeEach(async ({ page }) => {
-        await gotoLanding(page);
-        await waitForAnimations(page);
-    });
+  test.beforeEach(async ({ page }) => {
+    await gotoLanding(page)
+    await waitForAnimations(page)
+  })
 
-    test('should display the features section heading', async ({ page }) => {
-        const section = page.locator('section#features');
-        await expect(section).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-        await expect(
-            section.getByRole('heading', {
-                name: /Everything You Need for Cold-Chain IoT/,
-            }),
-        ).toBeVisible();
-    });
+  test('should display the features section heading', async ({ page }) => {
+    const section = page.locator('section#features')
+    await expect(section).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+    await expect(
+      section.getByRole('heading', {
+        name: /Everything You Need for Cold-Chain IoT/,
+      })
+    ).toBeVisible()
+  })
 
-    test('should render all 6 feature cards', async ({ page }) => {
-        const featureTitles = [
-            'Real-Time GPS Tracking',
-            'Temperature Monitoring',
-            'Instant Alerts',
-            'Role-Based Access',
-            'Analytics Dashboard',
-            'IoT-First Architecture',
-        ];
+  test('should render all 6 feature cards', async ({ page }) => {
+    const featureTitles = [
+      'Real-Time GPS Tracking',
+      'Temperature Monitoring',
+      'Instant Alerts',
+      'Role-Based Access',
+      'Analytics Dashboard',
+      'IoT-First Architecture',
+    ]
 
-        for (const title of featureTitles) {
-            await expect(
-                page.locator('section#features').getByText(title),
-            ).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-        }
-    });
+    for (const title of featureTitles) {
+      await expect(
+        page.locator('section#features').getByText(title)
+      ).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+    }
+  })
 
-    test('each feature card should have a description', async ({ page }) => {
-        const featureDescriptions = [
-            /sub-second MQTT updates/i,
-            /TimescaleDB stores millions of temperature readings/i,
-            /threshold alerts pushed to dashboard & mobile/i,
-            /Granular RBAC/i,
-            /shadcn\/ui components/i,
-            /Eclipse Mosquitto MQTT/i,
-        ];
+  test('each feature card should have a description', async ({ page }) => {
+    const featureDescriptions = [
+      /sub-second MQTT updates/i,
+      /TimescaleDB stores millions of temperature readings/i,
+      /threshold alerts pushed to dashboard & mobile/i,
+      /Granular RBAC/i,
+      /shadcn\/ui components/i,
+      /Eclipse Mosquitto MQTT/i,
+    ]
 
-        for (const desc of featureDescriptions) {
-            await expect(
-                page.locator('section#features').getByText(desc),
-            ).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-        }
-    });
-});
+    for (const desc of featureDescriptions) {
+      await expect(
+        page.locator('section#features').getByText(desc)
+      ).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+    }
+  })
+})
 
 // ===============================================================
 // 5. TECH STACK SECTION
 // ===============================================================
 test.describe('Tech Stack Section', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'serial' })
 
-    test.beforeEach(async ({ page }) => {
-        await gotoLanding(page);
-        await waitForAnimations(page);
-    });
+  test.beforeEach(async ({ page }) => {
+    await gotoLanding(page)
+    await waitForAnimations(page)
+  })
 
-    test('should display the tech stack heading', async ({ page }) => {
-        const section = page.locator('#tech');
-        await expect(section).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-        await expect(section.getByRole('heading')).toContainText(
-            'Built with Modern Open-Source Tech',
-        );
-    });
+  test('should display the tech stack heading', async ({ page }) => {
+    const section = page.locator('#tech')
+    await expect(section).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+    await expect(section.getByRole('heading')).toContainText(
+      'Built with Modern Open-Source Tech'
+    )
+  })
 
-    test('should list core technologies', async ({ page }) => {
-        const techSection = page.locator('#tech');
-        const techs = [
-            'Next.js 15',
-            'React 18',
-            'TypeScript',
-            'Tailwind CSS',
-            'shadcn/ui',
-            'Framer Motion',
-            'PostgreSQL',
-            'TimescaleDB',
-            'Redis',
-            'MQTT',
-            'Socket.IO',
-            'Playwright',
-        ];
+  test('should list core technologies', async ({ page }) => {
+    const techSection = page.locator('#tech')
+    const techs = [
+      'Next.js 15',
+      'React 18',
+      'TypeScript',
+      'Tailwind CSS',
+      'shadcn/ui',
+      'Framer Motion',
+      'PostgreSQL',
+      'TimescaleDB',
+      'Redis',
+      'MQTT',
+      'Socket.IO',
+      'Playwright',
+    ]
 
-        for (const tech of techs) {
-            await expect(techSection.getByText(tech).first()).toBeVisible();
-        }
-    });
-});
+    for (const tech of techs) {
+      await expect(techSection.getByText(tech).first()).toBeVisible()
+    }
+  })
+})
 
 // ===============================================================
 // 6. CALL-TO-ACTION (CTA) SECTION
 // ===============================================================
 test.describe('CTA Section', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'serial' })
 
-    test.beforeEach(async ({ page }) => {
-        await gotoLanding(page);
-        await waitForAnimations(page);
-    });
+  test.beforeEach(async ({ page }) => {
+    await gotoLanding(page)
+    await waitForAnimations(page)
+  })
 
-    test('should display "Ready to Track?" heading', async ({ page }) => {
-        await expect(
-            page.getByRole('heading', { name: /Ready to Track/i }),
-        ).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-    });
+  test('should display "Ready to Track?" heading', async ({ page }) => {
+    await expect(
+      page.getByRole('heading', { name: /Ready to Track/i })
+    ).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+  })
 
-    test('should have a "Launch Dashboard" button', async ({ page }) => {
-        const ctaLink = page.getByRole('link', { name: /Launch Dashboard/ });
-        await expect(ctaLink).toBeVisible({ timeout: HYDRATION_TIMEOUT });
-        await expect(ctaLink).toHaveAttribute('href', '/dashboard');
-    });
+  test('should have a "Launch Dashboard" button', async ({ page }) => {
+    const ctaLink = page.getByRole('link', { name: /Launch Dashboard/ })
+    await expect(ctaLink).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+    await expect(ctaLink).toHaveAttribute('href', '/dashboard')
+  })
 
-    test('should mention Docker Compose in CTA description', async ({
-        page,
-    }) => {
-        await expect(page.getByText(/Docker Compose/)).toBeVisible({
-            timeout: HYDRATION_TIMEOUT,
-        });
-    });
-});
+  test('should mention Docker Compose in CTA description', async ({ page }) => {
+    await expect(page.getByText(/Docker Compose/)).toBeVisible({
+      timeout: HYDRATION_TIMEOUT,
+    })
+  })
+})
 
 // ===============================================================
 // 7. FOOTER
 // ===============================================================
 test.describe('Footer', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'serial' })
 
-    test.beforeEach(async ({ page }) => {
-        await gotoLanding(page);
-    });
+  test.beforeEach(async ({ page }) => {
+    await gotoLanding(page)
+  })
 
-    test('should display copyright with current year', async ({ page }) => {
-        const footer = page.locator('footer');
-        await expect(footer).toBeVisible();
-        const year = new Date().getFullYear().toString();
-        await expect(footer).toContainText(year);
-        await expect(footer).toContainText('Ice Truck Tracking');
-    });
+  test('should display copyright with current year', async ({ page }) => {
+    const footer = page.locator('footer')
+    await expect(footer).toBeVisible()
+    const year = new Date().getFullYear().toString()
+    await expect(footer).toContainText(year)
+    await expect(footer).toContainText('Ice Truck Tracking')
+  })
 
-    test('should include GitHub link in footer', async ({ page }) => {
-        const ghFooterLink = page.locator('footer a[href*="github"]');
-        await expect(ghFooterLink).toBeVisible();
-    });
-});
+  test('should include GitHub link in footer', async ({ page }) => {
+    const ghFooterLink = page.locator('footer a[href*="github"]')
+    await expect(ghFooterLink).toBeVisible()
+  })
+})
 
 // ===============================================================
 // 8. RESPONSIVE BEHAVIOUR
 // ===============================================================
 test.describe('Responsive Design', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'serial' })
 
-    test('hero heading should be visible at 375×812 (iPhone SE)', async ({
-        page,
-    }) => {
-        await page.setViewportSize({ width: 375, height: 812 });
-        await gotoLanding(page);
-        await waitForAnimations(page);
-        await expect(page.getByRole('heading', { level: 1 })).toBeVisible({
-            timeout: HYDRATION_TIMEOUT,
-        });
-    });
+  test('hero heading should be visible at 375×812 (iPhone SE)', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 812 })
+    await gotoLanding(page)
+    await waitForAnimations(page)
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({
+      timeout: HYDRATION_TIMEOUT,
+    })
+  })
 
-    test('hero heading should be visible at 768×1024 (iPad)', async ({
-        page,
-    }) => {
-        await page.setViewportSize({ width: 768, height: 1024 });
-        await gotoLanding(page);
-        await waitForAnimations(page);
-        await expect(page.getByRole('heading', { level: 1 })).toBeVisible({
-            timeout: HYDRATION_TIMEOUT,
-        });
-    });
+  test('hero heading should be visible at 768×1024 (iPad)', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 768, height: 1024 })
+    await gotoLanding(page)
+    await waitForAnimations(page)
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible({
+      timeout: HYDRATION_TIMEOUT,
+    })
+  })
 
-    test('features section should be visible on all viewports', async ({
-        page,
-    }) => {
-        for (const vp of [
-            { width: 375, height: 812 },
-            { width: 768, height: 1024 },
-            { width: 1440, height: 900 },
-        ]) {
-            await page.setViewportSize(vp);
-            await gotoLanding(page);
-            await waitForAnimations(page);
-            await expect(page.locator('section#features')).toBeVisible({
-                timeout: HYDRATION_TIMEOUT,
-            });
-        }
-    });
-});
+  test('features section should be visible on all viewports', async ({
+    page,
+  }) => {
+    for (const vp of [
+      { width: 375, height: 812 },
+      { width: 768, height: 1024 },
+      { width: 1440, height: 900 },
+    ]) {
+      await page.setViewportSize(vp)
+      await gotoLanding(page)
+      await waitForAnimations(page)
+      await expect(page.locator('section#features')).toBeVisible({
+        timeout: HYDRATION_TIMEOUT,
+      })
+    }
+  })
+})
 
 // ===============================================================
 // 9. ACCESSIBILITY BASICS
 // ===============================================================
 test.describe('Accessibility', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'serial' })
 
-    test.beforeEach(async ({ page }) => {
-        await gotoLanding(page);
-        await waitForAnimations(page);
-    });
+  test.beforeEach(async ({ page }) => {
+    await gotoLanding(page)
+    await waitForAnimations(page)
+  })
 
-    test('page should have <html lang="en">', async ({ page }) => {
-        const lang = await page.locator('html').getAttribute('lang');
-        expect(lang).toBe('en');
-    });
+  test('page should have <html lang="en">', async ({ page }) => {
+    const lang = await page.locator('html').getAttribute('lang')
+    expect(lang).toBe('en')
+  })
 
-    test('page should have exactly one h1', async ({ page }) => {
-        const headings = page.getByRole('heading', { level: 1 });
-        await expect(headings).toHaveCount(1);
-    });
+  test('page should have exactly one h1', async ({ page }) => {
+    const headings = page.getByRole('heading', { level: 1 })
+    await expect(headings).toHaveCount(1)
+  })
 
-    test('all images should load without errors', async ({ page }) => {
-        const brokenImages = await page.evaluate(() =>
-            Array.from(document.querySelectorAll('img')).filter(
-                (img) => !img.complete || img.naturalWidth === 0,
-            ).length,
-        );
-        expect(brokenImages).toBe(0);
-    });
+  test('all images should load without errors', async ({ page }) => {
+    const brokenImages = await page.evaluate(
+      () =>
+        Array.from(document.querySelectorAll('img')).filter(
+          img => !img.complete || img.naturalWidth === 0
+        ).length
+    )
+    expect(brokenImages).toBe(0)
+  })
 
-    test('page title should contain "Ice Truck"', async ({ page }) => {
-        await expect(page).toHaveTitle(/Ice Truck/i);
-    });
-});
+  test('page title should contain "Ice Truck"', async ({ page }) => {
+    await expect(page).toHaveTitle(/Ice Truck/i)
+  })
+})
 
 // ===============================================================
 // 10. NAVIGATION FLOW
 // ===============================================================
 test.describe('Navigation Flow', () => {
-    test.describe.configure({ mode: 'serial' });
+  test.describe.configure({ mode: 'serial' })
 
-    test('"Open Dashboard" link should navigate toward /dashboard', async ({
-        page,
-        baseURL,
-    }) => {
-        // Set auth cookie so the middleware lets us through to /dashboard
-        await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000');
+  test('"Open Dashboard" link should navigate toward /dashboard', async ({
+    page,
+    baseURL,
+  }) => {
+    // Set auth cookie so the middleware lets us through to /dashboard
+    await setE2EAuthCookies(page, baseURL ?? 'http://localhost:3000')
 
-        await gotoLanding(page);
-        await waitForAnimations(page);
-        const navLink = page
-            .locator('nav')
-            .getByRole('link', { name: 'Open Dashboard' });
+    await gotoLanding(page)
+    await waitForAnimations(page)
+    const navLink = page
+      .locator('nav')
+      .getByRole('link', { name: 'Open Dashboard' })
 
-        // On mobile the nav link is hidden — use hero CTA instead
-        const navVisible = await navLink.isVisible();
-        if (navVisible) {
-            await navLink.waitFor({ state: 'visible' });
-            await navLink.click();
-        } else {
-            const heroLink = page
-                .getByRole('link', { name: /Live Dashboard/ })
-                .first();
-            await heroLink.waitFor({ state: 'visible' });
-            await heroLink.click();
-        }
+    // On mobile the nav link is hidden — use hero CTA instead
+    const navVisible = await navLink.isVisible()
+    if (navVisible) {
+      await navLink.waitFor({ state: 'visible' })
+      await navLink.click()
+    } else {
+      const heroLink = page
+        .getByRole('link', { name: /Live Dashboard/ })
+        .first()
+      await heroLink.waitFor({ state: 'visible' })
+      await heroLink.click()
+    }
 
-        await expect(page).toHaveURL(/\/dashboard/);
-    });
+    await expect(page).toHaveURL(/\/dashboard/)
+  })
 
-    test('without auth cookie, dashboard link should redirect to /login', async ({
-        page,
-    }) => {
-        await page.context().clearCookies();
-        await gotoLanding(page);
-        await page.evaluate(() => {
-            globalThis.localStorage.clear();
-            globalThis.sessionStorage.clear();
-        });
-        await waitForAnimations(page);
-        const navLink = page
-            .locator('nav')
-            .getByRole('link', { name: 'Open Dashboard' });
+  test('without auth cookie, dashboard link should redirect to /login', async ({
+    page,
+  }) => {
+    await page.context().clearCookies()
+    await gotoLanding(page)
+    await page.evaluate(() => {
+      globalThis.localStorage.clear()
+      globalThis.sessionStorage.clear()
+    })
+    await waitForAnimations(page)
+    const navLink = page
+      .locator('nav')
+      .getByRole('link', { name: 'Open Dashboard' })
 
-        const navVisible3 = await navLink.isVisible();
-        if (navVisible3) {
-            await navLink.waitFor({ state: 'visible' });
-            await navLink.click();
-        } else {
-            const heroLink = page
-                .getByRole('link', { name: /Live Dashboard/ })
-                .first();
-            await heroLink.waitFor({ state: 'visible' });
-            await heroLink.click();
-        }
+    const navVisible3 = await navLink.isVisible()
+    if (navVisible3) {
+      await navLink.waitFor({ state: 'visible' })
+      await navLink.click()
+    } else {
+      const heroLink = page
+        .getByRole('link', { name: /Live Dashboard/ })
+        .first()
+      await heroLink.waitFor({ state: 'visible' })
+      await heroLink.click()
+    }
 
-        // In production and high-security CI, auth middleware MUST enforce redirect to login.
-        // We assert strictly on /login to ensure the security seal is intact.
-        await expect(page).toHaveURL(/\/login/);
-    });
-});
+    // In production and high-security CI, auth middleware MUST enforce redirect to login.
+    // We assert strictly on /login to ensure the security seal is intact.
+    await expect(page).toHaveURL(/\/login/)
+  })
+})

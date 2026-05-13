@@ -429,5 +429,3 @@ export function MapView({
     </div>
   )
 }
-
-

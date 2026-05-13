@@ -6,10 +6,10 @@
  *
  * Env: E2E_LIGHT=true → conditional 3D bootstrap is disabled.
  */
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test'
 
 // Explicit CI detection (expect CI='true' in CI environments)
-const isCI = process.env.CI === 'true';
+const isCI = process.env.CI === 'true'
 const lightUseConfig = {
   baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
   viewport: { width: 1920, height: 1080 },
@@ -75,12 +75,12 @@ export default defineConfig({
       E2E_LIGHT: 'true',
       NEXT_PUBLIC_E2E_LIGHT: 'true',
       PORT: '3000',
-        NODE_OPTIONS: '--max_old_space_size=4096',
-        // Suppress noisy Node deprecation warnings in CI/light runs so test logs stay focused
-        NODE_NO_WARNINGS: '1',
-        // Ensure non-interactive build on Windows and disable Next telemetry prompts
-        CI: '1',
-        NEXT_TELEMETRY_DISABLED: '1',
+      NODE_OPTIONS: '--max_old_space_size=4096',
+      // Suppress noisy Node deprecation warnings in CI/light runs so test logs stay focused
+      NODE_NO_WARNINGS: '1',
+      // Ensure non-interactive build on Windows and disable Next telemetry prompts
+      CI: '1',
+      NEXT_TELEMETRY_DISABLED: '1',
     },
   },
 })

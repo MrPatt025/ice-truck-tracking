@@ -52,7 +52,7 @@ export function MapScreen() {
         showsUserLocation
         showsMyLocationButton
       >
-        {trucks.map((truck) => (
+        {trucks.map(truck => (
           <Marker
             key={truck.id}
             coordinate={{
@@ -75,7 +75,9 @@ export function MapScreen() {
 
             <Callout style={styles.callout}>
               <View style={styles.calloutContent}>
-                <Text style={styles.calloutTitle}>{truck.driver_name || 'Unknown Driver'}</Text>
+                <Text style={styles.calloutTitle}>
+                  {truck.driver_name || 'Unknown Driver'}
+                </Text>
                 <Text style={styles.calloutText}>ID: {truck.id}</Text>
                 <Text style={styles.calloutText}>
                   Speed: {truck.speed} km/h

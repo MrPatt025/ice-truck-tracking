@@ -12,7 +12,7 @@
  *  per frame) to stay within the 6ms GPU budget.
  * ================================================================ */
 
-import * as THREE from 'three';
+import * as THREE from 'three'
 
 // ═════════════════════════════════════════════════════════════════
 //  1. MESH GRADIENT BACKGROUND SHADER
@@ -26,7 +26,7 @@ const meshGradientVertex = /* glsl */ `
     vUv = uv;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
-`;
+`
 
 const meshGradientFragment = /* glsl */ `
   precision highp float;
@@ -89,36 +89,36 @@ const meshGradientFragment = /* glsl */ `
 
     gl_FragColor = vec4(color, 1.0);
   }
-`;
+`
 
 export interface MeshGradientColors {
-    color1: [number, number, number];
-    color2: [number, number, number];
-    color3: [number, number, number];
-    color4: [number, number, number];
+  color1: [number, number, number]
+  color2: [number, number, number]
+  color3: [number, number, number]
+  color4: [number, number, number]
 }
 
 /** Create an animated mesh gradient material */
 export function createMeshGradientMaterial(
-    colors: MeshGradientColors,
-    speed = 0.08,
-    noiseScale = 2.5,
+  colors: MeshGradientColors,
+  speed = 0.08,
+  noiseScale = 2.5
 ): THREE.ShaderMaterial {
-    return new THREE.ShaderMaterial({
-        uniforms: {
-            uTime: { value: 0 },
-            uColor1: { value: new THREE.Color(...colors.color1) },
-            uColor2: { value: new THREE.Color(...colors.color2) },
-            uColor3: { value: new THREE.Color(...colors.color3) },
-            uColor4: { value: new THREE.Color(...colors.color4) },
-            uSpeed: { value: speed },
-            uNoiseScale: { value: noiseScale },
-        },
-        vertexShader: meshGradientVertex,
-        fragmentShader: meshGradientFragment,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-    });
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uColor1: { value: new THREE.Color(...colors.color1) },
+      uColor2: { value: new THREE.Color(...colors.color2) },
+      uColor3: { value: new THREE.Color(...colors.color3) },
+      uColor4: { value: new THREE.Color(...colors.color4) },
+      uSpeed: { value: speed },
+      uNoiseScale: { value: noiseScale },
+    },
+    vertexShader: meshGradientVertex,
+    fragmentShader: meshGradientFragment,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  })
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -150,7 +150,7 @@ const particleGlowVertex = /* glsl */ `
 
     gl_Position = projectionMatrix * mvPosition;
   }
-`;
+`
 
 const particleGlowFragment = /* glsl */ `
   precision highp float;
@@ -168,21 +168,23 @@ const particleGlowFragment = /* glsl */ `
 
     gl_FragColor = vec4(vColor, alpha);
   }
-`;
+`
 
 /** Create a particle glow material (additive blending) */
 export function createParticleGlowMaterial(): THREE.ShaderMaterial {
-    return new THREE.ShaderMaterial({
-        uniforms: {
-            uTime: { value: 0 },
-            uPixelRatio: { value: Math.min(globalThis.window?.devicePixelRatio ?? 1, 2) },
-        },
-        vertexShader: particleGlowVertex,
-        fragmentShader: particleGlowFragment,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-    });
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uPixelRatio: {
+        value: Math.min(globalThis.window?.devicePixelRatio ?? 1, 2),
+      },
+    },
+    vertexShader: particleGlowVertex,
+    fragmentShader: particleGlowFragment,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -203,7 +205,7 @@ const dataGlowVertex = /* glsl */ `
     vGlowColor = aGlowColor;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
-`;
+`
 
 const dataGlowFragment = /* glsl */ `
   precision highp float;
@@ -225,21 +227,21 @@ const dataGlowFragment = /* glsl */ `
 
     gl_FragColor = vec4(color, alpha);
   }
-`;
+`
 
 /** Create a data-driven glow material */
 export function createDataGlowMaterial(pulseSpeed = 2): THREE.ShaderMaterial {
-    return new THREE.ShaderMaterial({
-        uniforms: {
-            uTime: { value: 0 },
-            uPulseSpeed: { value: pulseSpeed },
-        },
-        vertexShader: dataGlowVertex,
-        fragmentShader: dataGlowFragment,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-    });
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uPulseSpeed: { value: pulseSpeed },
+    },
+    vertexShader: dataGlowVertex,
+    fragmentShader: dataGlowFragment,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
 }
 
 // ═════════════════════════════════════════════════════════════════
@@ -253,7 +255,7 @@ const fogVertex = /* glsl */ `
     vUv = uv;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
-`;
+`
 
 const fogFragment = /* glsl */ `
   precision highp float;
@@ -276,77 +278,77 @@ const fogFragment = /* glsl */ `
 
     gl_FragColor = vec4(uFogColor, fog);
   }
-`;
+`
 
 /** Create a depth fog material */
 export function createDepthFogMaterial(
-    fogColor: THREE.Color = new THREE.Color(0x0a0a1a),
-    density = 0.3,
+  fogColor: THREE.Color = new THREE.Color(0x0a0a1a),
+  density = 0.3
 ): THREE.ShaderMaterial {
-    return new THREE.ShaderMaterial({
-        uniforms: {
-            uTime: { value: 0 },
-            uFogColor: { value: fogColor },
-            uDensity: { value: density },
-            uOffset: { value: 0.3 },
-        },
-        vertexShader: fogVertex,
-        fragmentShader: fogFragment,
-        transparent: true,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-    });
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uFogColor: { value: fogColor },
+      uDensity: { value: density },
+      uOffset: { value: 0.3 },
+    },
+    vertexShader: fogVertex,
+    fragmentShader: fogFragment,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  })
 }
 
 // ═════════════════════════════════════════════════════════════════
 //  5. THEME COLOR PRESETS FOR SHADERS
 // ═════════════════════════════════════════════════════════════════
 
-import type { Theme } from '../types';
+import type { Theme } from '../types'
 
 /** Gradient colors per theme */
 export const SHADER_THEME_COLORS: Record<Theme, MeshGradientColors> = {
-    dark: {
-        color1: [0.03, 0.03, 0.08],
-        color2: [0.05, 0.02, 0.12],
-        color3: [0.02, 0.06, 0.1],
-        color4: [0.04, 0.03, 0.06],
-    },
-    neon: {
-        color1: [0.05, 0, 0.15],
-        color2: [0, 0.1, 0.2],
-        color3: [0.15, 0, 0.1],
-        color4: [0, 0.05, 0.15],
-    },
-    ocean: {
-        color1: [0, 0.05, 0.15],
-        color2: [0, 0.08, 0.2],
-        color3: [0, 0.03, 0.1],
-        color4: [0.02, 0.06, 0.18],
-    },
-    forest: {
-        color1: [0.02, 0.08, 0.03],
-        color2: [0.01, 0.06, 0.04],
-        color3: [0.03, 0.1, 0.02],
-        color4: [0.02, 0.05, 0.03],
-    },
-};
+  dark: {
+    color1: [0.03, 0.03, 0.08],
+    color2: [0.05, 0.02, 0.12],
+    color3: [0.02, 0.06, 0.1],
+    color4: [0.04, 0.03, 0.06],
+  },
+  neon: {
+    color1: [0.05, 0, 0.15],
+    color2: [0, 0.1, 0.2],
+    color3: [0.15, 0, 0.1],
+    color4: [0, 0.05, 0.15],
+  },
+  ocean: {
+    color1: [0, 0.05, 0.15],
+    color2: [0, 0.08, 0.2],
+    color3: [0, 0.03, 0.1],
+    color4: [0.02, 0.06, 0.18],
+  },
+  forest: {
+    color1: [0.02, 0.08, 0.03],
+    color2: [0.01, 0.06, 0.04],
+    color3: [0.03, 0.1, 0.02],
+    color4: [0.02, 0.05, 0.03],
+  },
+}
 
 /** Particle base colors per theme */
 export const PARTICLE_THEME_COLORS: Record<Theme, THREE.Color> = {
-    dark: new THREE.Color(0.3, 0.5, 1),
-    neon: new THREE.Color(0, 1, 0.8),
-    ocean: new THREE.Color(0.2, 0.6, 1),
-    forest: new THREE.Color(0.3, 0.9, 0.4),
-};
+  dark: new THREE.Color(0.3, 0.5, 1),
+  neon: new THREE.Color(0, 1, 0.8),
+  ocean: new THREE.Color(0.2, 0.6, 1),
+  forest: new THREE.Color(0.3, 0.9, 0.4),
+}
 
 /** Fog colors per theme */
 export const FOG_THEME_COLORS: Record<Theme, THREE.Color> = {
-    dark:   new THREE.Color(0x0a0a1a),
-    neon:   new THREE.Color(0x0a001a),
-    ocean:  new THREE.Color(0x001020),
-    forest: new THREE.Color(0x0a1a0a),
-};
+  dark: new THREE.Color(0x0a0a1a),
+  neon: new THREE.Color(0x0a001a),
+  ocean: new THREE.Color(0x001020),
+  forest: new THREE.Color(0x0a1a0a),
+}
 
 // ═════════════════════════════════════════════════════════════════
 //  6. SHADER UNIFORM UPDATER HELPER
@@ -358,12 +360,12 @@ export const FOG_THEME_COLORS: Record<Theme, THREE.Color> = {
  * Designed for the frame scheduler — lightweight, no allocations.
  */
 export function updateShaderUniforms(
-    materials: THREE.ShaderMaterial[],
-    elapsed: number,
+  materials: THREE.ShaderMaterial[],
+  elapsed: number
 ): void {
-    for (const m of materials) {
-        if (m.uniforms.uTime) {
-            m.uniforms.uTime.value = elapsed;
-        }
+  for (const m of materials) {
+    if (m.uniforms.uTime) {
+      m.uniforms.uTime.value = elapsed
     }
+  }
 }

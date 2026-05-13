@@ -16,7 +16,13 @@ class AlertRepository {
     const rows = await db.query(
       `INSERT INTO alerts (truck_id, driver_id, alert_type, message, severity)
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [alert.truck_id, alert.driver_id, alert.alert_type, alert.message, alert.severity || 'warning'],
+      [
+        alert.truck_id,
+        alert.driver_id,
+        alert.alert_type,
+        alert.message,
+        alert.severity || 'warning',
+      ]
     );
     return rows[0];
   }
@@ -25,7 +31,7 @@ class AlertRepository {
     await db.query(
       `UPDATE alerts SET resolved = TRUE, resolved_at = NOW(), resolved_by = $1
        WHERE time = $2 AND truck_id = $3`,
-      [userId, alertTime, truckId],
+      [userId, alertTime, truckId]
     );
   }
 }

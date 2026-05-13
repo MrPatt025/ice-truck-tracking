@@ -58,21 +58,20 @@ interface CardTitleProps extends HTMLAttributes<HTMLHeadingElement> {
   children: ReactNode
 }
 
-const CardTitle = forwardRef<
-  HTMLParagraphElement,
-  CardTitleProps
->(({ className, children, ...props }, ref) => (
-  <h3
-    ref={ref}
-    className={cn(
-      'text-lg font-semibold leading-none tracking-tight',
-      className
-    )}
-    {...props}
-  >
-    {children}
-  </h3>
-))
+const CardTitle = forwardRef<HTMLParagraphElement, CardTitleProps>(
+  ({ className, children, ...props }, ref) => (
+    <h3
+      ref={ref}
+      className={cn(
+        'text-lg font-semibold leading-none tracking-tight',
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </h3>
+  )
+)
 CardTitle.displayName = 'CardTitle'
 
 const CardContent = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
@@ -84,5 +83,3 @@ CardContent.displayName = 'CardContent'
 
 export { Card, CardHeader, CardTitle, CardContent }
 export type { CardProps }
-
-

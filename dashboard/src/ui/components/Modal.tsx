@@ -106,5 +106,3 @@ export const Modal = memo(function Modal({
 })
 
 Modal.displayName = 'Modal'
-
-

@@ -1,8 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { motion } from 'framer-motion';
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
+import { motion } from 'framer-motion'
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
 import { useEffect, useMemo, useState } from 'react'
 import { Download, Plus, Search, Truck } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'

@@ -14,7 +14,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     { className, label, error, helperText, leftIcon, rightIcon, id, ...props },
     ref
   ) => {
-    const reactId = useId();
+    const reactId = useId()
     const inputId = id || `input-${reactId.replaceAll(':', '')}`
     let describedById: string | undefined
     if (error) describedById = `${inputId}-error`
@@ -85,5 +85,3 @@ Input.displayName = 'Input'
 
 export { Input }
 export type { InputProps }
-
-

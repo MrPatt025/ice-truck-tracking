@@ -117,5 +117,3 @@ export const ConnectionStatus = memo(function ConnectionStatus({
 })
 
 ConnectionStatus.displayName = 'ConnectionStatus'
-
-

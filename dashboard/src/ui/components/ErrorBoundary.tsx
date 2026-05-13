@@ -89,7 +89,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
           <div className='flex gap-3'>
             <Button onClick={this.handleRetry}>Try Again</Button>
-            <Button variant='outline' onClick={() => globalThis.location.reload()}>
+            <Button
+              variant='outline'
+              onClick={() => globalThis.location.reload()}
+            >
               Refresh Page
             </Button>
           </div>
@@ -100,5 +103,3 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children
   }
 }
-
-

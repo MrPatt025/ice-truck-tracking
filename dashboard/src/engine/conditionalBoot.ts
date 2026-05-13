@@ -23,7 +23,7 @@ export function is3DDisabled(): boolean {
 
 // Augment Window for the E2E flag
 declare global {
-    interface Window {
-      __E2E_LIGHT__?: boolean
-    }
+  interface Window {
+    __E2E_LIGHT__?: boolean
+  }
 }

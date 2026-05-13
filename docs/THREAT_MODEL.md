@@ -108,8 +108,8 @@ dashboards and mobile apps via REST/WebSocket APIs behind a Kong API Gateway.
 
 ## Controls Summary
 
-| Control               | Implementation                    | Status        |
-| --------------------- | --------------------------------- | ------------- |
+| Control               | Implementation                    | Status         |
+| --------------------- | --------------------------------- | -------------- |
 | Input Validation      | Zod schemas on all routes         | ✅ Implemented |
 | Authentication        | JWT 15m TTL + refresh rotation    | ✅ Implemented |
 | Authorization         | RBAC with 5 roles                 | ✅ Implemented |

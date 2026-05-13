@@ -11,9 +11,7 @@ const SharedCanvasHost = dynamic(
   }
 )
 
-function SharedCanvasHostReady({
-  onReady,
-}: Readonly<{ onReady: () => void }>) {
+function SharedCanvasHostReady({ onReady }: Readonly<{ onReady: () => void }>) {
   useEffect(() => {
     onReady()
   }, [onReady])

@@ -1,68 +1,129 @@
-'use client';
+'use client'
 
-import React, { useState, useMemo } from 'react';
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
-import { motion } from 'framer-motion';
+import React, { useState, useMemo } from 'react'
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
+import { motion } from 'framer-motion'
 import {
-  Shield, Users, Search, Plus, Edit, Trash2,
-  UserCheck, UserX,
-  Phone, Calendar, Activity,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { roleColors } from '@/lib/tokens';
-import AppSidebar from '@/components/AppSidebar';
-import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
-import { useAuthStore, hasPermission } from '@/stores/authStore';
-import type { UserRole } from '@/lib/tokens';
+  Shield,
+  Users,
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  UserCheck,
+  UserX,
+  Phone,
+  Calendar,
+  Activity,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { roleColors } from '@/lib/tokens'
+import AppSidebar from '@/components/AppSidebar'
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
+import { useAuthStore, hasPermission } from '@/stores/authStore'
+import type { UserRole } from '@/lib/tokens'
 
 interface AdminUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  status: 'active' | 'suspended';
-  lastLogin: string;
-  createdAt: string;
-  phone?: string;
+  id: string
+  name: string
+  email: string
+  role: UserRole
+  status: 'active' | 'suspended'
+  lastLogin: string
+  createdAt: string
+  phone?: string
 }
 
 // ── Mock Data ──────────────────────────────────────────────
 const mockUsers: AdminUser[] = [
-  { id: '1', name: 'Somchai Admin', email: 'admin@icetruck.com', role: 'admin', status: 'active', lastLogin: '2024-06-15T08:00:00Z', createdAt: '2023-01-01T00:00:00Z', phone: '+66 81 234 5678' },
-  { id: '2', name: 'Prasert Manager', email: 'prasert@icetruck.com', role: 'fleet-manager', status: 'active', lastLogin: '2024-06-14T12:30:00Z', createdAt: '2023-03-15T00:00:00Z' },
-  { id: '3', name: 'Nattapong Ops', email: 'nattapong@icetruck.com', role: 'operator', status: 'active', lastLogin: '2024-06-15T06:00:00Z', createdAt: '2023-06-01T00:00:00Z' },
-  { id: '4', name: 'Kittisak View', email: 'kittisak@icetruck.com', role: 'viewer', status: 'active', lastLogin: '2024-06-13T15:00:00Z', createdAt: '2024-01-10T00:00:00Z' },
-  { id: '5', name: 'Wichai Driver', email: 'wichai@icetruck.com', role: 'operator', status: 'suspended', lastLogin: '2024-05-20T09:00:00Z', createdAt: '2023-09-05T00:00:00Z' },
-  { id: '6', name: 'Anong Analyst', email: 'anong@icetruck.com', role: 'fleet-manager', status: 'active', lastLogin: '2024-06-15T07:30:00Z', createdAt: '2023-11-20T00:00:00Z' },
-];
+  {
+    id: '1',
+    name: 'Somchai Admin',
+    email: 'admin@icetruck.com',
+    role: 'admin',
+    status: 'active',
+    lastLogin: '2024-06-15T08:00:00Z',
+    createdAt: '2023-01-01T00:00:00Z',
+    phone: '+66 81 234 5678',
+  },
+  {
+    id: '2',
+    name: 'Prasert Manager',
+    email: 'prasert@icetruck.com',
+    role: 'fleet-manager',
+    status: 'active',
+    lastLogin: '2024-06-14T12:30:00Z',
+    createdAt: '2023-03-15T00:00:00Z',
+  },
+  {
+    id: '3',
+    name: 'Nattapong Ops',
+    email: 'nattapong@icetruck.com',
+    role: 'operator',
+    status: 'active',
+    lastLogin: '2024-06-15T06:00:00Z',
+    createdAt: '2023-06-01T00:00:00Z',
+  },
+  {
+    id: '4',
+    name: 'Kittisak View',
+    email: 'kittisak@icetruck.com',
+    role: 'viewer',
+    status: 'active',
+    lastLogin: '2024-06-13T15:00:00Z',
+    createdAt: '2024-01-10T00:00:00Z',
+  },
+  {
+    id: '5',
+    name: 'Wichai Driver',
+    email: 'wichai@icetruck.com',
+    role: 'operator',
+    status: 'suspended',
+    lastLogin: '2024-05-20T09:00:00Z',
+    createdAt: '2023-09-05T00:00:00Z',
+  },
+  {
+    id: '6',
+    name: 'Anong Analyst',
+    email: 'anong@icetruck.com',
+    role: 'fleet-manager',
+    status: 'active',
+    lastLogin: '2024-06-15T07:30:00Z',
+    createdAt: '2023-11-20T00:00:00Z',
+  },
+]
 
 export default function AdminPage() {
-  const user = useAuthStore((s) => s.user);
-  const canEdit = hasPermission(user?.role, 'users:edit');
-  const canDelete = hasPermission(user?.role, 'users:delete');
+  const user = useAuthStore(s => s.user)
+  const canEdit = hasPermission(user?.role, 'users:edit')
+  const canDelete = hasPermission(user?.role, 'users:delete')
 
-  const [users] = useState<AdminUser[]>(mockUsers);
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [users] = useState<AdminUser[]>(mockUsers)
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState<string>('all')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
 
   const filtered = useMemo(() => {
     return users.filter(u => {
       if (search) {
-        const q = search.toLowerCase();
-        if (!u.name.toLowerCase().includes(q) && !u.email.toLowerCase().includes(q)) return false;
+        const q = search.toLowerCase()
+        if (
+          !u.name.toLowerCase().includes(q) &&
+          !u.email.toLowerCase().includes(q)
+        )
+          return false
       }
-      if (roleFilter !== 'all' && u.role !== roleFilter) return false;
-      if (statusFilter !== 'all' && u.status !== statusFilter) return false;
-      return true;
-    });
-  }, [users, search, roleFilter, statusFilter]);
+      if (roleFilter !== 'all' && u.role !== roleFilter) return false
+      if (statusFilter !== 'all' && u.status !== statusFilter) return false
+      return true
+    })
+  }, [users, search, roleFilter, statusFilter])
 
   const roleCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: users.length };
-    for (const u of users) counts[u.role] = (counts[u.role] || 0) + 1;
-    return counts;
-  }, [users]);
+    const counts: Record<string, number> = { all: users.length }
+    for (const u of users) counts[u.role] = (counts[u.role] || 0) + 1
+    return counts
+  }, [users])
 
   return (
     <>

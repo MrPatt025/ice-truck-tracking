@@ -7,7 +7,11 @@ export interface LandingTelemetryState {
   temperatureC: number
   fogDensity: number
   fogTint: number
-  setTelemetry: (temperatureC: number, fogDensity: number, fogTint: number) => void
+  setTelemetry: (
+    temperatureC: number,
+    fogDensity: number,
+    fogTint: number
+  ) => void
 }
 
 export const useLandingTelemetryStore = create<LandingTelemetryState>()(

@@ -16,7 +16,8 @@ const withFiniteConstraint = (schema: z.ZodNumber) =>
 const finiteNumber = () => withFiniteConstraint(z.number())
 
 const finiteRangedNumber = (min: number, max?: number) => {
-  const base = max === undefined ? z.number().min(min) : z.number().min(min).max(max)
+  const base =
+    max === undefined ? z.number().min(min) : z.number().min(min).max(max)
   return withFiniteConstraint(base)
 }
 
@@ -89,7 +90,9 @@ const liveFleetFiniteOptional = finiteNumber().optional()
 
 const liveFleetTruckPatchSchema = z
   .object({
-    id: z.union([z.string(), z.number()]).transform(value => String(value).trim()),
+    id: z
+      .union([z.string(), z.number()])
+      .transform(value => String(value).trim()),
     lat: liveFleetFiniteOptional,
     lon: liveFleetFiniteOptional,
     latitude: liveFleetFiniteOptional,
@@ -131,7 +134,9 @@ export interface FleetLivePacket {
 
 const liveFleetTruckPatchesSchema = z.array(liveFleetTruckPatchSchema)
 
-function parsePatchArray(payload: unknown): readonly FleetLiveTruckPatch[] | null {
+function parsePatchArray(
+  payload: unknown
+): readonly FleetLiveTruckPatch[] | null {
   const parsed = liveFleetTruckPatchesSchema.safeParse(payload)
   if (!parsed.success) return null
   return parsed.data.filter(patch => patch.id.length > 0)
@@ -157,7 +162,8 @@ export function parseFleetLivePacket(payload: unknown): FleetLivePacket | null {
     return null
   }
 
-  const typeRaw = typeof payload.type === 'string' ? payload.type.toLowerCase() : ''
+  const typeRaw =
+    typeof payload.type === 'string' ? payload.type.toLowerCase() : ''
 
   const directTrucks = parsePatchArray(payload.trucks)
   if (directTrucks) {
@@ -170,7 +176,10 @@ export function parseFleetLivePacket(payload: unknown): FleetLivePacket | null {
       : parsePatchArray(payload.payload)
 
   if (payloadTrucks) {
-    const mode = typeRaw.includes('snapshot') || typeRaw === 'trucks' ? 'replace' : 'upsert'
+    const mode =
+      typeRaw.includes('snapshot') || typeRaw === 'trucks'
+        ? 'replace'
+        : 'upsert'
     return { mode, trucks: payloadTrucks }
   }
 

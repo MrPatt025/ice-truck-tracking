@@ -150,7 +150,10 @@ export function FeatureFlags({ isAdmin = false }: Readonly<FeatureFlagsProps>) {
 
               {isAdmin && flag.enabled && (
                 <div className='flex items-center space-x-2'>
-                  <label htmlFor={`rollout-label-${flag.key}`} className='text-gray-500'>
+                  <label
+                    htmlFor={`rollout-label-${flag.key}`}
+                    className='text-gray-500'
+                  >
                     Rollout:
                   </label>
                   <div className='flex items-center space-x-2'>
@@ -164,7 +167,10 @@ export function FeatureFlags({ isAdmin = false }: Readonly<FeatureFlagsProps>) {
                       max='100'
                       value={flag.rolloutPercentage}
                       onChange={e =>
-                        updateRollout(flag.key, Number.parseInt(e.target.value, 10))
+                        updateRollout(
+                          flag.key,
+                          Number.parseInt(e.target.value, 10)
+                        )
                       }
                       className='w-20'
                     />
@@ -209,5 +215,3 @@ export function useFeatureFlag(flagKey: string): boolean {
 
   return enabled
 }
-
-

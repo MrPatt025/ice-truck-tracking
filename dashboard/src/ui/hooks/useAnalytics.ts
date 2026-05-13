@@ -64,7 +64,10 @@ export function useAnalytics() {
   )
 
   const trackMapInteraction = useCallback(
-    (interaction: string, details?: Record<string, string | number | boolean | undefined>) => {
+    (
+      interaction: string,
+      details?: Record<string, string | number | boolean | undefined>
+    ) => {
       track({
         action: 'map_interaction',
         category: 'engagement',
@@ -161,5 +164,3 @@ export function useAnalyticsOptIn() {
 
   return { isOptedIn, optIn, optOut }
 }
-
-

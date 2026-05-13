@@ -1,45 +1,54 @@
-'use client';
+'use client'
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useMemo, useCallback } from 'react'
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Bell, AlertTriangle, AlertCircle, Info, CheckCircle2,
-  Search, Plus, Trash2, Edit,
-  Clock, Truck, X,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { severityColors } from '@/lib/tokens';
-import AppSidebar from '@/components/AppSidebar';
-import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
-import { useAuthStore, hasPermission } from '@/stores/authStore';
+  Bell,
+  AlertTriangle,
+  AlertCircle,
+  Info,
+  CheckCircle2,
+  Search,
+  Plus,
+  Trash2,
+  Edit,
+  Clock,
+  Truck,
+  X,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { severityColors } from '@/lib/tokens'
+import AppSidebar from '@/components/AppSidebar'
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
+import { useAuthStore, hasPermission } from '@/stores/authStore'
 
 const ALERTS_BASE_TS = Date.parse('2026-01-01T12:00:00.000Z')
 
 // ── Types ──────────────────────────────────────────────────
 interface Alert {
-  id: string;
-  truckId: string;
-  truckName: string;
-  type: string;
-  severity: 'critical' | 'warning' | 'info';
-  message: string;
-  status: 'active' | 'acknowledged' | 'resolved';
-  createdAt: string;
-  acknowledgedAt?: string;
+  id: string
+  truckId: string
+  truckName: string
+  type: string
+  severity: 'critical' | 'warning' | 'info'
+  message: string
+  status: 'active' | 'acknowledged' | 'resolved'
+  createdAt: string
+  acknowledgedAt?: string
 }
 
 interface AlertRule {
-  id: string;
-  name: string;
-  metric: string;
-  condition: string;
-  threshold: number;
-  thresholdMax?: number;
-  severity: 'critical' | 'warning' | 'info';
-  enabled: boolean;
-  notifyEmail: boolean;
-  notifySms: boolean;
+  id: string
+  name: string
+  metric: string
+  condition: string
+  threshold: number
+  thresholdMax?: number
+  severity: 'critical' | 'warning' | 'info'
+  enabled: boolean
+  notifyEmail: boolean
+  notifySms: boolean
 }
 
 // ── Mock Data ──────────────────────────────────────────────

@@ -1,4 +1,4 @@
-jest.mock("pg", () => {
+jest.mock('pg', () => {
   const mockClient = {
     query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
     release: jest.fn(),
@@ -11,10 +11,10 @@ jest.mock("pg", () => {
   };
   return { Pool: jest.fn(() => mockPool) };
 });
-jest.mock("bcryptjs", () => ({
-  hashSync: () => "hashed",
+jest.mock('bcryptjs', () => ({
+  hashSync: () => 'hashed',
   compareSync: () => true,
-  hash: () => Promise.resolve("hashed"),
+  hash: () => Promise.resolve('hashed'),
   compare: () => Promise.resolve(true),
-  genSalt: () => Promise.resolve("salt"),
+  genSalt: () => Promise.resolve('salt'),
 }));

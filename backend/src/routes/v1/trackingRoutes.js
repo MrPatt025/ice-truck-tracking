@@ -93,7 +93,7 @@ router.post('/bulk', requirePermission('tracking:create'), async (req, res, next
       return next(new AppError('data must be an array of locations', 400));
     }
     const results = await Promise.all(
-      locations.map((loc) =>
+      locations.map(loc =>
         TrackingService.createTracking({
           truck_id: loc.truckId,
           latitude: loc.latitude,

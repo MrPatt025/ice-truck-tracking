@@ -21,16 +21,21 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.post('/', requirePermission('alerts:create'), validate(schemas.alert), async (req, res, next) => {
-  try {
-    const newAlert = await alertService.createAlert(req.body);
-    res.status(201).json({
-      status: 'success',
-      data: newAlert,
-    });
-  } catch (error) {
-    next(error);
+router.post(
+  '/',
+  requirePermission('alerts:create'),
+  validate(schemas.alert),
+  async (req, res, next) => {
+    try {
+      const newAlert = await alertService.createAlert(req.body);
+      res.status(201).json({
+        status: 'success',
+        data: newAlert,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 module.exports = router;

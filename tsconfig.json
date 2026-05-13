@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -24,45 +20,20 @@
         "name": "next"
       }
     ],
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@/components/*": [
-        "./src/components/*"
-      ],
-      "@/lib/*": [
-        "./src/lib/*"
-      ],
-      "@/types/*": [
-        "./src/types/*"
-      ],
-      "@backend/*": [
-        "./backend/*"
-      ],
-      "@dashboard/*": [
-        "./dashboard/*"
-      ],
-      "@mobile-app/*": [
-        "./mobile-app/*"
-      ],
-      "@sdk-edge/*": [
-        "./sdk/edge/*"
-      ],
-      "@sdk-mobile/*": [
-        "./sdk/mobile/*"
-      ]
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/types/*": ["./src/types/*"],
+      "@backend/*": ["./backend/*"],
+      "@dashboard/*": ["./dashboard/*"],
+      "@mobile-app/*": ["./mobile-app/*"],
+      "@sdk-edge/*": ["./sdk/edge/*"],
+      "@sdk-mobile/*": ["./sdk/mobile/*"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "scripts/**/*.ts",
-    "*.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.ts", "*.ts"],
   "exclude": [
     "node_modules",
     "dist",

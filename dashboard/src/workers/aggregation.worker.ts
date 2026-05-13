@@ -6,148 +6,150 @@
 
 // ── Message Types ──────────────────────────────────────────
 interface AggregateTimeSeriesMsg {
-  type: 'aggregate-timeseries';
-  data: TelemetryPoint[];
-  interval: 'minute' | 'hour' | 'day' | 'week';
-  metrics: string[];
+  type: 'aggregate-timeseries'
+  data: TelemetryPoint[]
+  interval: 'minute' | 'hour' | 'day' | 'week'
+  metrics: string[]
 }
 
 interface ComputeFleetStatsMsg {
-  type: 'compute-fleet-stats';
-  trucks: TruckData[];
+  type: 'compute-fleet-stats'
+  trucks: TruckData[]
 }
 
 interface EvaluateAlertsMsg {
-  type: 'evaluate-alerts';
-  telemetry: TelemetryPoint[];
-  rules: AlertRule[];
+  type: 'evaluate-alerts'
+  telemetry: TelemetryPoint[]
+  rules: AlertRule[]
 }
 
 interface PrepareExportMsg {
-  type: 'prepare-export';
-  data: Record<string, unknown>[];
-  format: 'csv' | 'json';
-  columns: string[];
+  type: 'prepare-export'
+  data: Record<string, unknown>[]
+  format: 'csv' | 'json'
+  columns: string[]
 }
 
 type WorkerInbound =
   | AggregateTimeSeriesMsg
   | ComputeFleetStatsMsg
   | EvaluateAlertsMsg
-  | PrepareExportMsg;
+  | PrepareExportMsg
 
 interface TelemetryPoint {
-  truckId: string;
-  timestamp: number;
-  temperature: number;
-  humidity: number;
-  lat: number;
-  lng: number;
-  speed: number;
-  fuelLevel: number;
-  batteryLevel: number;
-  doorOpen: boolean;
+  truckId: string
+  timestamp: number
+  temperature: number
+  humidity: number
+  lat: number
+  lng: number
+  speed: number
+  fuelLevel: number
+  batteryLevel: number
+  doorOpen: boolean
 }
 
 interface TruckData {
-  id: string;
-  name: string;
-  status: 'active' | 'idle' | 'maintenance' | 'offline' | 'alert';
-  temperature: number;
-  speed: number;
-  fuelLevel: number;
-  lastUpdate: number;
-  totalDistance: number;
-  deliveries: number;
+  id: string
+  name: string
+  status: 'active' | 'idle' | 'maintenance' | 'offline' | 'alert'
+  temperature: number
+  speed: number
+  fuelLevel: number
+  lastUpdate: number
+  totalDistance: number
+  deliveries: number
 }
 
 interface AlertRule {
-  id: string;
-  metric: string;
-  condition: 'gt' | 'lt' | 'eq' | 'gte' | 'lte' | 'between';
-  threshold: number;
-  thresholdMax?: number;
-  severity: 'critical' | 'warning' | 'info';
-  duration?: number; // consecutive violations before trigger
+  id: string
+  metric: string
+  condition: 'gt' | 'lt' | 'eq' | 'gte' | 'lte' | 'between'
+  threshold: number
+  thresholdMax?: number
+  severity: 'critical' | 'warning' | 'info'
+  duration?: number // consecutive violations before trigger
 }
 
 // ── Worker Handler ─────────────────────────────────────────
 globalThis.onmessage = (e: MessageEvent<WorkerInbound>) => {
-  const msg = e.data;
+  const msg = e.data
 
   switch (msg.type) {
     case 'aggregate-timeseries':
-      handleTimeSeries(msg);
-      break;
+      handleTimeSeries(msg)
+      break
     case 'compute-fleet-stats':
-      handleFleetStats(msg);
-      break;
+      handleFleetStats(msg)
+      break
     case 'evaluate-alerts':
-      handleAlertEvaluation(msg);
-      break;
+      handleAlertEvaluation(msg)
+      break
     case 'prepare-export':
-      handleExport(msg);
-      break;
+      handleExport(msg)
+      break
   }
-};
+}
 
 // ── Time Series Aggregation ────────────────────────────────
 function handleTimeSeries(msg: AggregateTimeSeriesMsg) {
-  const { data, interval, metrics } = msg;
-  const bucketMs = intervalToMs(interval);
+  const { data, interval, metrics } = msg
+  const bucketMs = intervalToMs(interval)
 
   // Group by time bucket
-  const buckets = new Map<number, TelemetryPoint[]>();
+  const buckets = new Map<number, TelemetryPoint[]>()
   for (const point of data) {
-    const bucket = Math.floor(point.timestamp / bucketMs) * bucketMs;
-    const existing = buckets.get(bucket) || [];
-    existing.push(point);
-    buckets.set(bucket, existing);
+    const bucket = Math.floor(point.timestamp / bucketMs) * bucketMs
+    const existing = buckets.get(bucket) || []
+    existing.push(point)
+    buckets.set(bucket, existing)
   }
 
   // Aggregate each bucket
   const result = Array.from(buckets.entries())
     .map(([timestamp, points]) => {
-      const agg: Record<string, unknown> = { timestamp, count: points.length };
+      const agg: Record<string, unknown> = { timestamp, count: points.length }
 
       for (const metric of metrics) {
-        const values = points.map(p => (p as unknown as Record<string, number>)[metric]).filter(v => typeof v === 'number');
-        if (values.length === 0) continue;
+        const values = points
+          .map(p => (p as unknown as Record<string, number>)[metric])
+          .filter(v => typeof v === 'number')
+        if (values.length === 0) continue
 
-        agg[`${metric}_avg`] = values.reduce((a, b) => a + b, 0) / values.length;
-        agg[`${metric}_min`] = Math.min(...values);
-        agg[`${metric}_max`] = Math.max(...values);
-        agg[`${metric}_sum`] = values.reduce((a, b) => a + b, 0);
+        agg[`${metric}_avg`] = values.reduce((a, b) => a + b, 0) / values.length
+        agg[`${metric}_min`] = Math.min(...values)
+        agg[`${metric}_max`] = Math.max(...values)
+        agg[`${metric}_sum`] = values.reduce((a, b) => a + b, 0)
       }
 
-      return agg;
+      return agg
     })
-    .sort((a, b) => (a.timestamp as number) - (b.timestamp as number));
+    .sort((a, b) => (a.timestamp as number) - (b.timestamp as number))
 
-  globalThis.postMessage({ type: 'aggregate-timeseries-result', data: result });
+  globalThis.postMessage({ type: 'aggregate-timeseries-result', data: result })
 }
 
 // ── Fleet Statistics ───────────────────────────────────────
 function handleFleetStats(msg: ComputeFleetStatsMsg) {
-  const { trucks } = msg;
-  const total = trucks.length;
-  const byStatus: Record<string, number> = {};
-  let totalTemp = 0;
-  let totalSpeed = 0;
-  let totalFuel = 0;
-  let totalDistance = 0;
-  let totalDeliveries = 0;
+  const { trucks } = msg
+  const total = trucks.length
+  const byStatus: Record<string, number> = {}
+  let totalTemp = 0
+  let totalSpeed = 0
+  let totalFuel = 0
+  let totalDistance = 0
+  let totalDeliveries = 0
 
   for (const truck of trucks) {
-    byStatus[truck.status] = (byStatus[truck.status] || 0) + 1;
-    totalTemp += truck.temperature;
-    totalSpeed += truck.speed;
-    totalFuel += truck.fuelLevel;
-    totalDistance += truck.totalDistance;
-    totalDeliveries += truck.deliveries;
+    byStatus[truck.status] = (byStatus[truck.status] || 0) + 1
+    totalTemp += truck.temperature
+    totalSpeed += truck.speed
+    totalFuel += truck.fuelLevel
+    totalDistance += truck.totalDistance
+    totalDeliveries += truck.deliveries
   }
 
-  const active = byStatus['active'] || 0;
+  const active = byStatus['active'] || 0
 
   self.postMessage({
     type: 'compute-fleet-stats-result',
@@ -165,52 +167,63 @@ function handleFleetStats(msg: ComputeFleetStatsMsg) {
       totalDistance,
       totalDeliveries,
     },
-  });
+  })
 }
 
 // ── Alert Evaluation ───────────────────────────────────────
 
 function isRuleViolated(rule: AlertRule, value: number): boolean {
   switch (rule.condition) {
-    case 'gt':  return value > rule.threshold;
-    case 'lt':  return value < rule.threshold;
-    case 'eq':  return value === rule.threshold;
-    case 'gte': return value >= rule.threshold;
-    case 'lte': return value <= rule.threshold;
-    case 'between': return value >= rule.threshold && value <= (rule.thresholdMax ?? rule.threshold);
+    case 'gt':
+      return value > rule.threshold
+    case 'lt':
+      return value < rule.threshold
+    case 'eq':
+      return value === rule.threshold
+    case 'gte':
+      return value >= rule.threshold
+    case 'lte':
+      return value <= rule.threshold
+    case 'between':
+      return (
+        value >= rule.threshold &&
+        value <= (rule.thresholdMax ?? rule.threshold)
+      )
   }
 }
 
-function groupByTruck(telemetry: TelemetryPoint[]): Map<string, TelemetryPoint[]> {
-  const byTruck = new Map<string, TelemetryPoint[]>();
+function groupByTruck(
+  telemetry: TelemetryPoint[]
+): Map<string, TelemetryPoint[]> {
+  const byTruck = new Map<string, TelemetryPoint[]>()
   for (const point of telemetry) {
-    const existing = byTruck.get(point.truckId) || [];
-    existing.push(point);
-    byTruck.set(point.truckId, existing);
+    const existing = byTruck.get(point.truckId) || []
+    existing.push(point)
+    byTruck.set(point.truckId, existing)
   }
-  return byTruck;
+  return byTruck
 }
 
 function handleAlertEvaluation(msg: EvaluateAlertsMsg) {
-  const { telemetry, rules } = msg;
+  const { telemetry, rules } = msg
   const triggered: Array<{
-    ruleId: string;
-    truckId: string;
-    metric: string;
-    value: number;
-    threshold: number;
-    severity: string;
-    timestamp: number;
-  }> = [];
+    ruleId: string
+    truckId: string
+    metric: string
+    value: number
+    threshold: number
+    severity: string
+    timestamp: number
+  }> = []
 
-  const byTruck = groupByTruck(telemetry);
+  const byTruck = groupByTruck(telemetry)
 
   for (const rule of rules) {
     for (const [truckId, points] of byTruck) {
-      const latest = points.at(-1);
-      if (!latest) continue;
-      const value = (latest as unknown as Record<string, number>)[rule.metric];
-      if (typeof value !== 'number') continue;
+      const latest = points.at(-1)
+      if (!latest) continue
+      const value = (latest as unknown as Record<string, number>)[rule.metric]
+      if (typeof value !== 'number') continue
 
       if (isRuleViolated(rule, value)) {
         triggered.push({
@@ -221,56 +234,69 @@ function handleAlertEvaluation(msg: EvaluateAlertsMsg) {
           threshold: rule.threshold,
           severity: rule.severity,
           timestamp: latest.timestamp,
-        });
+        })
       }
     }
   }
 
-  globalThis.postMessage({ type: 'evaluate-alerts-result', data: triggered });
+  globalThis.postMessage({ type: 'evaluate-alerts-result', data: triggered })
 }
 
 // ── Export Preparation ─────────────────────────────────────
 function formatCsvCell(val: unknown): string {
-  if (val == null) return '';
+  if (val == null) return ''
   switch (typeof val) {
     case 'string':
       return val.includes(',') || val.includes('"')
         ? `"${val.replaceAll('"', '""')}"`
-        : val;
+        : val
     case 'object':
-      return JSON.stringify(val);
+      return JSON.stringify(val)
     default: {
-      const str = String(val); // NOSONAR — only numbers, booleans, bigints reach this branch
+      const str = String(val) // NOSONAR — only numbers, booleans, bigints reach this branch
       return str.includes(',') || str.includes('"')
         ? `"${str.replaceAll('"', '""')}"`
-        : str;
+        : str
     }
   }
 }
 
 function handleExport(msg: PrepareExportMsg) {
-  const { data, format, columns } = msg;
+  const { data, format, columns } = msg
 
   if (format === 'csv') {
-    const header = columns.join(',');
+    const header = columns.join(',')
     const rows = data.map(row =>
       columns.map(col => formatCsvCell(row[col])).join(',')
-    );
-    const csv = [header, ...rows].join('\n');
-    globalThis.postMessage({ type: 'prepare-export-result', data: csv, format: 'csv' });
+    )
+    const csv = [header, ...rows].join('\n')
+    globalThis.postMessage({
+      type: 'prepare-export-result',
+      data: csv,
+      format: 'csv',
+    })
   } else {
-    const json = JSON.stringify(data, null, 2);
-    globalThis.postMessage({ type: 'prepare-export-result', data: json, format: 'json' });
+    const json = JSON.stringify(data, null, 2)
+    globalThis.postMessage({
+      type: 'prepare-export-result',
+      data: json,
+      format: 'json',
+    })
   }
 }
 
 // ── Helpers ────────────────────────────────────────────────
 function intervalToMs(interval: string): number {
   switch (interval) {
-    case 'minute': return 60_000;
-    case 'hour': return 3_600_000;
-    case 'day': return 86_400_000;
-    case 'week': return 604_800_000;
-    default: return 3_600_000;
+    case 'minute':
+      return 60_000
+    case 'hour':
+      return 3_600_000
+    case 'day':
+      return 86_400_000
+    case 'week':
+      return 604_800_000
+    default:
+      return 3_600_000
   }
 }

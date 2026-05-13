@@ -3,7 +3,6 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const http = require('node:http');
 
-
 // Import configurations
 const config = require('./src/config/env');
 const logger = require('./src/config/logger');
@@ -50,9 +49,9 @@ const app = express();
 app.set('trust proxy', 1);
 
 // ─── Security middleware stack ───
-app.use(requestIdMiddleware);   // X-Request-Id on every response
-app.use(helmetMiddleware);      // CSP, HSTS, X-Frame-Options, etc.
-app.use(securityHeaders);       // Permissions-Policy, Referrer-Policy
+app.use(requestIdMiddleware); // X-Request-Id on every response
+app.use(helmetMiddleware); // CSP, HSTS, X-Frame-Options, etc.
+app.use(securityHeaders); // Permissions-Policy, Referrer-Policy
 
 // CORS configuration
 const corsOptions = {
@@ -62,11 +61,7 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    const allowedOrigins = [
-      CLIENT_URL,
-      'http://localhost:3000',
-      'https://ice-truck-tracking.com',
-    ];
+    const allowedOrigins = [CLIENT_URL, 'http://localhost:3000', 'https://ice-truck-tracking.com'];
 
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -124,7 +119,6 @@ app.get('/', (req, res) => {
     },
   });
 });
-
 
 // Mount API v1 routes (after mock data so mock endpoints take precedence in dev)
 app.use('/api/v1', apiV1Routes);
@@ -185,13 +179,13 @@ async function onServerStarted() {
     try {
       const { eventBus } = require('./src/services/eventBus');
       const { startTelemetryWorker } = require('./src/workers/telemetryWorker');
-      
+
       await eventBus.connect();
       await startTelemetryWorker();
 
       await mqttService.connect();
       telemetryIngestion.registerHandlers(mqttService);
-      
+
       logger.info('Kafka and MQTT connected — telemetry ingestion active');
     } catch (err) {
       logger.error('Telemetry pipeline initialization failed: ' + err.message);
@@ -225,5 +219,3 @@ if (!process.env.JEST_WORKER_ID) {
 }
 
 module.exports = { app, server, startServer };
-
-

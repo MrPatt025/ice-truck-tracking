@@ -7,22 +7,22 @@ const { recordCacheOp } = require('../middleware/observability');
 let client = null;
 
 const getClient = () => {
-    if (client) return client;
+  if (client) return client;
 
-    client = new Redis(config.REDIS_URL, {
-        maxRetriesPerRequest: 3,
-        retryStrategy(times) {
-            const delay = Math.min(times * 200, 5000);
-            return delay;
-        },
-        lazyConnect: true,
-    });
+  client = new Redis(config.REDIS_URL, {
+    maxRetriesPerRequest: 3,
+    retryStrategy(times) {
+      const delay = Math.min(times * 200, 5000);
+      return delay;
+    },
+    lazyConnect: true,
+  });
 
-    client.on('connect', () => logger.info('Redis connected'));
-    client.on('error', (err) => logger.error('Redis error', err));
-    client.on('close', () => logger.warn('Redis connection closed'));
+  client.on('connect', () => logger.info('Redis connected'));
+  client.on('error', err => logger.error('Redis error', err));
+  client.on('close', () => logger.warn('Redis connection closed'));
 
-    return client;
+  return client;
 };
 
 /**
@@ -32,65 +32,65 @@ const getClient = () => {
  * @param {number} ttl - seconds (default 60)
  */
 const cacheOrFetch = async (key, fetchFn, ttl = 60) => {
-    const redis = getClient();
-    try {
-        const cached = await redis.get(key);
-        if (cached) {
-            logger.debug({ key }, 'cache hit');
-            recordCacheOp('get', 'hit');
-            return JSON.parse(cached);
-        }
-    } catch (err) {
-        logger.debug('Redis cache get error: ' + (err?.message ?? String(err)));
-        // Redis down — fall through to fetch
+  const redis = getClient();
+  try {
+    const cached = await redis.get(key);
+    if (cached) {
+      logger.debug({ key }, 'cache hit');
+      recordCacheOp('get', 'hit');
+      return JSON.parse(cached);
     }
+  } catch (err) {
+    logger.debug('Redis cache get error: ' + (err?.message ?? String(err)));
+    // Redis down — fall through to fetch
+  }
 
-    recordCacheOp('get', 'miss');
-    const data = await fetchFn();
+  recordCacheOp('get', 'miss');
+  const data = await fetchFn();
 
-    try {
-        await redis.setex(key, ttl, JSON.stringify(data));
-        recordCacheOp('set', 'ok');
-    } catch (err) {
-        logger.debug('Redis cache set error: ' + (err?.message ?? String(err)));
-        // Redis down — ignore
-    }
+  try {
+    await redis.setex(key, ttl, JSON.stringify(data));
+    recordCacheOp('set', 'ok');
+  } catch (err) {
+    logger.debug('Redis cache set error: ' + (err?.message ?? String(err)));
+    // Redis down — ignore
+  }
 
-    return data;
+  return data;
 };
 
 /** Invalidate a key or pattern */
-const invalidate = async (pattern) => {
-    const redis = getClient();
-    try {
-        if (pattern.includes('*')) {
-            const keys = await redis.keys(pattern);
-            if (keys.length) await redis.del(...keys);
-        } else {
-            await redis.del(pattern);
-        }
-    } catch (err) {
-        logger.debug('Redis invalidate error: ' + (err?.message ?? String(err)));
-        // Redis down — ignore
+const invalidate = async pattern => {
+  const redis = getClient();
+  try {
+    if (pattern.includes('*')) {
+      const keys = await redis.keys(pattern);
+      if (keys.length) await redis.del(...keys);
+    } else {
+      await redis.del(pattern);
     }
+  } catch (err) {
+    logger.debug('Redis invalidate error: ' + (err?.message ?? String(err)));
+    // Redis down — ignore
+  }
 };
 
 /** Publish to a Redis channel (for horizontal scaling) */
 const publish = async (channel, message) => {
-    const redis = getClient();
-    try {
-        await redis.publish(channel, JSON.stringify(message));
-    } catch (err) {
-        logger.debug('Redis publish error: ' + (err?.message ?? String(err)));
-        // ignore
-    }
+  const redis = getClient();
+  try {
+    await redis.publish(channel, JSON.stringify(message));
+  } catch (err) {
+    logger.debug('Redis publish error: ' + (err?.message ?? String(err)));
+    // ignore
+  }
 };
 
 const close = async () => {
-    if (client) {
-        await client.quit();
-        client = null;
-    }
+  if (client) {
+    await client.quit();
+    client = null;
+  }
 };
 
 module.exports = { getClient, cacheOrFetch, invalidate, publish, close };

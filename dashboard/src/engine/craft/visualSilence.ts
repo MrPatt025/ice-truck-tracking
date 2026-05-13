@@ -15,15 +15,15 @@
 
 // ─── Types ─────────────────────────────────────────────────────
 
-export type SilenceLevel = 'minimal' | 'balanced' | 'maximal';
+export type SilenceLevel = 'minimal' | 'balanced' | 'maximal'
 
 export interface VisualSilenceConfig {
-  level: SilenceLevel;
-  removeBorders: boolean;
-  fadeChrome: boolean;         // fade non-essential chrome on idle
-  chromeOpacity: number;       // opacity for non-essential UI
-  contentMaxWidth: string;     // max readable content width
-  breathingMultiplier: number; // multiplier for spacing
+  level: SilenceLevel
+  removeBorders: boolean
+  fadeChrome: boolean // fade non-essential chrome on idle
+  chromeOpacity: number // opacity for non-essential UI
+  contentMaxWidth: string // max readable content width
+  breathingMultiplier: number // multiplier for spacing
 }
 
 // ─── Presets ──────────────────────────────────────────────────
@@ -53,76 +53,76 @@ const SILENCE_PRESETS: Record<SilenceLevel, VisualSilenceConfig> = {
     contentMaxWidth: '960px',
     breathingMultiplier: 1.6,
   },
-};
+}
 
 // ─── Visual Silence Controller ────────────────────────────────
 
 export class VisualSilenceController {
-  private _config: VisualSilenceConfig;
-  private _styleEl: HTMLStyleElement | null = null;
-  private _mounted = false;
-  private _idleTimer: ReturnType<typeof setTimeout> | null = null;
-  private _isIdle = false;
+  private _config: VisualSilenceConfig
+  private _styleEl: HTMLStyleElement | null = null
+  private _mounted = false
+  private _idleTimer: ReturnType<typeof setTimeout> | null = null
+  private _isIdle = false
 
   constructor(level: SilenceLevel = 'balanced') {
-    this._config = { ...SILENCE_PRESETS[level] };
+    this._config = { ...SILENCE_PRESETS[level] }
   }
 
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || document === undefined) return;
-    this._mounted = true;
-    this._injectStyles();
-    this._applyVars();
+    if (this._mounted || document === undefined) return
+    this._mounted = true
+    this._injectStyles()
+    this._applyVars()
 
     if (this._config.fadeChrome) {
-      this._setupIdleDetection();
+      this._setupIdleDetection()
     }
   }
 
   destroy(): void {
-    this._mounted = false;
-    this._styleEl?.remove();
-    this._styleEl = null;
-    if (this._idleTimer) clearTimeout(this._idleTimer);
+    this._mounted = false
+    this._styleEl?.remove()
+    this._styleEl = null
+    if (this._idleTimer) clearTimeout(this._idleTimer)
 
     if (typeof document !== 'undefined') {
-      delete document.documentElement.dataset.silence;
-      delete document.documentElement.dataset.silenceIdle;
+      delete document.documentElement.dataset.silence
+      delete document.documentElement.dataset.silenceIdle
     }
   }
 
   /* ── Public API ────────────────────────────────────────────── */
 
   setLevel(level: SilenceLevel): void {
-    this._config = { ...SILENCE_PRESETS[level] };
-    this._applyVars();
-    this._updateStyles();
+    this._config = { ...SILENCE_PRESETS[level] }
+    this._applyVars()
+    this._updateStyles()
   }
 
   getLevel(): SilenceLevel {
-    return this._config.level;
+    return this._config.level
   }
 
   /** Mark an element as non-essential chrome (fades on idle) */
   markAsChrome(el: HTMLElement): void {
-    el.dataset.silenceChrome = 'true';
+    el.dataset.silenceChrome = 'true'
   }
 
   /** Mark an element as essential (never fades) */
   markAsEssential(el: HTMLElement): void {
-    el.dataset.silenceEssential = 'true';
+    el.dataset.silenceEssential = 'true'
   }
 
   /** Force idle state (useful for demo/testing) */
   setIdle(idle: boolean): void {
-    this._isIdle = idle;
+    this._isIdle = idle
     if (typeof document !== 'undefined') {
       if (idle) {
-        document.documentElement.dataset.silenceIdle = 'true';
+        document.documentElement.dataset.silenceIdle = 'true'
       } else {
-        delete document.documentElement.dataset.silenceIdle;
+        delete document.documentElement.dataset.silenceIdle
       }
     }
   }
@@ -130,43 +130,46 @@ export class VisualSilenceController {
   /* ── Internal ──────────────────────────────────────────────── */
 
   private _applyVars(): void {
-    if (typeof document === 'undefined') return;
-    const root = document.documentElement;
-    const m = this._config.breathingMultiplier;
+    if (typeof document === 'undefined') return
+    const root = document.documentElement
+    const m = this._config.breathingMultiplier
 
-    root.style.setProperty('--silence-breathing', String(m));
-    root.style.setProperty('--silence-chrome-opacity', String(this._config.chromeOpacity));
-    root.style.setProperty('--silence-max-width', this._config.contentMaxWidth);
+    root.style.setProperty('--silence-breathing', String(m))
+    root.style.setProperty(
+      '--silence-chrome-opacity',
+      String(this._config.chromeOpacity)
+    )
+    root.style.setProperty('--silence-max-width', this._config.contentMaxWidth)
 
     // Spacing scale (base * multiplier)
-    root.style.setProperty('--silence-space-xs', `${4 * m}px`);
-    root.style.setProperty('--silence-space-sm', `${8 * m}px`);
-    root.style.setProperty('--silence-space-md', `${16 * m}px`);
-    root.style.setProperty('--silence-space-lg', `${24 * m}px`);
-    root.style.setProperty('--silence-space-xl', `${40 * m}px`);
-    root.style.setProperty('--silence-space-2xl', `${64 * m}px`);
+    root.style.setProperty('--silence-space-xs', `${4 * m}px`)
+    root.style.setProperty('--silence-space-sm', `${8 * m}px`)
+    root.style.setProperty('--silence-space-md', `${16 * m}px`)
+    root.style.setProperty('--silence-space-lg', `${24 * m}px`)
+    root.style.setProperty('--silence-space-xl', `${40 * m}px`)
+    root.style.setProperty('--silence-space-2xl', `${64 * m}px`)
 
-    root.dataset.silence = this._config.level;
+    root.dataset.silence = this._config.level
   }
 
   private _injectStyles(): void {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
-    this._styleEl = document.createElement('style');
-    this._styleEl.dataset.craft = 'visual-silence';
-    this._updateStyles();
-    document.head.appendChild(this._styleEl);
+    this._styleEl = document.createElement('style')
+    this._styleEl.dataset.craft = 'visual-silence'
+    this._updateStyles()
+    document.head.appendChild(this._styleEl)
   }
 
   private _updateStyles(): void {
-    if (!this._styleEl) return;
+    if (!this._styleEl) return
 
     const borderRule = this._config.removeBorders
       ? `[data-silence="balanced"] [data-silence-chrome],
          [data-silence="maximal"] [data-silence-chrome] {
            border-color: transparent !important;
          }`
-      : '';
+      : ''
 
     this._styleEl.textContent = `
       /* ── Visual Silence — Breathing Room ─────────────── */
@@ -236,28 +239,28 @@ export class VisualSilenceController {
       [data-silence="maximal"] .border {
         border-color: oklch(0.5 0 0 / 0.08);
       }
-    `;
+    `
   }
 
   private _setupIdleDetection(): void {
-    const browserWindow = globalThis.window;
-    if (browserWindow === undefined) return;
+    const browserWindow = globalThis.window
+    if (browserWindow === undefined) return
 
     const resetIdle = () => {
       if (this._isIdle) {
-        this.setIdle(false);
+        this.setIdle(false)
       }
-      if (this._idleTimer) clearTimeout(this._idleTimer);
-      this._idleTimer = setTimeout(() => this.setIdle(true), 30_000);
-    };
+      if (this._idleTimer) clearTimeout(this._idleTimer)
+      this._idleTimer = setTimeout(() => this.setIdle(true), 30_000)
+    }
 
-    browserWindow.addEventListener('mousemove', resetIdle, { passive: true });
-    browserWindow.addEventListener('keydown', resetIdle, { passive: true });
-    browserWindow.addEventListener('scroll', resetIdle, { passive: true });
+    browserWindow.addEventListener('mousemove', resetIdle, { passive: true })
+    browserWindow.addEventListener('keydown', resetIdle, { passive: true })
+    browserWindow.addEventListener('scroll', resetIdle, { passive: true })
 
     // Start initial timer
-    this._idleTimer = setTimeout(() => this.setIdle(true), 30_000);
+    this._idleTimer = setTimeout(() => this.setIdle(true), 30_000)
   }
 }
 
-export { SILENCE_PRESETS };
+export { SILENCE_PRESETS }

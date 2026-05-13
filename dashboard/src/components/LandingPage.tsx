@@ -117,9 +117,9 @@ export default function LandingPage() {
   const setProgress = useTransitionStore(s => s.setProgress)
   const transitionProgress = useMotionValue(0)
   const latestScrollRef = React.useRef(0)
-  const routeFallbackTimerRef = React.useRef<
-    ReturnType<typeof setTimeout> | null
-  >(null)
+  const routeFallbackTimerRef = React.useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null)
   const { wsStatus, backendStatus } = useAppHealthEvents()
   const [browserOffline, setBrowserOffline] = React.useState(false)
   const isLiveFlowing = wsStatus === 'connected'

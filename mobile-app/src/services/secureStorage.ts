@@ -1,7 +1,7 @@
-import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store'
+import { Platform } from 'react-native'
 
-const PREFIX = 'ice_truck_';
+const PREFIX = 'ice_truck_'
 
 /**
  * Secure Storage adapter — uses expo-secure-store on native,
@@ -11,37 +11,37 @@ const PREFIX = 'ice_truck_';
  * (iOS Keychain / Android EncryptedSharedPreferences).
  */
 class SecureStorage {
-  private readonly memoryStore = new Map<string, string>();
+  private readonly memoryStore = new Map<string, string>()
 
   private get isNative(): boolean {
-    return Platform.OS === 'ios' || Platform.OS === 'android';
+    return Platform.OS === 'ios' || Platform.OS === 'android'
   }
 
   async get(key: string): Promise<string | null> {
-    const prefixedKey = PREFIX + key;
+    const prefixedKey = PREFIX + key
     if (this.isNative) {
-      return SecureStore.getItemAsync(prefixedKey);
+      return SecureStore.getItemAsync(prefixedKey)
     }
-    return this.memoryStore.get(prefixedKey) ?? null;
+    return this.memoryStore.get(prefixedKey) ?? null
   }
 
   async set(key: string, value: string): Promise<void> {
-    const prefixedKey = PREFIX + key;
+    const prefixedKey = PREFIX + key
     if (this.isNative) {
       await SecureStore.setItemAsync(prefixedKey, value, {
         keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-      });
+      })
     } else {
-      this.memoryStore.set(prefixedKey, value);
+      this.memoryStore.set(prefixedKey, value)
     }
   }
 
   async remove(key: string): Promise<void> {
-    const prefixedKey = PREFIX + key;
+    const prefixedKey = PREFIX + key
     if (this.isNative) {
-      await SecureStore.deleteItemAsync(prefixedKey);
+      await SecureStore.deleteItemAsync(prefixedKey)
     } else {
-      this.memoryStore.delete(prefixedKey);
+      this.memoryStore.delete(prefixedKey)
     }
   }
 
@@ -50,15 +50,15 @@ class SecureStorage {
     await Promise.all([
       this.set('access_token', accessToken),
       this.set('refresh_token', refreshToken),
-    ]);
+    ])
   }
 
   async getAccessToken(): Promise<string | null> {
-    return this.get('access_token');
+    return this.get('access_token')
   }
 
   async getRefreshToken(): Promise<string | null> {
-    return this.get('refresh_token');
+    return this.get('refresh_token')
   }
 
   /** Remove all auth tokens */
@@ -66,8 +66,8 @@ class SecureStorage {
     await Promise.all([
       this.remove('access_token'),
       this.remove('refresh_token'),
-    ]);
+    ])
   }
 }
 
-export const secureStorage = new SecureStorage();
+export const secureStorage = new SecureStorage()

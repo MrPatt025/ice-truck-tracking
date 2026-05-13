@@ -1,29 +1,37 @@
-'use client';
+'use client'
 
 import React, { useState, useCallback, Suspense } from 'react'
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, Snowflake, Loader2, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
-import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
-import { useAuthStore } from '@/stores/authStore';
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { motion } from 'framer-motion'
+import {
+  Eye,
+  EyeOff,
+  Snowflake,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  ArrowLeft,
+} from 'lucide-react'
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
+import { useAuthStore } from '@/stores/authStore'
 
 function ResetPasswordContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams?.get('token') || '';
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const token = searchParams?.get('token') || ''
 
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [validationError, setValidationError] = useState('');
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [validationError, setValidationError] = useState('')
 
-  const resetPassword = useAuthStore((s) => s.resetPassword);
-  const isLoading = useAuthStore((s) => s.isLoading);
-  const error = useAuthStore((s) => s.error);
-  const clearError = useAuthStore((s) => s.clearError);
+  const resetPassword = useAuthStore(s => s.resetPassword)
+  const isLoading = useAuthStore(s => s.isLoading)
+  const error = useAuthStore(s => s.error)
+  const clearError = useAuthStore(s => s.clearError)
 
   const handleSubmit = useCallback(
     (e: React.SyntheticEvent<HTMLFormElement>) => {
@@ -57,7 +65,7 @@ function ResetPasswordContent() {
     [password, confirmPassword, token, resetPassword, clearError, router]
   )
 
-  const displayError = validationError || error;
+  const displayError = validationError || error
 
   return (
     <motion.div
@@ -207,21 +215,21 @@ export default function ResetPasswordPage() {
     <>
       <ScrollytellingCanvas />
       <PremiumPageWrapper
-      mode='glass'
-      className='w-full'
-      denseNoise
-      contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(14,165,233,0.95)]'
-    >
-      <Suspense
-        fallback={
-          <div className='flex items-center justify-center min-h-[200px]'>
-            <Loader2 className='w-6 h-6 animate-spin text-primary' />
-          </div>
-        }
+        mode='glass'
+        className='w-full'
+        denseNoise
+        contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(14,165,233,0.95)]'
       >
-        <ResetPasswordContent />
-      </Suspense>
-    </PremiumPageWrapper>
+        <Suspense
+          fallback={
+            <div className='flex items-center justify-center min-h-[200px]'>
+              <Loader2 className='w-6 h-6 animate-spin text-primary' />
+            </div>
+          }
+        >
+          <ResetPasswordContent />
+        </Suspense>
+      </PremiumPageWrapper>
     </>
   )
 }

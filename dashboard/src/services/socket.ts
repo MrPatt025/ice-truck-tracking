@@ -36,12 +36,14 @@ class SocketService {
     })
 
     this.socket.on('connect', () => {
-      if (process.env.NODE_ENV === 'development') console.debug('[Socket] connected')
+      if (process.env.NODE_ENV === 'development')
+        console.debug('[Socket] connected')
       this.reconnectAttempts = 0
     })
 
     this.socket.on('disconnect', () => {
-      if (process.env.NODE_ENV === 'development') console.debug('[Socket] disconnected')
+      if (process.env.NODE_ENV === 'development')
+        console.debug('[Socket] disconnected')
     })
 
     this.socket.on('connect_error', error => {
@@ -82,5 +84,3 @@ class SocketService {
 
 export const socketService = new SocketService()
 export default socketService
-
-

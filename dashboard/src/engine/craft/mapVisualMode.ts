@@ -13,48 +13,48 @@
  *  All applied as DOM overlays or Mapbox GL expressions.
  * ================================================================ */
 
-import type { Theme } from '../types';
-import type { TimeSegment } from './temporalBehavior';
+import type { Theme } from '../types'
+import type { TimeSegment } from './temporalBehavior'
 
-const OPEN_STYLE_URL = 'https://demotiles.maplibre.org/style.json';
+const OPEN_STYLE_URL = 'https://demotiles.maplibre.org/style.json'
 const HAS_MAPBOX_TOKEN =
-  (process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim() ?? '').length > 0;
+  (process.env.NEXT_PUBLIC_MAPBOX_TOKEN?.trim() ?? '').length > 0
 
 // ─── Types ─────────────────────────────────────────────────────
 
 export interface TruckMarkerVisuals {
-  id: string;
-  speed: number;         // km/h
-  heading: number;       // degrees
-  temperature: number;   // °C (cargo temperature)
-  isMoving: boolean;
-  alertLevel: 'none' | 'warning' | 'critical';
+  id: string
+  speed: number // km/h
+  heading: number // degrees
+  temperature: number // °C (cargo temperature)
+  isMoving: boolean
+  alertLevel: 'none' | 'warning' | 'critical'
 }
 
 export interface MapVisualConfig {
-  shadowEnabled: boolean;
-  headlightEnabled: boolean;
-  routeGlowEnabled: boolean;
-  heatDiffusionEnabled: boolean;
-  nightMode: boolean;
+  shadowEnabled: boolean
+  headlightEnabled: boolean
+  routeGlowEnabled: boolean
+  heatDiffusionEnabled: boolean
+  nightMode: boolean
 }
 
 // ─── Speed-Based Route Colors ─────────────────────────────────
 
 const SPEED_COLORS = {
-  stopped: 'oklch(0.65 0.12 250)',     // blue-gray
-  slow: 'oklch(0.70 0.15 135)',        // green
-  normal: 'oklch(0.75 0.10 200)',      // teal
-  fast: 'oklch(0.72 0.18 80)',         // amber
-  speeding: 'oklch(0.65 0.22 25)',     // red
-} as const;
+  stopped: 'oklch(0.65 0.12 250)', // blue-gray
+  slow: 'oklch(0.70 0.15 135)', // green
+  normal: 'oklch(0.75 0.10 200)', // teal
+  fast: 'oklch(0.72 0.18 80)', // amber
+  speeding: 'oklch(0.65 0.22 25)', // red
+} as const
 
 function getSpeedColor(speed: number): string {
-  if (speed < 1) return SPEED_COLORS.stopped;
-  if (speed < 30) return SPEED_COLORS.slow;
-  if (speed < 80) return SPEED_COLORS.normal;
-  if (speed < 110) return SPEED_COLORS.fast;
-  return SPEED_COLORS.speeding;
+  if (speed < 1) return SPEED_COLORS.stopped
+  if (speed < 30) return SPEED_COLORS.slow
+  if (speed < 80) return SPEED_COLORS.normal
+  if (speed < 110) return SPEED_COLORS.fast
+  return SPEED_COLORS.speeding
 }
 
 // ─── Defaults ──────────────────────────────────────────────────
@@ -65,78 +65,79 @@ const DEFAULT_CONFIG: MapVisualConfig = {
   routeGlowEnabled: true,
   heatDiffusionEnabled: true,
   nightMode: false,
-};
+}
 
 // ─── Map Visual Controller ────────────────────────────────────
 
 export class MapVisualController {
-  private readonly _config: MapVisualConfig;
-  private _theme: Theme = 'dark';
-  private _timeSegment: TimeSegment = 'afternoon';
-  private _styleEl: HTMLStyleElement | null = null;
-  private _mounted = false;
+  private readonly _config: MapVisualConfig
+  private _theme: Theme = 'dark'
+  private _timeSegment: TimeSegment = 'afternoon'
+  private _styleEl: HTMLStyleElement | null = null
+  private _mounted = false
 
   constructor(config?: Partial<MapVisualConfig>) {
-    this._config = { ...DEFAULT_CONFIG, ...config };
+    this._config = { ...DEFAULT_CONFIG, ...config }
   }
 
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || document === undefined) return;
-    this._mounted = true;
-    this._injectStyles();
+    if (this._mounted || document === undefined) return
+    this._mounted = true
+    this._injectStyles()
   }
 
   destroy(): void {
-    this._mounted = false;
-    this._styleEl?.remove();
-    this._styleEl = null;
+    this._mounted = false
+    this._styleEl?.remove()
+    this._styleEl = null
   }
 
   /* ── Public API ────────────────────────────────────────────── */
 
   setTheme(theme: Theme): void {
-    this._theme = theme;
-    this._config.nightMode = theme === 'dark';
-    this._updateStyles();
+    this._theme = theme
+    this._config.nightMode = theme === 'dark'
+    this._updateStyles()
   }
 
   setTimeSegment(segment: TimeSegment): void {
-    this._timeSegment = segment;
-    const isNight = segment === 'night' || segment === 'lateNight' || segment === 'evening';
-    this._config.nightMode = isNight;
-    this._updateStyles();
+    this._timeSegment = segment
+    const isNight =
+      segment === 'night' || segment === 'lateNight' || segment === 'evening'
+    this._config.nightMode = isNight
+    this._updateStyles()
   }
 
   /** Generate CSS for a truck marker */
   getTruckMarkerCSS(truck: TruckMarkerVisuals): Record<string, string> {
-    const styles: Record<string, string> = {};
+    const styles: Record<string, string> = {}
 
     // Shadow
     if (this._config.shadowEnabled) {
-      const shadowBlur = truck.isMoving ? 12 : 8;
-      const shadowOffset = truck.isMoving ? 4 : 2;
-      styles.filter = `drop-shadow(0 ${shadowOffset}px ${shadowBlur}px rgba(0,0,0,0.35))`;
+      const shadowBlur = truck.isMoving ? 12 : 8
+      const shadowOffset = truck.isMoving ? 4 : 2
+      styles.filter = `drop-shadow(0 ${shadowOffset}px ${shadowBlur}px rgba(0,0,0,0.35))`
     }
 
     // Rotation (heading)
-    styles.transform = `rotate(${truck.heading}deg)`;
-    styles.transition = 'transform 500ms cubic-bezier(0.33, 1, 0.68, 1)';
+    styles.transform = `rotate(${truck.heading}deg)`
+    styles.transition = 'transform 500ms cubic-bezier(0.33, 1, 0.68, 1)'
 
     // Alert glow
     if (truck.alertLevel === 'critical') {
-      styles.boxShadow = '0 0 16px 4px rgba(255, 60, 60, 0.5)';
+      styles.boxShadow = '0 0 16px 4px rgba(255, 60, 60, 0.5)'
     } else if (truck.alertLevel === 'warning') {
-      styles.boxShadow = '0 0 10px 2px rgba(255, 180, 60, 0.4)';
+      styles.boxShadow = '0 0 10px 2px rgba(255, 180, 60, 0.4)'
     }
 
-    return styles;
+    return styles
   }
 
   /** Generate headlight beam SVG for night mode */
   getHeadlightBeam(heading: number): string {
-    if (!this._config.headlightEnabled || !this._config.nightMode) return '';
+    if (!this._config.headlightEnabled || !this._config.nightMode) return ''
 
     return `<svg width="80" height="120" viewBox="0 0 80 120" style="
       position:absolute;
@@ -154,7 +155,7 @@ export class MapVisualController {
         </radialGradient>
       </defs>
       <ellipse cx="40" cy="60" rx="35" ry="55" fill="url(#headlight)"/>
-    </svg>`;
+    </svg>`
   }
 
   /** Generate route paint properties for Mapbox GL */
@@ -164,15 +165,21 @@ export class MapVisualController {
       'line-width': width,
       'line-blur': this._config.routeGlowEnabled ? 3 : 0,
       'line-opacity': 0.85,
-    };
+    }
   }
 
   /** Generate heat diffusion circle for temperature warnings */
-  getHeatDiffusionCSS(temperature: number, maxTemp = 50): Record<string, string> {
-    if (!this._config.heatDiffusionEnabled) return {};
+  getHeatDiffusionCSS(
+    temperature: number,
+    maxTemp = 50
+  ): Record<string, string> {
+    if (!this._config.heatDiffusionEnabled) return {}
 
-    const intensity = Math.max(0, Math.min(1, (temperature - 20) / (maxTemp - 20)));
-    const radius = 30 + intensity * 40;
+    const intensity = Math.max(
+      0,
+      Math.min(1, (temperature - 20) / (maxTemp - 20))
+    )
+    const radius = 30 + intensity * 40
 
     return {
       width: `${radius * 2}px`,
@@ -184,35 +191,36 @@ export class MapVisualController {
       position: 'absolute',
       transform: 'translate(-50%, -50%)',
       pointerEvents: 'none',
-      animation: intensity > 0.7 ? 'craft-heat-pulse 2s ease-in-out infinite' : 'none',
-    };
+      animation:
+        intensity > 0.7 ? 'craft-heat-pulse 2s ease-in-out infinite' : 'none',
+    }
   }
 
   /** Get Mapbox GL style URL appropriate for current time/theme */
   getMapStyle(): string {
     if (!HAS_MAPBOX_TOKEN) {
-      return OPEN_STYLE_URL;
+      return OPEN_STYLE_URL
     }
 
     if (this._config.nightMode || this._theme === 'dark') {
-      return 'mapbox://styles/mapbox/dark-v11';
+      return 'mapbox://styles/mapbox/dark-v11'
     }
-    return 'mapbox://styles/mapbox/light-v11';
+    return 'mapbox://styles/mapbox/light-v11'
   }
 
   /* ── Internal ──────────────────────────────────────────────── */
 
   private _injectStyles(): void {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
-    this._styleEl = document.createElement('style');
-    this._styleEl.dataset.craft = 'map-visuals';
-    this._updateStyles();
-    document.head.appendChild(this._styleEl);
+    this._styleEl = document.createElement('style')
+    this._styleEl.dataset.craft = 'map-visuals'
+    this._updateStyles()
+    document.head.appendChild(this._styleEl)
   }
 
   private _updateStyles(): void {
-    if (!this._styleEl) return;
+    if (!this._styleEl) return
 
     this._styleEl.textContent = `
       @keyframes craft-heat-pulse {
@@ -243,8 +251,8 @@ export class MapVisualController {
         filter: blur(2px);
         opacity: 0.4;
       }
-    `;
+    `
   }
 }
 
-export { getSpeedColor, SPEED_COLORS };
+export { getSpeedColor, SPEED_COLORS }

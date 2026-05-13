@@ -31,7 +31,7 @@ class WebSocketService {
         setWsConnections(this.connectedClients.size);
       });
 
-      socket.on('error', (err) => {
+      socket.on('error', err => {
         logger.error(`WebSocket error on ${socket.id}: ${err.message}`);
         recordWsError('socket');
       });

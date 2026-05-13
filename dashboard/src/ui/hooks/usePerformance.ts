@@ -88,5 +88,3 @@ export function useWebVitals() {
     return () => observer.disconnect()
   }, [])
 }
-
-

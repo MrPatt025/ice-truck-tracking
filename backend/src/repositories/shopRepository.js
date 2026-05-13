@@ -18,7 +18,7 @@ class ShopRepository {
     const rows = await db.query(
       `INSERT INTO shops (shop_code, shop_name, phone, address, latitude, longitude)
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [shop.shop_code, shop.shop_name, shop.phone, shop.address, shop.latitude, shop.longitude],
+      [shop.shop_code, shop.shop_name, shop.phone, shop.address, shop.latitude, shop.longitude]
     );
     return rows[0];
   }

@@ -1,9 +1,9 @@
-'use client';
+'use client'
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
   Truck,
@@ -23,15 +23,15 @@ import {
   Snowflake,
   type LucideIcon,
 } from 'lucide-react'
-import { useAuthStore, hasPermission } from '@/stores/authStore';
-import { cn } from '@/lib/utils';
+import { useAuthStore, hasPermission } from '@/stores/authStore'
+import { cn } from '@/lib/utils'
 
 interface NavItem {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  permission: string;
-  badge?: number;
+  label: string
+  href: string
+  icon: LucideIcon
+  permission: string
+  badge?: number
 }
 
 const navItems: NavItem[] = [

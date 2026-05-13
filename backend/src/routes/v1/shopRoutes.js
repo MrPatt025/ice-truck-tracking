@@ -37,16 +37,21 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-router.post('/', requirePermission('shops:create'), validate(schemas.shop), async (req, res, next) => {
-  try {
-    const newShop = await shopService.createShop(req.body);
-    res.status(201).json({
-      status: 'success',
-      data: newShop,
-    });
-  } catch (error) {
-    next(error);
+router.post(
+  '/',
+  requirePermission('shops:create'),
+  validate(schemas.shop),
+  async (req, res, next) => {
+    try {
+      const newShop = await shopService.createShop(req.body);
+      res.status(201).json({
+        status: 'success',
+        data: newShop,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 module.exports = router;

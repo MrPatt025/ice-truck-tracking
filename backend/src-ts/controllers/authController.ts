@@ -57,7 +57,11 @@ export class AuthControllerTs {
       const password = req.body.password;
 
       if (!identifier || !password || password.trim().length === 0) {
-        next(Object.assign(new Error('Please provide username/email and password'), { statusCode: 400 }));
+        next(
+          Object.assign(new Error('Please provide username/email and password'), {
+            statusCode: 400,
+          })
+        );
         return;
       }
 

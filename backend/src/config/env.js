@@ -19,7 +19,8 @@ module.exports = {
   PORT: Number.parseInt(process.env.PORT) || 5000,
 
   // ── PostgreSQL + TimescaleDB ─────────────────────────────
-  DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/ice_tracking',
+  DATABASE_URL:
+    process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/ice_tracking',
   DB_POOL_MAX: Number.parseInt(process.env.DB_POOL_MAX) || 20,
   DB_SSL: process.env.DB_SSL === 'true',
 

@@ -2,7 +2,7 @@
 # Kong API Gateway — Declarative Configuration
 # Routes, rate limiting, authentication, CORS
 # ============================================================================
-_format_version: "3.0"
+_format_version: '3.0'
 
 services:
   # ── Backend API Service ──────────────────────────────────
@@ -14,15 +14,15 @@ services:
     write_timeout: 30000
     routes:
       - name: api-route
-        paths: ["/api"]
+        paths: ['/api']
         strip_path: false
         protocols: [http, https]
       - name: health-route
-        paths: ["/api/v1/health"]
+        paths: ['/api/v1/health']
         strip_path: false
         methods: [GET]
       - name: metrics-route
-        paths: ["/metrics"]
+        paths: ['/metrics']
         strip_path: false
         methods: [GET]
     plugins:
@@ -34,7 +34,7 @@ services:
           redis_port: 6379
       - name: cors
         config:
-          origins: ["https://dashboard.ice-truck.example.com"]
+          origins: ['https://dashboard.ice-truck.example.com']
           methods: [GET, POST, PUT, DELETE, PATCH, OPTIONS]
           headers: [Content-Type, Authorization, X-Request-Id, X-CSRF-Token]
           credentials: true
@@ -48,15 +48,15 @@ services:
             headers: [X-Powered-By, Server]
           add:
             headers:
-              - "X-Content-Type-Options: nosniff"
-              - "X-Frame-Options: DENY"
+              - 'X-Content-Type-Options: nosniff'
+              - 'X-Frame-Options: DENY'
 
   # ── Dashboard Service ────────────────────────────────────
   - name: ice-truck-dashboard
     url: http://dashboard:3000
     routes:
       - name: dashboard-route
-        paths: ["/"]
+        paths: ['/']
         strip_path: false
         protocols: [http, https]
 
@@ -65,7 +65,7 @@ services:
     url: http://backend:5000
     routes:
       - name: ws-route
-        paths: ["/socket.io"]
+        paths: ['/socket.io']
         strip_path: false
         protocols: [http, https]
     plugins:
@@ -73,8 +73,8 @@ services:
         config:
           add:
             headers:
-              - "Connection: Upgrade"
-              - "Upgrade: websocket"
+              - 'Connection: Upgrade'
+              - 'Upgrade: websocket'
 
 plugins:
   # Global plugins

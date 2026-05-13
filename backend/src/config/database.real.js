@@ -12,7 +12,7 @@ const pool = new Pool({
 });
 
 pool.on('connect', () => logger.debug('New PostgreSQL client connected'));
-pool.on('error', (err) => logger.error('Unexpected PostgreSQL pool error', err));
+pool.on('error', err => logger.error('Unexpected PostgreSQL pool error', err));
 
 /**
  * Execute a parameterised query ($1, $2 … style)
@@ -21,7 +21,10 @@ const query = async (text, params) => {
   const start = Date.now();
   try {
     const result = await pool.query(text, params);
-    logger.debug({ text: text.substring(0, 80), duration: Date.now() - start, rows: result.rowCount }, 'query');
+    logger.debug(
+      { text: text.substring(0, 80), duration: Date.now() - start, rows: result.rowCount },
+      'query'
+    );
     return result.rows;
   } catch (err) {
     logger.error({ text: text.substring(0, 80), error: err.message }, 'query error');
@@ -36,7 +39,7 @@ const get = async (text, params) => {
 };
 
 /** Execute inside a transaction */
-const transaction = async (callback) => {
+const transaction = async callback => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');

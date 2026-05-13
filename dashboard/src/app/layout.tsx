@@ -53,7 +53,9 @@ export default function RootLayout({
         <link rel='dns-prefetch' href='https://api.mapbox.com' />
         <link rel='dns-prefetch' href='https://cdn.jsdelivr.net' />
       </head>
-      <body className={`${bodyFont.variable} ${displayFont.variable} antialiased relative isolate`}>
+      <body
+        className={`${bodyFont.variable} ${displayFont.variable} antialiased relative isolate`}
+      >
         <ThemeProvider>
           <GlobalErrorBoundary>
             <div
@@ -72,5 +74,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-

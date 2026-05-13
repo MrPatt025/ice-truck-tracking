@@ -368,5 +368,3 @@ export const PreferencesPanel = memo(function PreferencesPanel({
 })
 
 PreferencesPanel.displayName = 'PreferencesPanel'
-
-

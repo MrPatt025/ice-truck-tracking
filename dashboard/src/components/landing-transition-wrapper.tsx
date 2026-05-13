@@ -1,18 +1,18 @@
-'use client';
+'use client'
 /* eslint-disable react/prop-types */
 
-import { motion } from 'framer-motion';
-import { ReactNode } from 'react';
-import { TransitionOrchestrator } from '@/components/transition-orchestrator';
+import { motion } from 'framer-motion'
+import { ReactNode } from 'react'
+import { TransitionOrchestrator } from '@/components/transition-orchestrator'
 
 interface LandingTransitionWrapperProps {
-  children: ReactNode;
-  onClickDashboard?: () => void;
+  children: ReactNode
+  onClickDashboard?: () => void
 }
 
 /**
  * LandingTransitionWrapper
- * 
+ *
  * Wraps landing page content with:
  * - Framer Motion fade-out animation
  * - Coordinates with WebGL camera movement (TransitionOrchestrator)
@@ -32,7 +32,7 @@ export const LandingTransitionWrapper: React.FC<
         duration={1200}
         onComplete={() => {
           // Wait for transition to complete, then navigate
-          onClickDashboard?.();
+          onClickDashboard?.()
         }}
       />
 
@@ -45,5 +45,5 @@ export const LandingTransitionWrapper: React.FC<
         {children}
       </motion.div>
     </>
-  );
-};
+  )
+}

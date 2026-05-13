@@ -1,5 +1,5 @@
 const workerGlobal = globalThis as typeof globalThis & {
-    global?: typeof globalThis
+  global?: typeof globalThis
 }
 
 workerGlobal.global ??= workerGlobal

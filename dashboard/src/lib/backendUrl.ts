@@ -7,9 +7,13 @@ function trimPathTrailingSlashes(url: URL): void {
 function normalizeApiRoot(configuredApiRoot: string): string {
   const trimmed = configuredApiRoot.trim()
   const lower = trimmed.toLowerCase()
-  const isLocalHostLike = lower === 'localhost' || lower === '127.0.0.1'
-    || lower.startsWith('localhost:') || lower.startsWith('localhost/')
-    || lower.startsWith('127.0.0.1:') || lower.startsWith('127.0.0.1/')
+  const isLocalHostLike =
+    lower === 'localhost' ||
+    lower === '127.0.0.1' ||
+    lower.startsWith('localhost:') ||
+    lower.startsWith('localhost/') ||
+    lower.startsWith('127.0.0.1:') ||
+    lower.startsWith('127.0.0.1/')
   let candidate = trimmed
 
   if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
@@ -46,9 +50,9 @@ export function resolveApiBaseV1(): string {
   }
 
   if (
-    globalThis.window !== undefined
-    && (globalThis.window.location.hostname === 'localhost'
-      || globalThis.window.location.hostname === '127.0.0.1')
+    globalThis.window !== undefined &&
+    (globalThis.window.location.hostname === 'localhost' ||
+      globalThis.window.location.hostname === '127.0.0.1')
   ) {
     return '/api/v1'
   }
@@ -67,9 +71,9 @@ export function resolveMetricsIngestUrl(): string {
   }
 
   if (
-    globalThis.window !== undefined
-    && (globalThis.window.location.hostname === 'localhost'
-      || globalThis.window.location.hostname === '127.0.0.1')
+    globalThis.window !== undefined &&
+    (globalThis.window.location.hostname === 'localhost' ||
+      globalThis.window.location.hostname === '127.0.0.1')
   ) {
     return '/metrics'
   }

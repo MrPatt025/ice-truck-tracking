@@ -6,13 +6,13 @@ class AlertService {
   static async checkOffRoute(truckCode, currentLocation, routeLocations) {
     try {
       const isOffRoute = this.calculateDistanceFromRoute(currentLocation, routeLocations) > 0.5; // 500 เมตร
-      
+
       if (isOffRoute) {
         await this.createSystemAlert({
           truck_code: truckCode,
           type: 'off_route',
           message: `รถหมายเลข ${truckCode} ออกนอกเส้นทางที่กำหนดไว้`,
-          location: currentLocation
+          location: currentLocation,
         });
         return true;
       }
@@ -28,13 +28,13 @@ class AlertService {
     try {
       const now = new Date();
       const timeDiff = (now - new Date(lastMovementTime)) / (1000 * 60); // นาที
-      
+
       if (timeDiff > idleThresholdMinutes) {
         await this.createSystemAlert({
           truck_code: truckCode,
           type: 'idle_too_long',
           message: `รถหมายเลข ${truckCode} จอดอยู่นานเกิน ${idleThresholdMinutes} นาที`,
-          location: null
+          location: null,
         });
         return true;
       }
@@ -53,7 +53,7 @@ class AlertService {
           truck_code: truckCode,
           type: 'speed_exceeded',
           message: `รถหมายเลข ${truckCode} ขับเร็วเกินกำหนด (${currentSpeed} กม./ชม.)`,
-          location: null
+          location: null,
         });
         return true;
       }
@@ -67,25 +67,28 @@ class AlertService {
   // ตรวจสอบการบำรุงรักษา
   static async checkMaintenanceDue(truckCode) {
     try {
-      const [rows] = await db.query(`
+      const [rows] = await db.query(
+        `
         SELECT last_maintenance, maintenance_interval_days 
         FROM trucks 
         WHERE truck_code = ?
-      `, [truckCode]);
+      `,
+        [truckCode]
+      );
 
       if (rows.length > 0) {
         const { last_maintenance, maintenance_interval_days } = rows[0];
         const lastMaintenanceDate = new Date(last_maintenance);
         const nextMaintenanceDate = new Date(lastMaintenanceDate);
         nextMaintenanceDate.setDate(nextMaintenanceDate.getDate() + maintenance_interval_days);
-        
+
         const now = new Date();
         if (now >= nextMaintenanceDate) {
           await this.createSystemAlert({
             truck_code: truckCode,
             type: 'maintenance_due',
             message: `รถหมายเลข ${truckCode} ถึงกำหนดเข้าซ่อมบำรุงแล้ว`,
-            location: null
+            location: null,
           });
           return true;
         }
@@ -113,9 +116,9 @@ class AlertService {
   // คำนวณระยะทางจากเส้นทาง
   static calculateDistanceFromRoute(currentLocation, routeLocations) {
     if (!routeLocations || routeLocations.length === 0) return 0;
-    
+
     let minDistance = Infinity;
-    
+
     for (const routePoint of routeLocations) {
       const distance = this.calculateDistance(
         currentLocation.latitude,
@@ -125,7 +128,7 @@ class AlertService {
       );
       minDistance = Math.min(minDistance, distance);
     }
-    
+
     return minDistance;
   }
 
@@ -134,42 +137,44 @@ class AlertService {
     const R = 6371; // รัศมีโลกในกิโลเมตร
     const dLat = this.deg2rad(lat2 - lat1);
     const dLon = this.deg2rad(lon2 - lon1);
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(this.deg2rad(lat1)) *
+        Math.cos(this.deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c; // ระยะทางในกิโลเมตร
     return distance;
   }
 
   static deg2rad(deg) {
-    return deg * (Math.PI/180);
+    return deg * (Math.PI / 180);
   }
 
   // ตรวจสอบการแจ้งเตือนทั้งหมด
   static async runAllChecks(truckCode, trackingData) {
     try {
       const checks = [];
-      
+
       // ตรวจสอบรถออกนอกเส้นทาง
       if (trackingData.location && trackingData.route) {
         checks.push(this.checkOffRoute(truckCode, trackingData.location, trackingData.route));
       }
-      
+
       // ตรวจสอบรถจอดอยู่นานเกินไป
       if (trackingData.lastMovementTime) {
         checks.push(this.checkIdleTooLong(truckCode, trackingData.lastMovementTime));
       }
-      
+
       // ตรวจสอบความเร็วเกินกำหนด
       if (trackingData.speed) {
         checks.push(this.checkSpeedExceeded(truckCode, trackingData.speed));
       }
-      
+
       // ตรวจสอบการบำรุงรักษา
       checks.push(this.checkMaintenanceDue(truckCode));
-      
+
       await Promise.all(checks);
     } catch (error) {
       console.error('Error running alert checks:', error);

@@ -181,7 +181,9 @@ test.describe('Chaos Engineering — Network Resilience', () => {
 
     // Try to perform an action (e.g., update alert status or truck assignment)
     // This depends on your app's available actions; example: update geofence
-    const actionButton = page.locator('[data-testid="action-toggle-alert"]').first()
+    const actionButton = page
+      .locator('[data-testid="action-toggle-alert"]')
+      .first()
     const actionCount = await actionButton.count()
 
     if (actionCount > 0) {

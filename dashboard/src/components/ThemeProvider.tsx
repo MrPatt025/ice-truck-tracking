@@ -162,5 +162,3 @@ export const DarkModeToggle = memo(function DarkModeToggle({
 })
 
 DarkModeToggle.displayName = 'DarkModeToggle'
-
-

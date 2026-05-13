@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useTransition } from 'react';
+import { useState, useCallback, useRef, useTransition } from 'react'
 
 /**
  * useOptimistic — apply UI changes instantly, revert on server failure.
@@ -7,55 +7,55 @@ import { useState, useCallback, useRef, useTransition } from 'react';
  * @example
  * const { data, mutate } = useOptimistic(trucks);
  * mutate(
-*   (prev) => [...prev, newTruck],          // optimistic updater
-*   () => fetch('/api/v1/trucks', { method: 'POST', body: ... }),   // server call
+ *   (prev) => [...prev, newTruck],          // optimistic updater
+ *   () => fetch('/api/v1/trucks', { method: 'POST', body: ... }),   // server call
  * );
  */
 export function useOptimistic<T>(serverState: T) {
-    const [optimistic, setOptimistic] = useState<T>(serverState);
-    const [error, setError] = useState<Error | null>(null);
-    const [isPending, startTransition] = useTransition();
-    const rollbackRef = useRef<T>(serverState);
+  const [optimistic, setOptimistic] = useState<T>(serverState)
+  const [error, setError] = useState<Error | null>(null)
+  const [isPending, startTransition] = useTransition()
+  const rollbackRef = useRef<T>(serverState)
 
-    // Sync when server state changes externally
-    const prevRef = useRef(serverState);
-    if (prevRef.current !== serverState) {
-        prevRef.current = serverState;
-        setOptimistic(serverState);
-        rollbackRef.current = serverState;
-    }
+  // Sync when server state changes externally
+  const prevRef = useRef(serverState)
+  if (prevRef.current !== serverState) {
+    prevRef.current = serverState
+    setOptimistic(serverState)
+    rollbackRef.current = serverState
+  }
 
-    const mutate = useCallback(
-        async (
-            updater: (current: T) => T,
-            serverAction: () => Promise<T | void>,
-        ) => {
-            setError(null);
-            rollbackRef.current = optimistic;
-            // Apply optimistic update immediately
-            const next = updater(optimistic);
-            setOptimistic(next);
+  const mutate = useCallback(
+    async (
+      updater: (current: T) => T,
+      serverAction: () => Promise<T | void>
+    ) => {
+      setError(null)
+      rollbackRef.current = optimistic
+      // Apply optimistic update immediately
+      const next = updater(optimistic)
+      setOptimistic(next)
 
-            try {
-                const result = await serverAction();
-                // If server returns new state, use it
-                startTransition(() => {
-                    if (result !== undefined) {
-                        setOptimistic(result as T);
-                    }
-                });
-            } catch (err) {
-                // Rollback on failure
-                setOptimistic(rollbackRef.current);
-                const e = err instanceof Error ? err : new Error(String(err));
-                setError(e);
-                throw e;
-            }
-        },
-        [optimistic],
-    );
+      try {
+        const result = await serverAction()
+        // If server returns new state, use it
+        startTransition(() => {
+          if (result !== undefined) {
+            setOptimistic(result as T)
+          }
+        })
+      } catch (err) {
+        // Rollback on failure
+        setOptimistic(rollbackRef.current)
+        const e = err instanceof Error ? err : new Error(String(err))
+        setError(e)
+        throw e
+      }
+    },
+    [optimistic]
+  )
 
-    return { data: optimistic, mutate, error, isPending } as const;
+  return { data: optimistic, mutate, error, isPending } as const
 }
 
 /**
@@ -63,18 +63,18 @@ export function useOptimistic<T>(serverState: T) {
  * Useful for search inputs, live filters.
  */
 export function useDebouncedCallback<Args extends unknown[]>(
-    callback: (...args: Args) => void,
-    delay: number,
+  callback: (...args: Args) => void,
+  delay: number
 ) {
-    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-    return useCallback(
-        (...args: Args) => {
-            if (timerRef.current !== null) {
-                clearTimeout(timerRef.current);
-            }
-            timerRef.current = setTimeout(() => callback(...args), delay);
-        },
-        [callback, delay],
-    );
+  return useCallback(
+    (...args: Args) => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current)
+      }
+      timerRef.current = setTimeout(() => callback(...args), delay)
+    },
+    [callback, delay]
+  )
 }

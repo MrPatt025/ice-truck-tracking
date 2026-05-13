@@ -6,7 +6,9 @@ interface OfflineIndicatorProps {
   className?: string
 }
 
-const OfflineIndicator = memo(function OfflineIndicator({ className = '' }: Readonly<OfflineIndicatorProps>) {
+const OfflineIndicator = memo(function OfflineIndicator({
+  className = '',
+}: Readonly<OfflineIndicatorProps>) {
   const [isOnline, setIsOnline] = useState<boolean>(() => {
     if (globalThis.window === undefined) return true
     return globalThis.navigator.onLine
@@ -45,7 +47,9 @@ const OfflineIndicator = memo(function OfflineIndicator({ className = '' }: Read
       data-testid='offline-indicator'
       className={`glass-panel rounded-xl border border-amber-200/30 bg-amber-100/10 p-3 text-amber-100 shadow-xl ${className}`}
     >
-      <p className='text-sm font-semibold tracking-wide'>Offline mode enabled</p>
+      <p className='text-sm font-semibold tracking-wide'>
+        Offline mode enabled
+      </p>
       <p className='text-xs opacity-90'>graceful fallback mode</p>
     </div>
   )

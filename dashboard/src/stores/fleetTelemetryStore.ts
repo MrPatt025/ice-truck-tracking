@@ -71,7 +71,10 @@ function mergeTruckPatch(
   }
 }
 
-function hasTruckChanged(previous: FleetTruck | undefined, next: FleetTruck): boolean {
+function hasTruckChanged(
+  previous: FleetTruck | undefined,
+  next: FleetTruck
+): boolean {
   if (!previous) return true
   return (
     previous.lat !== next.lat ||
@@ -98,7 +101,9 @@ function applyReplaceMode(
 
   const isUnchanged =
     nextTrucks.length === previousTrucks.length &&
-    nextTrucks.every((truck, index) => !hasTruckChanged(previousTrucks[index], truck))
+    nextTrucks.every(
+      (truck, index) => !hasTruckChanged(previousTrucks[index], truck)
+    )
 
   return isUnchanged ? null : nextTrucks
 }
@@ -136,7 +141,9 @@ export const useFleetTelemetryStore = create<FleetTelemetryState>()(
           return { updatedAt: Date.now() }
         }
 
-        const currentById = new Map(state.trucks.map(truck => [truck.id, truck]))
+        const currentById = new Map(
+          state.trucks.map(truck => [truck.id, truck])
+        )
 
         const nextTrucks =
           mode === 'replace'

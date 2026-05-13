@@ -1,27 +1,43 @@
-'use client';
+'use client'
 
-import React, { useState, useCallback } from 'react';
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas';
-import { motion } from 'framer-motion';
+import React, { useState, useCallback } from 'react'
+import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
+import { motion } from 'framer-motion'
 import {
-  Settings, User, Shield, Key, Bell, Palette,
-  Save, Camera, Loader2, CheckCircle, Moon, Sun, Monitor,
+  Settings,
+  User,
+  Shield,
+  Key,
+  Bell,
+  Palette,
+  Save,
+  Camera,
+  Loader2,
+  CheckCircle,
+  Moon,
+  Sun,
+  Monitor,
   type LucideIcon,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import AppSidebar from '@/components/AppSidebar';
-import PremiumPageWrapper from '@/components/common/PremiumPageWrapper';
-import { useAuthStore } from '@/stores/authStore';
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import AppSidebar from '@/components/AppSidebar'
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
+import { useAuthStore } from '@/stores/authStore'
 
-type SettingsTab = 'profile' | 'security' | 'api-keys' | 'notifications' | 'appearance';
+type SettingsTab =
+  | 'profile'
+  | 'security'
+  | 'api-keys'
+  | 'notifications'
+  | 'appearance'
 
 export default function SettingsPage() {
-  const user = useAuthStore((s) => s.user);
-  const updateProfile = useAuthStore((s) => s.updateProfile);
-  const isLoading = useAuthStore((s) => s.isLoading);
+  const user = useAuthStore(s => s.user)
+  const updateProfile = useAuthStore(s => s.updateProfile)
+  const isLoading = useAuthStore(s => s.isLoading)
 
-  const [tab, setTab] = useState<SettingsTab>('profile');
-  const [saved, setSaved] = useState(false);
+  const [tab, setTab] = useState<SettingsTab>('profile')
+  const [saved, setSaved] = useState(false)
 
   // Profile form
   const [profile, setProfile] = useState({
@@ -29,21 +45,39 @@ export default function SettingsPage() {
     email: user?.email || '',
     phone: user?.phone || '',
     company: user?.company || '',
-  });
+  })
 
   // Security settings
   const [security, setSecurity] = useState({
     twoFactor: false,
     sessionTimeout: 30,
     loginAlerts: true,
-  });
+  })
 
   // API Keys
   const [apiKeys] = useState([
-    { id: '1', name: 'Production API', key: 'ict_prod_••••••••abcd', lastUsed: '2 hours ago', created: '2024-01-15' },
-    { id: '2', name: 'Staging API', key: 'ict_stg_••••••••efgh', lastUsed: '5 days ago', created: '2024-02-20' },
-    { id: '3', name: 'Mobile App', key: 'ict_mob_••••••••ijkl', lastUsed: '1 hour ago', created: '2024-03-10' },
-  ]);
+    {
+      id: '1',
+      name: 'Production API',
+      key: 'ict_prod_••••••••abcd',
+      lastUsed: '2 hours ago',
+      created: '2024-01-15',
+    },
+    {
+      id: '2',
+      name: 'Staging API',
+      key: 'ict_stg_••••••••efgh',
+      lastUsed: '5 days ago',
+      created: '2024-02-20',
+    },
+    {
+      id: '3',
+      name: 'Mobile App',
+      key: 'ict_mob_••••••••ijkl',
+      lastUsed: '1 hour ago',
+      created: '2024-03-10',
+    },
+  ])
 
   // Notification settings
   const [notifications, setNotifications] = useState({
@@ -53,15 +87,15 @@ export default function SettingsPage() {
     dailyDigest: true,
     weeklyReport: true,
     criticalOnly: false,
-  });
+  })
 
   const handleSave = useCallback(async () => {
     if (tab === 'profile') {
-      await updateProfile(profile);
+      await updateProfile(profile)
     }
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }, [tab, profile, updateProfile]);
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }, [tab, profile, updateProfile])
 
   const tabs: { key: SettingsTab; label: string; icon: LucideIcon }[] = [
     { key: 'profile', label: 'Profile', icon: User },
@@ -69,7 +103,7 @@ export default function SettingsPage() {
     { key: 'api-keys', label: 'API Keys', icon: Key },
     { key: 'notifications', label: 'Notifications', icon: Bell },
     { key: 'appearance', label: 'Appearance', icon: Palette },
-  ];
+  ]
 
   return (
     <>

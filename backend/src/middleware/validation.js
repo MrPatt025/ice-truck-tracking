@@ -33,11 +33,7 @@ function isValidUsername(username) {
  * @returns {boolean} True if valid
  */
 function isValidEmail(email) {
-  return (
-    typeof email === 'string' &&
-    email.trim().length >= 5 &&
-    email.includes('@')
-  );
+  return typeof email === 'string' && email.trim().length >= 5 && email.includes('@');
 }
 
 /**
@@ -62,10 +58,7 @@ function validateLogin(body) {
   }
 
   if (identifier.length < 3) {
-    throw new AppError(
-      'Username/email must be at least 3 characters',
-      400
-    );
+    throw new AppError('Username/email must be at least 3 characters', 400);
   }
 
   if (!isValidPassword(body.password)) {

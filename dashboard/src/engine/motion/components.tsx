@@ -14,24 +14,24 @@
  *  All animations run on rAF — zero CSS transitions.
  * ================================================================ */
 
-'use client';
+'use client'
 
 import React, {
-    useRef,
-    useEffect,
-    useCallback,
-    type ReactNode,
-    type CSSProperties,
-} from 'react';
+  useRef,
+  useEffect,
+  useCallback,
+  type ReactNode,
+  type CSSProperties,
+} from 'react'
 import { cn } from '@/lib/utils'
 import {
-    SpringValue,
-    Spring2D,
-    GestureEngine,
-    SPRING_PRESETS,
-} from './springPhysics';
-import type { SpringConfig } from '../types';
-import { frameScheduler } from '../frameScheduler';
+  SpringValue,
+  Spring2D,
+  GestureEngine,
+  SPRING_PRESETS,
+} from './springPhysics'
+import type { SpringConfig } from '../types'
+import { frameScheduler } from '../frameScheduler'
 
 type MutableValueRef<T> = { current: T }
 
@@ -127,10 +127,7 @@ export function useSpring2D(
   initialY: number,
   config: Partial<SpringConfig> = {},
   onUpdate?: (x: number, y: number) => void
-): [
-  MutableValueRef<{ x: number; y: number }>,
-  (x: number, y: number) => void,
-] {
+): [MutableValueRef<{ x: number; y: number }>, (x: number, y: number) => void] {
   const springRef = useRef<Spring2D | null>(null)
   const posRef = useRef({ x: initialX, y: initialY })
   const idRef = useRef(createStableId('spring2d'))

@@ -29,7 +29,11 @@ export const validateEmail = (email: string): boolean => {
   }
 
   const atIndex = email.indexOf('@')
-  if (atIndex <= 0 || atIndex !== email.lastIndexOf('@') || atIndex === email.length - 1) {
+  if (
+    atIndex <= 0 ||
+    atIndex !== email.lastIndexOf('@') ||
+    atIndex === email.length - 1
+  ) {
     return false
   }
 
@@ -37,14 +41,14 @@ export const validateEmail = (email: string): boolean => {
   const domainPart = email.slice(atIndex + 1)
 
   if (
-    localPart.startsWith('.')
-    || localPart.endsWith('.')
-    || domainPart.startsWith('.')
-    || domainPart.endsWith('.')
-    || localPart.includes(' ')
-    || domainPart.includes(' ')
-    || !domainPart.includes('.')
-    || domainPart.includes('..')
+    localPart.startsWith('.') ||
+    localPart.endsWith('.') ||
+    domainPart.startsWith('.') ||
+    domainPart.endsWith('.') ||
+    localPart.includes(' ') ||
+    domainPart.includes(' ') ||
+    !domainPart.includes('.') ||
+    domainPart.includes('..')
   ) {
     return false
   }

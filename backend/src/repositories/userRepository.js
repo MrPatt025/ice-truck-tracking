@@ -34,7 +34,7 @@ class UserRepository {
       `INSERT INTO users (username, email, full_name, password_hash, role)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, username, email, full_name, role, last_login_at as last_login, created_at`,
-      [username, email || null, full_name || null, password, role],
+      [username, email || null, full_name || null, password, role]
     );
     return rows[0] || null;
   }

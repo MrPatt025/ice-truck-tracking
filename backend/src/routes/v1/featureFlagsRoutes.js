@@ -61,15 +61,9 @@ router.get('/:key/check', protect, (req, res) => {
 
   // Deterministic rollout bucketing using crypto hash (0-99)
   const identitySeed = String(
-    req.user?.id
-      ?? req.user?.username
-      ?? req.user?.email
-      ?? req.ip
-      ?? 'anonymous'
+    req.user?.id ?? req.user?.username ?? req.user?.email ?? req.ip ?? 'anonymous'
   );
-  const hashHex = createHash('sha256')
-    .update(`${flag.key}:${identitySeed}`)
-    .digest('hex');
+  const hashHex = createHash('sha256').update(`${flag.key}:${identitySeed}`).digest('hex');
   const userBucket = Number.parseInt(hashHex.slice(0, 8), 16) % 100;
   const enabled = flag.enabled && userBucket < flag.rolloutPercentage;
 

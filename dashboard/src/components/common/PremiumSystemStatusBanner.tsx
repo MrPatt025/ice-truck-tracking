@@ -18,8 +18,10 @@ interface PremiumSystemStatusBannerProps {
 }
 
 function resolveIssueIcon(kind: StatusIssueKind): React.ReactNode {
-  if (kind === 'network') return <WifiOff aria-hidden='true' className='h-4 w-4' />
-  if (kind === 'api') return <ServerCrash aria-hidden='true' className='h-4 w-4' />
+  if (kind === 'network')
+    return <WifiOff aria-hidden='true' className='h-4 w-4' />
+  if (kind === 'api')
+    return <ServerCrash aria-hidden='true' className='h-4 w-4' />
   return <AlertTriangle aria-hidden='true' className='h-4 w-4' />
 }
 

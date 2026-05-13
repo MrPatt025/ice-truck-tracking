@@ -16,33 +16,33 @@
 
 // ─── Types ─────────────────────────────────────────────────────
 
-export type DensityMode = 'compact' | 'focus' | 'cinematic' | 'analyst';
+export type DensityMode = 'compact' | 'focus' | 'cinematic' | 'analyst'
 
 export interface DensityConfig {
   /** Base spacing unit in px */
-  spacingUnit: number;
+  spacingUnit: number
   /** Content max-width */
-  contentMaxWidth: string;
+  contentMaxWidth: string
   /** Panel gap */
-  panelGap: string;
+  panelGap: string
   /** Font size scale factor */
-  fontScale: number;
+  fontScale: number
   /** Padding scale factor */
-  paddingScale: number;
+  paddingScale: number
   /** Border radius scale */
-  radiusScale: number;
+  radiusScale: number
   /** Number of visible panels (for grid layouts) */
-  panelColumns: number;
+  panelColumns: number
   /** Card minimum width */
-  cardMinWidth: string;
+  cardMinWidth: string
   /** Header height */
-  headerHeight: string;
+  headerHeight: string
   /** Sidebar width */
-  sidebarWidth: string;
+  sidebarWidth: string
   /** Show decorative elements */
-  showDecorations: boolean;
+  showDecorations: boolean
   /** Animation intensity (0 = none, 1 = full) */
-  animationIntensity: number;
+  animationIntensity: number
 }
 
 // ─── Density Presets ───────────────────────────────────────────
@@ -104,105 +104,105 @@ const DENSITY_PRESETS: Record<DensityMode, DensityConfig> = {
     showDecorations: false,
     animationIntensity: 0.1,
   },
-};
+}
 
 // ─── Layout Density Controller ────────────────────────────────
 
 export class LayoutDensityController {
-  private _mode: DensityMode = 'focus';
-  private _config: DensityConfig;
-  private _styleEl: HTMLStyleElement | null = null;
-  private _mounted = false;
-  private _autoDetect = true;
-  private _resizeObserver: ResizeObserver | null = null;
+  private _mode: DensityMode = 'focus'
+  private _config: DensityConfig
+  private _styleEl: HTMLStyleElement | null = null
+  private _mounted = false
+  private _autoDetect = true
+  private _resizeObserver: ResizeObserver | null = null
 
   constructor(mode?: DensityMode) {
-    this._mode = mode || 'focus';
-    this._config = { ...DENSITY_PRESETS[this._mode] };
+    this._mode = mode || 'focus'
+    this._config = { ...DENSITY_PRESETS[this._mode] }
   }
 
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || document === undefined) return;
-    this._mounted = true;
+    if (this._mounted || document === undefined) return
+    this._mounted = true
 
-    this._injectStyles();
-    this._applyDensityVars();
+    this._injectStyles()
+    this._applyDensityVars()
 
     // Auto-detect density based on viewport
-    const browserWindow = globalThis.window;
+    const browserWindow = globalThis.window
     if (this._autoDetect && browserWindow !== undefined) {
       this._resizeObserver = new ResizeObserver(() => {
-        this._autoAdjust();
-      });
-      this._resizeObserver.observe(document.documentElement);
-      this._autoAdjust();
+        this._autoAdjust()
+      })
+      this._resizeObserver.observe(document.documentElement)
+      this._autoAdjust()
     }
   }
 
   destroy(): void {
-    this._mounted = false;
-    this._styleEl?.remove();
-    this._styleEl = null;
-    this._resizeObserver?.disconnect();
-    this._resizeObserver = null;
+    this._mounted = false
+    this._styleEl?.remove()
+    this._styleEl = null
+    this._resizeObserver?.disconnect()
+    this._resizeObserver = null
   }
 
   /* ── Mode Control ──────────────────────────────────────────── */
 
   setMode(mode: DensityMode): void {
-    this._mode = mode;
-    this._config = { ...DENSITY_PRESETS[mode] };
-    this._applyDensityVars();
-    this._setDataAttribute(mode);
+    this._mode = mode
+    this._config = { ...DENSITY_PRESETS[mode] }
+    this._applyDensityVars()
+    this._setDataAttribute(mode)
   }
 
   getMode(): DensityMode {
-    return this._mode;
+    return this._mode
   }
 
   getConfig(): Readonly<DensityConfig> {
-    return this._config;
+    return this._config
   }
 
   /** Enable/disable auto-detection */
   setAutoDetect(enabled: boolean): void {
-    this._autoDetect = enabled;
+    this._autoDetect = enabled
   }
 
   /* ── Internal ──────────────────────────────────────────────── */
 
   private _autoAdjust(): void {
-    const browserWindow = globalThis.window;
-    if (browserWindow === undefined || !this._autoDetect) return;
+    const browserWindow = globalThis.window
+    if (browserWindow === undefined || !this._autoDetect) return
 
-    const w = browserWindow.innerWidth;
-    const h = browserWindow.innerHeight;
-    const aspect = w / h;
+    const w = browserWindow.innerWidth
+    const h = browserWindow.innerHeight
+    const aspect = w / h
 
-    let suggested: DensityMode;
+    let suggested: DensityMode
     if (w < 768) {
-      suggested = 'compact';
+      suggested = 'compact'
     } else if (w < 1280) {
-      suggested = 'focus';
+      suggested = 'focus'
     } else if (aspect > 2) {
       // Ultra-wide → analyst mode
-      suggested = 'analyst';
+      suggested = 'analyst'
     } else if (w >= 1920) {
-      suggested = 'cinematic';
+      suggested = 'cinematic'
     } else {
-      suggested = 'focus';
+      suggested = 'focus'
     }
 
     if (suggested !== this._mode) {
-      this.setMode(suggested);
+      this.setMode(suggested)
     }
   }
 
   private _applyDensityVars(): void {
-    if (typeof document === 'undefined') return;
-    const c = this._config;
+    if (typeof document === 'undefined') return
+    const c = this._config
 
     const vars: Record<string, string> = {
       '--density-spacing': `${c.spacingUnit}px`,
@@ -216,21 +216,21 @@ export class LayoutDensityController {
       '--density-header-h': c.headerHeight,
       '--density-sidebar-w': c.sidebarWidth,
       '--density-animation': String(c.animationIntensity),
-    };
+    }
 
-    const root = document.documentElement;
+    const root = document.documentElement
     for (const [k, v] of Object.entries(vars)) {
-      root.style.setProperty(k, v);
+      root.style.setProperty(k, v)
     }
   }
 
   private _setDataAttribute(mode: DensityMode): void {
-    if (typeof document === 'undefined') return;
-    document.documentElement.dataset.density = mode;
+    if (typeof document === 'undefined') return
+    document.documentElement.dataset.density = mode
   }
 
   private _injectStyles(): void {
-    if (typeof document === 'undefined') return;
+    if (typeof document === 'undefined') return
 
     const css = `
       :root {
@@ -288,13 +288,13 @@ export class LayoutDensityController {
       [data-density="analyst"] [data-craft-decoration] {
         display: none !important;
       }
-    `;
+    `
 
-    this._styleEl = document.createElement('style');
-    this._styleEl.dataset.craft = 'layout-density';
-    this._styleEl.textContent = css;
-    document.head.appendChild(this._styleEl);
+    this._styleEl = document.createElement('style')
+    this._styleEl.dataset.craft = 'layout-density'
+    this._styleEl.textContent = css
+    document.head.appendChild(this._styleEl)
   }
 }
 
-export { DENSITY_PRESETS };
+export { DENSITY_PRESETS }

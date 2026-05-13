@@ -19,12 +19,13 @@ const MapModeToggle = memo(function MapModeToggle({
   const isHistoricalMode = !isLiveMode
 
   return (
-   <fieldset
-     className={`glass-panel relative z-50 pointer-events-auto mb-4 inline-flex items-center rounded-xl bg-white/5 p-1 ring-1 ring-cyan-200/20 ${className}`}
-     aria-label='Map visualization mode toggle'
-     data-testid='map-mode-toggle'
-   >      <legend className='sr-only'>Map visualization mode</legend>
-
+    <fieldset
+      className={`glass-panel relative z-50 pointer-events-auto mb-4 inline-flex items-center rounded-xl bg-white/5 p-1 ring-1 ring-cyan-200/20 ${className}`}
+      aria-label='Map visualization mode toggle'
+      data-testid='map-mode-toggle'
+    >
+      {' '}
+      <legend className='sr-only'>Map visualization mode</legend>
       <div className='relative'>
         <button
           type='button'
@@ -44,7 +45,6 @@ const MapModeToggle = memo(function MapModeToggle({
           />
         )}
       </div>
-
       <div className='relative'>
         <button
           type='button'

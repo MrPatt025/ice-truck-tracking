@@ -156,5 +156,3 @@ export const Tooltip = memo(function Tooltip({
 })
 
 Tooltip.displayName = 'Tooltip'
-
-

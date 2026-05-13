@@ -5,8 +5,8 @@ const request = require('supertest');
 const websocketService = require('../../src/services/websocketService');
 
 jest.mock('../../src/services/userService', () => ({
-    login: jest.fn(),
-    register: jest.fn(),
+  login: jest.fn(),
+  register: jest.fn(),
 }));
 
 const userService = require('../../src/services/userService');
@@ -15,38 +15,37 @@ const CREDENTIAL_FIELD = 'password';
 const DUMMY_AUTH_VALUE = process.env.TEST_AUTH_VALUE || 'placeholder';
 
 describe('API endpoint integration', () => {
-    afterAll(async () => {
-        websocketService.stop();
-        await new Promise(resolve => server.close(resolve));
+  afterAll(async () => {
+    websocketService.stop();
+    await new Promise(resolve => server.close(resolve));
+  });
+
+  test('POST /api/v1/auth/login returns token for valid credentials', async () => {
+    userService.login.mockResolvedValueOnce({
+      id: 'u-1',
+      username: 'admin',
+      role: 'admin',
+      password: 'hashed', // NOSONAR - test fixture only
     });
 
-    test('POST /api/v1/auth/login returns token for valid credentials', async () => {
-        userService.login.mockResolvedValueOnce({
-            id: 'u-1',
-            username: 'admin',
-            role: 'admin',
-            password: 'hashed', // NOSONAR - test fixture only
-        });
+    const res = await request(app)
+      .post('/api/v1/auth/login')
+      .send({ username: 'admin', [CREDENTIAL_FIELD]: DUMMY_AUTH_VALUE });
 
-        const res = await request(app)
-            .post('/api/v1/auth/login')
-            .send({ username: 'admin', [CREDENTIAL_FIELD]: DUMMY_AUTH_VALUE });
+    expect(res.statusCode).toBe(200);
+    expect(res.body.status).toBe('success');
+    expect(typeof res.body.token).toBe('string');
+    expect(res.body.data?.user?.username).toBe('admin');
+  });
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body.status).toBe('success');
-        expect(typeof res.body.token).toBe('string');
-        expect(res.body.data?.user?.username).toBe('admin');
-    });
+  test('POST /api/v1/auth/login rejects invalid credentials', async () => {
+    userService.login.mockResolvedValueOnce(null);
 
-    test('POST /api/v1/auth/login rejects invalid credentials', async () => {
-        userService.login.mockResolvedValueOnce(null);
+    const res = await request(app)
+      .post('/api/v1/auth/login')
+      .send({ username: 'wrong-user', [CREDENTIAL_FIELD]: DUMMY_AUTH_VALUE });
 
-        const res = await request(app)
-            .post('/api/v1/auth/login')
-            .send({ username: 'wrong-user', [CREDENTIAL_FIELD]: DUMMY_AUTH_VALUE });
-
-        expect(res.statusCode).not.toBe(200);
-        expect(res.body?.token).toBeUndefined();
-    });
-
+    expect(res.statusCode).not.toBe(200);
+    expect(res.body?.token).toBeUndefined();
+  });
 });

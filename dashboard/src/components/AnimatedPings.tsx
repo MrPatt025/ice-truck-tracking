@@ -54,5 +54,3 @@ const AnimatedPings = memo(function AnimatedPings({
 AnimatedPings.displayName = 'AnimatedPings'
 
 export default AnimatedPings
-
-

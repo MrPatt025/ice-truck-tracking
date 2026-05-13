@@ -426,7 +426,11 @@ function TruckModel({
       onPointerOut={handleTruckPointerOut}
       onClick={handleTruckClick}
     >
-      <mesh ref={bodyMesh} position={[0, 0.2, 0]} castShadow={enableSoftShadows}>
+      <mesh
+        ref={bodyMesh}
+        position={[0, 0.2, 0]}
+        castShadow={enableSoftShadows}
+      >
         <boxGeometry args={[2.8, 0.24, 1.45]} />
         <meshStandardMaterial
           color='#1d4ed8'
@@ -545,12 +549,12 @@ function ColdFogParticles() {
 
     for (let i = 0; i < count; i += 1) {
       const i3 = i * 3
-        const radius = secureRandomRange(0.8, 3.2)
-        const angle = secureRandomRange(0, Math.PI * 2)
+      const radius = secureRandomRange(0.8, 3.2)
+      const angle = secureRandomRange(0, Math.PI * 2)
       positions[i3] = Math.cos(angle) * radius
-        positions[i3 + 1] = secureRandomRange(-0.18, 1.72)
-        positions[i3 + 2] = Math.sin(angle) * secureRandomRange(0.55, 2.45)
-        seeds[i] = secureRandom()
+      positions[i3 + 1] = secureRandomRange(-0.18, 1.72)
+      positions[i3 + 2] = Math.sin(angle) * secureRandomRange(0.55, 2.45)
+      seeds[i] = secureRandom()
     }
 
     g.setAttribute('position', new BufferAttribute(positions, 3))
@@ -766,9 +770,7 @@ function resolveResolutionScale(dpr: number): number {
   return 1
 }
 
-function createPostFxConfig(
-  isTruckSelected: boolean
-): CinematicPostFxConfig {
+function createPostFxConfig(isTruckSelected: boolean): CinematicPostFxConfig {
   const scrollBloom = 0.12 + runtimeState.scroll * 0.16
   const neonSelectionBoost = isTruckSelected ? 0.2 : 0
   const bloomIntensity = Math.min(0.5, scrollBloom + neonSelectionBoost)
@@ -843,9 +845,13 @@ export default function CinematicRig() {
 
   return (
     <>
-      <AdaptiveLightingEnvironment enabled={postFxConfig.enablePremiumLighting} />
+      <AdaptiveLightingEnvironment
+        enabled={postFxConfig.enablePremiumLighting}
+      />
       <color attach='background' args={['#020617']} />
-      <ambientLight intensity={postFxConfig.enablePremiumLighting ? 0.48 : 0.58} />
+      <ambientLight
+        intensity={postFxConfig.enablePremiumLighting ? 0.48 : 0.58}
+      />
       <hemisphereLight
         color='#c7f0ff'
         groundColor='#0f172a'

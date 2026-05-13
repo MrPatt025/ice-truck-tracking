@@ -173,7 +173,10 @@ export class AuthServiceTs {
     return decoded;
   }
 
-  private async createTokenPair(user: AuthUserRecord, family?: string): Promise<{ accessToken: string; refreshToken: string }> {
+  private async createTokenPair(
+    user: AuthUserRecord,
+    family?: string
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const tokenFamily = family ?? crypto.randomUUID();
 
     const accessToken = jwt.sign(

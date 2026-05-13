@@ -41,16 +41,21 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // POST /api/v1/drivers (requires drivers:create permission)
-router.post('/', requirePermission('drivers:create'), validate(schemas.driver), async (req, res, next) => {
-  try {
-    const newDriver = await driverService.createDriver(req.body);
-    res.status(201).json({
-      status: 'success',
-      data: newDriver,
-    });
-  } catch (error) {
-    next(error);
+router.post(
+  '/',
+  requirePermission('drivers:create'),
+  validate(schemas.driver),
+  async (req, res, next) => {
+    try {
+      const newDriver = await driverService.createDriver(req.body);
+      res.status(201).json({
+        status: 'success',
+        data: newDriver,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
 module.exports = router;
