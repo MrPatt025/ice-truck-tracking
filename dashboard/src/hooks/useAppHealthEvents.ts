@@ -47,21 +47,21 @@ export function useAppHealthEvents(): AppHealthState {
 
     globalThis.window.addEventListener(
       WS_HEALTH_EVENT_NAME,
-      onWsHealth as EventListener
+      onWsHealth
     )
     globalThis.window.addEventListener(
       BACKEND_HEALTH_EVENT_NAME,
-      onBackendHealth as EventListener
+      onBackendHealth
     )
 
     return () => {
       globalThis.window.removeEventListener(
         WS_HEALTH_EVENT_NAME,
-        onWsHealth as EventListener
+        onWsHealth
       )
       globalThis.window.removeEventListener(
         BACKEND_HEALTH_EVENT_NAME,
-        onBackendHealth as EventListener
+        onBackendHealth
       )
     }
   }, [])

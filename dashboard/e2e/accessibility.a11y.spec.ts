@@ -17,7 +17,7 @@ async function runAxeAudit(page: Page) {
 
   const results = await page.evaluate(async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (window as Record<string, any>).axe.run(document, {
+    return (globalThis as Record<string, any>).axe.run(document, {
       // NOSONAR
       runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] },
     })

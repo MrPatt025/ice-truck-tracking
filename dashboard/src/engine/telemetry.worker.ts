@@ -427,7 +427,7 @@ function flushBatch(): void {
 
 // ─── postMessage helper ────────────────────────────────────────
 function post(msg: WorkerOutbound): void {
-  ;(globalThis as unknown as Worker).postMessage(msg)
+  postMessage(msg)
 }
 
 // ─── Alert level helper ────────────────────────────────────────

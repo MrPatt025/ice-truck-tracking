@@ -53,6 +53,8 @@ RUN pnpm run build
 FROM base AS runner
 WORKDIR /app
 
+# Ensure standard secure path
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs \

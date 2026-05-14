@@ -2,6 +2,9 @@ FROM node:26-alpine
 
 WORKDIR /app
 
+# Ensure standard secure path
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
 # Copy package files
 COPY package.json ./
 

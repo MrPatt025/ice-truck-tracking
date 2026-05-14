@@ -211,12 +211,12 @@ export function updateCameraFlyToProgress(
   const targetZoom = isTrackingTruck ? 16 : 12 // Close zoom for truck, wide for overview
   const targetPitch = isTrackingTruck ? 50 : 34 // Higher pitch for truck view
 
-  const startLatitude = cameraFlyTo.startLatitude as number
-  const targetLatitude = cameraFlyTo.targetLatitude as number
-  const startLongitude = cameraFlyTo.startLongitude as number
-  const targetLongitude = cameraFlyTo.targetLongitude as number
-  const startZoom = cameraFlyTo.startZoom as number
-  const startPitch = cameraFlyTo.startPitch as number
+  const startLatitude = cameraFlyTo.startLatitude
+  const targetLatitude = cameraFlyTo.targetLatitude
+  const startLongitude = cameraFlyTo.startLongitude
+  const targetLongitude = cameraFlyTo.targetLongitude
+  const startZoom = cameraFlyTo.startZoom
+  const startPitch = cameraFlyTo.startPitch
 
   // Interpolate camera position smoothly
   const nextLatitude = startLatitude + (targetLatitude - startLatitude) * eased

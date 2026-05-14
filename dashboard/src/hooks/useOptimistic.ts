@@ -41,7 +41,7 @@ export function useOptimistic<T>(serverState: T) {
         // If server returns new state, use it
         startTransition(() => {
           if (result !== undefined) {
-            setOptimistic(result as T)
+            setOptimistic(result)
           }
         })
       } catch (err) {

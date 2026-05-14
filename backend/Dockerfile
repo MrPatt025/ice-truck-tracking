@@ -45,6 +45,7 @@ COPY index.js swagger.json ./
 COPY src ./src
 
 # Set environment variables
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV NODE_ENV=production
 ENV PORT=5000
 

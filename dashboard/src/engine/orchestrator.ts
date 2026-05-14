@@ -534,11 +534,11 @@ function handleWorkerMessage(msg: WorkerOutbound): void {
 
   switch (msg.type) {
     case 'truck-update':
-      handleTruckUpdate(msg as WorkerOutbound & { type: 'truck-update' })
+      handleTruckUpdate(msg)
       break
 
     case 'truck-batch':
-      handleTruckBatch(msg as WorkerOutbound & { type: 'truck-batch' })
+      handleTruckBatch(msg)
       break
 
     case 'alert': {
