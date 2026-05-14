@@ -1,3 +1,5 @@
+'use client'
+import dynamic from 'next/dynamic'
 /* ================================================================
  *  Ice-Truck IoT Dashboard — Masterpiece GPU-First Frontend v4.0
  *  ──────────────────────────────────────────────────────────────
@@ -20,7 +22,7 @@
  *  React ONLY renders: Shell, Panels, Controls, Forms, Metric Cards
  *  React NEVER renders: Telemetry loop, marker updates, chart draws
  * ================================================================ */
-'use client'
+
 
 import React, {
   useEffect,
@@ -30,8 +32,13 @@ import React, {
   useMemo,
   memo,
 } from 'react'
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
-import dynamic from 'next/dynamic'
+
+
+const ScrollytellingCanvas = dynamic(
+  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  { ssr: false }
+)
+
 import {
   animate,
   motion,

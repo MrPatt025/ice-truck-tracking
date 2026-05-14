@@ -1,7 +1,12 @@
 'use client'
 
 import React, { useState, useCallback, Suspense } from 'react'
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
+import dynamic from 'next/dynamic'
+
+const ScrollytellingCanvas = dynamic(
+  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  { ssr: false }
+)
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'

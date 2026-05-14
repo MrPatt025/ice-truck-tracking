@@ -187,13 +187,13 @@ export class MicroInteractionController {
         const pointerEvent = e as PointerEvent
         this._onPress(el, pointerEvent, options)
       }),
-      pointerup: (() => {
+      pointerup: ((_e: Event) => {
         this._onRelease(el)
       }),
-      pointerenter: (() => {
+      pointerenter: ((_e: Event) => {
         this._onHoverIn(el)
       }),
-      pointerleave: (() => {
+      pointerleave: ((_e: Event) => {
         this._onHoverOut(el)
       }),
     }

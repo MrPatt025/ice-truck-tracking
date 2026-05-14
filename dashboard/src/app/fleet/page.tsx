@@ -1,8 +1,15 @@
 'use client'
-
 import dynamic from 'next/dynamic'
+
+
+
 import { motion } from 'framer-motion'
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
+
+
+const ScrollytellingCanvas = dynamic(
+  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  { ssr: false }
+)
 import { useEffect, useMemo, useState } from 'react'
 import { Download, Plus, Search, Truck } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
@@ -88,7 +95,7 @@ function createMockRows(count: number): FleetTruckRow[] {
 
 function FleetGridSkeleton() {
   return (
-    <div className='rounded-2xl border border-white/10 bg-slate-900/40 p-4'>
+    <div className='rounded-2xl border border-white/10 bg-slate-900/40 p-4 backdrop-blur-xl relative z-50'>
       <div className='mb-4 h-5 w-56 animate-pulse rounded bg-white/10' />
       <div className='space-y-2'>
         {Array.from({ length: 10 }, (_, idx) => (

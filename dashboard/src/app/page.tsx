@@ -1,6 +1,11 @@
 'use client'
 import LandingPage from '@/components/LandingPage'
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
+import dynamic from 'next/dynamic'
+
+const ScrollytellingCanvas = dynamic(
+  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  { ssr: false }
+)
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 
 export default function Home() {

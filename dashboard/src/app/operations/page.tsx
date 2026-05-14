@@ -1,7 +1,12 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ScrollytellingCanvas } from '@/components/ScrollytellingCanvas'
+import dynamic from 'next/dynamic'
+
+const ScrollytellingCanvas = dynamic(
+  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  { ssr: false }
+)
 import { RadioTower, Waves, Clock3, CircleGauge } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'

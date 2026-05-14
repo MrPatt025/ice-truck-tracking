@@ -29,14 +29,21 @@ import {
   CardDescription,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import HeroBackground from '@/components/landing/HeroBackground'
+import dynamic from 'next/dynamic'
 import GlassPanel from '@/components/landing/GlassPanel'
-import ScrollTruckStory from '@/components/landing/ScrollTruckStory'
 import { useTransitionStore } from '@/stores/transitionStore'
 import PremiumSystemStatusBanner, {
   type StatusIssue,
 } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
+
+const HeroBackground = dynamic(() => import('@/components/landing/HeroBackground'), {
+  ssr: false,
+})
+const ScrollTruckStory = dynamic(
+  () => import('@/components/landing/ScrollTruckStory'),
+  { ssr: false }
+)
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
