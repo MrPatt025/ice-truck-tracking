@@ -100,7 +100,10 @@ beforeAll(async () => {
   await waitForPostgres(pool);
 
   // Apply migration (skip TimescaleDB-specific parts)
-  const migrationPath = path.resolve(__dirname, '../../database/migrations/001_init.sql');
+  const migrationPath = path.resolve(__dirname, '../../database/migrations/001_init_timescaledb.sql');
+  if (!fs.existsSync(migrationPath)) {
+    throw new Error(`Migration file not found: ${migrationPath}`);
+  }
   let sql = fs.readFileSync(migrationPath, 'utf8');
 
   // Remove TimescaleDB-specific statements (not available in plain postgres)
