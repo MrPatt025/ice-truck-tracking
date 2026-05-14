@@ -28,7 +28,7 @@ import {
   createDepthFogMaterial,
   updateShaderUniforms,
   SHADER_THEME_COLORS,
-  FOG_THEME_COLORS,
+  FOG_THEME_HEX,
 } from './gpu/shaderMaterials'
 import { AdaptiveDPR } from './gpu/adaptiveDPR'
 
@@ -229,7 +229,7 @@ export class ImperativeThreeLayer {
 
   private createDepthFog(theme: Theme): void {
     if (!this.scene) return
-    const fogColor = FOG_THEME_COLORS[theme]
+    const fogColor = FOG_THEME_HEX[theme]
     const fogMaterial = createDepthFogMaterial(fogColor, 0.25)
     this.shaderMaterials.push(fogMaterial)
 
@@ -549,9 +549,9 @@ export class ImperativeThreeLayer {
 
     // Update fog
     if (this.fogMesh) {
-      const fogColor = FOG_THEME_COLORS[theme]
+      const fogColor = FOG_THEME_HEX[theme]
       const mat = this.fogMesh.material as THREE.ShaderMaterial
-      mat.uniforms.uFogColor.value.copy(fogColor)
+      mat.uniforms.uFogColor.value.setHex(fogColor)
     }
 
     this.sceneCtrl?.markDirty('theme')

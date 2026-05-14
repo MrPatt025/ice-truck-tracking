@@ -83,8 +83,8 @@ export {
   createDepthFogMaterial,
   updateShaderUniforms,
   SHADER_THEME_COLORS,
-  PARTICLE_THEME_COLORS,
-  FOG_THEME_COLORS,
+  PARTICLE_THEME_HEX,
+  FOG_THEME_HEX,
 } from './gpu/shaderMaterials'
 export {
   AdaptiveDPR,

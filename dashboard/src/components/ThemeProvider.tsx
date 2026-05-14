@@ -64,6 +64,21 @@ export function ThemeProvider({
     root.style.colorScheme = resolved
   }, [theme])
 
+  // Console Guard — Mute harmless but noisy 3D HMR warnings
+  useEffect(() => {
+    const originalWarn = console.warn
+    console.warn = (...args: unknown[]) => {
+      const msg = args[0]?.toString() || ''
+      if (msg.includes('THREE.Clock') || msg.includes('Context Lost')) {
+        return
+      }
+      originalWarn(...args)
+    }
+    return () => {
+      console.warn = originalWarn
+    }
+  }, [])
+
   // Listen for system theme changes
   useEffect(() => {
     if (theme !== 'system') return

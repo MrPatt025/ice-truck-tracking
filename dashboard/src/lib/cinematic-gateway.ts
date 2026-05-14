@@ -62,12 +62,14 @@ export const orchestrateTransition = (
   // FOV: 60° to 20° (depth compression)
   const startFOV = 60
   const endFOV = 20
-  camera.fov = THREE.MathUtils.lerp(startFOV, endFOV, eased)
+  
+  // Use safe math instead of THREE.MathUtils.lerp to be doubly safe
+  camera.fov = startFOV + (endFOV - startFOV) * eased
 
   // Z position: 0 to -50 (push back for dramatic effect)
   const startZ = 0
   const endZ = -50
-  camera.position.z = THREE.MathUtils.lerp(startZ, endZ, eased)
+  camera.position.z = startZ + (endZ - startZ) * eased
 
   camera.updateProjectionMatrix()
 }
@@ -82,7 +84,9 @@ export const easeInOutCubic = (t: number): number => {
 /**
  * SVG noise generator for subtle texture
  */
-export const createNoisePattern = (): HTMLCanvasElement => {
+export const createNoisePattern = (): HTMLCanvasElement | null => {
+  if (typeof document === 'undefined') return null
+  
   const canvas = document.createElement('canvas')
   canvas.width = 512
   canvas.height = 512
@@ -109,7 +113,9 @@ export const createNoisePattern = (): HTMLCanvasElement => {
  * Global canvas initialization
  * Called once from root layout
  */
-export const initGlobalCanvas = (): HTMLCanvasElement => {
+export const initGlobalCanvas = (): HTMLCanvasElement | null => {
+  if (typeof document === 'undefined' || typeof window === 'undefined') return null
+  
   const canvas = document.createElement('canvas')
 
   canvas.id = 'cinematic-gateway-canvas'

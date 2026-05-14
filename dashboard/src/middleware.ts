@@ -21,8 +21,20 @@ const AUTH_ROUTES = [
   '/reset-password',
 ]
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  
+  // Whitelist PWA manifest, favicons and robots.txt to bypass auth and headers if needed
+  if (
+    pathname === '/manifest.json' ||
+    pathname === '/favicon.ico' ||
+    pathname.startsWith('/icon-') ||
+    pathname.startsWith('/apple-icon') ||
+    pathname === '/robots.txt'
+  ) {
+    return NextResponse.next()
+  }
+
   const requestHeaders = new Headers(request.headers)
   const response = NextResponse.next({
     request: {
@@ -75,5 +87,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|icon-|apple-icon|robots.txt|api).*)',
+  ],
 }

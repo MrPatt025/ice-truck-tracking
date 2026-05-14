@@ -1,9 +1,17 @@
 'use client'
-import LandingPage from '@/components/LandingPage'
+
+import React from 'react'
 import dynamic from 'next/dynamic'
 
+const LandingPage = dynamic(() => import('@/components/LandingPage'), {
+  ssr: false,
+})
+
 const ScrollytellingCanvas = dynamic(
-  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  () =>
+    import('@/components/ScrollytellingCanvas').then(
+      m => m.ScrollytellingCanvas
+    ),
   { ssr: false }
 )
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'

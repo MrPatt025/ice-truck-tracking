@@ -37,7 +37,7 @@ import {
   pushChartPoint,
 } from './store'
 import { frameScheduler } from './frameScheduler'
-import { ImperativeThreeLayer } from './threeLayer'
+import type { ImperativeThreeLayer } from './threeLayer'
 import { ImperativeChart } from './chartEngine'
 import { PerformanceOverlay } from './perfOverlay'
 import { AdaptiveController } from './adaptive'
@@ -292,9 +292,13 @@ export function shutdownEngine(): void {
 // ─── Layer mounting (called by React refs) ─────────────────────
 
 /** Mount the Three.js 3D background into a container */
-export function mount3D(container: HTMLElement): void {
+export async function mount3D(container: HTMLElement): Promise<void> {
   if (threeLayer) return
   const theme = useIoTStore.getState().theme
+  
+  // Lazy-load Three.js layer only on the client
+  const { ImperativeThreeLayer } = await import('./threeLayer')
+  
   threeLayer = new ImperativeThreeLayer()
   threeLayer.init(container, theme)
   frameScheduler.register('three', dt => threeLayer?.update(dt))

@@ -38,8 +38,8 @@ function normalizeBackendOrigin(rawUrl: string): string {
 
 const backendOrigin = normalizeBackendOrigin(configuredApiRoot)
 const scriptSrc = isProduction
-  ? "script-src 'self' 'unsafe-inline'"
-  : "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+  ? "script-src 'self' 'unsafe-inline' https://vercel.live https://*.vercel-scripts.com"
+  : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com"
 const localApiOrigins: string[] = []
 if (!isProduction) {
   localApiOrigins.push('http://localhost:5000', 'ws://localhost:5000')
@@ -50,6 +50,8 @@ const connectSrc = [
   'wss:',
   'https://api.mapbox.com',
   'https://events.mapbox.com',
+  'https://vercel.live',
+  'wss://*.vercel.live',
   ...localApiOrigins,
 ].join(' ')
 

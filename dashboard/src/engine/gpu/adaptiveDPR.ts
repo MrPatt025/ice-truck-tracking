@@ -288,6 +288,10 @@ function downLOD(current: LODLevel, steps: number): LODLevel {
  * Runs once at boot; result cached in adaptive layer.
  */
 export function detectDeviceTier(): DeviceTier {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return 'mid-range' // Safe default for SSR
+  }
+
   // Check for hardware concurrency
   const cores = navigator.hardwareConcurrency || 2
 
