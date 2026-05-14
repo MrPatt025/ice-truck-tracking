@@ -180,7 +180,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         ) : null}
         <motion.div
           variants={CHILDREN_VARIANTS}
-          className='relative z-[1] antialiased [font-kerning:normal] [font-variant-ligatures:common-ligatures] [text-wrap:balance]'
+          className='relative z-50 antialiased [font-kerning:normal] [font-variant-ligatures:common-ligatures] [text-wrap:balance]'
           style={{
             contain: 'layout style paint',
             contentVisibility: 'auto',

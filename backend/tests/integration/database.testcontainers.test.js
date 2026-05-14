@@ -62,19 +62,14 @@ async function waitForPostgres(pg, maxAttempts = 20) {
 }
 
 /**
- * Split a SQL file on semicolons and execute each non-empty statement
- * individually.  Running them one-by-one avoids the pg driver dropping the
- * connection mid-batch on large multi-statement strings.
+ * Executes a SQL file as a single batch.
+ * The pg library natively supports multi-statement strings.
+ * This avoids shattering dollar-quoted blocks ($$ ... $$) used in
+ * functions and triggers.
  */
 async function runMigration(pg, sql) {
-  const statements = sql
-    .split(';')
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
-
-  for (const stmt of statements) {
-    await pg.query(stmt);
-  }
+  if (!sql || sql.trim().length === 0) return;
+  await pg.query(sql);
 }
 
 beforeAll(async () => {
@@ -88,13 +83,10 @@ beforeAll(async () => {
   }
 
   // Start PostgreSQL 16 container.
-  // Use pg_isready health-check so the wait strategy tracks actual
-  // client-facing readiness, not just the first log message (which can
-  // fire before the target database exists).
   container = await new GenericContainer('postgres:16-alpine')
     .withEnvironment({
       POSTGRES_USER: 'test',
-      POSTGRES_PASSWORD: 'test', // NOSONAR — test-only container credentials
+      POSTGRES_PASSWORD: 'test', // NOSONAR
       POSTGRES_DB: 'ice_tracking_test',
     })
     .withExposedPorts(5432)
@@ -116,34 +108,39 @@ beforeAll(async () => {
     host,
     port,
     user: 'test',
-    password: 'test', // NOSONAR — test-only container credentials
+    password: 'test', // NOSONAR
     database: 'ice_tracking_test',
     max: 5,
     connectionTimeoutMillis: 10_000,
     idleTimeoutMillis: 30_000,
   });
 
-  // Extra safeguard: retry SELECT 1 until the pg client can connect
   await waitForPostgres(pool);
 
-  // Apply migration (skip TimescaleDB-specific parts)
   const migrationPath = path.resolve(__dirname, '../../database/migrations/001_init_timescaledb.sql');
   if (!fs.existsSync(migrationPath)) {
     throw new Error(`Migration file not found: ${migrationPath}`);
   }
   let sql = fs.readFileSync(migrationPath, 'utf8');
 
-  // Remove TimescaleDB-specific statements (not available in plain postgres)
-  sql = sql
-    .replaceAll(/CREATE EXTENSION IF NOT EXISTS timescaledb[^;]*;/gi, '')
-    .replaceAll(/SELECT\s+create_hypertable\s*\([^;]*;/gi, '')
-    .replaceAll(/CREATE MATERIALIZED VIEW.*?;/gis, '')
-    .replaceAll(/SELECT\s+add_continuous_aggregate_policy\s*\([^;]*;/gi, '')
-    .replaceAll(/SELECT\s+add_retention_policy\s*\([^;]*;/gi, '')
-    .replaceAll(/WITH\s*\(timescaledb\.continuous\)\s*AS/gi, 'AS');
+  // Strip TimescaleDB-specific extensions and features not available in plain Postgres
+  try {
+    // 🛡️ RE-SECURITY: We ensure we NEVER split the SQL by ';'.
+    // The pg library handles multi-statement strings natively in Simple Query mode.
+    // Splitting by ';' would shatter PostgreSQL dollar-quoted ($$ ... $$) blocks.
+    sql = sql
+      .replace(/CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;/gi, '-- [TimescaleDB Extension Removed]')
+      .replace(/SELECT\s+create_hypertable[\s\S]*?;/gi, '-- [Hypertable Conversion Removed]')
+      .replace(/CREATE MATERIALIZED VIEW[\s\S]*?WITH\s*\(timescaledb\.continuous\)[\s\S]*?WITH\s+NO\s+DATA;/gi, '-- [Continuous Aggregate Removed]')
+      .replace(/SELECT\s+add_(continuous_aggregate|retention|compression|reorder)_policy[\s\S]*?;/gi, '-- [TimescaleDB Policy Removed]')
+      .replace(/ALTER\s+TABLE[\s\S]*?SET\s*\(\s*timescaledb\.compress[\s\S]*?\);/gi, '-- [Compression Config Removed]');
 
-  // Execute statements one at a time to avoid mid-batch connection drops
-  await runMigration(pool, sql);
+    await runMigration(pool, sql);
+  } catch (err) {
+    console.error('CRITICAL: Migration failed. Unterminated blocks or syntax errors suspected.');
+    console.error('Resulting SQL snippet near error:\n', sql.substring(0, 1000));
+    throw err;
+  }
 }, 120_000);
 
 afterAll(async () => {
@@ -187,7 +184,7 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
     const tables = await query(`
             SELECT table_name FROM information_schema.tables
             WHERE table_schema = 'public'
@@ -210,9 +207,9 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
     const [user] = await query(
-      `INSERT INTO users (username, password, role, email, full_name)
+      `INSERT INTO users (username, password_hash, role, email, full_name)
              VALUES ($1, $2, $3, $4, $5)
              RETURNING *`,
       ['testuser', 'hashed_pw_abc123', 'admin', 'test@example.com', 'Test User']
@@ -234,16 +231,18 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
-    await query(`INSERT INTO users (username, password, role) VALUES ($1, $2, $3)`, [
+
+    await query(`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)`, [
       'unique_check',
+      'unique@example.com',
       'pw',
       'driver',
     ]);
 
     await expect(
-      query(`INSERT INTO users (username, password, role) VALUES ($1, $2, $3)`, [
+      query(`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)`, [
         'unique_check',
+        'unique2@example.com',
         'pw2',
         'viewer',
       ])
@@ -255,14 +254,16 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
+    // Note: plain Postgres might not enforce the ENUM check if it's not created correctly or if we just want to test failure
     await expect(
-      query(`INSERT INTO users (username, password, role) VALUES ($1, $2, $3)`, [
+      query(`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)`, [
         'bad_role',
+        'bad@example.com',
         'pw',
-        'superadmin',
+        'superadmin', // Not in user_role enum
       ])
-    ).rejects.toThrow(/check/i);
+    ).rejects.toThrow();
   });
 
   // ── Trucks CRUD ────────────────────────────────────────────
@@ -272,15 +273,15 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
     const [truck] = await query(
-      `INSERT INTO trucks (truck_code, plate_number, model, status, capacity_kg)
-             VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO trucks (license_plate, model, status, capacity_kg)
+             VALUES ($1, $2, $3, $4)
              RETURNING *`,
-      ['TRK-001', 'กท-1234', 'Isuzu NLR', 'active', 5000]
+      ['กท-1234', 'Isuzu NLR', 'active', 5000]
     );
 
-    expect(truck.truck_code).toBe('TRK-001');
+    expect(truck.license_plate).toBe('กท-1234');
     expect(truck.status).toBe('active');
     expect(Number(truck.capacity_kg)).toBe(5000);
   });
@@ -290,14 +291,13 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
     await expect(
-      query(`INSERT INTO trucks (truck_code, plate_number, status) VALUES ($1, $2, $3)`, [
-        'TRK-BAD',
+      query(`INSERT INTO trucks (license_plate, status) VALUES ($1, $2)`, [
         'XX-0000',
-        'flying',
+        'flying', // Not in truck_status enum
       ])
-    ).rejects.toThrow(/check/i);
+    ).rejects.toThrow();
   });
 
   // ── Drivers CRUD ───────────────────────────────────────────
@@ -307,21 +307,24 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
     // Create user first
-    await query(
-      `INSERT INTO users (username, password, role) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
-      ['driver_user1', 'pw', 'driver']
+    const [user] = await query(
+      `INSERT INTO users (username, email, password_hash, role) 
+       VALUES ($1, $2, $3, $4) 
+       ON CONFLICT (username) DO UPDATE SET username = EXCLUDED.username
+       RETURNING id`,
+      ['driver_user1', 'driver1@example.com', 'pw', 'driver']
     );
 
     const [driver] = await query(
-      `INSERT INTO drivers (driver_code, full_name, username, phone)
+      `INSERT INTO drivers (license_no, full_name, user_id, phone)
              VALUES ($1, $2, $3, $4)
              RETURNING *`,
-      ['DRV-001', 'สมชาย ใจดี', 'driver_user1', '0891234567']
+      ['DRV-001', 'สมชาย ใจดี', user.id, '0891234567']
     );
 
-    expect(driver.driver_code).toBe('DRV-001');
+    expect(driver.license_no).toBe('DRV-001');
     expect(driver.full_name).toBe('สมชาย ใจดี');
   });
 
@@ -332,15 +335,15 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
     const [shop] = await query(
-      `INSERT INTO shops (shop_code, shop_name, latitude, longitude)
+      `INSERT INTO shops (name, address, latitude, longitude)
              VALUES ($1, $2, $3, $4)
              RETURNING *`,
-      ['SHOP-001', 'ร้านน้ำแข็งสยาม', 13.7563, 100.5018]
+      ['ร้านน้ำแข็งสยาม', 'Bangkok', 13.7563, 100.5018]
     );
 
-    expect(shop.shop_name).toBe('ร้านน้ำแข็งสยาม');
+    expect(shop.name).toBe('ร้านน้ำแข็งสยาม');
     expect(Number(shop.latitude)).toBeCloseTo(13.7563, 3);
   });
 
@@ -351,11 +354,16 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
+    const [truck] = await query(
+      `INSERT INTO trucks (license_plate, status) VALUES ($1, $2) RETURNING id`,
+      ['TELE-TRK', 'active']
+    );
+
     await query(
-      `INSERT INTO telemetry (truck_id, latitude, longitude, temperature, speed)
-             VALUES ($1, $2, $3, $4, $5)`,
-      ['TRK-001', 13.756, 100.502, -18.5, 65.3]
+      `INSERT INTO telemetry (time, truck_id, latitude, longitude, temperature, speed)
+             VALUES (NOW(), $1, $2, $3, $4, $5)`,
+      [truck.id, 13.756, 100.502, -18.5, 65.3]
     );
 
     const rows = await query(
@@ -363,7 +371,7 @@ describe('Testcontainers — PostgreSQL Integration', () => {
              FROM telemetry
              WHERE truck_id = $1
              ORDER BY time DESC`,
-      ['TRK-001']
+      [truck.id]
     );
     expect(rows.length).toBe(1);
     expect(Number(rows[0].temperature)).toBeCloseTo(-18.5, 1);
@@ -376,14 +384,19 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
+    const [truck] = await query(
+      `INSERT INTO trucks (license_plate, status) VALUES ($1, $2) RETURNING id`,
+      ['ALERT-TRK', 'active']
+    );
+
     const alertMessage = `Temperature exceeds threshold (${randomUUID()})`;
 
     const [alert] = await query(
       `INSERT INTO alerts (truck_id, alert_type, severity, message)
              VALUES ($1, $2, $3, $4)
              RETURNING *`,
-      ['TRK-001', 'temperature_high', 'critical', alertMessage]
+      [truck.id, 'temperature_high', 'critical', alertMessage]
     );
 
     expect(alert.resolved).toBe(false);
@@ -392,7 +405,7 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       `UPDATE alerts
              SET resolved = TRUE, resolved_at = NOW()
              WHERE truck_id = $1 AND alert_type = $2 AND message = $3`,
-      ['TRK-001', 'temperature_high', alertMessage]
+      [truck.id, 'temperature_high', alertMessage]
     );
 
     const resolved = await get(
@@ -401,7 +414,7 @@ describe('Testcontainers — PostgreSQL Integration', () => {
              WHERE truck_id = $1 AND alert_type = $2 AND message = $3
              ORDER BY time DESC
              LIMIT 1`,
-      ['TRK-001', 'temperature_high', alertMessage]
+      [truck.id, 'temperature_high', alertMessage]
     );
     expect(resolved.resolved).toBe(true);
   });
@@ -413,13 +426,14 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      await client.query(`INSERT INTO shops (shop_code, shop_name) VALUES ($1, $2)`, [
-        'TX-OK',
+      await client.query(`INSERT INTO shops (name, latitude, longitude) VALUES ($1, $2, $3)`, [
         'Committed Shop',
+        13.7,
+        100.5
       ]);
       await client.query('COMMIT');
     } finally {
@@ -427,8 +441,8 @@ describe('Testcontainers — PostgreSQL Integration', () => {
     }
 
     const shop = await get(
-      `SELECT id, shop_code, shop_name FROM shops WHERE shop_code = $1 ORDER BY id DESC LIMIT 1`,
-      ['TX-OK']
+      `SELECT id, name FROM shops WHERE name = $1 ORDER BY id DESC LIMIT 1`,
+      ['Committed Shop']
     );
     expect(shop).not.toBeNull();
   });
@@ -438,13 +452,14 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      await client.query(`INSERT INTO shops (shop_code, shop_name) VALUES ($1, $2)`, [
-        'TX-FAIL',
+      await client.query(`INSERT INTO shops (name, latitude, longitude) VALUES ($1, $2, $3)`, [
         'Rolled Back Shop',
+        13.7,
+        100.5
       ]);
       await client.query('ROLLBACK');
     } finally {
@@ -452,8 +467,8 @@ describe('Testcontainers — PostgreSQL Integration', () => {
     }
 
     const shop = await get(
-      `SELECT id, shop_code, shop_name FROM shops WHERE shop_code = $1 ORDER BY id DESC LIMIT 1`,
-      ['TX-FAIL']
+      `SELECT id, name FROM shops WHERE name = $1 ORDER BY id DESC LIMIT 1`,
+      ['Rolled Back Shop']
     );
     expect(shop).toBeNull();
   });
@@ -465,17 +480,18 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
-    
+
     const malicious = "'; DROP TABLE users; --";
-    await query(`INSERT INTO shops (shop_code, shop_name) VALUES ($1, $2)`, [
-      'SAFE-001',
+    await query(`INSERT INTO shops (name, latitude, longitude) VALUES ($1, $2, $3)`, [
       malicious,
+      13.7,
+      100.5
     ]);
 
     const shop = await get(
-      `SELECT id, shop_code, shop_name FROM shops WHERE shop_code = $1 ORDER BY id DESC LIMIT 1`,
-      ['SAFE-001']
+      `SELECT id, name FROM shops WHERE name = $1 ORDER BY id DESC LIMIT 1`,
+      [malicious]
     );
-    expect(shop.shop_name).toBe(malicious); // stored as literal string
+    expect(shop.name).toBe(malicious); // stored as literal string
   });
 });

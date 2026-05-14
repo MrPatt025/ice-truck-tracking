@@ -120,7 +120,7 @@ export default function SettingsPage() {
             denseNoise
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(99,102,241,0.95)]'
           >
-            <div className='mx-auto max-w-[1200px] p-4 lg:p-6'>
+            <div className='relative z-50 mx-auto max-w-[1200px] p-4 lg:p-6'>
               {/* Header */}
               <div className='mb-6'>
                 <h1 className='flex items-center gap-2 text-2xl font-bold leading-tight'>

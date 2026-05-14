@@ -139,7 +139,7 @@ export default function AdminPage() {
             denseNoise
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(56,189,248,0.95)]'
           >
-            <div className='mx-auto max-w-[1400px] space-y-6 p-4 lg:p-6'>
+            <div className='relative z-50 mx-auto max-w-[1400px] space-y-6 p-4 lg:p-6'>
               {/* Header */}
               <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
                 <div>

@@ -218,7 +218,7 @@ export default function FleetManagementPage() {
             denseNoise
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(45,212,191,0.95)]'
           >
-            <div className='mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>
+            <div className='relative z-50 mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>
               <header className='flex flex-col gap-3 rounded-2xl border border-white/15 bg-slate-900/40 p-5 backdrop-blur-2xl md:flex-row md:items-center md:justify-between'>
                 <div>
                   <h1 className='flex items-center gap-2 text-2xl font-bold text-slate-100'>

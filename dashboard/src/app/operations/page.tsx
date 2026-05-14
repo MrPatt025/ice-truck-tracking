@@ -29,7 +29,7 @@ export default function OperationsPage() {
             denseNoise
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-70px_rgba(45,212,191,0.95)]'
           >
-            <main className='mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'>
+            <main className='relative z-50 mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'>
               <motion.header
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}

@@ -49,7 +49,7 @@ export default function CompliancePage() {
             denseNoise
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-68px_rgba(244,114,182,0.85)]'
           >
-            <main className='mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'>
+            <main className='relative z-50 mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'>
               <motion.header
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}

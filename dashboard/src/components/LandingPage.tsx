@@ -289,7 +289,7 @@ export default function LandingPage() {
         willChange: 'opacity, transform',
         contain: 'layout paint style',
       }}
-      className='mission-control-shell relative min-h-screen overflow-hidden text-white'
+      className='mission-control-shell relative z-50 min-h-screen overflow-hidden text-white'
     >
       <PremiumSystemStatusBanner issues={statusIssues} className='top-24' />
 
