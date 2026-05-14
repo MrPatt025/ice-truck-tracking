@@ -174,9 +174,7 @@ const REFRESH_SPEED_VALUES = ['fast', 'normal', 'slow'] as const
 function isRefreshSpeed(
   value: string
 ): value is (typeof REFRESH_SPEED_VALUES)[number] {
-  return REFRESH_SPEED_VALUES.includes(
-    value as (typeof REFRESH_SPEED_VALUES)[number]
-  )
+  return (REFRESH_SPEED_VALUES as readonly string[]).includes(value)
 }
 
 const DASHBOARD_TITLE = 'Ice Truck Tracking Dashboard | Mission Control'

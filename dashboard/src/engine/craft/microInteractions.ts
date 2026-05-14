@@ -184,7 +184,8 @@ export class MicroInteractionController {
 
     const handlers: Record<string, EventListener> = {
       pointerdown: ((e: Event) => {
-        this._onPress(el, e as PointerEvent, options)
+        const pointerEvent = e as PointerEvent
+        this._onPress(el, pointerEvent, options)
       }),
       pointerup: (() => {
         this._onRelease(el)

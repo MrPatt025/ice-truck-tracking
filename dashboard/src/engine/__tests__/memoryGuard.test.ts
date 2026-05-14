@@ -10,7 +10,7 @@
 import { ObjectPool } from '../dataViz/objectPool'
 import { RingBuffer } from '../ringBuffer'
 import { SpatialIndex } from '../dataViz/spatialIndex'
-import type { SpatialEntity, TruckTelemetry } from '../types'
+import type { SpatialEntity } from '../types'
 import { randomInt } from 'node:crypto'
 
 // ─── Helpers ───────────────────────────────────────────────────
@@ -34,7 +34,7 @@ function makeTruck(id: string, x: number, y: number): SpatialEntity {
       driverName: 'Driver',
       routeId: 'R1',
       timestamp: Date.now(),
-    } as TruckTelemetry,
+    },
   }
 }
 

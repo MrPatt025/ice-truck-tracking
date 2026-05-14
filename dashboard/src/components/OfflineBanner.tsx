@@ -57,7 +57,7 @@ const OfflineBanner = memo(function OfflineBanner({
       }
 
       const controller = new AbortController()
-      const timeoutId: number = globalThis.window.setTimeout(() => {
+      const timeoutId = globalThis.window.setTimeout(() => {
         controller.abort()
       }, 1500)
 

@@ -56,14 +56,13 @@ const mockGL = {
   SRC_ALPHA: 0x0302,
   ONE_MINUS_SRC_ALPHA: 0x0303,
 }
-
 // Patch HTMLCanvasElement for pool
 beforeAll(() => {
   HTMLCanvasElement.prototype.getContext = jest.fn(function (
     this: HTMLCanvasElement,
     type: string
   ) {
-    if (type === 'webgl2' || type === 'webgl') return mockGL as unknown as WebGL2RenderingContext
+    if (type === 'webgl2' || type === 'webgl') return mockGL
     return null
   }) as unknown as typeof HTMLCanvasElement.prototype.getContext
 })

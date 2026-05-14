@@ -62,7 +62,7 @@ const contentSecurityPolicy = [
   scriptSrc,
   "style-src 'self' 'unsafe-inline' https://api.mapbox.com https://fonts.googleapis.com",
   "img-src 'self' data: blob: https://*.mapbox.com https://api.mapbox.com https://events.mapbox.com https://demotiles.maplibre.org",
-  "font-src 'self' data: https://fonts.gstatic.com https://r2cdn.perplexity.ai",
+  "font-src 'self' data: https://fonts.gstatic.com https://r2cdn.perplexity.ai https://frontend-cdn.perplexity.ai",
   `connect-src ${connectSrc}`,
   "worker-src 'self' blob:",
   "media-src 'self' blob:",

@@ -5,7 +5,7 @@
  * No DOM, no WebGL, no network.
  */
 import { SpatialIndex, EntityMap } from '../dataViz/spatialIndex'
-import type { SpatialEntity, TruckTelemetry } from '../types'
+import type { SpatialEntity } from '../types'
 import { randomInt } from 'node:crypto'
 
 // ─── Helpers ───────────────────────────────────────────────────
@@ -29,7 +29,7 @@ function makeTruck(id: string, x: number, y: number): SpatialEntity {
       driverName: `Driver ${id}`,
       routeId: 'R1',
       timestamp: Date.now(),
-    } as TruckTelemetry,
+    },
   }
 }
 
