@@ -185,16 +185,16 @@ export class MicroInteractionController {
     const handlers: Record<string, EventListener> = {
       pointerdown: ((e: PointerEvent) => {
         this._onPress(el, e, options)
-      }) as EventListener,
+      }),
       pointerup: (() => {
         this._onRelease(el)
-      }) as EventListener,
+      }),
       pointerenter: (() => {
         this._onHoverIn(el)
-      }) as EventListener,
+      }),
       pointerleave: (() => {
         this._onHoverOut(el)
-      }) as EventListener,
+      }),
     }
 
     this._boundHandlers.set(el, handlers)

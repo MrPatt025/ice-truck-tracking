@@ -105,7 +105,7 @@ import OfflineBanner from '@/components/OfflineBanner'
 const API_BASE = resolveApiBaseV1()
 
 const GlassPulseFallback = () => (
-  <div className='h-9 w-28 animate-pulse rounded-xl border border-white/20 bg-white/10 shadow-[0_16px_38px_-20px_rgba(56,189,248,0.85)]' />
+  <div className='h-9 w-28 animate-pulse rounded-xl border border-white/10 bg-white/10 shadow-[0_16px_38px_-20px_rgba(56,189,248,0.85)]' />
 )
 
 const WebGLCanvasSkeleton = () => (
@@ -1067,7 +1067,7 @@ const OperationsPulsePanel = memo(function OperationsPulsePanel() {
             </p>
           </div>
         </div>
-        <div className='mt-4 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-slate-300 backdrop-blur-md'>
+        <div className='mt-4 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300 backdrop-blur-md'>
           Data stream status:{' '}
           <span className='font-semibold text-cyan-200'>
             {resolveConnectionLabel(connectionStatus)}
@@ -2137,7 +2137,7 @@ export default function Dashboard() {
 
               {/* ── Alerts Side Panel ── */}
               {showAlerts && (
-                <div className='fixed right-0 top-0 bottom-0 w-96 bg-slate-900/95 backdrop-blur-2xl ring-1 ring-white/10 shadow-2xl z-[60] animate-slideInRight overflow-hidden flex flex-col'>
+                <div className='fixed right-0 top-0 bottom-0 w-96 bg-slate-900/95 backdrop-blur-xl ring-1 ring-white/10 shadow-2xl z-[60] animate-slideInRight overflow-hidden flex flex-col'>
                   <div className='p-6 border-b border-white/10'>
                     <div className='flex items-center justify-between mb-4'>
                       <h3 className='text-xl font-bold flex items-center gap-2'>
@@ -2219,7 +2219,7 @@ export default function Dashboard() {
 
               {/* ── Fullscreen Modal ── */}
               {fullscreen && (
-                <div className='fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-2xl animate-fadeIn'>
+                <div className='fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-xl animate-fadeIn'>
                   <div className='absolute inset-4 lg:inset-10 rounded-3xl ring-1 ring-white/20 bg-slate-900/80 backdrop-blur-xl p-4 lg:p-8 shadow-2xl'>
                     <div className='mb-4 flex items-center justify-between'>
                       <h3 className='text-xl lg:text-2xl font-bold'>

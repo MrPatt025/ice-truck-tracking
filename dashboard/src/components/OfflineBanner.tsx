@@ -59,7 +59,7 @@ const OfflineBanner = memo(function OfflineBanner({
       const controller = new AbortController()
       const timeoutId: number = globalThis.window.setTimeout(() => {
         controller.abort()
-      }, 1500) as unknown as number
+      }, 1500)
 
       try {
         const response = await fetch(resolveBackendHealthUrl(), {

@@ -78,7 +78,7 @@ function startSimulation(): void {
       fuelLevel: secureRandomRange(40, 100),
       engineRpm: secureRandomRange(1200, 3200),
       odometer: secureRandomRange(10000, 100000),
-      status: 'active' as TruckStatus,
+      status: 'active',
       driverName: `Driver ${i}`,
       routeId: `R${String(Math.ceil(i / 5)).padStart(2, '0')}`,
       timestamp: Date.now(),

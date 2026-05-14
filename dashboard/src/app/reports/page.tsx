@@ -32,7 +32,7 @@ const ReportsCharts = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className='rounded-xl border border-white/20 bg-white/5 p-6 backdrop-blur-xl shadow-[0_24px_60px_-30px_rgba(14,165,233,0.55)]'>
+      <div className='rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl shadow-[0_24px_60px_-30px_rgba(14,165,233,0.55)]'>
         <div className='mb-4 h-6 w-52 animate-pulse rounded-md bg-white/20' />
         <div className='h-80 animate-pulse rounded-xl bg-gradient-to-br from-cyan-400/20 via-sky-300/10 to-white/5' />
         <div className='mt-4 flex gap-3'>

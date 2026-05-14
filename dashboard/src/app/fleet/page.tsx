@@ -88,7 +88,7 @@ function createMockRows(count: number): FleetTruckRow[] {
 
 function FleetGridSkeleton() {
   return (
-    <div className='rounded-2xl border border-white/15 bg-slate-900/40 p-4'>
+    <div className='rounded-2xl border border-white/10 bg-slate-900/40 p-4'>
       <div className='mb-4 h-5 w-56 animate-pulse rounded bg-white/10' />
       <div className='space-y-2'>
         {Array.from({ length: 10 }, (_, idx) => (
@@ -219,7 +219,7 @@ export default function FleetManagementPage() {
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(45,212,191,0.95)]'
           >
             <div className='relative z-50 mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>
-              <header className='flex flex-col gap-3 rounded-2xl border border-white/15 bg-slate-900/40 p-5 backdrop-blur-2xl md:flex-row md:items-center md:justify-between'>
+              <header className='flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900/40 p-5 backdrop-blur-xl md:flex-row md:items-center md:justify-between'>
                 <div>
                   <h1 className='flex items-center gap-2 text-2xl font-bold text-slate-100'>
                     <Truck className='h-7 w-7 text-cyan-300' />
@@ -239,7 +239,7 @@ export default function FleetManagementPage() {
                 <div className='flex items-center gap-2'>
                   <button
                     type='button'
-                    className='inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 transition hover:bg-white/[0.08]'
+                    className='inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-slate-200 transition hover:bg-white/[0.08]'
                   >
                     <Download className='h-4 w-4' />
                     Export
@@ -256,7 +256,7 @@ export default function FleetManagementPage() {
                 </div>
               </header>
 
-              <section className='rounded-2xl border border-white/15 bg-slate-900/40 p-4 backdrop-blur-2xl'>
+              <section className='rounded-2xl border border-white/10 bg-slate-900/40 p-4 backdrop-blur-xl'>
                 <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
                   <div className='flex flex-wrap items-center gap-2'>
                     {ALL_FILTERS.map(filter => (
@@ -288,7 +288,7 @@ export default function FleetManagementPage() {
                       value={search}
                       onChange={event => setSearch(event.target.value)}
                       placeholder='Search by truck, plate, driver, route...'
-                      className='w-full rounded-lg border border-white/15 bg-slate-950/60 py-2.5 pl-10 pr-4 text-sm text-slate-100 outline-none transition focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-500/35'
+                      className='w-full rounded-lg border border-white/10 bg-slate-950/60 py-2.5 pl-10 pr-4 text-sm text-slate-100 outline-none transition focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-500/35'
                       data-testid='fleet-grid-search'
                     />
                   </div>
@@ -308,7 +308,7 @@ export default function FleetManagementPage() {
                 )}
               </SectionErrorBoundary>
 
-              <section className='rounded-2xl border border-white/15 bg-slate-900/40 p-4 backdrop-blur-2xl'>
+              <section className='rounded-2xl border border-white/10 bg-slate-900/40 p-4 backdrop-blur-xl'>
                 <p className='text-sm text-slate-300'>
                   Showing{' '}
                   <span className='font-semibold text-slate-100'>
