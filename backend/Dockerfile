@@ -1,5 +1,5 @@
 # Multi-stage build for production
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 
 # Install security updates and dumb-init
 RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
