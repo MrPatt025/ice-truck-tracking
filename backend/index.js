@@ -169,9 +169,10 @@ if (NODE_ENV !== 'production') {
 }
 
 async function onServerStarted() {
-  logger.info(`Server running on port ${PORT} in ${NODE_ENV} mode`);
-  logger.info(`Health Check: http://localhost:${PORT}/api/v1/health`);
-  logger.info(`Metrics: http://localhost:${PORT}/metrics`);
+  const actualPort = server.address().port;
+  logger.info(`Server running on port ${actualPort} in ${NODE_ENV} mode`);
+  logger.info(`Health Check: http://localhost:${actualPort}/api/v1/health`);
+  logger.info(`Metrics: http://localhost:${actualPort}/metrics`);
   logger.info('WebSocket enabled for real-time updates');
 
   // Connect Kafka Event Bus, Telemetry Worker, and MQTT
@@ -206,16 +207,28 @@ async function onServerStarted() {
   }
 }
 
-function startServer() {
+function startServer(portToTry = PORT) {
   if (isServerStarted) return;
-  isServerStarted = true;
-  server.listen(PORT, () => {
+  
+  server.on('error', (e) => {
+    if (e.code === 'EADDRINUSE') {
+      const nextPort = parseInt(portToTry) + 1;
+      logger.warn(`Port ${portToTry} is in use, trying ${nextPort}...`);
+      portToTry = nextPort;
+      server.listen(portToTry);
+    } else {
+      logger.error(e);
+    }
+  });
+
+  server.listen(portToTry, () => {
+    isServerStarted = true;
     void onServerStarted();
   });
 }
 
 if (!process.env.JEST_WORKER_ID) {
-  startServer();
+  startServer(PORT);
 }
 
 module.exports = { app, server, startServer };

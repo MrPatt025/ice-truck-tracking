@@ -43,7 +43,7 @@ const OfflineBanner = memo(function OfflineBanner({
       timerRef.current = globalThis.window.setTimeout(() => {
         timerRef.current = null
         void probeHealth()
-      }, delayMs) as unknown as number
+      }, delayMs)
     }
 
     const probeHealth = async () => {

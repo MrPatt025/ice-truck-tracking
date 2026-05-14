@@ -219,7 +219,7 @@ export default function FleetManagementPage() {
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(45,212,191,0.95)]'
           >
             <div className='relative z-50 mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>
-              <header className='flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900/40 p-5 backdrop-blur-xl md:flex-row md:items-center md:justify-between'>
+              <header className='flex flex-col gap-3 rounded-2xl border border-white/10 bg-slate-900/40 p-5 backdrop-blur-xl md:flex-row md:items-center md:justify-between relative z-50'>
                 <div>
                   <h1 className='flex items-center gap-2 text-2xl font-bold text-slate-100'>
                     <Truck className='h-7 w-7 text-cyan-300' />
@@ -256,7 +256,7 @@ export default function FleetManagementPage() {
                 </div>
               </header>
 
-              <section className='rounded-2xl border border-white/10 bg-slate-900/40 p-4 backdrop-blur-xl'>
+              <section className='rounded-2xl border border-white/10 bg-slate-900/40 p-4 backdrop-blur-xl relative z-50'>
                 <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
                   <div className='flex flex-wrap items-center gap-2'>
                     {ALL_FILTERS.map(filter => (
@@ -308,7 +308,7 @@ export default function FleetManagementPage() {
                 )}
               </SectionErrorBoundary>
 
-              <section className='rounded-2xl border border-white/10 bg-slate-900/40 p-4 backdrop-blur-xl'>
+              <section className='rounded-2xl border border-white/10 bg-slate-900/40 p-4 backdrop-blur-xl relative z-50'>
                 <p className='text-sm text-slate-300'>
                   Showing{' '}
                   <span className='font-semibold text-slate-100'>

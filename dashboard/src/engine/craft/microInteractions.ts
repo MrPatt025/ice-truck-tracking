@@ -183,8 +183,8 @@ export class MicroInteractionController {
     el.style.willChange = 'transform'
 
     const handlers: Record<string, EventListener> = {
-      pointerdown: ((e: PointerEvent) => {
-        this._onPress(el, e, options)
+      pointerdown: ((e: Event) => {
+        this._onPress(el, e as PointerEvent, options)
       }),
       pointerup: (() => {
         this._onRelease(el)

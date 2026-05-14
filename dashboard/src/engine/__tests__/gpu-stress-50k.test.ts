@@ -63,7 +63,7 @@ beforeAll(() => {
     this: HTMLCanvasElement,
     type: string
   ) {
-    if (type === 'webgl2' || type === 'webgl') return mockGL
+    if (type === 'webgl2' || type === 'webgl') return mockGL as unknown as WebGL2RenderingContext
     return null
   }) as unknown as typeof HTMLCanvasElement.prototype.getContext
 })
