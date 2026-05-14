@@ -114,7 +114,7 @@ export const createNoisePattern = (): HTMLCanvasElement | null => {
  * Called once from root layout
  */
 export const initGlobalCanvas = (): HTMLCanvasElement | null => {
-  if (typeof document === 'undefined' || typeof window === 'undefined') return null
+  if (typeof document === 'undefined' || typeof globalThis.window === 'undefined') return null
   
   const canvas = document.createElement('canvas')
 
@@ -129,12 +129,12 @@ export const initGlobalCanvas = (): HTMLCanvasElement | null => {
 
   // Responsive sizing
   const updateCanvasSize = () => {
-    canvas.width = window.innerWidth * window.devicePixelRatio
-    canvas.height = window.innerHeight * window.devicePixelRatio
+    canvas.width = globalThis.window.innerWidth * globalThis.window.devicePixelRatio
+    canvas.height = globalThis.window.innerHeight * globalThis.window.devicePixelRatio
   }
 
   updateCanvasSize()
-  window.addEventListener('resize', updateCanvasSize)
+  globalThis.window.addEventListener('resize', updateCanvasSize)
 
   document.body.appendChild(canvas)
 

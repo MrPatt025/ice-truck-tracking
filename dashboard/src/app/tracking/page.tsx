@@ -39,7 +39,7 @@ export default function TrackingPage() {
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
-                className='relative overflow-hidden rounded-2xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-xl z-50'
+                className='overflow-hidden p-6 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'
               >
                 <div className='pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-cyan-400/20 blur-3xl' />
                 <div className='pointer-events-none absolute -left-12 -bottom-20 h-40 w-40 rounded-full bg-blue-500/20 blur-3xl' />
@@ -61,7 +61,7 @@ export default function TrackingPage() {
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.06 * index }}
-                    className='rounded-2xl border border-white/10 bg-slate-900/40 relative z-50 p-5 backdrop-blur-xl'
+                    className='p-5 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'
                   >
                     <p className='text-xs uppercase tracking-[0.12em] text-cyan-200/85'>
                       {lane.zone}
@@ -88,7 +88,7 @@ export default function TrackingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.28 }}
-                className='min-h-[340px] rounded-2xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-xl relative z-50'
+                className='min-h-[340px] p-6 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'
               >
                 <h2 className='flex items-center gap-2 text-lg font-semibold text-slate-100'>
                   <MapPinned className='h-5 w-5 text-cyan-300' />

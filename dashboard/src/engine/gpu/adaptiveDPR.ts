@@ -187,36 +187,18 @@ export class PerformanceGuard {
     }
   }
 
-  /** Analyze the window and return violations */
-  analyze(): typeof this.violations {
-    if (this.history.length < 10) return []
+  private analyzeLayer(layer: keyof BudgetSample): void {
+    const avg = this.history.reduce((s, h) => s + h[layer], 0) / this.history.length
+    const budget = BUDGET_LIMITS[layer]
 
-    this.violations = []
-    const layers = ['react', 'worker', 'gpu', 'motion'] as const
-
-    for (const layer of layers) {
-      const avg =
-        this.history.reduce((s, h) => s + h[layer], 0) / this.history.length
-      const budget = BUDGET_LIMITS[layer]
-
-      if (avg > budget * 1.5) {
-        this.violations.push({
-          layer,
-          avgTime: avg,
-          budget,
-          severity: 'critical',
-        })
-      } else if (avg > budget) {
-        this.violations.push({
-          layer,
-          avgTime: avg,
-          budget,
-          severity: 'warn',
-        })
-      }
+    if (avg > budget * 1.5) {
+      this.violations.push({ layer, avgTime: avg, budget, severity: 'critical' })
+    } else if (avg > budget) {
+      this.violations.push({ layer, avgTime: avg, budget, severity: 'warn' })
     }
+  }
 
-    // Total frame time
+  private analyzeTotal(): void {
     const avgTotal =
       this.history.reduce(
         (s, h) => s + h.react + h.worker + h.gpu + h.motion,
@@ -231,6 +213,19 @@ export class PerformanceGuard {
         severity: avgTotal > 20 ? 'critical' : 'warn',
       })
     }
+  }
+
+  /** Analyze the window and return violations */
+  analyze(): typeof this.violations {
+    if (this.history.length < 10) return []
+
+    this.violations = []
+    
+    this.analyzeLayer('react')
+    this.analyzeLayer('worker')
+    this.analyzeLayer('gpu')
+    this.analyzeLayer('motion')
+    this.analyzeTotal()
 
     return this.violations
   }
@@ -248,19 +243,23 @@ export class PerformanceGuard {
     return currentLOD
   }
 
+  private applyScaling(overrides: Partial<GPUSceneConfig>, current: GPUSceneConfig, v: { layer: string, severity: 'warn' | 'critical' }): void {
+    if (v.layer === 'gpu' && v.severity === 'critical') {
+      overrides.enableShadows = false
+      overrides.enablePostProcessing = false
+      overrides.particleCount = Math.floor(current.particleCount * 0.5)
+    } else if (v.layer === 'gpu' && v.severity === 'warn') {
+      overrides.enableShadows = false
+      overrides.particleCount = Math.floor(current.particleCount * 0.75)
+    }
+  }
+
   /** Get recommended config overrides */
   recommendConfig(current: GPUSceneConfig): Partial<GPUSceneConfig> {
     const overrides: Partial<GPUSceneConfig> = {}
 
     for (const v of this.violations) {
-      if (v.layer === 'gpu' && v.severity === 'critical') {
-        overrides.enableShadows = false
-        overrides.enablePostProcessing = false
-        overrides.particleCount = Math.floor(current.particleCount * 0.5)
-      } else if (v.layer === 'gpu' && v.severity === 'warn') {
-        overrides.enableShadows = false
-        overrides.particleCount = Math.floor(current.particleCount * 0.75)
-      }
+      this.applyScaling(overrides, current, v as { layer: string, severity: 'warn' | 'critical' })
     }
 
     return overrides
@@ -283,19 +282,7 @@ function downLOD(current: LODLevel, steps: number): LODLevel {
 
 // ─── Device Tier Detection ─────────────────────────────────────
 
-/**
- * Detect device performance tier based on available APIs.
- * Runs once at boot; result cached in adaptive layer.
- */
-export function detectDeviceTier(): DeviceTier {
-  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
-    return 'mid-range' // Safe default for SSR
-  }
-
-  // Check for hardware concurrency
-  const cores = navigator.hardwareConcurrency || 2
-
-  // Check GPU via WebGL
+function getGpuScore(): number {
   let gpuScore = 1
   try {
     const canvas = document.createElement('canvas')
@@ -305,20 +292,14 @@ export function detectDeviceTier(): DeviceTier {
       if (debugInfo) {
         const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
         const rendererStr = (renderer as string).toLowerCase()
-        // High-end discrete GPUs
         if (/nvidia|radeon|rx\s[5-9]|rtx|gtx\s1\d|geforce/i.test(rendererStr)) {
           gpuScore = 3
-        }
-        // Integrated but decent
-        else if (/intel.*iris|apple.*gpu|mali-g7/i.test(rendererStr)) {
+        } else if (/intel.*iris|apple.*gpu|mali-g7/i.test(rendererStr)) {
           gpuScore = 2
-        }
-        // Basic / software
-        else if (/swiftshader|llvmpipe|software/i.test(rendererStr)) {
+        } else if (/swiftshader|llvmpipe|software/i.test(rendererStr)) {
           gpuScore = 0
         }
       }
-      // Check max texture size as proxy
       const maxTexture = gl.getParameter(gl.MAX_TEXTURE_SIZE)
       if (maxTexture >= 16384) gpuScore = Math.max(gpuScore, 2)
     }
@@ -326,21 +307,36 @@ export function detectDeviceTier(): DeviceTier {
   } catch {
     // fallback
   }
+  return gpuScore
+}
 
-  // Memory check (Chrome only)
-  let memoryGB = 4 // default assumption
-  const nav = navigator as Navigator & { deviceMemory?: number }
-  if (nav.deviceMemory) {
-    memoryGB = nav.deviceMemory
-  }
-
-  // Composite score
+function calculateTier(cores: number, gpuScore: number, memoryGB: number): DeviceTier {
   const score = cores * 0.3 + gpuScore * 3 + memoryGB * 0.5
-
   if (score >= 8) return 'high-end'
   if (score >= 5) return 'mid-range'
   if (score >= 2.5) return 'low-end'
   return 'potato'
+}
+
+/**
+ * Detect device performance tier based on available APIs.
+ * Runs once at boot; result cached in adaptive layer.
+ */
+export function detectDeviceTier(): DeviceTier {
+  if (typeof globalThis.window === 'undefined' || typeof globalThis.navigator === 'undefined') {
+    return 'mid-range' // Safe default for SSR
+  }
+
+  const cores = globalThis.navigator.hardwareConcurrency || 2
+  const gpuScore = getGpuScore()
+
+  let memoryGB = 4
+  const nav = globalThis.navigator as Navigator & { deviceMemory?: number }
+  if (nav.deviceMemory) {
+    memoryGB = nav.deviceMemory
+  }
+
+  return calculateTier(cores, gpuScore, memoryGB)
 }
 
 // ─── GPU Barrel export ─────────────────────────────────────────

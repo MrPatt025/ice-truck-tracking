@@ -19,7 +19,6 @@ const logger = (req, res, next) => {
     if (err) console.error('Logging error:', err);
   });
 
-  console.log(`${timestamp} - ${method} ${url} - ${ip}`);
   next();
 };
 

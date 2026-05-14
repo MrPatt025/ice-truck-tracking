@@ -64,7 +64,6 @@ sdk.start();
 process.on('SIGTERM', () => {
   sdk
     .shutdown()
-    .then(() => console.log('[OTel] SDK shut down'))
     .catch(err => console.error('[OTel] Shutdown error', err));
 });
 

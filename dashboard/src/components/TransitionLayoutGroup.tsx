@@ -1,12 +1,23 @@
 'use client'
 
 import React from 'react'
-import { LayoutGroup } from 'framer-motion'
+import { LayoutGroup, AnimatePresence } from 'framer-motion'
+import { usePathname } from 'next/navigation'
 
 export default function TransitionLayoutGroup({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  return <LayoutGroup id='ui-shared-transition'>{children}</LayoutGroup>
+  const pathname = usePathname()
+
+  return (
+    <LayoutGroup id='ui-shared-transition'>
+      <AnimatePresence mode='wait' initial={false}>
+        <div key={pathname} className="w-full h-full">
+          {children}
+        </div>
+      </AnimatePresence>
+    </LayoutGroup>
+  )
 }

@@ -59,7 +59,7 @@ export default function CompliancePage() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.42 }}
-                className='rounded-2xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur-xl relative z-50'
+                className='p-6 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'
               >
                 <h1 className='flex items-center gap-3 text-2xl font-semibold text-slate-50'>
                   <ShieldCheck className='h-7 w-7 text-pink-300' />
@@ -72,7 +72,7 @@ export default function CompliancePage() {
               </motion.header>
 
               <section className='grid gap-4 md:grid-cols-3'>
-                <article className='rounded-2xl border border-white/10 bg-slate-900/40 p-5 backdrop-blur-xl relative z-50'>
+                <article className='p-5 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
                   <h2 className='flex items-center gap-2 text-sm uppercase tracking-[0.12em] text-slate-300'>
                     <FileBadge2 className='h-4 w-4 text-pink-300' /> Open
                     Findings
@@ -81,7 +81,7 @@ export default function CompliancePage() {
                     7
                   </p>
                 </article>
-                <article className='rounded-2xl border border-white/10 bg-slate-900/40 p-5 backdrop-blur-xl relative z-50'>
+                <article className='p-5 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
                   <h2 className='flex items-center gap-2 text-sm uppercase tracking-[0.12em] text-slate-300'>
                     <Siren className='h-4 w-4 text-rose-300' /> Escalations
                   </h2>
@@ -89,7 +89,7 @@ export default function CompliancePage() {
                     2
                   </p>
                 </article>
-                <article className='rounded-2xl border border-white/10 bg-slate-900/40 p-5 backdrop-blur-xl relative z-50'>
+                <article className='p-5 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
                   <h2 className='flex items-center gap-2 text-sm uppercase tracking-[0.12em] text-slate-300'>
                     <ClipboardCheck className='h-4 w-4 text-fuchsia-300' />{' '}
                     Policy Coverage
@@ -100,7 +100,7 @@ export default function CompliancePage() {
                 </article>
               </section>
 
-              <section className='overflow-hidden rounded-2xl border border-white/10 bg-slate-900/40 backdrop-blur-xl relative z-50'>
+              <section className='overflow-hidden bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
                 <table className='w-full table-fixed'>
                   <thead>
                     <tr className='border-b border-white/10 text-left text-xs uppercase tracking-[0.12em] text-slate-300'>

@@ -38,8 +38,6 @@ class SecureEnvGenerator {
 
     try {
       fs.writeFileSync(this.envPath, envContent, { mode: 0o600 });
-      console.log('✅ Secure environment file created successfully');
-      console.log('🔐 JWT_SECRET has been generated with cryptographically secure random bytes');
       return true;
     } catch (error) {
       console.error('❌ Failed to create secure environment file:', error.message);
@@ -58,7 +56,6 @@ class SecureEnvGenerator {
       if (fs.existsSync(file)) {
         try {
           fs.chmodSync(file, 0o600);
-          console.log(`✅ Fixed permissions for ${file}`);
         } catch (error) {
           console.error(`❌ Failed to fix permissions for ${file}:`, error.message);
         }
