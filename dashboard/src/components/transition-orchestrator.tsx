@@ -42,6 +42,8 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
     if (!isActive) return
 
     // Initialize Three.js scene
+    if (typeof window === 'undefined') return
+
     const canvas = document.getElementById(
       'cinematic-gateway-canvas'
     ) as HTMLCanvasElement

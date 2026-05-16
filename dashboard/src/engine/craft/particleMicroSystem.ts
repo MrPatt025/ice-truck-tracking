@@ -360,7 +360,8 @@ export class ParticleMicroSystem {
 
   private _resize(): void {
     if (!this._canvas) return
-    const viewportWindow = globalThis.window
+    if (typeof window === 'undefined') return
+    const viewportWindow = window
     if (viewportWindow === undefined) return
     const dpr = Math.min(viewportWindow.devicePixelRatio, 2)
     this._canvas.width = viewportWindow.innerWidth * dpr

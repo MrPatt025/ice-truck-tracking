@@ -29,7 +29,7 @@ FROM base AS dependencies
 RUN npm ci --omit=dev --ignore-scripts
 
 # Production stage
-FROM node:24-alpine AS production
+FROM node:26-alpine AS production
 
 # Install security updates and dumb-init
 RUN apk update && apk upgrade && apk add --no-cache dumb-init

@@ -38,11 +38,13 @@ function normalizeBackendOrigin(rawUrl: string): string {
 
 const backendOrigin = normalizeBackendOrigin(configuredApiRoot)
 const scriptSrc = isProduction
-  ? "script-src 'self' 'unsafe-inline' https://vercel.live https://*.vercel-scripts.com"
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com"
   : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com"
 const localApiOrigins: string[] = []
 if (!isProduction) {
   localApiOrigins.push('http://localhost:5000', 'ws://localhost:5000')
+} else {
+  localApiOrigins.push('http://localhost:5000')
 }
 const connectSrc = [
   "'self'",
@@ -51,6 +53,7 @@ const connectSrc = [
   'https://api.mapbox.com',
   'https://events.mapbox.com',
   'https://vercel.live',
+  'https://*.vercel.live',
   'wss://*.vercel.live',
   ...localApiOrigins,
 ].join(' ')
@@ -64,11 +67,11 @@ const contentSecurityPolicy = [
   scriptSrc,
   "style-src 'self' 'unsafe-inline' https://api.mapbox.com https://fonts.googleapis.com",
   "img-src 'self' data: blob: https://*.mapbox.com https://api.mapbox.com https://events.mapbox.com https://demotiles.maplibre.org",
-  "font-src 'self' data: https://fonts.gstatic.com https://r2cdn.perplexity.ai https://frontend-cdn.perplexity.ai",
+  "font-src 'self' data: https://fonts.gstatic.com https://r2cdn.perplexity.ai https://frontend-cdn.perplexity.ai https://*.perplexity.ai",
   `connect-src ${connectSrc}`,
   "worker-src 'self' blob:",
   "media-src 'self' blob:",
-  "frame-src 'none'",
+  "frame-src 'self' https://vercel.live",
   "manifest-src 'self'",
   isProduction ? 'upgrade-insecure-requests' : '',
 ]

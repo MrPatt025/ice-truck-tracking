@@ -33,8 +33,8 @@ export const Tooltip = memo(function Tooltip({
     timeoutRef.current = setTimeout(() => {
       if (triggerRef.current) {
         const rect = triggerRef.current.getBoundingClientRect()
-        const scrollX = window.pageXOffset
-        const scrollY = window.pageYOffset
+        const scrollX = typeof window !== 'undefined' ? window.pageXOffset : 0
+        const scrollY = typeof window !== 'undefined' ? window.pageYOffset : 0
 
         let x = rect.left + scrollX + rect.width / 2
         let y = rect.top + scrollY

@@ -28,7 +28,7 @@ export function middleware(request: NextRequest) {
   if (
     pathname === '/manifest.json' ||
     pathname === '/favicon.ico' ||
-    pathname.startsWith('/icon-') ||
+    pathname.startsWith('/icon') ||
     pathname.startsWith('/apple-icon') ||
     pathname === '/robots.txt'
   ) {
