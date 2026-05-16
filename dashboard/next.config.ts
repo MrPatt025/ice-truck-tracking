@@ -37,14 +37,13 @@ function normalizeBackendOrigin(rawUrl: string): string {
 }
 
 const backendOrigin = normalizeBackendOrigin(configuredApiRoot)
-const scriptSrc = isProduction
-  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com"
-  : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com"
+const scriptSrc = "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com"
+
 const localApiOrigins: string[] = []
-if (!isProduction) {
-  localApiOrigins.push('http://localhost:5000', 'ws://localhost:5000')
-} else {
+if (isProduction) {
   localApiOrigins.push('http://localhost:5000')
+} else {
+  localApiOrigins.push('http://localhost:5000', 'ws://localhost:5000')
 }
 const connectSrc = [
   "'self'",

@@ -11,7 +11,7 @@ import * as THREE from 'three'
  *  60 FPS without triggering React reconciliation.
  * ---------------------------------------------------------------- */
 /* eslint-disable react/no-unknown-property */
-function ScrollytellingGrid({ scrollProgress }: { scrollProgress: MotionValue<number> }) {
+function ScrollytellingGrid({ scrollProgress }: Readonly<{ scrollProgress: MotionValue<number> }>) {
   const gridRef = useRef<THREE.GridHelper>(null)
   const dirLightRef = useRef<THREE.DirectionalLight>(null)
   const timeRef = useRef(0)

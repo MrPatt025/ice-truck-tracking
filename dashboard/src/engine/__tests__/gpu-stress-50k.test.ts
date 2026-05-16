@@ -64,7 +64,7 @@ beforeAll(() => {
   ) {
     if (type === 'webgl2' || type === 'webgl') return mockGL
     return null
-  })
+  }) as unknown as typeof HTMLCanvasElement.prototype.getContext
 })
 
 // ═══════════════════════════════════════════════════════════════
