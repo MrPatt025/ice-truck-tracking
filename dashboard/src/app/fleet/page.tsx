@@ -228,7 +228,7 @@ export default function FleetManagementPage() {
             <div className='relative z-50 mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>
               <header className='flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
                 <div>
-                  <h1 className='flex items-center gap-2 text-2xl font-bold text-slate-100'>
+                  <h1 className='flex items-center gap-2 text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 text-slate-100'>
                     <Truck className='h-7 w-7 text-cyan-300' />
                     Fleet Management
                   </h1>

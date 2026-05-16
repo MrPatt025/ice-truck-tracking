@@ -43,7 +43,7 @@ export default function TrackingPage() {
               >
                 <div className='pointer-events-none absolute -right-10 -top-16 h-44 w-44 rounded-full bg-cyan-400/20 blur-3xl' />
                 <div className='pointer-events-none absolute -left-12 -bottom-20 h-40 w-40 rounded-full bg-blue-500/20 blur-3xl' />
-                <h1 className='flex items-center gap-3 text-2xl font-semibold text-slate-50'>
+                <h1 className='flex items-center gap-3 text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 text-slate-50'>
                   <Route className='h-7 w-7 text-cyan-300' />
                   Live Corridor Tracking
                 </h1>

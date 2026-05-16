@@ -21,7 +21,7 @@ const AUTH_ROUTES = [
   '/reset-password',
 ]
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   
   // Whitelist PWA manifest, favicons and robots.txt to bypass auth and headers if needed
