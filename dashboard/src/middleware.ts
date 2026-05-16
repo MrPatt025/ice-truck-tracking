@@ -30,7 +30,8 @@ export function middleware(request: NextRequest) {
     pathname === '/favicon.ico' ||
     pathname.startsWith('/icon') ||
     pathname.startsWith('/apple-icon') ||
-    pathname === '/robots.txt'
+    pathname === '/robots.txt' ||
+    pathname === '/metrics'
   ) {
     return NextResponse.next()
   }

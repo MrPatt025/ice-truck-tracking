@@ -42,7 +42,7 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
     if (!isActive) return
 
     // Initialize Three.js scene
-    if (typeof window === 'undefined') return
+    if (typeof globalThis.window === 'undefined') return
 
     const canvas = document.getElementById(
       'cinematic-gateway-canvas'
@@ -52,7 +52,7 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
     const scene = new THREE.Scene()
     const camera = new THREE.PerspectiveCamera(
       60,
-      window.innerWidth / window.innerHeight,
+      globalThis.window.innerWidth / globalThis.window.innerHeight,
       0.1,
       10000
     )
@@ -64,8 +64,8 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
       alpha: true,
       powerPreference: 'high-performance',
     })
-    renderer.setPixelRatio(window.devicePixelRatio)
-    renderer.setSize(window.innerWidth, window.innerHeight)
+    renderer.setPixelRatio(globalThis.window.devicePixelRatio)
+    renderer.setSize(globalThis.window.innerWidth, globalThis.window.innerHeight)
     renderer.setClearColor(0x000000, 0.1)
 
     // Add subtle mesh to canvas (visual anchor)
@@ -128,8 +128,8 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
 
     // Handle resize
     const handleResize = () => {
-      const width = window.innerWidth
-      const height = window.innerHeight
+      const width = globalThis.window.innerWidth
+      const height = globalThis.window.innerHeight
 
       camera.aspect = width / height
       camera.updateProjectionMatrix()
@@ -137,11 +137,11 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
       renderer.setSize(width, height)
     }
 
-    window.addEventListener('resize', handleResize)
+    globalThis.window.addEventListener('resize', handleResize)
 
     const rafsToClean = rafs.current
     return () => {
-      window.removeEventListener('resize', handleResize)
+      globalThis.window.removeEventListener('resize', handleResize)
       rafsToClean.forEach(raf => cancelAnimationFrame(raf))
       if (animationIdRef.current !== null) {
         cancelAnimationFrame(animationIdRef.current)

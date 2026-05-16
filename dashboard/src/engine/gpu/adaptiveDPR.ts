@@ -259,7 +259,7 @@ export class PerformanceGuard {
     const overrides: Partial<GPUSceneConfig> = {}
 
     for (const v of this.violations) {
-      this.applyScaling(overrides, current, v as { layer: string, severity: 'warn' | 'critical' })
+      this.applyScaling(overrides, current, v)
     }
 
     return overrides

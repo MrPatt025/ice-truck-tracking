@@ -95,7 +95,7 @@ export class ImperativeChart {
 
   private draw(): void {
     const { canvas, ctx } = this
-    const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1
+    const dpr = typeof globalThis.window !== 'undefined' ? Math.min(globalThis.window.devicePixelRatio, 2) : 1
     const w = canvas.clientWidth
     const h = canvas.clientHeight
 

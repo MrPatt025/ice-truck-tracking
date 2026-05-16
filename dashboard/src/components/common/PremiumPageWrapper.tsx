@@ -145,7 +145,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         variants={CONTENT_VARIANTS}
         className={cn(
           mode === 'glass' &&
-            'premium-surface relative z-50 overflow-hidden rounded-3xl border border-white/10 bg-slate-900/40 shadow-2xl backdrop-blur-2xl supports-[backdrop-filter]:backdrop-saturate-150',
+            'premium-surface relative z-50 overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] backdrop-blur-3xl text-slate-100 supports-[backdrop-filter]:backdrop-saturate-150',
           contentClassName
         )}
         style={{ contain: 'layout style paint' }}

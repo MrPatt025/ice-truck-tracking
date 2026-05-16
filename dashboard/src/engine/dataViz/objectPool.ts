@@ -180,7 +180,7 @@ export class HeatmapRenderer {
 
   /** Resize canvas */
   resize(width: number, height: number): void {
-    const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1
+    const dpr = typeof globalThis.window !== 'undefined' ? Math.min(globalThis.window.devicePixelRatio, 2) : 1
     this.canvas.width = width * dpr
     this.canvas.height = height * dpr
     this.canvas.style.width = `${width}px`
@@ -325,7 +325,7 @@ export class RouteRenderer {
   }
 
   resize(width: number, height: number): void {
-    const dpr = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1
+    const dpr = typeof globalThis.window !== 'undefined' ? Math.min(globalThis.window.devicePixelRatio, 2) : 1
     this.canvas.width = width * dpr
     this.canvas.height = height * dpr
     this.canvas.style.width = `${width}px`
