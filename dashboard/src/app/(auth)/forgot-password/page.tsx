@@ -2,16 +2,16 @@
 
 import React, { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-
-const ScrollytellingCanvas = dynamic(
-  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
-  { ssr: false }
-)
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Snowflake, Loader2, AlertCircle, ArrowLeft, Mail } from 'lucide-react'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { useAuthStore } from '@/stores/authStore'
+
+const ScrollytellingCanvas = dynamic(
+  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  { ssr: false }
+)
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')

@@ -44,8 +44,17 @@ class MqttService {
       logger.error({ err: err.message }, 'MQTT error');
     });
 
+    let reconnectAttempts = 0;
     this.client.on('reconnect', () => {
-      logger.warn('MQTT reconnecting…');
+      reconnectAttempts++;
+      if (reconnectAttempts > 3) {
+        logger.warn('Operating in degraded mode: No MQTT');
+        if (this.client) {
+          this.client.end(true); // Stop reconnecting completely
+        }
+      } else {
+        logger.warn(`MQTT reconnecting... (attempt ${reconnectAttempts})`);
+      }
     });
 
     this.client.on('message', (topic, payload) => {

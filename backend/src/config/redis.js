@@ -12,6 +12,10 @@ const getClient = () => {
   client = new Redis(config.REDIS_URL, {
     maxRetriesPerRequest: 3,
     retryStrategy(times) {
+      if (times > 3) {
+        logger.warn('Operating in degraded mode: No Redis');
+        return null;
+      }
       const delay = Math.min(times * 200, 5000);
       return delay;
     },

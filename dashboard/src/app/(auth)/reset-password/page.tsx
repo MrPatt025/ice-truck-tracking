@@ -2,11 +2,6 @@
 
 import React, { useState, useCallback, Suspense } from 'react'
 import dynamic from 'next/dynamic'
-
-const ScrollytellingCanvas = dynamic(
-  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
-  { ssr: false }
-)
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -21,6 +16,11 @@ import {
 } from 'lucide-react'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { useAuthStore } from '@/stores/authStore'
+
+const ScrollytellingCanvas = dynamic(
+  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  { ssr: false }
+)
 
 function ResetPasswordContent() {
   const router = useRouter()
