@@ -212,7 +212,7 @@ function startServer(portToTry = PORT) {
   
   server.on('error', (e) => {
     if (e.code === 'EADDRINUSE') {
-      const nextPort = parseInt(portToTry) + 1;
+      const nextPort = Number.parseInt(portToTry) + 1;
       logger.warn(`Port ${portToTry} is in use, trying ${nextPort}...`);
       portToTry = nextPort;
       server.listen(portToTry);

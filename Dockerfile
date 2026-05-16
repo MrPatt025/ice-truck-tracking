@@ -46,7 +46,7 @@ COPY src ./src
 RUN pnpm run build
 
 # ── Runtime stage ──────────────────────────────────
-FROM node:24-alpine AS runner
+FROM node:26-alpine AS runner
 RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"

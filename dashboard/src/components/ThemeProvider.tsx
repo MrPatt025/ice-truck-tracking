@@ -48,7 +48,7 @@ export function ThemeProvider({
   // Hydrate from localStorage
   useEffect(() => {
     const stored = localStorage.getItem(storageKey)
-    if (stored && (['light', 'dark', 'system'] as string[]).includes(stored)) {
+    if (stored && (['light', 'dark', 'system']).includes(stored)) {
       setTheme(stored as Theme)
     }
   }, [storageKey, setTheme])
