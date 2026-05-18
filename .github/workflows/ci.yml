@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '24'
+  NODE_VERSION: '26'
   PNPM_VERSION: '10.32.1'
   CI: 'true'
   NEXT_TELEMETRY_DISABLED: '1'

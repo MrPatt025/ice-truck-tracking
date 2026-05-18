@@ -1,0 +1,82 @@
+'use client'
+
+import React, { memo } from 'react'
+import { motion } from 'framer-motion'
+
+type GlassCardProps = Readonly<{
+  children: React.ReactNode
+  accent?: string
+  className?: string
+  onClick?: () => void
+  layoutId?: string
+}>
+
+const GlassCard = memo(function GlassCard({
+  children,
+  accent = 'from-violet-400/30 via-purple-400/20 to-cyan-400/30',
+  className = '',
+  onClick,
+  layoutId,
+}: GlassCardProps) {
+  const inner = (
+    <motion.div
+      layout
+      layoutId={layoutId}
+      transition={{ type: 'spring', damping: 30, stiffness: 230 }}
+      className="h-full"
+    >
+      <div
+        className={`group glass-panel relative h-full rounded-3xl p-[2px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02] will-change-transform overflow-hidden`}
+        style={{
+          boxShadow:
+            '0 0 40px -10px rgba(139, 92, 246, 0.3), 0 0 20px -5px rgba(34, 211, 238, 0.2)',
+        }}
+      >
+        {/* Enhanced glassmorphism background */}
+        <div
+          className={`relative h-full rounded-[calc(1.5rem-2px)] bg-slate-900/70 backdrop-blur-xl backdrop-saturate-150 backdrop-brightness-110 ring-1 ring-white/20 transition-all duration-500 group-hover:ring-white/30 ${className}`}
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(30, 41, 59, 0.65) 100%), rgba(15, 23, 42, 0.5)',
+            backdropFilter: 'blur(12px) saturate(150%) brightness(110%)',
+          }}
+        >
+          {/* Multi-layer radial glow backdrop */}
+          <div className='pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.25),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.2),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]' />
+
+          {/* Noise texture overlay */}
+          <div
+            className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-[0.03] mix-blend-overlay'
+            style={{
+              backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" result="noise"/></filter><rect width="100" height="100" fill="white" filter="url(%23n)"/></svg>')`,
+              backgroundSize: '50px 50px',
+            }}
+          />
+
+          {/* Shimmer effect with enhanced animation */}
+          <div className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.15),transparent)] bg-[length:200%_100%] animate-shimmer' />
+
+          {/* Enhanced border glow effect */}
+          <div className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[linear-gradient(135deg,rgba(139,92,246,.1),transparent,rgba(34,211,238,.1))]' />
+
+          {/* Primary content */}
+          <div className='relative h-full'>{children}</div>
+        </div>
+      </div>
+    </motion.div>
+  )
+  if (onClick) {
+    return (
+      <button
+        type='button'
+        className='cursor-pointer text-left w-full h-full border-0 bg-transparent p-0'
+        onClick={onClick}
+      >
+        {inner}
+      </button>
+    )
+  }
+  return inner
+})
+
+export default GlassCard
