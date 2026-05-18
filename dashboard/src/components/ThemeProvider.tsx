@@ -64,12 +64,30 @@ export function ThemeProvider({
     root.style.colorScheme = resolved
   }, [theme])
 
-  // Console Guard — Mute harmless but noisy 3D HMR warnings
+  const shouldMuteWarning = (args: readonly unknown[]): boolean => {
+    const message = args
+      .map(arg => {
+        try {
+          return String(arg)
+        } catch {
+          return ''
+        }
+      })
+      .join(' ')
+
+    return (
+      message.includes('THREE.Clock') ||
+      message.includes('Context Lost') ||
+      message.includes('Reduced Motion') ||
+      message.includes('use-reduced-motion')
+    )
+  }
+
+  // Console Guard — mute harmless but noisy 3D/browser preference warnings.
   useEffect(() => {
     const originalWarn = console.warn
     console.warn = (...args: unknown[]) => {
-      const msg = args[0]?.toString() || ''
-      if (msg.includes('THREE.Clock') || msg.includes('Context Lost') || msg.includes('Reduced Motion') || msg.includes('use-reduced-motion')) {
+      if (shouldMuteWarning(args)) {
         return
       }
       originalWarn(...args)

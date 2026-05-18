@@ -128,7 +128,7 @@ export default function SettingsPage() {
             <div className='relative z-50 mx-auto max-w-[1200px] p-4 lg:p-6'>
               {/* Header */}
               <div className='mb-6'>
-                <h1 className='flex items-center gap-2 text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 leading-tight'>
+                <h1 className='flex items-center gap-2 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 leading-tight'>
                   <Settings className='w-7 h-7 text-primary' />
                   Settings
                 </h1>
@@ -177,7 +177,7 @@ export default function SettingsPage() {
 
                       {/* Avatar */}
                       <div className='flex items-center gap-4'>
-                        <div className='w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
+                        <div className='w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-primary text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
                           {profile.name.charAt(0).toUpperCase() || 'U'}
                         </div>
                         <div>

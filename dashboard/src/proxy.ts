@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 /**
- * Edge proxy — runs at the CDN edge for auth checks, rate limiting,
- * security headers, RBAC route guards, and geo-based routing.
+ * Next.js proxy — handles auth checks, security headers, and API healing
+ * for local development and production preview deployments.
  */
 
 const PROTECTED_ROUTES = [
@@ -14,6 +14,7 @@ const PROTECTED_ROUTES = [
   '/settings',
   '/admin',
 ]
+
 const AUTH_ROUTES = [
   '/login',
   '/register',
@@ -21,17 +22,55 @@ const AUTH_ROUTES = [
   '/reset-password',
 ]
 
+const HTTP_SCHEME = 'http://'
+const HTTPS_SCHEME = 'https://'
+
+function trimPathTrailingSlashes(url: URL): void {
+  while (url.pathname.length > 1 && url.pathname.endsWith('/')) {
+    url.pathname = url.pathname.slice(0, -1)
+  }
+}
+
+function normalizeBackendOrigin(rawUrl: string): string {
+  const candidate =
+    rawUrl.startsWith(HTTP_SCHEME) || rawUrl.startsWith(HTTPS_SCHEME)
+      ? rawUrl
+      : `${HTTP_SCHEME}${rawUrl}`
+  const url = new URL(candidate)
+
+  trimPathTrailingSlashes(url)
+  const pathnameLower = url.pathname.toLowerCase()
+
+  if (pathnameLower.endsWith('/api/v1')) {
+    url.pathname = url.pathname.slice(0, -7) || '/'
+  } else if (pathnameLower.endsWith('/api')) {
+    url.pathname = url.pathname.slice(0, -4) || '/'
+  }
+
+  trimPathTrailingSlashes(url)
+  return `${url.origin}${url.pathname === '/' ? '' : url.pathname}`
+}
+
+function resolveBackendOrigin(): string {
+  const configuredApiRoot =
+    process.env.NEXT_PUBLIC_API_URL?.trim() || 'http://localhost:5000'
+  return normalizeBackendOrigin(configuredApiRoot)
+}
+
+function isApiRoute(pathname: string): boolean {
+  return pathname.startsWith('/api/') || pathname === '/metrics'
+}
+
 export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  
-  // Whitelist PWA manifest, favicons and robots.txt to bypass auth and headers if needed
+  const { pathname, search } = request.nextUrl
+  const backendOrigin = resolveBackendOrigin()
+
   if (
     pathname === '/manifest.json' ||
     pathname === '/favicon.ico' ||
     pathname.startsWith('/icon') ||
     pathname.startsWith('/apple-icon') ||
-    pathname === '/robots.txt' ||
-    pathname === '/metrics'
+    pathname === '/robots.txt'
   ) {
     return NextResponse.next()
   }
@@ -56,9 +95,22 @@ export function proxy(request: NextRequest) {
     'max-age=63072000; includeSubDomains; preload'
   )
 
+  const token = request.cookies.get('access_token')?.value
+  if (token) {
+    requestHeaders.set('x-auth-token', token)
+  }
+
+  if (isApiRoute(pathname)) {
+    const targetUrl = new URL(pathname + search, backendOrigin)
+    return NextResponse.rewrite(targetUrl, {
+      request: {
+        headers: requestHeaders,
+      },
+    })
+  }
+
   const isProtected = PROTECTED_ROUTES.some(route => pathname.startsWith(route))
   const isAuthRoute = AUTH_ROUTES.some(route => pathname.startsWith(route))
-  const token = request.cookies.get('access_token')?.value
 
   if (isProtected && !token) {
     const loginUrl = new URL('/login', request.url)
@@ -68,10 +120,6 @@ export function proxy(request: NextRequest) {
 
   if (isAuthRoute && token) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
-  if (token) {
-    requestHeaders.set('x-auth-token', token)
   }
 
   const clientIp =
@@ -89,6 +137,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|icon-|apple-icon|robots.txt|api).*)',
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|icon-|apple-icon|robots.txt).*)',
   ],
 }

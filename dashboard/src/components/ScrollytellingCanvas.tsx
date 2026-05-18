@@ -89,9 +89,9 @@ export function ScrollytellingCanvas() {
       style={{ opacity, scale }}
     >
       <Canvas
-        shadows={{ type: THREE.PCFShadowMap }}
-        dpr={[1, 2]}
-        gl={{ antialias: false }}
+        shadows={false}
+        dpr={[1, 1.5]}
+        gl={{ powerPreference: "high-performance", antialias: false }}
         frameloop='always'
       >
         <ScrollytellingGrid scrollProgress={scrollYProgress} />

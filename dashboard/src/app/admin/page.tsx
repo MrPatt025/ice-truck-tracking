@@ -148,7 +148,7 @@ export default function AdminPage() {
               {/* Header */}
               <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
                 <div>
-                  <h1 className='flex items-center gap-2 text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 leading-tight'>
+                  <h1 className='flex items-center gap-2 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 leading-tight'>
                     <Shield className='w-7 h-7 text-primary' />
                     User Administration
                   </h1>
@@ -213,7 +213,7 @@ export default function AdminPage() {
                         <card.icon className={cn('w-5 h-5', card.color)} />
                       </div>
                       <div>
-                        <p className='text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>{card.value}</p>
+                        <p className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>{card.value}</p>
                         <p className='text-xs text-muted-foreground'>
                           {card.label}
                         </p>

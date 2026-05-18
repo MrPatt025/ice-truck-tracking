@@ -56,7 +56,7 @@ export default function ForgotPasswordPage() {
             <div className='inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4'>
               <Snowflake className='w-7 h-7 text-primary' />
             </div>
-            <h1 className='text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
+            <h1 className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
               {sent ? 'Check your email' : 'Reset your password'}
             </h1>
             <p className='text-muted-foreground mt-1'>

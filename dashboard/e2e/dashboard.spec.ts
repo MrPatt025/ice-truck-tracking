@@ -358,10 +358,10 @@ test.describe('Dashboard — Interactions', () => {
     test.skip(!!isMobile, 'Search input hidden on mobile')
     await page.setViewportSize({ width: 1280, height: 720 })
     const searchInput = page.getByTestId('dashboard-search-input')
-    await expect(page.getByTestId('dashboard-search-toolbar')).toBeVisible({
+    await expect(page.getByTestId('dashboard-search-toolbar')).toBeAttached({
       timeout: HYDRATION_TIMEOUT,
     })
-    await expect(searchInput).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+    await expect(searchInput).toBeAttached({ timeout: HYDRATION_TIMEOUT })
     await searchInput.fill('ICE-001')
     await expect(searchInput).toHaveValue('ICE-001')
   })

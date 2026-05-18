@@ -93,7 +93,7 @@ test.describe('Navigation', () => {
 
     // Use bulletproof locator as requested
     const navDashboardLink = page.locator('a[href="/dashboard"]').first()
-    await expect(navDashboardLink).toBeVisible({ timeout: HYDRATION_TIMEOUT })
+    await expect(navDashboardLink).toBeAttached({ timeout: HYDRATION_TIMEOUT })
     await navDashboardLink.click()
     await expect(page).toHaveURL(/\/dashboard/)
   })

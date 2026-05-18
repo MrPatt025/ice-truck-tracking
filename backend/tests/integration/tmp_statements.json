@@ -1,0 +1,326 @@
+[
+  {
+    "idx": 0,
+    "len": 341,
+    "preview": "-- NOSONAR\\n-- ============================================================================\\n-- Ice Truck Tracking — TimescaleDB Schema (Production-Grade)\\n-- PostgreSQL 16 + TimescaleDB 2.x\\n-- =========",
+    "keep": false
+  },
+  {
+    "idx": 1,
+    "len": 42,
+    "preview": "\\n\\nCREATE EXTENSION IF NOT EXISTS pgcrypto;",
+    "keep": true
+  },
+  {
+    "idx": 2,
+    "len": 41,
+    "preview": "\\n\\nCREATE EXTENSION IF NOT EXISTS pg_trgm;",
+    "keep": true
+  },
+  {
+    "idx": 3,
+    "len": 339,
+    "preview": "\\n\\n-- ============================================================================\\n-- ENUM TYPES\\n-- ============================================================================\\nDO $$ BEGIN\\n  CREATE TYP",
+    "keep": true
+  },
+  {
+    "idx": 4,
+    "len": 145,
+    "preview": "\\n\\nDO $$ BEGIN\\n  CREATE TYPE truck_status AS ENUM ('active', 'idle', 'maintenance', 'offline');\\nEXCEPTION WHEN duplicate_object THEN NULL;\\nEND $$;",
+    "keep": true
+  },
+  {
+    "idx": 5,
+    "len": 147,
+    "preview": "\\n\\nDO $$ BEGIN\\n  CREATE TYPE alert_severity AS ENUM ('info', 'warning', 'critical', 'emergency');\\nEXCEPTION WHEN duplicate_object THEN NULL;\\nEND $$;",
+    "keep": true
+  },
+  {
+    "idx": 6,
+    "len": 295,
+    "preview": "\\n\\nDO $$ BEGIN\\n  CREATE TYPE alert_type AS ENUM (\\n    'temperature_high', 'temperature_low', 'speed_exceeded', 'geofence_breach',\\n    'route_deviation', 'idle_too_long', 'maintenance_due', 'connection_",
+    "keep": true
+  },
+  {
+    "idx": 7,
+    "len": 714,
+    "preview": "\\n\\n-- ============================================================================\\n-- CORE TABLES\\n-- ============================================================================\\n\\n-- Users (with RBAC su",
+    "keep": true
+  },
+  {
+    "idx": 8,
+    "len": 379,
+    "preview": "\\n\\n-- Refresh tokens (JWT rotation)\\nCREATE TABLE IF NOT EXISTS refresh_tokens (\\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),\\n    user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE,\\n  ",
+    "keep": true
+  },
+  {
+    "idx": 9,
+    "len": 81,
+    "preview": "\\n\\nCREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens (user_id);",
+    "keep": true
+  },
+  {
+    "idx": 10,
+    "len": 82,
+    "preview": "\\n\\nCREATE INDEX IF NOT EXISTS idx_refresh_tokens_family ON refresh_tokens (family);",
+    "keep": true
+  },
+  {
+    "idx": 11,
+    "len": 560,
+    "preview": "\\n\\n-- Trucks\\nCREATE TABLE IF NOT EXISTS trucks (\\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),\\n    license_plate VARCHAR(20) UNIQUE NOT NULL,\\n    model VARCHAR(50),\\n    capacity_kg DECIMAL(10, 2)",
+    "keep": true
+  },
+  {
+    "idx": 12,
+    "len": 480,
+    "preview": "\\n\\n-- Drivers\\nCREATE TABLE IF NOT EXISTS drivers (\\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),\\n    user_id UUID REFERENCES users (id) ON DELETE SET NULL,\\n    license_no VARCHAR(30) UNIQUE NOT N",
+    "keep": true
+  },
+  {
+    "idx": 13,
+    "len": 373,
+    "preview": "\\n\\n-- Shops (delivery destinations)\\nCREATE TABLE IF NOT EXISTS shops (\\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),\\n    name VARCHAR(100) NOT NULL,\\n    address TEXT,\\n    latitude DOUBLE PRECISIO",
+    "keep": true
+  },
+  {
+    "idx": 14,
+    "len": 417,
+    "preview": "\\n\\n-- Routes\\nCREATE TABLE IF NOT EXISTS routes (\\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),\\n    name VARCHAR(100) NOT NULL,\\n    truck_id UUID REFERENCES trucks (id) ON DELETE SET NULL,\\n    dri",
+    "keep": true
+  },
+  {
+    "idx": 15,
+    "len": 377,
+    "preview": "\\n\\n-- Route stops (ordered shop visits)\\nCREATE TABLE IF NOT EXISTS route_stops (\\n    id UUID PRIMARY KEY DEFAULT gen_random_uuid (),\\n    route_id UUID NOT NULL REFERENCES routes (id) ON DELETE CASCADE,",
+    "keep": true
+  },
+  {
+    "idx": 16,
+    "len": 748,
+    "preview": "\\n\\n-- ============================================================================\\n-- TIMESCALEDB HYPERTABLES — Time-Series Data\\n-- =====================================================================",
+    "keep": true
+  },
+  {
+    "idx": 17,
+    "len": 199,
+    "preview": "\\n\\n-- Convert to hypertable (partitioned by time, 1-day chunks)\\nSELECT create_hypertable (\\n        'telemetry', 'time', chunk_time_interval => INTERVAL '1 day', if_not_exists => TRUE -- NOSONAR\\n    );",
+    "keep": false
+  },
+  {
+    "idx": 18,
+    "len": 624,
+    "preview": "\\n\\n-- Alerts\\nCREATE TABLE IF NOT EXISTS alerts (\\n    time TIMESTAMPTZ NOT NULL DEFAULT NOW(),\\n    truck_id UUID REFERENCES trucks (id) ON DELETE SET NULL,\\n    driver_id UUID REFERENCES drivers (id) ON ",
+    "keep": true
+  },
+  {
+    "idx": 19,
+    "len": 136,
+    "preview": "\\n\\nSELECT create_hypertable (\\n        'alerts', 'time', chunk_time_interval => INTERVAL '7 days', if_not_exists => TRUE -- NOSONAR\\n    );",
+    "keep": false
+  },
+  {
+    "idx": 20,
+    "len": 312,
+    "preview": "\\n\\n-- Audit log (immutable)\\nCREATE TABLE IF NOT EXISTS audit_log (\\n    time TIMESTAMPTZ NOT NULL DEFAULT NOW(),\\n    user_id UUID,\\n    action VARCHAR(50) NOT NULL,\\n    resource VARCHAR(50) NOT NULL,\\n   ",
+    "keep": true
+  },
+  {
+    "idx": 21,
+    "len": 140,
+    "preview": "\\n\\nSELECT create_hypertable (\\n        'audit_log', 'time', chunk_time_interval => INTERVAL '30 days', if_not_exists => TRUE -- NOSONAR\\n    );",
+    "keep": false
+  },
+  {
+    "idx": 22,
+    "len": 306,
+    "preview": "\\n\\n-- ============================================================================\\n-- INDEXES (B-tree, GIN for JSONB)\\n-- ============================================================================\\n\\n--",
+    "keep": true
+  },
+  {
+    "idx": 23,
+    "len": 84,
+    "preview": "\\n\\nCREATE INDEX IF NOT EXISTS idx_telemetry_payload ON telemetry USING GIN (payload);",
+    "keep": true
+  },
+  {
+    "idx": 24,
+    "len": 100,
+    "preview": "\\n\\n-- Alert indexes\\nCREATE INDEX IF NOT EXISTS idx_alerts_truck_time ON alerts (truck_id, time DESC);",
+    "keep": true
+  },
+  {
+    "idx": 25,
+    "len": 81,
+    "preview": "\\n\\nCREATE INDEX IF NOT EXISTS idx_alerts_severity ON alerts (severity, time DESC);",
+    "keep": true
+  },
+  {
+    "idx": 26,
+    "len": 110,
+    "preview": "\\n\\nCREATE INDEX IF NOT EXISTS idx_alerts_unresolved ON alerts (resolved, time DESC)\\nWHERE\\n    resolved = false;",
+    "keep": true
+  },
+  {
+    "idx": 27,
+    "len": 80,
+    "preview": "\\n\\nCREATE INDEX IF NOT EXISTS idx_alerts_metadata ON alerts USING GIN (metadata);",
+    "keep": true
+  },
+  {
+    "idx": 28,
+    "len": 99,
+    "preview": "\\n\\n-- Audit log indexes\\nCREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log (user_id, time DESC);",
+    "keep": true
+  },
+  {
+    "idx": 29,
+    "len": 110,
+    "preview": "\\n\\nCREATE INDEX IF NOT EXISTS idx_audit_resource ON audit_log (\\n    resource,\\n    resource_id,\\n    time DESC\\n);",
+    "keep": true
+  },
+  {
+    "idx": 30,
+    "len": 78,
+    "preview": "\\n\\n-- User indexes\\nCREATE INDEX IF NOT EXISTS idx_users_email ON users (email);",
+    "keep": true
+  },
+  {
+    "idx": 31,
+    "len": 60,
+    "preview": "\\n\\nCREATE INDEX IF NOT EXISTS idx_users_role ON users (role);",
+    "keep": true
+  },
+  {
+    "idx": 32,
+    "len": 83,
+    "preview": "\\n\\n-- Truck indexes\\nCREATE INDEX IF NOT EXISTS idx_trucks_status ON trucks (status);",
+    "keep": true
+  },
+  {
+    "idx": 33,
+    "len": 72,
+    "preview": "\\n\\nCREATE INDEX IF NOT EXISTS idx_trucks_plate ON trucks (license_plate);",
+    "keep": true
+  },
+  {
+    "idx": 34,
+    "len": 93,
+    "preview": "\\n\\n-- Driver indexes\\nCREATE INDEX IF NOT EXISTS idx_drivers_truck ON drivers (assigned_truck);",
+    "keep": true
+  },
+  {
+    "idx": 35,
+    "len": 948,
+    "preview": "\\n\\n-- ============================================================================\\n-- CONTINUOUS AGGREGATES (Real-time dashboards)\\n-- ===================================================================",
+    "keep": false
+  },
+  {
+    "idx": 36,
+    "len": 293,
+    "preview": "\\n\\n-- Daily alert summary\\nCREATE MATERIALIZED VIEW IF NOT EXISTS alerts_daily\\nWITH (timescaledb.continuous) AS\\nSELECT\\n    time_bucket ('1 day', time) AS bucket,\\n    truck_id,\\n    severity,\\n    COUNT(*)",
+    "keep": false
+  },
+  {
+    "idx": 37,
+    "len": 457,
+    "preview": "\\n\\n-- ============================================================================\\n-- CONTINUOUS AGGREGATE POLICIES (auto-refresh)\\n-- ===================================================================",
+    "keep": false
+  },
+  {
+    "idx": 38,
+    "len": 241,
+    "preview": "\\n\\nSELECT\\n    add_continuous_aggregate_policy (\\n        'alerts_daily',\\n        start_offset = > INTERVAL '3 days',\\n        end_offset = > INTERVAL '1 day',\\n        schedule_interval = > INTERVAL '1 da",
+    "keep": false
+  },
+  {
+    "idx": 39,
+    "len": 349,
+    "preview": "\\n\\n-- ============================================================================\\n-- COMPRESSION POLICIES\\n-- ============================================================================\\n\\nALTER TABLE t",
+    "keep": false
+  },
+  {
+    "idx": 40,
+    "len": 122,
+    "preview": "\\n\\nSELECT add_compression_policy (\\n        'telemetry', compress_after = > INTERVAL '7 days', if_not_exists = > TRUE\\n    );",
+    "keep": false
+  },
+  {
+    "idx": 41,
+    "len": 161,
+    "preview": "\\n\\nALTER TABLE alerts SET(\\n    timescaledb.compress,\\n    timescaledb.compress_segmentby = 'truck_id',\\n    timescaledb.compress_orderby = 'time DESC' -- NOSONAR\\n);",
+    "keep": false
+  },
+  {
+    "idx": 42,
+    "len": 120,
+    "preview": "\\n\\nSELECT add_compression_policy (\\n        'alerts', compress_after = > INTERVAL '30 days', if_not_exists = > TRUE\\n    );",
+    "keep": false
+  },
+  {
+    "idx": 43,
+    "len": 115,
+    "preview": "\\n\\nALTER TABLE audit_log SET(\\n    timescaledb.compress,\\n    timescaledb.compress_orderby = 'time DESC' -- NOSONAR\\n);",
+    "keep": false
+  },
+  {
+    "idx": 44,
+    "len": 123,
+    "preview": "\\n\\nSELECT add_compression_policy (\\n        'audit_log', compress_after = > INTERVAL '90 days', if_not_exists = > TRUE\\n    );",
+    "keep": false
+  },
+  {
+    "idx": 45,
+    "len": 345,
+    "preview": "\\n\\n-- ============================================================================\\n-- DATA RETENTION POLICIES\\n-- ============================================================================\\n\\n-- Telemet",
+    "keep": false
+  },
+  {
+    "idx": 46,
+    "len": 142,
+    "preview": "\\n\\n-- Alerts: keep for 1 year\\nSELECT add_retention_policy (\\n        'alerts', drop_after = > INTERVAL '365 days', if_not_exists = > TRUE\\n    );",
+    "keep": false
+  },
+  {
+    "idx": 47,
+    "len": 162,
+    "preview": "\\n\\n-- Audit log: keep for 2 years (compliance)\\nSELECT add_retention_policy (\\n        'audit_log', drop_after = > INTERVAL '730 days', if_not_exists = > TRUE\\n    );",
+    "keep": false
+  },
+  {
+    "idx": 48,
+    "len": 322,
+    "preview": "\\n\\n-- ============================================================================\\n-- UPDATE TRIGGERS\\n-- ============================================================================\\n\\nCREATE OR REPLACE ",
+    "keep": true
+  },
+  {
+    "idx": 49,
+    "len": 184,
+    "preview": "\\n\\nDO $$ BEGIN\\n  CREATE TRIGGER set_users_updated_at\\n    BEFORE UPDATE ON users\\n    FOR EACH ROW EXECUTE FUNCTION update_updated_at();\\nEXCEPTION WHEN duplicate_object THEN NULL;\\nEND $$;",
+    "keep": true
+  },
+  {
+    "idx": 50,
+    "len": 186,
+    "preview": "\\n\\nDO $$ BEGIN\\n  CREATE TRIGGER set_trucks_updated_at\\n    BEFORE UPDATE ON trucks\\n    FOR EACH ROW EXECUTE FUNCTION update_updated_at();\\nEXCEPTION WHEN duplicate_object THEN NULL;\\nEND $$;",
+    "keep": true
+  },
+  {
+    "idx": 51,
+    "len": 188,
+    "preview": "\\n\\nDO $$ BEGIN\\n  CREATE TRIGGER set_drivers_updated_at\\n    BEFORE UPDATE ON drivers\\n    FOR EACH ROW EXECUTE FUNCTION update_updated_at();\\nEXCEPTION WHEN duplicate_object THEN NULL;\\nEND $$;",
+    "keep": true
+  },
+  {
+    "idx": 52,
+    "len": 565,
+    "preview": "\\n\\n-- ============================================================================\\n-- SEED: Default admin user\\n-- password hash provided at runtime via environment variable\\n-- =========================",
+    "keep": true
+  },
+  {
+    "idx": 53,
+    "len": 3,
+    "preview": "\\n\\n\\n",
+    "keep": true
+  }
+]
