@@ -1,6 +1,6 @@
 'use client'
-import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
+import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState } from 'react'
 import { Download, Plus, Search, Truck } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
@@ -202,8 +202,7 @@ export default function FleetManagementPage() {
   }, [rows])
 
   return (
-    <>
-      <motion.main
+    <motion.main
         suppressHydrationWarning
         initial={false}
         animate={{ opacity: 1, y: 0 }}
@@ -328,6 +327,5 @@ export default function FleetManagementPage() {
           </PremiumPageWrapper>
         </AppSidebar>
       </motion.main>
-    </>
   )
 }

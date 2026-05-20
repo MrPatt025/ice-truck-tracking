@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import AppSidebar from '@/components/AppSidebar'
-import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import type { ReportsTab } from '@/components/reports/ReportsCharts'
 
 const MOCK_BASE_DATE = new Date('2026-01-01T00:00:00.000Z')

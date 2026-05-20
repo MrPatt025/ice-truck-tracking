@@ -105,8 +105,7 @@ export default function SettingsPage() {
   ]
 
   return (
-    <>
-      <motion.main
+    <motion.main
         suppressHydrationWarning
         initial={false}
         animate={{ opacity: 1, y: 0 }}
@@ -594,6 +593,5 @@ export default function SettingsPage() {
           </PremiumPageWrapper>
         </AppSidebar>
       </motion.main>
-    </>
   )
 }

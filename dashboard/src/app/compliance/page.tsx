@@ -1,15 +1,6 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import dynamic from 'next/dynamic'
-
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
 import { ShieldCheck, FileBadge2, Siren, ClipboardCheck } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
@@ -43,8 +34,7 @@ const CONTROL_ROWS = [
 
 export default function CompliancePage() {
   return (
-    <>
-      <motion.main
+    <motion.main
         suppressHydrationWarning
         initial={false}
         animate={{ opacity: 1, y: 0 }}
@@ -132,6 +122,5 @@ export default function CompliancePage() {
           </PremiumPageWrapper>
         </AppSidebar>
       </motion.main>
-    </>
   )
 }

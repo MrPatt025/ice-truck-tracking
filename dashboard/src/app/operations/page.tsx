@@ -15,8 +15,7 @@ const OPS_STREAMS = [
 
 export default function OperationsPage() {
   return (
-    <>
-      <motion.main
+    <motion.main
         suppressHydrationWarning
         initial={false}
         animate={{ opacity: 1, y: 0 }}
@@ -99,6 +98,5 @@ export default function OperationsPage() {
           </PremiumPageWrapper>
         </AppSidebar>
       </motion.main>
-    </>
   )
 }

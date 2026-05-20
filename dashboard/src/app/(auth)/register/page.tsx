@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -93,8 +92,7 @@ export default function RegisterPage() {
   const displayError = validationError || error
 
   return (
-    <>
-      <PremiumPageWrapper
+    <PremiumPageWrapper
         mode='glass'
         denseNoise
         testId='auth-page-wrapper'
@@ -305,6 +303,5 @@ export default function RegisterPage() {
           </div>
         </motion.div>
       </PremiumPageWrapper>
-    </>
   )
 }

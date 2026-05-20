@@ -50,7 +50,8 @@ COPY dashboard/src ./dashboard/src
 # Build the Next.js application
 WORKDIR /app/dashboard
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN pnpm run build
+# Ensure only production dependencies are installed for the dashboard build output
+RUN pnpm install --frozen-lockfile --prod --filter @ice-truck/dashboard && pnpm run build
 
 # ── Production runner ──────────────────────────────────
 FROM base AS runner

@@ -11,8 +11,7 @@ import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 
 export default function Home() {
   return (
-    <>
-      <PremiumPageWrapper
+    <PremiumPageWrapper
         mode='glass'
         denseNoise
         testId='dashboard-page-wrapper'
@@ -20,6 +19,5 @@ export default function Home() {
       >
         <LandingPage />
       </PremiumPageWrapper>
-    </>
   )
 }

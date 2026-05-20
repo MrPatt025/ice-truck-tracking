@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import dynamic from 'next/dynamic'
 
 // ScrollytellingCanvas mounted globally at ClientSharedCanvasHost
 import { motion } from 'framer-motion'
@@ -128,8 +127,7 @@ export default function AdminPage() {
   }, [users])
 
   return (
-    <>
-      <motion.main
+    <motion.main
         initial={false}
         animate={{ opacity: 1, y: 0 }}
         className='relative w-full'
@@ -357,6 +355,5 @@ export default function AdminPage() {
           </PremiumPageWrapper>
         </AppSidebar>
       </motion.main>
-    </>
   )
 }

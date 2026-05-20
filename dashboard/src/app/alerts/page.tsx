@@ -1,15 +1,6 @@
 'use client'
 
 import React, { useState, useMemo, useCallback } from 'react'
-import dynamic from 'next/dynamic'
-
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Bell,
@@ -246,8 +237,7 @@ export default function AlertsPage() {
   }, [])
 
   return (
-    <>
-      <motion.main
+    <motion.main
         suppressHydrationWarning
         initial={false}
         animate={{ opacity: 1, y: 0 }}
@@ -809,6 +799,5 @@ export default function AlertsPage() {
           </PremiumPageWrapper>
         </AppSidebar>
       </motion.main>
-    </>
   )
 }

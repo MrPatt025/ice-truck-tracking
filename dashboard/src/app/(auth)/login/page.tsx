@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useCallback, Suspense } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -195,8 +194,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <>
-      <PremiumPageWrapper
+    <PremiumPageWrapper
         mode='glass'
         className='w-full'
         denseNoise
@@ -213,6 +211,5 @@ export default function LoginPage() {
           <LoginContent />
         </Suspense>
       </PremiumPageWrapper>
-    </>
   )
 }

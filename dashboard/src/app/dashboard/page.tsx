@@ -26,8 +26,7 @@ const DashboardView = dynamic(
 
 export default function DashboardPage() {
   return (
-    <>
-      <PremiumPageWrapper
+    <PremiumPageWrapper
         mode='glass'
         animate={false}
         denseNoise
@@ -35,6 +34,5 @@ export default function DashboardPage() {
       >
         <DashboardView />
       </PremiumPageWrapper>
-    </>
   )
 }

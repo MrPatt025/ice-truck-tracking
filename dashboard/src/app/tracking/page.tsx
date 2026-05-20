@@ -1,7 +1,6 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import dynamic from 'next/dynamic'
 
 // ScrollytellingCanvas mounted globally at ClientSharedCanvasHost
 import { Route, Thermometer, Gauge, MapPinned } from 'lucide-react'
@@ -17,8 +16,7 @@ const TRACKING_LANES = [
 
 export default function TrackingPage() {
   return (
-    <>
-      <motion.main
+    <motion.main
         suppressHydrationWarning
         initial={false}
         animate={{ opacity: 1, y: 0 }}
@@ -102,6 +100,5 @@ export default function TrackingPage() {
           </PremiumPageWrapper>
         </AppSidebar>
       </motion.main>
-    </>
   )
 }
