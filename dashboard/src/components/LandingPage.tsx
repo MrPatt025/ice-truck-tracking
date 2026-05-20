@@ -338,18 +338,21 @@ export default function LandingPage() {
           <div className='flex items-center gap-4 sm:gap-6'>
             <a
               href='#features'
+              data-testid='landing-nav-features'
               className='text-sm text-slate-300 hover:text-white transition'
             >
               Features
             </a>
             <a
               href='#stats'
+              data-testid='landing-nav-performance'
               className='text-sm text-slate-300 hover:text-white transition'
             >
               Performance
             </a>
             <a
               href='#tech'
+              data-testid='landing-nav-tech-stack'
               className='text-sm text-slate-300 hover:text-white transition'
             >
               Tech Stack

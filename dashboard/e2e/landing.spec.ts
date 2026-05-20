@@ -105,7 +105,13 @@ test.describe('Navigation', () => {
     test.skip(!!isMobile, 'Desktop-only nav links')
     await page.setViewportSize({ width: 1280, height: 720 })
     for (const label of ['Features', 'Performance', 'Tech Stack']) {
-      const locator = page.locator(`a:has-text("${label}")`).first()
+      const testId =
+        label === 'Features'
+          ? 'landing-nav-features'
+          : label === 'Performance'
+            ? 'landing-nav-performance'
+            : 'landing-nav-tech-stack'
+      const locator = page.getByTestId(testId)
       await locator.click({ force: true })
       // navigate back to landing for next iteration
       await gotoLanding(page)

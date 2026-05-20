@@ -22,10 +22,10 @@ ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY dashboard/package.json ./dashboard/
 
-# Install dependencies with frozen lockfile + --ignore-scripts (SonarCloud docker:S4507)
-# Uses pnpm store cache mount for faster rebuilds (docker:S8543)
+# Install the full workspace with a frozen lockfile so workspace links stay
+# deterministic while still using the shared pnpm store cache.
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --ignore-scripts --filter @ice-truck/dashboard...
+    pnpm install --frozen-lockfile --ignore-scripts
 
 # ── Builder stage ──────────────────────────────────────
 FROM base AS builder
@@ -34,7 +34,6 @@ WORKDIR /app
 
 # Copy installed node_modules from deps
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/dashboard/node_modules ./dashboard/node_modules
 
 # Copy workspace config
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -47,11 +46,11 @@ COPY dashboard/next-env.d.ts ./dashboard/
 COPY dashboard/public ./dashboard/public
 COPY dashboard/src ./dashboard/src
 
-# Build the Next.js application
 WORKDIR /app/dashboard
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-# Ensure only production dependencies are installed for the dashboard build output
-RUN pnpm install --frozen-lockfile --prod --filter @ice-truck/dashboard && pnpm run build
+
+# Build the Next.js application using the locked workspace dependencies.
+RUN pnpm run build
 
 # ── Production runner ──────────────────────────────────
 FROM base AS runner

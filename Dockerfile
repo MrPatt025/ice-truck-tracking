@@ -42,9 +42,10 @@ COPY mobile-app ./mobile-app
 COPY sdk ./sdk
 COPY src ./src
 
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Build all packages
 RUN pnpm run build
-ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # ── Runtime stage ──────────────────────────────────
 FROM node:26-alpine AS runner

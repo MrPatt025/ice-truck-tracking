@@ -25,6 +25,8 @@ RUN npm ci --only=production --ignore-scripts && \
 COPY tsconfig.json ./
 COPY src ./src
 
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 RUN npm run build && \
   true
 USER notification

@@ -28,7 +28,6 @@ export default function DashboardPage() {
   return (
     <PremiumPageWrapper
         mode='glass'
-        animate={false}
         denseNoise
         testId='dashboard-page-wrapper'
       >

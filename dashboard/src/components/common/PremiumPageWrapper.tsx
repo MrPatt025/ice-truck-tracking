@@ -10,7 +10,6 @@ type PremiumPageWrapperProps = Readonly<{
   className?: string
   contentClassName?: string
   mode?: 'glass' | 'none'
-  animate?: boolean
   denseNoise?: boolean
 }>
 
@@ -20,10 +19,9 @@ const SURFACE_NOISE_IMAGE = `url("data:image/svg+xml,%3Csvg xmlns='${encodeURICo
 
 const PremiumPageWrapper = memo(function PremiumPageWrapper({
   children,
-  className: _className,
+  className,
   contentClassName,
   mode = 'glass',
-  animate = true,
   denseNoise = false,
   testId = 'premium-wrapper',
 }: PremiumPageWrapperProps & { testId?: string }) {
@@ -32,11 +30,12 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
       data-testid={testId}
       suppressHydrationWarning
       aria-label='Primary content'
+      className={cn('relative isolate min-h-[100svh] text-slate-100', className)}
     >
-      <motion.div
-        initial={animate ? { opacity: 1, y: 10 } : false}
+      <motion.main
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.3 }}
         className='w-full h-full min-h-[100svh] relative isolate'
       >
         <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120rem_58rem_at_50%_-25%,rgba(56,189,248,.12),transparent_56%),radial-gradient(104rem_44rem_at_12%_108%,rgba(45,212,191,.13),transparent_62%)]' />
@@ -91,7 +90,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
           ) : null}
           <div className='relative z-50 antialiased'>{children}</div>
         </div>
-      </motion.div>
+      </motion.main>
     </section>
   )
 })
