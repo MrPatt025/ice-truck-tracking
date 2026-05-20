@@ -11,7 +11,7 @@
 
 /** Check if 3D/GPU layers should be disabled (E2E light mode) */
 export function is3DDisabled(): boolean {
-  if (globalThis.window === undefined) {
+  if (typeof globalThis === 'undefined' || !globalThis.window) {
     return true // SSR
   }
 

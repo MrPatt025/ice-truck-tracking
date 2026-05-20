@@ -183,19 +183,19 @@ export class MicroInteractionController {
     el.style.willChange = 'transform'
 
     const handlers: Record<string, EventListener> = {
-      pointerdown: ((e: Event) => {
+      pointerdown: (e: Event) => {
         const pointerEvent = e as PointerEvent
         this._onPress(el, pointerEvent, options)
-      }),
-      pointerup: ((_e: Event) => {
+      },
+      pointerup: (_e: Event) => {
         this._onRelease(el)
-      }),
-      pointerenter: ((_e: Event) => {
+      },
+      pointerenter: (_e: Event) => {
         this._onHoverIn(el)
-      }),
-      pointerleave: ((_e: Event) => {
+      },
+      pointerleave: (_e: Event) => {
         this._onHoverOut(el)
-      }),
+      },
     }
 
     this._boundHandlers.set(el, handlers)

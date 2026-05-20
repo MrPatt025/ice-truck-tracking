@@ -68,7 +68,7 @@ export default defineConfig({
     command: 'pnpm run build && node scripts/start-standalone.js',
     url: 'http://localhost:3000',
     reuseExistingServer: !isCI,
-    timeout: 300_000,
+    timeout: 1_200_000,
     stdout: 'pipe',
     stderr: 'pipe',
     env: {

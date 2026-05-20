@@ -1,3 +1,5 @@
+import { IS_DEVELOPMENT } from '@/config/env'
+
 /* ================================================================
  *  CRAFT LAYER — Predictive Rendering (#12)
  *  ─────────────────────────────────────────────────────────────
@@ -101,9 +103,9 @@ export class PredictiveRenderer {
     this._hoverTimers.clear()
     if (
       this._idleCallbackId !== null &&
-      typeof cancelIdleCallback !== 'undefined'
+      typeof globalThis.cancelIdleCallback !== 'undefined'
     ) {
-      cancelIdleCallback(this._idleCallbackId)
+      globalThis.cancelIdleCallback(this._idleCallbackId)
     }
   }
 
@@ -208,7 +210,7 @@ export class PredictiveRenderer {
     if (!target || target.loaded || !this._config.enabled) return
     if (this._loadingCount >= this._config.maxConcurrent) return
 
-    if (process.env.NODE_ENV === 'development')
+    if (IS_DEVELOPMENT)
       console.debug(`[Predictive] ${signal} → preloading "${targetId}"`)
 
     this._loadingCount++
@@ -229,9 +231,9 @@ export class PredictiveRenderer {
   }
 
   private _scheduleIdlePrefetch(): void {
-    if (requestIdleCallback === undefined) return
+    if (typeof globalThis.requestIdleCallback === 'undefined') return
 
-    this._idleCallbackId = requestIdleCallback(deadline => {
+    this._idleCallbackId = globalThis.requestIdleCallback(deadline => {
       // Prefetch highest-priority unloaded targets during idle
       const unloaded = Array.from(this._targets.values())
         .filter(t => !t.loaded)

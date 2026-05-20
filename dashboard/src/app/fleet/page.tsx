@@ -1,13 +1,13 @@
 'use client'
 import dynamic from 'next/dynamic'
 
-
-
 import { motion } from 'framer-motion'
 
-
 const ScrollytellingCanvas = dynamic(
-  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  () =>
+    import('@/components/ScrollytellingCanvas').then(
+      m => m.ScrollytellingCanvas
+    ),
   { ssr: false }
 )
 import { useEffect, useMemo, useState } from 'react'

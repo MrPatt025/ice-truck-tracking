@@ -9,7 +9,10 @@ import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { useAuthStore } from '@/stores/authStore'
 
 const ScrollytellingCanvas = dynamic(
-  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  () =>
+    import('@/components/ScrollytellingCanvas').then(
+      m => m.ScrollytellingCanvas
+    ),
   { ssr: false }
 )
 

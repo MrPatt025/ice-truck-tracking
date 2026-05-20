@@ -23,7 +23,7 @@ const GlassCard = memo(function GlassCard({
       layout
       layoutId={layoutId}
       transition={{ type: 'spring', damping: 30, stiffness: 230 }}
-      className="h-full"
+      className='h-full'
     >
       <div
         className={`group glass-panel relative h-full rounded-3xl p-[2px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02] will-change-transform overflow-hidden`}

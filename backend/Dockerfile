@@ -1,4 +1,7 @@
-# Multi-stage build for production
+# ============================================================================
+# Backend Dockerfile — Multi-Stage Production Build
+# ============================================================================
+
 FROM node:26-alpine AS base
 
 # Install security updates and dumb-init
@@ -7,8 +10,8 @@ RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
 # Create app directory
 WORKDIR /usr/src/app
 
-# Copy package files
-COPY package.json ./
+# Copy package files (lockfile required for --frozen-lockfile)
+COPY package.json package-lock.json* ./
 
 # Configure NPM network retry settings to prevent ECONNRESET timeouts
 ENV NPM_CONFIG_FETCH_RETRIES=5
@@ -17,14 +20,14 @@ ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 
 # Development stage
 FROM base AS development
-RUN npm install -g pnpm && pnpm install --frozen-lockfile --ignore-scripts
+RUN npm ci --ignore-scripts
 COPY index.js swagger.json ./
 COPY src ./src
 EXPOSE 5000
 USER node
 CMD ["dumb-init", "npm", "run", "dev"]
 
-# Production dependencies stage
+# Production dependencies stage — locked versions + ignore-scripts (SonarCloud docker:S4507 & S8543)
 FROM base AS dependencies
 RUN npm ci --omit=dev --ignore-scripts
 
@@ -48,6 +51,7 @@ COPY src ./src
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV NODE_ENV=production
 ENV PORT=5000
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Expose port
 EXPOSE 5000

@@ -209,8 +209,8 @@ async function onServerStarted() {
 
 function startServer(portToTry = PORT) {
   if (isServerStarted) return;
-  
-  server.on('error', (e) => {
+
+  server.on('error', e => {
     if (e.code === 'EADDRINUSE') {
       const nextPort = Number.parseInt(portToTry) + 1;
       logger.warn(`Port ${portToTry} is in use, trying ${nextPort}...`);

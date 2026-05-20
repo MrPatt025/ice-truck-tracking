@@ -45,20 +45,14 @@ export function useAppHealthEvents(): AppHealthState {
       setBackendDetail(customEvent.detail)
     }
 
-    globalThis.window.addEventListener(
-      WS_HEALTH_EVENT_NAME,
-      onWsHealth
-    )
+    globalThis.window.addEventListener(WS_HEALTH_EVENT_NAME, onWsHealth)
     globalThis.window.addEventListener(
       BACKEND_HEALTH_EVENT_NAME,
       onBackendHealth
     )
 
     return () => {
-      globalThis.window.removeEventListener(
-        WS_HEALTH_EVENT_NAME,
-        onWsHealth
-      )
+      globalThis.window.removeEventListener(WS_HEALTH_EVENT_NAME, onWsHealth)
       globalThis.window.removeEventListener(
         BACKEND_HEALTH_EVENT_NAME,
         onBackendHealth

@@ -4,7 +4,10 @@ import React, { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 
 const ScrollytellingCanvas = dynamic(
-  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  () =>
+    import('@/components/ScrollytellingCanvas').then(
+      m => m.ScrollytellingCanvas
+    ),
   { ssr: false }
 )
 import { motion } from 'framer-motion'
@@ -213,7 +216,9 @@ export default function AdminPage() {
                         <card.icon className={cn('w-5 h-5', card.color)} />
                       </div>
                       <div>
-                        <p className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>{card.value}</p>
+                        <p className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
+                          {card.value}
+                        </p>
                         <p className='text-xs text-muted-foreground'>
                           {card.label}
                         </p>

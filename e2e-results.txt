@@ -1,0 +1,6 @@
+Error: C:\Projects\Ice-truck-racking\playwright.light.config.ts does not exist
+    at resolveConfigFile (C:\Projects\Ice-truck-racking\node_modules\.pnpm\playwright@1.59.1\node_modules\playwright\lib\common\configLoader.js:321:11)
+    at resolveConfigLocation (C:\Projects\Ice-truck-racking\node_modules\.pnpm\playwright@1.59.1\node_modules\playwright\lib\common\configLoader.js:302:30)
+    at loadConfigFromFile (C:\Projects\Ice-truck-racking\node_modules\.pnpm\playwright@1.59.1\node_modules\playwright\lib\common\configLoader.js:331:27)
+    at runTests (C:\Projects\Ice-truck-racking\node_modules\.pnpm\playwright@1.59.1\node_modules\playwright\lib\testActions.js:51:67)
+    at async i.<anonymous> (C:\Projects\Ice-truck-racking\node_modules\.pnpm\playwright@1.59.1\node_modules\playwright\lib\program.js:56:7)

@@ -62,9 +62,7 @@ sdk.start();
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  sdk
-    .shutdown()
-    .catch(err => console.error('[OTel] Shutdown error', err));
+  sdk.shutdown().catch(err => console.error('[OTel] Shutdown error', err));
 });
 
 module.exports = { sdk };

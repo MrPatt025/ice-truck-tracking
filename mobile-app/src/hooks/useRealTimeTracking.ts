@@ -61,7 +61,14 @@ export function useRealTimeTracking() {
       socket.disconnect()
       setIsConnected(false)
     }
-  }, [user, token, handleTruckUpdate, handleConnect, handleDisconnect, handleTrucksPayload])
+  }, [
+    user,
+    token,
+    handleTruckUpdate,
+    handleConnect,
+    handleDisconnect,
+    handleTrucksPayload,
+  ])
 
   return {
     trucks,

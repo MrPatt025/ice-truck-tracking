@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { memo, useState, useEffect } from 'react'
 import { Button } from './Button'
@@ -62,14 +62,16 @@ export const PreferencesPanel = memo(function PreferencesPanel({
 
   useEffect(() => {
     // Load preferences from localStorage
-    const saved = localStorage.getItem('user-preferences')
-    if (saved) {
+    if (typeof globalThis !== 'undefined' && globalThis.window) {
+      const saved = globalThis.window.localStorage.getItem('user-preferences')
+      if (saved) {
       try {
         const parsed = JSON.parse(saved)
         setPreferences({ ...defaultPreferences, ...parsed })
       } catch (error) {
         console.error('Failed to parse preferences:', error)
       }
+    }
     }
   }, [])
 
@@ -92,7 +94,9 @@ export const PreferencesPanel = memo(function PreferencesPanel({
   }
 
   const handleSave = () => {
-    localStorage.setItem('user-preferences', JSON.stringify(preferences))
+    if (typeof globalThis !== 'undefined' && globalThis.window) {
+      globalThis.window.localStorage.setItem('user-preferences', JSON.stringify(preferences))
+    }
     onPreferencesChange(preferences)
     setHasChanges(false)
 

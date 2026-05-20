@@ -107,7 +107,6 @@ export class ParticleMicroSystem {
       zIndex: '9980',
       opacity: '1',
     })
-
     ;(parent || document.body).appendChild(this._canvas)
     this._ctx = this._canvas.getContext('2d')
 

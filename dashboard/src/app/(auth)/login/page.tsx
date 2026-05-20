@@ -9,9 +9,13 @@ import { Eye, EyeOff, Snowflake, Loader2, AlertCircle } from 'lucide-react'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { useAuthStore } from '@/stores/authStore'
 import { useTransitionStore } from '@/stores/transitionStore'
+import { DEMO_EMAIL, DEMO_PASSWORD } from '@/config/env'
 
 const ScrollytellingCanvas = dynamic(
-  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  () =>
+    import('@/components/ScrollytellingCanvas').then(
+      m => m.ScrollytellingCanvas
+    ),
   { ssr: false }
 )
 
@@ -23,8 +27,8 @@ function LoginContent() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const demoEmail = process.env.NEXT_PUBLIC_DEMO_EMAIL
-  const demoPassword = process.env.NEXT_PUBLIC_DEMO_PASSWORD
+  const demoEmail = DEMO_EMAIL
+  const demoPassword = DEMO_PASSWORD
 
   const login = useAuthStore(s => s.login)
   const isLoading = useAuthStore(s => s.isLoading)
@@ -75,7 +79,9 @@ function LoginContent() {
         >
           <Snowflake className='w-7 h-7 text-primary' />
         </motion.div>
-        <h1 className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>Welcome back</h1>
+        <h1 className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
+          Welcome back
+        </h1>
         <p className='text-muted-foreground mt-1'>
           Sign in to your Ice Truck account
         </p>

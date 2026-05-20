@@ -4,7 +4,10 @@ import React, { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 
 const ScrollytellingCanvas = dynamic(
-  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  () =>
+    import('@/components/ScrollytellingCanvas').then(
+      m => m.ScrollytellingCanvas
+    ),
   { ssr: false }
 )
 import { motion } from 'framer-motion'

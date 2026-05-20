@@ -62,7 +62,7 @@ export const orchestrateTransition = (
   // FOV: 60° to 20° (depth compression)
   const startFOV = 60
   const endFOV = 20
-  
+
   // Use safe math instead of THREE.MathUtils.lerp to be doubly safe
   camera.fov = startFOV + (endFOV - startFOV) * eased
 
@@ -86,7 +86,7 @@ export const easeInOutCubic = (t: number): number => {
  */
 export const createNoisePattern = (): HTMLCanvasElement | null => {
   if (typeof document === 'undefined') return null
-  
+
   const canvas = document.createElement('canvas')
   canvas.width = 512
   canvas.height = 512
@@ -114,8 +114,12 @@ export const createNoisePattern = (): HTMLCanvasElement | null => {
  * Called once from root layout
  */
 export const initGlobalCanvas = (): HTMLCanvasElement | null => {
-  if (typeof document === 'undefined' || typeof globalThis.window === 'undefined') return null
-  
+  if (
+    typeof document === 'undefined' ||
+    typeof globalThis.window === 'undefined'
+  )
+    return null
+
   const canvas = document.createElement('canvas')
 
   canvas.id = 'cinematic-gateway-canvas'
@@ -129,8 +133,10 @@ export const initGlobalCanvas = (): HTMLCanvasElement | null => {
 
   // Responsive sizing
   const updateCanvasSize = () => {
-    canvas.width = globalThis.window.innerWidth * globalThis.window.devicePixelRatio
-    canvas.height = globalThis.window.innerHeight * globalThis.window.devicePixelRatio
+    canvas.width =
+      globalThis.window.innerWidth * globalThis.window.devicePixelRatio
+    canvas.height =
+      globalThis.window.innerHeight * globalThis.window.devicePixelRatio
   }
 
   updateCanvasSize()

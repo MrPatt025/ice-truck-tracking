@@ -188,11 +188,17 @@ export class PerformanceGuard {
   }
 
   private analyzeLayer(layer: keyof BudgetSample): void {
-    const avg = this.history.reduce((s, h) => s + h[layer], 0) / this.history.length
+    const avg =
+      this.history.reduce((s, h) => s + h[layer], 0) / this.history.length
     const budget = BUDGET_LIMITS[layer]
 
     if (avg > budget * 1.5) {
-      this.violations.push({ layer, avgTime: avg, budget, severity: 'critical' })
+      this.violations.push({
+        layer,
+        avgTime: avg,
+        budget,
+        severity: 'critical',
+      })
     } else if (avg > budget) {
       this.violations.push({ layer, avgTime: avg, budget, severity: 'warn' })
     }
@@ -220,7 +226,7 @@ export class PerformanceGuard {
     if (this.history.length < 10) return []
 
     this.violations = []
-    
+
     this.analyzeLayer('react')
     this.analyzeLayer('worker')
     this.analyzeLayer('gpu')
@@ -243,7 +249,11 @@ export class PerformanceGuard {
     return currentLOD
   }
 
-  private applyScaling(overrides: Partial<GPUSceneConfig>, current: GPUSceneConfig, v: { layer: string, severity: 'warn' | 'critical' }): void {
+  private applyScaling(
+    overrides: Partial<GPUSceneConfig>,
+    current: GPUSceneConfig,
+    v: { layer: string; severity: 'warn' | 'critical' }
+  ): void {
     if (v.layer === 'gpu' && v.severity === 'critical') {
       overrides.enableShadows = false
       overrides.enablePostProcessing = false
@@ -310,7 +320,11 @@ function getGpuScore(): number {
   return gpuScore
 }
 
-function calculateTier(cores: number, gpuScore: number, memoryGB: number): DeviceTier {
+function calculateTier(
+  cores: number,
+  gpuScore: number,
+  memoryGB: number
+): DeviceTier {
   const score = cores * 0.3 + gpuScore * 3 + memoryGB * 0.5
   if (score >= 8) return 'high-end'
   if (score >= 5) return 'mid-range'
@@ -323,7 +337,10 @@ function calculateTier(cores: number, gpuScore: number, memoryGB: number): Devic
  * Runs once at boot; result cached in adaptive layer.
  */
 export function detectDeviceTier(): DeviceTier {
-  if (typeof globalThis.window === 'undefined' || typeof globalThis.navigator === 'undefined') {
+  if (
+    typeof globalThis.window === 'undefined' ||
+    typeof globalThis.navigator === 'undefined'
+  ) {
     return 'mid-range' // Safe default for SSR
   }
 

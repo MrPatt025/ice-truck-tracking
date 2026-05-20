@@ -295,10 +295,10 @@ export function shutdownEngine(): void {
 export async function mount3D(container: HTMLElement): Promise<void> {
   if (threeLayer) return
   const theme = useIoTStore.getState().theme
-  
+
   // Lazy-load Three.js layer only on the client
   const { ImperativeThreeLayer } = await import('./threeLayer')
-  
+
   threeLayer = new ImperativeThreeLayer()
   threeLayer.init(container, theme)
   frameScheduler.register('three', dt => threeLayer?.update(dt))

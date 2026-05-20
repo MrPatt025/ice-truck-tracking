@@ -65,7 +65,10 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
       powerPreference: 'high-performance',
     })
     renderer.setPixelRatio(globalThis.window.devicePixelRatio)
-    renderer.setSize(globalThis.window.innerWidth, globalThis.window.innerHeight)
+    renderer.setSize(
+      globalThis.window.innerWidth,
+      globalThis.window.innerHeight
+    )
     renderer.setClearColor(0x000000, 0.1)
 
     // Add subtle mesh to canvas (visual anchor)

@@ -22,8 +22,10 @@ ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY dashboard/package.json ./dashboard/
 
-# Install dependencies with frozen lockfile (now resolvable from root)
-RUN pnpm install --frozen-lockfile --filter @ice-truck/dashboard...
+# Install dependencies with frozen lockfile + --ignore-scripts (SonarCloud docker:S4507)
+# Uses pnpm store cache mount for faster rebuilds (docker:S8543)
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --ignore-scripts --filter @ice-truck/dashboard...
 
 # ── Builder stage ──────────────────────────────────────
 FROM base AS builder
@@ -47,6 +49,7 @@ COPY dashboard/src ./dashboard/src
 
 # Build the Next.js application
 WORKDIR /app/dashboard
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm run build
 
 # ── Production runner ──────────────────────────────────
@@ -56,6 +59,7 @@ WORKDIR /app
 # Ensure standard secure path
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs

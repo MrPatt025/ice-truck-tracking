@@ -1,76 +1,38 @@
 ---
 name: backend-telemetry-hardening
-description: 'Harden backend telemetry ingestion under load. Use when handling MQTT data spikes, TimescaleDB connection-pool pressure, ingestion latency growth, validation failures, or schema-drift events in realtime telemetry pipelines.'
-argument-hint: 'Describe spike shape, ingestion path, and current failure signals.'
+description: Harden backend telemetry ingestion under load (MQTT spikes, DB pool pressure, validation failures).
+argument-hint: Describe spike shape, ingestion path, current failure signals.
 user-invocable: true
 ---
 
-# Backend Telemetry Hardening
+## TRIGGERS
 
-## What This Skill Does
+- MQTT bursts causing lag
+- TimescaleDB pool saturation/wait times
+- Ingestion queue growth/timeouts
+- Zod validation error spikes
+- Persistence inconsistency
 
-Defines a production-safe hardening protocol for backend telemetry ingestion, covering MQTT burst tolerance, database pool limits, and Zod validation fallback strategy.
+## STEPS
 
-## Triggers
+1. **Profile**: Quantify input/error rates, queue depth, p95 latency. ID bottleneck (ingress/validation/persistence).
+2. **Ingress**: Bounded queues|Explicit backpressure|Separate parse/persistence|NO blocking CPU/sync I/O in hot paths.
+3. **MQTT**: Per-topic throttle/batch|Coalesce safe telemetry|Idempotent reconnects.
+4. **TimescaleDB**: Measure pool util/wait|Tune limits|Batch writes|Parameterized SQL|Selective columns/deterministic order.
+5. **Validation (Zod)**: Validate at boundary|Route failures to dead-letter + reason|Preserve observability|NEVER bypass validation.
+6. **Resilience**: Idempotency guards|Circuit-breaking/load-shedding|Bounded/jittered retries.
+7. **Verify**: Burst & steady-state tests|Check pool stability, latency, data integrity.
+8. **CI Checks**:
+   - `pnpm --filter @ice-truck/backend lint`
+   - `pnpm --filter @ice-truck/backend type-check`
+   - `pnpm --filter @ice-truck/backend test`
 
-- MQTT message bursts cause processing lag or dropped updates
-- TimescaleDB pool saturation or elevated query wait time
-- Ingestion queue growth, timeout spikes, or backpressure collapse
-- Zod validation error spikes from schema drift or malformed payloads
-- Inconsistent telemetry persistence under sustained load
+## EXIT CRITERIA
 
-## Steps
+- Stable ingestion under load
+- NO uncontrolled queue/pool exhaustion
+- Validation failures quarantined, ZERO corruption
 
-1. Establish incident profile.
-   - Quantify input rate, error rate, queue depth, and end-to-end latency.
-   - Identify whether failure is ingress-bound, validation-bound, or persistence-bound.
+## REFS
 
-2. Protect ingestion path first.
-   - Apply bounded queues and explicit backpressure behavior.
-   - Separate fast-path parsing from slow-path persistence work.
-   - Avoid blocking CPU or sync I/O in message hot paths.
-
-3. Control MQTT spike handling.
-   - Classify topics by criticality and apply per-topic throttling or batching policy.
-   - Coalesce redundant telemetry updates where business-safe.
-   - Ensure reconnect and redelivery behavior does not duplicate side effects.
-
-4. Stabilize TimescaleDB pool behavior.
-   - Measure pool utilization, wait time, and query latency before tuning.
-   - Tune pool limits conservatively to prevent database thrash.
-   - Batch writes where safe and keep SQL parameterized with explicit columns.
-   - Ensure list/read paths include deterministic ordering and selective columns.
-
-5. Enforce Zod boundary validation with fallback protocol.
-   - Validate all inbound payloads at boundary before service logic.
-   - On validation failure, route payload to a quarantine or dead-letter path with reason metadata.
-   - Preserve observability fields for replay and schema evolution analysis.
-   - Never bypass validation to keep pipeline running.
-
-6. Add resilience controls.
-   - Use idempotency guards for duplicate delivery scenarios.
-   - Add circuit-breaking or load-shedding policy where downstream is degraded.
-   - Keep retry policies bounded and jittered.
-
-7. Verify with stress and failure drills.
-   - Run burst tests and steady-state tests against target throughput.
-   - Validate pool stability, ingestion latency, and data integrity after fixes.
-   - Execute project checks:
-     - `pnpm --filter @ice-truck/backend lint`
-     - `pnpm --filter @ice-truck/backend type-check`
-     - `pnpm --filter @ice-truck/backend test`
-
-## Exit Criteria
-
-- Ingestion remains stable under defined spike and steady-state profiles
-- No uncontrolled queue growth or pool exhaustion under target load
-- Validation failures are contained through fallback path without data corruption
-
-## References
-
-- `docs/DEFINITION_OF_DONE.md`
-- `docs/API.md`
-- `docs/THREAT_MODEL.md`
-- `backend/src/services/`
-- `backend/tests/`
-- `tests/k6/`
+`docs/DEFINITION_OF_DONE.md` | `docs/API.md` | `docs/THREAT_MODEL.md` | `backend/src/services/` | `backend/tests/` | `tests/k6/`

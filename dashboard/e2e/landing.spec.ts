@@ -385,7 +385,7 @@ test.describe('Footer', () => {
 })
 
 // ===============================================================
-// 8. RESPONSIVE BEHAVIOUR
+// 8. RESPONSIVE BEHAVIOR
 // ===============================================================
 test.describe('Responsive Design', () => {
   test.describe.configure({ mode: 'serial' })

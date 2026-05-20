@@ -69,7 +69,7 @@ export default function ScrollTruckStory() {
   return (
     <section ref={targetRef} className='mx-auto max-w-7xl px-6 py-24'>
       <div className='mb-8 text-center'>
-        <h2 className='text-3xl font-bold sm:text-4xl'>
+        <h2 className='text-3xl font-bold sm:text-4xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
           Scroll-Driven 3D Story
         </h2>
         <p className='mt-3 text-slate-400'>

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 
 export const metadata: Metadata = {
   title: 'Sign In | Ice Truck Tracking',
@@ -12,9 +11,5 @@ export default function AuthLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  return (
-    <PremiumPageWrapper mode="glass" className='min-h-screen flex items-center justify-center p-4' contentClassName='w-full max-w-md'>
-      {children}
-    </PremiumPageWrapper>
-  )
+  return children
 }

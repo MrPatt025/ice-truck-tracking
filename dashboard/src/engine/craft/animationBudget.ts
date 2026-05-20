@@ -13,6 +13,7 @@
  * ================================================================ */
 
 import type { DeviceTier } from '../types'
+import { IS_DEVELOPMENT } from '@/config/env'
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -314,7 +315,7 @@ export class AnimationBudgetGovernor {
       )
     }
 
-    if (process.env.NODE_ENV === 'development')
+    if (IS_DEVELOPMENT)
       console.debug(
         `[Budget] Degraded to level ${this._state.reductionLevel}, actions:`,
         [...this._state.activeActions]
@@ -344,7 +345,7 @@ export class AnimationBudgetGovernor {
       )
     }
 
-    if (process.env.NODE_ENV === 'development')
+    if (IS_DEVELOPMENT)
       console.debug(`[Budget] Recovered to level ${this._state.reductionLevel}`)
   }
 

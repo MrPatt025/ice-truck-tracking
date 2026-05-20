@@ -37,9 +37,12 @@ import PremiumSystemStatusBanner, {
 } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
 
-const HeroBackground = dynamic(() => import('@/components/landing/HeroBackground'), {
-  ssr: false,
-})
+const HeroBackground = dynamic(
+  () => import('@/components/landing/HeroBackground'),
+  {
+    ssr: false,
+  }
+)
 const ScrollTruckStory = dynamic(
   () => import('@/components/landing/ScrollTruckStory'),
   { ssr: false }
@@ -59,10 +62,15 @@ const fadeUp = {
     transition: { delay: i * 0.09, duration: 0.52, ease: EASE_STANDARD },
   }),
 }
-
-const stagger = { visible: { transition: { staggerChildren: 0.1 } } }
-
-/* ───────────────────── Feature data ─────────────────────────── */
+const stagger = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+}
 const features = [
   {
     icon: MapPin,
@@ -164,7 +172,7 @@ export default function LandingPage() {
   const heroY = useTransform(scrollYProgress, [0, 0.25], ['0%', '12%'])
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0.55])
   const heroScale = useTransform(scrollYProgress, [0, 0.35], [1, 0.92])
-  const pageOpacity = useTransform(transitionProgress, [0, 1], [1, 0.08])
+  const pageOpacity = useTransform(transitionProgress, [0, 1], [1, 1])
   const pageScale = useTransform(transitionProgress, [0, 1], [1, 0.94])
   const pageLift = useTransform(transitionProgress, [0, 1], ['0px', '-18px'])
   const veilOpacity = useTransform(transitionProgress, [0, 1], [0, 1])
@@ -346,11 +354,14 @@ export default function LandingPage() {
             >
               Tech Stack
             </a>
-            <Button size='sm' asChild>
-              <a href='/dashboard' onClick={beginDashboardTransition}>
-                Open Dashboard
-              </a>
-            </Button>
+            <a
+              href='/dashboard'
+              data-testid='landing-open-dashboard-nav'
+              onClick={beginDashboardTransition}
+              className='inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
+            >
+              Open Dashboard
+            </a>
           </div>
         </div>
       </motion.nav>
@@ -606,7 +617,7 @@ export default function LandingPage() {
           <motion.h2
             custom={0}
             variants={fadeUp}
-            className='text-3xl font-bold sm:text-4xl'
+            className='text-3xl font-bold sm:text-4xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'
           >
             Ready to Track?
           </motion.h2>

@@ -20,6 +20,7 @@ import type {
   CinematicTransitionPhase,
   CinematicWorkerMessage,
 } from '@/workers/cinematicMessages'
+import { E2E_LIGHT_MODE, WS_URL, API_URL } from '@/config/env'
 
 type HeroBackgroundProps = {
   scrollProgress?: MotionValue<number>
@@ -28,7 +29,6 @@ type HeroBackgroundProps = {
   isTransitioning?: boolean
 }
 
-const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
 
 const OffscreenCanvas = dynamic(
   () => import('@react-three/offscreen').then(mod => mod.Canvas),
@@ -109,14 +109,12 @@ function toWebSocketUrl(rawUrl: string): string {
 }
 
 function resolveWebSocketUrl(): string {
-  const configuredWs = process.env.NEXT_PUBLIC_WS_URL?.trim()
-  if (configuredWs) {
-    return toWebSocketUrl(configuredWs)
+  if (WS_URL) {
+    return toWebSocketUrl(WS_URL)
   }
 
-  const apiRoot = process.env.NEXT_PUBLIC_API_URL?.trim()
-  if (apiRoot) {
-    return toWebSocketUrl(apiRoot)
+  if (API_URL) {
+    return toWebSocketUrl(API_URL)
   }
 
   if (globalThis.window === undefined) {

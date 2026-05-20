@@ -37,7 +37,8 @@ function normalizeBackendOrigin(rawUrl: string): string {
 }
 
 const backendOrigin = normalizeBackendOrigin(configuredApiRoot)
-const scriptSrc = "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com"
+const scriptSrc =
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com"
 
 const localApiOrigins: string[] = []
 if (isProduction) {

@@ -14,7 +14,7 @@ export default function TransitionLayoutGroup({
   return (
     <LayoutGroup id='ui-shared-transition'>
       <AnimatePresence mode='wait' initial={false}>
-        <div key={pathname} className="w-full h-full">
+        <div key={pathname} className='w-full h-full'>
           {children}
         </div>
       </AnimatePresence>

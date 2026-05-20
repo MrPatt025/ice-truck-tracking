@@ -26,6 +26,98 @@ const execAsync = promisify(exec);
 
 let container;
 let pool;
+const SQL_LINE_COMMENT_PATTERN = /--.*$/gm;
+const SQL_BLOCK_COMMENT_PATTERN = /\/\*[\s\S]*?\*\//g;
+const SQL_DOLLAR_TAG_PATTERN = /^\$\w*\$/;
+
+function writeDebugArtifact(fileName, content) {
+  try {
+    fs.writeFileSync(path.join(__dirname, fileName), content);
+  } catch {
+    /* noop */
+  }
+}
+
+function stripSqlComments(statement) {
+  return statement
+    .replaceAll(SQL_LINE_COMMENT_PATTERN, '')
+    .replaceAll(SQL_BLOCK_COMMENT_PATTERN, '');
+}
+
+function readDollarTag(input, index) {
+  if (input[index] !== '$') {
+    return null;
+  }
+
+  const match = input.slice(index).match(SQL_DOLLAR_TAG_PATTERN);
+  return match?.[0] ?? null;
+}
+
+function splitTopLevelSqlStatements(input) {
+  const statements = [];
+  let i = 0;
+  let start = 0;
+  let dollarTag = null;
+
+  while (i < input.length) {
+    const tag = readDollarTag(input, i);
+    if (tag !== null && (dollarTag === null || dollarTag === tag)) {
+      dollarTag = dollarTag === null ? tag : null;
+      i += tag.length;
+      continue;
+    }
+
+    if (dollarTag === null && input[i] === ';') {
+      statements.push(input.slice(start, i + 1));
+      i += 1;
+      start = i;
+      continue;
+    }
+
+    i += 1;
+  }
+
+  if (start < input.length) {
+    statements.push(input.slice(start));
+  }
+
+  return statements;
+}
+
+function shouldKeepTimescaleStatement(statement) {
+  const normalized = stripSqlComments(statement).toLowerCase();
+
+  return !(
+    normalized.includes('timescaledb') ||
+    normalized.includes('create_hypertable') ||
+    normalized.includes('add_continuous_aggregate_policy') ||
+    normalized.includes('add_compression_policy') ||
+    normalized.includes('add_retention_policy')
+  );
+}
+
+function filterTimescaleStatements(input) {
+  const statements = splitTopLevelSqlStatements(input);
+  const filtered = [];
+  const debug = [];
+
+  for (const [idx, statement] of statements.entries()) {
+    const keep = shouldKeepTimescaleStatement(statement);
+    if (keep) {
+      filtered.push(statement);
+    }
+
+    debug.push({
+      idx,
+      len: statement.length,
+      preview: statement.slice(0, 200).replaceAll('\n', String.raw`\n`),
+      keep,
+    });
+  }
+
+  writeDebugArtifact('tmp_statements.json', JSON.stringify(debug, null, 2));
+  return filtered.join('\n');
+}
 
 /**
  * Check if Docker daemon is running.
@@ -53,7 +145,7 @@ async function waitForPostgres(pg, maxAttempts = 20) {
       return; // connected
     } catch (err) {
       lastError = err;
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
   }
   throw new Error(`PostgreSQL did not become ready after ${maxAttempts * 500} ms`, {
@@ -72,7 +164,7 @@ async function runMigration(pg, sql) {
   try {
     await pg.query(sql);
   } catch (err) {
-    console.error('Migration execution error:', err && err.message ? err.message : err);
+    console.error('Migration execution error:', err?.message ?? err);
     // expose a bit more context when possible
     try {
       console.error(
@@ -131,89 +223,19 @@ beforeAll(async () => {
 
   await waitForPostgres(pool);
 
-  const migrationPath = path.resolve(__dirname, '../../database/migrations/001_init_timescaledb.sql');
+  const migrationPath = path.resolve(
+    __dirname,
+    '../../database/migrations/001_init_timescaledb.sql'
+  );
   if (!fs.existsSync(migrationPath)) {
     throw new Error(`Migration file not found: ${migrationPath}`);
   }
   let sql = fs.readFileSync(migrationPath, 'utf8');
 
-  // Split SQL into top-level statements while preserving dollar-quoted blocks,
-  // then filter out TimescaleDB-specific statements.
-  function filterTimescaleStatements(input) {
-    const statements = [];
-    let i = 0;
-    let start = 0;
-    const n = input.length;
-    let dollarTag = null;
-
-    while (i < n) {
-      if (input[i] === '$') {
-        const m = input.slice(i).match(/^\$[A-Za-z0-9_]*\$/);
-        if (m) {
-          const tag = m[0];
-          if (!dollarTag) {
-            dollarTag = tag;
-            i += tag.length;
-            continue;
-          } else if (dollarTag === tag) {
-            // closing
-            i += tag.length;
-            dollarTag = null;
-            continue;
-          }
-        }
-      }
-
-      if (!dollarTag && input[i] === ';') {
-        // end of a top-level statement
-        statements.push(input.slice(start, i + 1));
-        i += 1;
-        start = i;
-        continue;
-      }
-
-      i += 1;
-    }
-    // push any trailing fragment
-    if (start < n) statements.push(input.slice(start));
-
-    const filtered = [];
-    const debug = [];
-    for (let idx = 0; idx < statements.length; idx++) {
-      const stmt = statements[idx];
-      let keep = true;
-      // strip SQL comments when deciding
-      const sNoComments = stmt.replace(/--.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').toLowerCase();
-      if (sNoComments.includes('timescaledb')) keep = false;
-      if (sNoComments.includes('create_hypertable')) keep = false;
-      if (sNoComments.includes('add_continuous_aggregate_policy')) keep = false;
-      if (sNoComments.includes('add_compression_policy')) keep = false;
-      if (sNoComments.includes('add_retention_policy')) keep = false;
-      if (keep) filtered.push(stmt);
-      debug.push({ idx, len: stmt.length, preview: stmt.slice(0, 200).replace(/\n/g, '\\n'), keep });
-    }
-    try {
-      fs.writeFileSync(
-        require('path').join(__dirname, 'tmp_statements.json'),
-        JSON.stringify(debug, null, 2)
-      );
-    } catch {
-      /* noop */
-    }
-    return filtered.join('\n');
-  }
-
   try {
     const safeSql = filterTimescaleStatements(sql);
     // write processed SQL to disk for debugging in CI/local dev
-    try {
-      fs.writeFileSync(
-        require('path').join(__dirname, 'tmp_processed_migration.sql'),
-        safeSql
-      );
-    } catch {
-      /* noop */
-    }
+    writeDebugArtifact('tmp_processed_migration.sql', safeSql);
     console.error('Processed SQL start:\n', safeSql.substring(0, 800));
     await runMigration(pool, safeSql);
   } catch (err) {
@@ -359,15 +381,15 @@ beforeAll(async () => {
       await runMigration(pool, fallbackSql);
       console.error('Fallback schema applied, continuing tests.');
     } catch (fallbackErr) {
-      console.error('Fallback schema also failed:', fallbackErr && fallbackErr.message ? fallbackErr.message : fallbackErr);
+      console.error('Fallback schema also failed:', fallbackErr?.message ?? fallbackErr);
       throw err;
     }
   }
 }, 120_000);
 
 afterAll(async () => {
-  if (pool) await pool.end();
-  if (container) await container.stop();
+  await pool?.end();
+  await container?.stop();
 }, 30_000);
 
 // ─── Helper ────────────────────────────────────────────────────
@@ -454,12 +476,10 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       return; // Skip this test
     }
 
-    await query(`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)`, [
-      'unique_check',
-      'unique@example.com',
-      'pw',
-      'driver',
-    ]);
+    await query(
+      `INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)`,
+      ['unique_check', 'unique@example.com', 'pw', 'driver']
+    );
 
     await expect(
       query(`INSERT INTO users (username, email, password_hash, role) VALUES ($1, $2, $3, $4)`, [
@@ -655,17 +675,16 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       await client.query(`INSERT INTO shops (name, latitude, longitude) VALUES ($1, $2, $3)`, [
         'Committed Shop',
         13.7,
-        100.5
+        100.5,
       ]);
       await client.query('COMMIT');
     } finally {
       client.release();
     }
 
-    const shop = await get(
-      `SELECT id, name FROM shops WHERE name = $1 ORDER BY id DESC LIMIT 1`,
-      ['Committed Shop']
-    );
+    const shop = await get(`SELECT id, name FROM shops WHERE name = $1 ORDER BY id DESC LIMIT 1`, [
+      'Committed Shop',
+    ]);
     expect(shop).not.toBeNull();
   });
 
@@ -681,17 +700,16 @@ describe('Testcontainers — PostgreSQL Integration', () => {
       await client.query(`INSERT INTO shops (name, latitude, longitude) VALUES ($1, $2, $3)`, [
         'Rolled Back Shop',
         13.7,
-        100.5
+        100.5,
       ]);
       await client.query('ROLLBACK');
     } finally {
       client.release();
     }
 
-    const shop = await get(
-      `SELECT id, name FROM shops WHERE name = $1 ORDER BY id DESC LIMIT 1`,
-      ['Rolled Back Shop']
-    );
+    const shop = await get(`SELECT id, name FROM shops WHERE name = $1 ORDER BY id DESC LIMIT 1`, [
+      'Rolled Back Shop',
+    ]);
     expect(shop).toBeNull();
   });
 
@@ -707,13 +725,12 @@ describe('Testcontainers — PostgreSQL Integration', () => {
     await query(`INSERT INTO shops (name, latitude, longitude) VALUES ($1, $2, $3)`, [
       malicious,
       13.7,
-      100.5
+      100.5,
     ]);
 
-    const shop = await get(
-      `SELECT id, name FROM shops WHERE name = $1 ORDER BY id DESC LIMIT 1`,
-      [malicious]
-    );
+    const shop = await get(`SELECT id, name FROM shops WHERE name = $1 ORDER BY id DESC LIMIT 1`, [
+      malicious,
+    ]);
     expect(shop.name).toBe(malicious); // stored as literal string
   });
 });

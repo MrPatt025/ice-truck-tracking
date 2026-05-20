@@ -17,7 +17,10 @@ import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { useAuthStore } from '@/stores/authStore'
 
 const ScrollytellingCanvas = dynamic(
-  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  () =>
+    import('@/components/ScrollytellingCanvas').then(
+      m => m.ScrollytellingCanvas
+    ),
   { ssr: false }
 )
 
@@ -113,7 +116,9 @@ export default function RegisterPage() {
             <div className='inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4'>
               <Snowflake className='w-7 h-7 text-primary' />
             </div>
-            <h1 className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>Create your account</h1>
+            <h1 className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
+              Create your account
+            </h1>
             <p className='text-muted-foreground mt-1'>
               Start tracking your fleet today
             </p>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { IS_DEVELOPMENT } from '@/config/env'
 
 interface PerformanceMetrics {
   renderTime: number
@@ -13,7 +14,7 @@ export function usePerformanceMonitor(componentName: string) {
   const mountTime = useRef<number>(0)
 
   useEffect(() => {
-    mountTime.current = performance.now()
+    mountTime.current = globalThis.performance.now()
 
     return () => {
       // Cleanup: no console logging or unused lifetime calculations
@@ -21,11 +22,11 @@ export function usePerformanceMonitor(componentName: string) {
   }, [componentName])
 
   const startRender = () => {
-    renderStartTime.current = performance.now()
+    renderStartTime.current = globalThis.performance.now()
   }
 
   const endRender = () => {
-    const renderTime = performance.now() - renderStartTime.current
+    const renderTime = globalThis.performance.now() - renderStartTime.current
 
     const metrics: PerformanceMetrics = {
       renderTime,
@@ -41,7 +42,7 @@ export function usePerformanceMonitor(componentName: string) {
     })
 
     // Log in development
-    if (process.env.NODE_ENV === 'development' && renderTime > 16) {
+    if (IS_DEVELOPMENT && renderTime > 16) {
       console.warn(
         `[Performance] ${componentName} slow render: ${renderTime.toFixed(2)}ms`
       )
@@ -58,7 +59,7 @@ export function useWebVitals() {
     if (globalThis.window === undefined) return
 
     // Measure Core Web Vitals
-    const observer = new PerformanceObserver(list => {
+    const observer = new globalThis.PerformanceObserver(list => {
       list.getEntries().forEach(entry => {
         const metric = {
           name: entry.name,

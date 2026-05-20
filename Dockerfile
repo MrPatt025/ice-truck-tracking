@@ -44,6 +44,7 @@ COPY src ./src
 
 # Build all packages
 RUN pnpm run build
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # ── Runtime stage ──────────────────────────────────
 FROM node:26-alpine AS runner
@@ -52,6 +53,7 @@ WORKDIR /app
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV NODE_ENV production
 ENV PORT 5000
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Create app user for security
 RUN addgroup -g 1001 -S nodejs && \

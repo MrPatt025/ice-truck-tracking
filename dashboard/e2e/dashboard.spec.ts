@@ -318,7 +318,7 @@ test.describe('Dashboard — Toolbar', () => {
 })
 
 // ===============================================================
-// 7. INTERACTIVE BEHAVIOUR
+// 7. INTERACTIVE BEHAVIOR
 // ===============================================================
 test.describe('Dashboard — Interactions', () => {
   test.describe.configure({ mode: 'serial' })

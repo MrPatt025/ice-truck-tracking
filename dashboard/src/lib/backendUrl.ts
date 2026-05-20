@@ -50,7 +50,8 @@ export function resolveApiBaseV1(): string {
   }
 
   if (
-    globalThis.window !== undefined &&
+    typeof globalThis !== 'undefined' &&
+    globalThis.window &&
     (globalThis.window.location.hostname === 'localhost' ||
       globalThis.window.location.hostname === '127.0.0.1')
   ) {
@@ -67,16 +68,17 @@ export function resolveBackendHealthUrl(): string {
 export function resolveMetricsIngestUrl(): string {
   const configuredApiRoot = process.env.NEXT_PUBLIC_API_URL?.trim()
   if (configuredApiRoot) {
-    return `${normalizeApiRoot(configuredApiRoot)}/metrics`
+    return `${normalizeApiRoot(configuredApiRoot)}/api/v1/telemetry`
   }
 
   if (
-    globalThis.window !== undefined &&
+    typeof globalThis !== 'undefined' &&
+    globalThis.window &&
     (globalThis.window.location.hostname === 'localhost' ||
       globalThis.window.location.hostname === '127.0.0.1')
   ) {
-    return '/metrics'
+    return '/api/v1/telemetry'
   }
 
-  return 'http://localhost:5000/metrics'
+  return 'http://localhost:5000/api/v1/telemetry'
 }

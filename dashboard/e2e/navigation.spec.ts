@@ -77,7 +77,7 @@ async function verifyPageLoad(page: Page, route: string): Promise<void> {
   await main.waitFor({ state: 'visible', timeout: ASSERTION_TIMEOUT })
 
   // Assert PremiumPageWrapper is present — bulletproof testid-based locator
-  const pageContent = page.locator('[data-testid="premium-wrapper"]')
+  const pageContent = page.locator('[data-testid="premium-wrapper"]').first()
   await expect(pageContent).toBeVisible({ timeout: ASSERTION_TIMEOUT })
 
   // Verify no critical console errors (filter out benign 3D/WebGL warnings)

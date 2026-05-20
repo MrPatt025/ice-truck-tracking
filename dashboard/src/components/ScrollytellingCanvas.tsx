@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef } from 'react'
+import React, { Suspense, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useScroll, motion, useTransform, MotionValue } from 'framer-motion'
 import * as THREE from 'three'
@@ -11,7 +11,9 @@ import * as THREE from 'three'
  *  60 FPS without triggering React reconciliation.
  * ---------------------------------------------------------------- */
 /* eslint-disable react/no-unknown-property */
-function ScrollytellingGrid({ scrollProgress }: Readonly<{ scrollProgress: MotionValue<number> }>) {
+function ScrollytellingGrid({
+  scrollProgress,
+}: Readonly<{ scrollProgress: MotionValue<number> }>) {
   const gridRef = useRef<THREE.GridHelper>(null)
   const dirLightRef = useRef<THREE.DirectionalLight>(null)
   const timeRef = useRef(0)
@@ -32,9 +34,24 @@ function ScrollytellingGrid({ scrollProgress }: Readonly<{ scrollProgress: Motio
     const targetRotX = THREE.MathUtils.lerp(-0.2, -0.8, scroll)
 
     // Smooth dampening
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, targetZ, 4, delta)
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, targetY, 4, delta)
-    camera.rotation.x = THREE.MathUtils.damp(camera.rotation.x, targetRotX, 4, delta)
+    camera.position.z = THREE.MathUtils.damp(
+      camera.position.z,
+      targetZ,
+      4,
+      delta
+    )
+    camera.position.y = THREE.MathUtils.damp(
+      camera.position.y,
+      targetY,
+      4,
+      delta
+    )
+    camera.rotation.x = THREE.MathUtils.damp(
+      camera.rotation.x,
+      targetRotX,
+      4,
+      delta
+    )
 
     // Light intensity interpolation based on scroll
     if (dirLightRef.current) {
@@ -51,7 +68,12 @@ function ScrollytellingGrid({ scrollProgress }: Readonly<{ scrollProgress: Motio
   return (
     <>
       <ambientLight intensity={0.5} />
-      <directionalLight ref={dirLightRef} position={[10, 10, 5]} intensity={1} castShadow />
+      <directionalLight
+        ref={dirLightRef}
+        position={[10, 10, 5]}
+        intensity={1}
+        castShadow
+      />
       <gridHelper
         ref={gridRef}
         args={[100, 100, '#4f46e5', '#334155']}
@@ -62,6 +84,15 @@ function ScrollytellingGrid({ scrollProgress }: Readonly<{ scrollProgress: Motio
   )
 }
 /* eslint-enable react/no-unknown-property */
+
+/** Spinner fallback shown while the 3D Canvas initializes — ensures FCP. */
+function CanvasFallback() {
+  return (
+    <div className='absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-md z-0'>
+      <div className='w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin' />
+    </div>
+  )
+}
 
 /**
  * ScrollytellingCanvas: Full-screen fixed background canvas that
@@ -88,14 +119,16 @@ export function ScrollytellingCanvas() {
       className='absolute inset-0 -z-10 pointer-events-none'
       style={{ opacity, scale }}
     >
-      <Canvas
-        shadows={false}
-        dpr={[1, 1.5]}
-        gl={{ powerPreference: "high-performance", antialias: false }}
-        frameloop='always'
-      >
-        <ScrollytellingGrid scrollProgress={scrollYProgress} />
-      </Canvas>
+      <Suspense fallback={<CanvasFallback />}>
+        <Canvas
+          shadows={false}
+          dpr={[1, 1.5]}
+          gl={{ powerPreference: 'high-performance', antialias: false }}
+          frameloop='always'
+        >
+          <ScrollytellingGrid scrollProgress={scrollYProgress} />
+        </Canvas>
+      </Suspense>
     </motion.div>
   )
 }

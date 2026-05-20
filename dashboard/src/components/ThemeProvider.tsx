@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import {
   createContext,
@@ -47,9 +47,11 @@ export function ThemeProvider({
 
   // Hydrate from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(storageKey)
-    if (stored && (['light', 'dark', 'system']).includes(stored)) {
-      setTheme(stored as Theme)
+    if (typeof globalThis !== 'undefined' && globalThis.window) {
+      const stored = globalThis.window.localStorage.getItem(storageKey)
+      if (stored && ['light', 'dark', 'system'].includes(stored)) {
+        setTheme(stored as Theme)
+      }
     }
   }, [storageKey, setTheme])
 
@@ -111,7 +113,9 @@ export function ThemeProvider({
   const persistTheme = useCallback(
     (t: Theme) => {
       setTheme(t)
-      localStorage.setItem(storageKey, t)
+      if (typeof globalThis !== 'undefined' && globalThis.window) {
+        globalThis.window.localStorage.setItem(storageKey, t)
+      }
     },
     [storageKey, setTheme]
   )

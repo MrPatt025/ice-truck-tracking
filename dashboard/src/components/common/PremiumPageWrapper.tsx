@@ -19,26 +19,23 @@ const SURFACE_NOISE_IMAGE = `url("data:image/svg+xml,%3Csvg xmlns='${encodeURICo
 
 const PremiumPageWrapper = memo(function PremiumPageWrapper({
   children,
-  className,
+  className: _className,
   contentClassName,
   mode = 'glass',
   animate = true,
   denseNoise = false,
 }: PremiumPageWrapperProps) {
   return (
-    <main
-      suppressHydrationWarning
+    <section
       data-testid='premium-wrapper'
-      className={cn(
-        'premium-page-shell relative isolate min-h-[100svh] overflow-visible premium-rhythm',
-        className
-      )}
+      suppressHydrationWarning
+      aria-label='Primary content'
     >
       <motion.div
-        initial={animate ? { opacity: 0.01, y: 10 } : false}
+        initial={animate ? { opacity: 1, y: 10 } : false}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full h-full min-h-[100svh] relative isolate"
+        className='w-full h-full min-h-[100svh] relative isolate'
       >
         <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120rem_58rem_at_50%_-25%,rgba(56,189,248,.12),transparent_56%),radial-gradient(104rem_44rem_at_12%_108%,rgba(45,212,191,.13),transparent_62%)]' />
         <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(66rem_36rem_at_18%_-12%,rgba(56,189,248,.16),transparent),radial-gradient(78rem_40rem_at_90%_108%,rgba(16,185,129,.14),transparent)]' />
@@ -66,15 +63,13 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         <div
           className={cn(
             mode === 'glass' &&
-              'premium-surface relative z-40 overflow-hidden rounded-3xl bg-slate-900/30 backdrop-blur-3xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] text-slate-50 supports-[backdrop-filter]:backdrop-saturate-150',
+              'premium-surface relative z-40 overflow-hidden rounded-3xl bg-slate-900/40 backdrop-blur-[40px] border border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.6)] saturate-150 text-slate-100 supports-[backdrop-filter]:backdrop-saturate-150',
             contentClassName
           )}
         >
           {mode === 'glass' ? (
             <>
-              <div
-                className='premium-visual premium-ornament pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(74rem_30rem_at_10%_-24%,rgba(56,189,248,.26),transparent),radial-gradient(84rem_34rem_at_96%_115%,rgba(16,185,129,.18),transparent)]'
-              />
+              <div className='premium-visual premium-ornament pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(74rem_30rem_at_10%_-24%,rgba(56,189,248,.26),transparent),radial-gradient(84rem_34rem_at_96%_115%,rgba(16,185,129,.18),transparent)]' />
               <div className='premium-visual premium-surface-grid pointer-events-none absolute inset-0 rounded-3xl opacity-[0.16] [background-image:linear-gradient(to_right,rgba(148,163,184,0.18)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.16)_1px,transparent_1px)] [background-size:24px_24px]' />
               <div className='premium-visual premium-topline pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent opacity-80' />
               <div className='premium-visual premium-left-line pointer-events-none absolute inset-y-6 left-0 w-px bg-gradient-to-b from-transparent via-cyan-200/25 to-transparent opacity-70' />
@@ -96,12 +91,10 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
               <div className='premium-visual premium-frame pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-cyan-200/20 shadow-[inset_0_0_35px_-20px_rgba(56,189,248,.95)]' />
             </>
           ) : null}
-          <div className='relative z-50 antialiased'>
-            {children}
-          </div>
+          <div className='relative z-50 antialiased'>{children}</div>
         </div>
       </motion.div>
-    </main>
+    </section>
   )
 })
 

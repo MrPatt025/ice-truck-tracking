@@ -189,7 +189,9 @@ export function createParticleGlowMaterial(): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
-      uPixelRatio: { value: Math.min(globalThis.window?.devicePixelRatio ?? 1, 2) },
+      uPixelRatio: {
+        value: Math.min(globalThis.window?.devicePixelRatio ?? 1, 2),
+      },
     },
     vertexShader: particleGlowVertex,
     fragmentShader: particleGlowFragment,
@@ -272,7 +274,8 @@ export function createDepthFogMaterial(
   fogColor: THREE.Color | number = 0x0a0a1a,
   density = 0.3
 ): THREE.ShaderMaterial {
-  const color = typeof fogColor === 'number' ? new THREE.Color(fogColor) : fogColor
+  const color =
+    typeof fogColor === 'number' ? new THREE.Color(fogColor) : fogColor
   return new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },

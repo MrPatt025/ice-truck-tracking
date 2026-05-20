@@ -109,7 +109,7 @@ function isLowEndOrMobileRuntime(): boolean {
   if (globalThis.navigator === undefined) return false
 
   const userAgent = globalThis.navigator.userAgent.toLowerCase()
-  const isMobile = /android|iphone|ipad|ipod|mobile/.test(userAgent)
+  const isMobile = ['android', 'iphone', 'ipad', 'ipod', 'mobile'].some(kw => userAgent.includes(kw))
 
   const memoryHint = Reflect.get(globalThis.navigator, 'deviceMemory')
   const concurrencyHint = Reflect.get(

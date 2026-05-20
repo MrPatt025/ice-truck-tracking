@@ -1,3 +1,7 @@
+# ============================================================================
+# Edge SDK Dockerfile — Secure Production Build
+# ============================================================================
+
 FROM node:26-alpine
 
 WORKDIR /app
@@ -5,15 +9,15 @@ WORKDIR /app
 # Ensure standard secure path
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-# Copy package files
-COPY package.json ./
+# Copy package files (lockfile required for locked version resolution)
+COPY package.json package-lock.json* ./
 
 # Configure NPM network retry settings to prevent ECONNRESET timeouts
 ENV NPM_CONFIG_FETCH_RETRIES=5
 ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000
 ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 
-# Install dependencies, copy source, build, create user and set permissions
+# Install dependencies with locked versions + --ignore-scripts (SonarCloud docker:S4507 & S8543)
 RUN npm ci --only=production --ignore-scripts && \
   addgroup -g 1001 -S nodejs && \
   adduser -S notification -u 1001

@@ -14,7 +14,7 @@
     "test": "cross-env NODE_OPTIONS=--max_old_space_size=4096 pnpm exec jest --config ./jest.config.js --passWithNoTests",
     "test:watch": "pnpm exec jest --config ./jest.config.js --passWithNoTests",
     "test:coverage": "jest --coverage",
-    "test:unit": "jest --testPathPattern='__tests__' --passWithNoTests",
+    "test:unit": "jest __tests__ --passWithNoTests",
     "test:e2e": "pnpm exec playwright test --config=playwright.light.config.ts",
     "test:e2e:light": "pnpm exec playwright test --config=playwright.light.config.ts",
     "test:e2e:gpu": "pnpm exec playwright test --config=playwright.gpu.config.ts",

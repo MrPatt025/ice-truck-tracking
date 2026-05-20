@@ -3,6 +3,15 @@
 import React from 'react'
 import dynamic from 'next/dynamic'
 import { Loader2 } from 'lucide-react'
+import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
+
+const ScrollytellingCanvas = dynamic(
+  () =>
+    import('@/components/ScrollytellingCanvas').then(
+      m => m.ScrollytellingCanvas
+    ),
+  { ssr: false }
+)
 
 const DashboardView = dynamic(
   () => import('@/components/dashboard/DashboardView'),
@@ -22,5 +31,12 @@ const DashboardView = dynamic(
 )
 
 export default function DashboardPage() {
-  return <DashboardView />
+  return (
+    <>
+      <ScrollytellingCanvas />
+      <PremiumPageWrapper mode='glass' animate={false} denseNoise>
+        <DashboardView />
+      </PremiumPageWrapper>
+    </>
+  )
 }

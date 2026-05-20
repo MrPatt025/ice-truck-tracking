@@ -1,12 +1,13 @@
 'use client'
 import dynamic from 'next/dynamic'
 
-
 import React, { useState } from 'react'
 
-
 const ScrollytellingCanvas = dynamic(
-  () => import('@/components/ScrollytellingCanvas').then(m => m.ScrollytellingCanvas),
+  () =>
+    import('@/components/ScrollytellingCanvas').then(
+      m => m.ScrollytellingCanvas
+    ),
   { ssr: false }
 )
 

@@ -9,7 +9,8 @@ const latencyP95 = new Trend('latency_p95', true)
 const reqCount = new Counter('total_requests')
 
 /* ─── Test Configuration ─── */
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:5000'
+const BACKEND_PORT = __ENV.BACKEND_PORT || '5000'
+const BASE_URL = __ENV.BASE_URL || `http://localhost:${BACKEND_PORT}`
 
 export const options = {
   stages: [

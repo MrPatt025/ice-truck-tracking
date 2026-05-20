@@ -10,7 +10,7 @@
  *  Reports to /api/metrics endpoint as JSON for Prometheus ingestion.
  * ================================================================ */
 
-import { resolveMetricsIngestUrl } from '@/lib/backendUrl'
+import { resolveApiBaseV1 } from '@/lib/backendUrl'
 
 export interface WebVitalsMetric {
   name: 'LCP' | 'FID' | 'INP' | 'CLS' | 'TTFB' | 'FCP'
@@ -37,7 +37,16 @@ export interface ClientErrorReport {
 
 const METRICS_BUFFER_SIZE = 50
 const FLUSH_INTERVAL_MS = 30_000 // 30s
-const METRICS_ENDPOINT = resolveMetricsIngestUrl()
+const METRICS_ENDPOINT = `${resolveApiBaseV1()}/telemetry`
+
+function shouldDispatchMetrics(endpoint: string): boolean {
+  try {
+    const url = new URL(endpoint, globalThis.window?.location?.origin ?? 'http://localhost')
+    return url.pathname !== '/metrics' && url.pathname !== '/api/metrics'
+  } catch {
+    return false
+  }
+}
 
 /**
  * ClientObservability — collects and reports browser metrics.
@@ -231,11 +240,13 @@ export class ClientObservability {
 
     const payload = { vitals, engine, errors, timestamp: Date.now() }
 
-    // Use sendBeacon for reliability (survives page unload)
-    if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
-      navigator.sendBeacon(METRICS_ENDPOINT, JSON.stringify(payload))
-    } else {
-      fetch(METRICS_ENDPOINT, {
+    // Push to the new telemetry endpoint (Phase 180)
+    if (!shouldDispatchMetrics(METRICS_ENDPOINT)) return
+
+    if (typeof globalThis !== 'undefined' && globalThis.navigator?.sendBeacon) {
+      globalThis.navigator.sendBeacon(METRICS_ENDPOINT, JSON.stringify(payload))
+    } else if (typeof globalThis !== 'undefined' && globalThis.fetch) {
+      globalThis.fetch(METRICS_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

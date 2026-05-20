@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback } from 'react'
 
@@ -22,7 +22,8 @@ export function useAnalytics() {
   const track = useCallback((event: AnalyticsEvent) => {
     // Check if user has opted in to analytics
     const analyticsEnabled =
-      localStorage.getItem('analytics-enabled') === 'true'
+      typeof globalThis !== 'undefined' && globalThis.window &&
+      globalThis.window.localStorage.getItem('analytics-enabled') === 'true'
     if (!analyticsEnabled) return
 
     // Google Analytics 4
@@ -39,7 +40,8 @@ export function useAnalytics() {
   const trackPageView = useCallback(
     (page_path: string, page_title?: string) => {
       const analyticsEnabled =
-        localStorage.getItem('analytics-enabled') === 'true'
+        typeof globalThis !== 'undefined' && globalThis.window &&
+        globalThis.window.localStorage.getItem('analytics-enabled') === 'true'
       if (!analyticsEnabled) return
 
       globalThis.window?.gtag?.('config', process.env.NEXT_PUBLIC_GA_ID ?? '', {
@@ -53,7 +55,8 @@ export function useAnalytics() {
   const setUserProperties = useCallback(
     (properties: Partial<UserProperties>) => {
       const analyticsEnabled =
-        localStorage.getItem('analytics-enabled') === 'true'
+        typeof globalThis !== 'undefined' && globalThis.window &&
+        globalThis.window.localStorage.getItem('analytics-enabled') === 'true'
       if (!analyticsEnabled) return
 
       globalThis.window?.gtag?.('config', process.env.NEXT_PUBLIC_GA_ID ?? '', {
@@ -140,12 +143,14 @@ export function useAnalytics() {
 
 export function useAnalyticsOptIn() {
   const isOptedIn =
-    globalThis.window === undefined
-      ? false
-      : localStorage.getItem('analytics-enabled') === 'true'
+    typeof globalThis !== 'undefined' && globalThis.window
+      ? globalThis.window.localStorage.getItem('analytics-enabled') === 'true'
+      : false
 
   const optIn = useCallback(() => {
-    localStorage.setItem('analytics-enabled', 'true')
+    if (typeof globalThis !== 'undefined' && globalThis.window) {
+      globalThis.window.localStorage.setItem('analytics-enabled', 'true')
+    }
 
     // Initialize analytics
     globalThis.window?.gtag?.('consent', 'update', {
@@ -154,7 +159,9 @@ export function useAnalyticsOptIn() {
   }, [])
 
   const optOut = useCallback(() => {
-    localStorage.setItem('analytics-enabled', 'false')
+    if (typeof globalThis !== 'undefined' && globalThis.window) {
+      globalThis.window.localStorage.setItem('analytics-enabled', 'false')
+    }
 
     // Disable analytics
     globalThis.window?.gtag?.('consent', 'update', {
