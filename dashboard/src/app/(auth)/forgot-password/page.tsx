@@ -1,25 +1,17 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Snowflake, Loader2, AlertCircle, ArrowLeft, Mail } from 'lucide-react'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { useAuthStore } from '@/stores/authStore'
 
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
+// ScrollytellingCanvas is mounted globally at ClientSharedCanvasHost
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
-
   const forgotPassword = useAuthStore(s => s.forgotPassword)
   const isLoading = useAuthStore(s => s.isLoading)
   const error = useAuthStore(s => s.error)
@@ -40,13 +32,12 @@ export default function ForgotPasswordPage() {
     },
     [email, forgotPassword, clearError]
   )
-
   return (
     <>
-      <ScrollytellingCanvas />
       <PremiumPageWrapper
         mode='glass'
         denseNoise
+        testId='auth-page-wrapper'
         contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(16,185,129,0.95)]'
       >
         <motion.div

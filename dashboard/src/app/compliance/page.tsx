@@ -44,7 +44,6 @@ const CONTROL_ROWS = [
 export default function CompliancePage() {
   return (
     <>
-      <ScrollytellingCanvas />
       <motion.main
         suppressHydrationWarning
         initial={false}
@@ -55,6 +54,7 @@ export default function CompliancePage() {
           <PremiumPageWrapper
             mode='glass'
             denseNoise
+            testId='dashboard-page-wrapper'
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-68px_rgba(244,114,182,0.85)]'
           >
             <main className='relative z-50 mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'>

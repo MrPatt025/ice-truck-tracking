@@ -11,13 +11,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useTransitionStore } from '@/stores/transitionStore'
 import { DEMO_EMAIL, DEMO_PASSWORD } from '@/config/env'
 
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
+// ScrollytellingCanvas mounted globally at ClientSharedCanvasHost
 
 function LoginContent() {
   const router = useRouter()
@@ -202,11 +196,11 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <>
-      <ScrollytellingCanvas />
       <PremiumPageWrapper
         mode='glass'
         className='w-full'
         denseNoise
+        testId='auth-page-wrapper'
         contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(56,189,248,0.95)]'
       >
         <Suspense

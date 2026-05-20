@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useCallback, Suspense } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
@@ -17,13 +16,7 @@ import {
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { useAuthStore } from '@/stores/authStore'
 
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
+// ScrollytellingCanvas mounted globally at ClientSharedCanvasHost
 
 function ResetPasswordContent() {
   const router = useRouter()
@@ -221,11 +214,11 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
   return (
     <>
-      <ScrollytellingCanvas />
       <PremiumPageWrapper
         mode='glass'
         className='w-full'
         denseNoise
+        testId='auth-page-wrapper'
         contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(14,165,233,0.95)]'
       >
         <Suspense

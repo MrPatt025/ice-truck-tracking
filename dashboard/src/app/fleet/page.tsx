@@ -1,15 +1,6 @@
 'use client'
 import dynamic from 'next/dynamic'
-
 import { motion } from 'framer-motion'
-
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
 import { useEffect, useMemo, useState } from 'react'
 import { Download, Plus, Search, Truck } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
@@ -212,7 +203,6 @@ export default function FleetManagementPage() {
 
   return (
     <>
-      <ScrollytellingCanvas />
       <motion.main
         suppressHydrationWarning
         initial={false}
@@ -223,6 +213,7 @@ export default function FleetManagementPage() {
           <PremiumPageWrapper
             mode='glass'
             denseNoise
+            testId='dashboard-page-wrapper'
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(45,212,191,0.95)]'
           >
             <div className='relative z-50 mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>

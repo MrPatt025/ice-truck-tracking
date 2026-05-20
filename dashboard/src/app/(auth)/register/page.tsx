@@ -16,13 +16,7 @@ import {
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { useAuthStore } from '@/stores/authStore'
 
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
+// ScrollytellingCanvas mounted globally at ClientSharedCanvasHost
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -100,10 +94,10 @@ export default function RegisterPage() {
 
   return (
     <>
-      <ScrollytellingCanvas />
       <PremiumPageWrapper
         mode='glass'
         denseNoise
+        testId='auth-page-wrapper'
         contentClassName='mx-auto w-full max-w-[40rem] border-white/30 bg-slate-950/48 shadow-[0_42px_145px_-78px_rgba(99,102,241,0.95)]'
       >
         <motion.div

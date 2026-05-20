@@ -2,6 +2,7 @@
 
 import { memo, type ReactNode } from 'react'
 import { motion } from 'framer-motion'
+import { glassPanel } from '@/ui/tokens/glass'
 import { cn } from '@/lib/utils'
 
 type PremiumPageWrapperProps = Readonly<{
@@ -24,10 +25,11 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
   mode = 'glass',
   animate = true,
   denseNoise = false,
-}: PremiumPageWrapperProps) {
+  testId = 'premium-wrapper',
+}: PremiumPageWrapperProps & { testId?: string }) {
   return (
     <section
-      data-testid='premium-wrapper'
+      data-testid={testId}
       suppressHydrationWarning
       aria-label='Primary content'
     >
@@ -61,11 +63,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
           className='pointer-events-none absolute -top-28 left-1/2 -z-10 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-300/10 blur-[120px]'
         />
         <div
-          className={cn(
-            mode === 'glass' &&
-              'premium-surface relative z-40 overflow-hidden rounded-3xl bg-slate-900/40 backdrop-blur-[40px] border border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.6)] saturate-150 text-slate-100 supports-[backdrop-filter]:backdrop-saturate-150',
-            contentClassName
-          )}
+          className={cn(mode === 'glass' ? glassPanel : '', contentClassName)}
         >
           {mode === 'glass' ? (
             <>

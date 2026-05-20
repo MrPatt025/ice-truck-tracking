@@ -5,13 +5,7 @@ import dynamic from 'next/dynamic'
 import { Loader2 } from 'lucide-react'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
+// ScrollytellingCanvas is mounted once at the ClientSharedCanvasHost
 
 const DashboardView = dynamic(
   () => import('@/components/dashboard/DashboardView'),
@@ -33,8 +27,12 @@ const DashboardView = dynamic(
 export default function DashboardPage() {
   return (
     <>
-      <ScrollytellingCanvas />
-      <PremiumPageWrapper mode='glass' animate={false} denseNoise>
+      <PremiumPageWrapper
+        mode='glass'
+        animate={false}
+        denseNoise
+        testId='dashboard-page-wrapper'
+      >
         <DashboardView />
       </PremiumPageWrapper>
     </>

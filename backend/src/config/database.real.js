@@ -85,7 +85,7 @@ const query = async (text, params) => {
       const res = await pool.query(text, params);
       return res.rows;
     }, []);
-    
+
     logger.debug(
       { text: text.substring(0, 80), duration: Date.now() - start, rows: result ? result.length : 0 },
       'query'

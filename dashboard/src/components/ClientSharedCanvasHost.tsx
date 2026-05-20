@@ -11,6 +11,14 @@ const SharedCanvasHost = dynamic(
   }
 )
 
+const ScrollytellingCanvas = dynamic(
+  () =>
+    import('@/components/ScrollytellingCanvas').then(
+      m => m.ScrollytellingCanvas
+    ),
+  { ssr: false }
+)
+
 function SharedCanvasHostReady({ onReady }: Readonly<{ onReady: () => void }>) {
   useEffect(() => {
     onReady()
@@ -24,6 +32,7 @@ export default function ClientSharedCanvasHost() {
 
   return (
     <>
+      <ScrollytellingCanvas />
       {showSkeleton ? (
         <div className='pointer-events-none fixed inset-0 -z-30 bg-gradient-to-br from-cyan-400/10 via-slate-900/60 to-blue-500/10 backdrop-blur-2xl'>
           <div className='absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-slate-900/60 to-blue-500/10' />

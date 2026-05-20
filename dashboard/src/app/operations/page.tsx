@@ -1,30 +1,21 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import dynamic from 'next/dynamic'
-
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
+// ScrollytellingCanvas mounted globally at ClientSharedCanvasHost
 import { RadioTower, Waves, Clock3, CircleGauge } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 
 const OPS_STREAMS = [
-  { id: 'MQTT', value: '2.1k/min', status: 'Healthy' },
+  { id: 'Ingress', value: '2.1k/min', status: 'Healthy' },
   { id: 'WebSocket', value: '940/s', status: 'Healthy' },
   { id: 'Kafka Bridge', value: '310/s', status: 'Degraded' },
   { id: 'Alert Bus', value: '82/s', status: 'Healthy' },
-]
+] as const
 
 export default function OperationsPage() {
   return (
     <>
-      <ScrollytellingCanvas />
       <motion.main
         suppressHydrationWarning
         initial={false}
@@ -35,6 +26,7 @@ export default function OperationsPage() {
           <PremiumPageWrapper
             mode='glass'
             denseNoise
+            testId='dashboard-page-wrapper'
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-70px_rgba(45,212,191,0.95)]'
           >
             <main className='relative z-50 mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'>

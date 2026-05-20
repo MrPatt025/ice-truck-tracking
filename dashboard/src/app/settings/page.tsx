@@ -1,15 +1,6 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
-import dynamic from 'next/dynamic'
-
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
 import { motion } from 'framer-motion'
 import {
   Settings,
@@ -115,7 +106,6 @@ export default function SettingsPage() {
 
   return (
     <>
-      <ScrollytellingCanvas />
       <motion.main
         suppressHydrationWarning
         initial={false}
@@ -126,6 +116,7 @@ export default function SettingsPage() {
           <PremiumPageWrapper
             mode='glass'
             denseNoise
+            testId='dashboard-page-wrapper'
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(99,102,241,0.95)]'
           >
             <div className='relative z-50 mx-auto max-w-[1200px] p-4 lg:p-6'>

@@ -247,7 +247,6 @@ export default function AlertsPage() {
 
   return (
     <>
-      <ScrollytellingCanvas />
       <motion.main
         suppressHydrationWarning
         initial={false}
@@ -258,7 +257,8 @@ export default function AlertsPage() {
           <PremiumPageWrapper
             mode='glass'
             denseNoise
-            contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-70px_rgba(34,211,238,0.95)]'
+            testId='dashboard-page-wrapper'
+            contentClassName='mx-auto w-full max-w-5xl'
           >
             <div className='relative z-50 mx-auto max-w-[1600px] space-y-6 p-4 lg:p-6'>
               {/* Header */}

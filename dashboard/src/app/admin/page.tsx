@@ -3,13 +3,7 @@
 import React, { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
+// ScrollytellingCanvas mounted globally at ClientSharedCanvasHost
 import { motion } from 'framer-motion'
 import {
   Shield,
@@ -31,12 +25,12 @@ import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { useAuthStore, hasPermission } from '@/stores/authStore'
 import type { UserRole } from '@/lib/tokens'
 
-interface AdminUser {
+type AdminUser = {
   id: string
   name: string
   email: string
   role: UserRole
-  status: 'active' | 'suspended'
+  status: string
   lastLogin: string
   createdAt: string
   phone?: string
@@ -135,7 +129,6 @@ export default function AdminPage() {
 
   return (
     <>
-      <ScrollytellingCanvas />
       <motion.main
         initial={false}
         animate={{ opacity: 1, y: 0 }}
@@ -145,6 +138,7 @@ export default function AdminPage() {
           <PremiumPageWrapper
             mode='glass'
             denseNoise
+            testId='dashboard-page-wrapper'
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(56,189,248,0.95)]'
           >
             <div className='relative z-50 mx-auto max-w-[1400px] space-y-6 p-4 lg:p-6'>

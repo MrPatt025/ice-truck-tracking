@@ -3,13 +3,7 @@
 import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
 
-const ScrollytellingCanvas = dynamic(
-  () =>
-    import('@/components/ScrollytellingCanvas').then(
-      m => m.ScrollytellingCanvas
-    ),
-  { ssr: false }
-)
+// ScrollytellingCanvas mounted globally at ClientSharedCanvasHost
 import { Route, Thermometer, Gauge, MapPinned } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
@@ -24,7 +18,6 @@ const TRACKING_LANES = [
 export default function TrackingPage() {
   return (
     <>
-      <ScrollytellingCanvas />
       <motion.main
         suppressHydrationWarning
         initial={false}
@@ -35,6 +28,7 @@ export default function TrackingPage() {
           <PremiumPageWrapper
             mode='glass'
             denseNoise
+            testId='dashboard-page-wrapper'
             contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-68px_rgba(59,130,246,0.95)]'
           >
             <main className='relative z-50 mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'>
