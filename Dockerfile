@@ -3,8 +3,9 @@
 
 # ── Dependencies stage ──────────────────────────────
 FROM node:26-alpine AS deps
-RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
 
 # Copy only workspace and dependency files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
@@ -20,8 +21,8 @@ RUN pnpm install --frozen-lockfile --prod --ignore-scripts && \
 
 # ── Builder stage ───────────────────────────────────
 FROM node:26-alpine AS builder
-RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
 ENV NODE_ENV production
 
 # Copy dependencies from deps stage
@@ -45,12 +46,14 @@ COPY src ./src
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Build all packages
-RUN pnpm run build
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+  pnpm install --frozen-lockfile --ignore-scripts && \
+  pnpm run build
 
 # ── Runtime stage ──────────────────────────────────
 FROM node:26-alpine AS runner
-RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
 ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV NODE_ENV production
 ENV PORT 5000

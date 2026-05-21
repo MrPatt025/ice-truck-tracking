@@ -11,7 +11,7 @@ concurrency:
 
 env:
   NODE_VERSION: '24'
-  PNPM_VERSION: '10.32.1'
+  PNPM_VERSION: '11.1.3'
   CI: 'true'
   NEXT_TELEMETRY_DISABLED: '1'
 
@@ -42,7 +42,7 @@ jobs:
       - name: Install Playwright with Chrome
         working-directory: dashboard
         run: |
-          pnpm exec playwright install --with-deps chromium # NOSONAR
+          pnpm --ignore-scripts exec playwright install --with-deps chromium # NOSONAR
 
       - name: Run GPU E2E Tests
         run: pnpm --filter @ice-truck/dashboard run test:e2e:gpu

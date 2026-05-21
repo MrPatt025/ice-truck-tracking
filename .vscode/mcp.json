@@ -1,42 +1,4 @@
 {
-	"inputs": [
-		{
-			"id": "SONARQUBE_TOKEN",
-			"type": "promptString",
-			"description": "Your SonarQube USER token",
-			"password": true
-		},
-		{
-			"id": "SONARQUBE_ORG",
-			"type": "promptString",
-			"description": "Your SonarQube Cloud organization key (if using SonarQube Cloud)",
-			"password": true
-		},
-		{
-			"id": "SONARQUBE_URL",
-			"type": "promptString",
-			"description": "Your SonarQube Server URL (if using SonarQube Server)",
-			"password": true
-		},
-		{
-			"id": "MAPBOX_ACCESS_TOKEN",
-			"type": "promptString",
-			"description": "Your Mapbox access token",
-			"password": true
-		},
-		{
-			"id": "POSTMAN_API_KEY",
-			"type": "promptString",
-			"description": "A valid Postman API key.",
-			"password": true
-		},
-		{
-			"id": "token",
-			"type": "promptString",
-			"description": "",
-			"password": true
-		}
-	],
 	"servers": {
 		"github": {
 			"type": "http",
@@ -117,10 +79,10 @@
 				"--rm",
 				"-e",
 				"GITHUB_PERSONAL_ACCESS_TOKEN=${input:token}",
-				"ghcr.io/github/github-mcp-server:1.0.3"
+				"ghcr.io/github/github-mcp-server:1.0.4"
 			],
 			"gallery": "https://api.mcp.github.com",
-			"version": "1.0.3"
+			"version": "1.0.4"
 		},
 		"com.stackoverflow.mcp/mcp": {
 			"type": "http",
@@ -157,5 +119,43 @@
 			"gallery": "https://api.mcp.github.com",
 			"version": "1.0.0"
 		}
-	}
+	},
+	"inputs": [
+		{
+			"id": "SONARQUBE_TOKEN",
+			"type": "promptString",
+			"description": "Your SonarQube USER token",
+			"password": true
+		},
+		{
+			"id": "SONARQUBE_ORG",
+			"type": "promptString",
+			"description": "Your SonarQube Cloud organization key (if using SonarQube Cloud)",
+			"password": true
+		},
+		{
+			"id": "SONARQUBE_URL",
+			"type": "promptString",
+			"description": "Your SonarQube Server URL (if using SonarQube Server)",
+			"password": true
+		},
+		{
+			"id": "MAPBOX_ACCESS_TOKEN",
+			"type": "promptString",
+			"description": "Your Mapbox access token",
+			"password": true
+		},
+		{
+			"id": "POSTMAN_API_KEY",
+			"type": "promptString",
+			"description": "A valid Postman API key.",
+			"password": true
+		},
+		{
+			"id": "token",
+			"type": "promptString",
+			"description": "",
+			"password": true
+		}
+	]
 }

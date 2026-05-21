@@ -5,13 +5,12 @@
 
 FROM node:26-alpine AS base
 
+RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
+
 # ── Dependencies stage ─────────────────────────────────
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
-
-# Pin pnpm version to satisfy SonarQube docker:S8543 strict versioning
-RUN npm install -g pnpm@10.32.1 --ignore-scripts
 
 # Configure NPM network retry settings to prevent ECONNRESET timeouts
 ENV NPM_CONFIG_FETCH_RETRIES=5
@@ -29,7 +28,6 @@ RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
 
 # ── Builder stage ──────────────────────────────────────
 FROM base AS builder
-RUN npm install -g pnpm@10.32.1 --ignore-scripts
 WORKDIR /app
 
 # Copy installed node_modules from deps
@@ -50,7 +48,9 @@ WORKDIR /app/dashboard
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Build the Next.js application using the locked workspace dependencies.
-RUN pnpm run build
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --ignore-scripts && \
+    pnpm run build
 
 # ── Production runner ──────────────────────────────────
 FROM base AS runner
