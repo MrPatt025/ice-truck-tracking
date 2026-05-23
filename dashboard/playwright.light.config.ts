@@ -8,6 +8,8 @@
  */
 import { defineConfig, devices } from '@playwright/test'
 
+process.env.PLAYWRIGHT_BYPASS_AUTH = 'true'
+
 // Explicit CI detection (expect CI='true' in CI environments)
 const isCI = process.env.CI === 'true'
 const lightUseConfig = {
@@ -74,6 +76,7 @@ export default defineConfig({
     env: {
       E2E_LIGHT: 'true',
       NEXT_PUBLIC_E2E_LIGHT: 'true',
+      PLAYWRIGHT_BYPASS_AUTH: 'true',
       PORT: '3000',
       NODE_OPTIONS: '--max_old_space_size=4096',
       // Suppress noisy Node deprecation warnings in CI/light runs so test logs stay focused

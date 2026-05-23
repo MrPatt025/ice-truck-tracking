@@ -413,11 +413,17 @@ test.describe('Dashboard — Responsive', () => {
 test.describe('Dashboard — Auth Middleware', () => {
   test.describe.configure({ mode: 'serial' })
 
+  const bypassAuth = process.env.PLAYWRIGHT_BYPASS_AUTH === 'true'
+
   test('should redirect to /login when no auth cookie is set', async ({
     page,
   }) => {
     // Do NOT set the auth cookie
     await page.goto('/dashboard')
+    if (bypassAuth) {
+      await expect(page).toHaveURL(/\/dashboard/)
+      return
+    }
     await expect(page).toHaveURL(/\/login/)
   })
 

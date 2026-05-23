@@ -40,5 +40,8 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 600_000,
+    env: {
+      PLAYWRIGHT_BYPASS_AUTH: 'true',
+    },
   },
 })

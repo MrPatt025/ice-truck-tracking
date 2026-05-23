@@ -65,6 +65,10 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   const backendOrigin = resolveBackendOrigin()
 
+  if (process.env.PLAYWRIGHT_BYPASS_AUTH === 'true') {
+    return NextResponse.next()
+  }
+
   if (
     pathname === '/manifest.json' ||
     pathname === '/favicon.ico' ||

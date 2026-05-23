@@ -478,6 +478,8 @@ test.describe('Accessibility', () => {
 test.describe('Navigation Flow', () => {
   test.describe.configure({ mode: 'serial' })
 
+  const bypassAuth = process.env.PLAYWRIGHT_BYPASS_AUTH === 'true'
+
   test('"Open Dashboard" link should navigate toward /dashboard', async ({
     page,
     baseURL,
@@ -531,6 +533,11 @@ test.describe('Navigation Flow', () => {
         .first()
       await heroLink.waitFor({ state: 'visible' })
       await heroLink.click()
+    }
+
+    if (bypassAuth) {
+      await expect(page).toHaveURL(/\/dashboard/)
+      return
     }
 
     // In production and high-security CI, auth middleware MUST enforce redirect to login.

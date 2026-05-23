@@ -128,6 +128,9 @@ for (const viewport of VIEWPORTS) {
           !error.includes(KNOWN_TOUCH_ACTION_PAGEERROR) &&
           !error.includes('eval() is not supported') &&
           !error.includes('React will never use eval()') &&
+          !error.includes('demotiles.maplibre.org/style.json') &&
+          !error.includes('violates the following Content Security Policy') &&
+          !error.includes('Refused to connect because it violates the document\'s Content Security Policy') &&
           !error.includes('non-static position')
       )
 

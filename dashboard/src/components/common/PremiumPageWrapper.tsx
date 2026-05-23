@@ -11,11 +11,14 @@ type PremiumPageWrapperProps = Readonly<{
   contentClassName?: string
   mode?: 'glass' | 'none'
   denseNoise?: boolean
+  testId?: string
 }>
 
 const SVG_XMLNS = 'http' + '://www.w3.org/2000/svg'
 const BG_NOISE_IMAGE = `url("data:image/svg+xml,%3Csvg xmlns='${encodeURIComponent(SVG_XMLNS)}' width='180' height='180'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23noise)'/%3E%3C/svg%3E")`
 const SURFACE_NOISE_IMAGE = `url("data:image/svg+xml,%3Csvg xmlns='${encodeURIComponent(SVG_XMLNS)}' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")`
+const PREMIUM_GLASS_CLASS =
+  'bg-slate-900/30 backdrop-blur-[40px] border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.6)] saturate-150 relative z-40 overflow-hidden text-slate-100'
 
 const PremiumPageWrapper = memo(function PremiumPageWrapper({
   children,
@@ -24,19 +27,22 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
   mode = 'glass',
   denseNoise = false,
   testId = 'premium-wrapper',
-}: PremiumPageWrapperProps & { testId?: string }) {
+}: PremiumPageWrapperProps) {
   return (
     <section
       data-testid={testId}
       suppressHydrationWarning
       aria-label='Primary content'
-      className={cn('relative isolate min-h-[100svh] text-slate-100', className)}
+      className={cn(
+        'relative isolate min-h-[100svh] text-slate-100 antialiased',
+        className
+      )}
     >
       <motion.main
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className='w-full h-full min-h-[100svh] relative isolate'
+        className='relative isolate h-full min-h-[100svh] w-full transform-gpu'
       >
         <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120rem_58rem_at_50%_-25%,rgba(56,189,248,.12),transparent_56%),radial-gradient(104rem_44rem_at_12%_108%,rgba(45,212,191,.13),transparent_62%)]' />
         <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(66rem_36rem_at_18%_-12%,rgba(56,189,248,.16),transparent),radial-gradient(78rem_40rem_at_90%_108%,rgba(16,185,129,.14),transparent)]' />
@@ -62,7 +68,10 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
           className='pointer-events-none absolute -top-28 left-1/2 -z-10 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-300/10 blur-[120px]'
         />
         <div
-          className={cn(mode === 'glass' ? glassPanel : '', contentClassName)}
+          className={cn(
+            mode === 'glass' ? `${glassPanel} ${PREMIUM_GLASS_CLASS}` : '',
+            contentClassName
+          )}
         >
           {mode === 'glass' ? (
             <>

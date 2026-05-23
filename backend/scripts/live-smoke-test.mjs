@@ -86,12 +86,12 @@ async function main() {
   const startedAt = Date.now();
   const intervalMs = Math.max(12, Math.floor(durationMs / messageCount));
 
-  console.log('--- LIVE TELEMETRY SMOKE TEST ---');
-  console.log(`broker: ${brokerUrl}`);
-  console.log(`messages: ${messageCount}`);
-  console.log(`durationMs: ${durationMs}`);
-  console.log(`trucks: ${truckCount}`);
-  console.log(`intervalMs: ${intervalMs}`);
+  console.info('--- LIVE TELEMETRY SMOKE TEST ---');
+  console.info(`broker: ${brokerUrl}`);
+  console.info(`messages: ${messageCount}`);
+  console.info(`durationMs: ${durationMs}`);
+  console.info(`trucks: ${truckCount}`);
+  console.info(`intervalMs: ${intervalMs}`);
 
   let sent = 0;
 
@@ -121,9 +121,9 @@ async function main() {
   client.end(true);
 
   const elapsedMs = Date.now() - startedAt;
-  console.log(`sent: ${sent}`);
-  console.log(`elapsedMs: ${elapsedMs}`);
-  console.log('status: PASS');
+  console.info(`sent: ${sent}`);
+  console.info(`elapsedMs: ${elapsedMs}`);
+  console.info('status: PASS');
 }
 
 try {

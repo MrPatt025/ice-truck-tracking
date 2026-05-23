@@ -85,15 +85,6 @@ function ScrollytellingGrid({
 }
 /* eslint-enable react/no-unknown-property */
 
-/** Spinner fallback shown while the 3D Canvas initializes — ensures FCP. */
-function CanvasFallback() {
-  return (
-    <div className='absolute inset-0 flex items-center justify-center bg-slate-950/80 backdrop-blur-md z-0'>
-      <div className='w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin' />
-    </div>
-  )
-}
-
 /**
  * ScrollytellingCanvas: Full-screen fixed background canvas that
  * maps scroll position to 3D camera/scene properties via framer-motion
@@ -119,7 +110,9 @@ export function ScrollytellingCanvas() {
       className='absolute inset-0 -z-10 pointer-events-none'
       style={{ opacity, scale }}
     >
-      <Suspense fallback={<CanvasFallback />}>
+      <Suspense
+        fallback={<div className='animate-pulse bg-slate-800 w-full h-full' />}
+      >
         <Canvas
           shadows={false}
           dpr={[1, 1.5]}
