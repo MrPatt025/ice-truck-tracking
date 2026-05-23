@@ -1,9 +1,8 @@
 'use client'
 
-import React, { useState, useCallback } from 'react'
+import React, { useCallback, useState } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import { Snowflake, Loader2, AlertCircle, ArrowLeft, Mail } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Loader2, Mail, Snowflake } from 'lucide-react'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -18,20 +17,23 @@ export default function ForgotPasswordPage() {
   const clearError = useAuthStore(s => s.clearError)
 
   const handleSubmit = useCallback(
-    (e: React.SyntheticEvent<HTMLFormElement>) => {
-      e.preventDefault()
+    (event: React.SyntheticEvent<HTMLFormElement>) => {
+      event.preventDefault()
       clearError()
-      if (!email.trim()) return
+
+      const trimmedEmail = email.trim()
+      if (!trimmedEmail) return
 
       void (async () => {
-        const success = await forgotPassword(email.trim())
+        const success = await forgotPassword(trimmedEmail)
         if (success) {
           setSent(true)
         }
       })()
     },
-    [email, forgotPassword, clearError]
+    [clearError, email, forgotPassword]
   )
+
   return (
     <PremiumPageWrapper
       mode='glass'
@@ -39,40 +41,34 @@ export default function ForgotPasswordPage() {
       testId='auth-page-wrapper'
       contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(16,185,129,0.95)]'
     >
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-      >
-        {/* Logo */}
-        <div className='text-center mb-8'>
-          <div className='inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4'>
-            <Snowflake className='w-7 h-7 text-primary' />
+      <div className='relative z-10'>
+        <div className='mb-8 text-center'>
+          <div className='mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10'>
+            <Snowflake className='h-7 w-7 text-primary' />
           </div>
-          <h1 className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
+          <h1 className='bg-gradient-to-r from-cyan-100 to-slate-400 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent'>
             {sent ? 'Check your email' : 'Reset your password'}
           </h1>
-          <p className='text-muted-foreground mt-1'>
+          <p className='mt-1 text-muted-foreground'>
             {sent
               ? 'We sent a password reset link to your email'
-              : `Enter your email and we'll send you a reset link`}
+              : 'Enter your email and we will send you a reset link'}
           </p>
         </div>
 
-        {/* Form / Success */}
-        <div className='bg-card rounded-xl border border-border p-6 shadow-lg'>
+        <div className='rounded-xl border border-border bg-card p-6 shadow-lg'>
           {sent ? (
-            <div className='text-center space-y-4'>
-              <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20'>
-                <Mail className='w-8 h-8 text-green-600 dark:text-green-400' />
+            <div className='space-y-4 text-center'>
+              <div className='inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20'>
+                <Mail className='h-8 w-8 text-green-600 dark:text-green-400' />
               </div>
               <div>
                 <p className='text-sm text-muted-foreground'>
                   We sent a reset link to{' '}
                   <span className='font-medium text-foreground'>{email}</span>
                 </p>
-                <p className='text-xs text-muted-foreground mt-2'>
-                  Check your spam folder if you don&apos;t see it within a few
+                <p className='mt-2 text-xs text-muted-foreground'>
+                  Check your spam folder if you do not see it within a few
                   minutes.
                 </p>
               </div>
@@ -82,24 +78,23 @@ export default function ForgotPasswordPage() {
                   setEmail('')
                   clearError()
                 }}
-                className='text-sm text-primary hover:text-primary/80 font-medium transition-colors'
+                className='text-sm font-medium text-primary transition-colors hover:text-primary/80'
               >
                 Try a different email
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className='space-y-4'>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className='flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm'
+            <form className='space-y-4' onSubmit={handleSubmit}>
+              {error ? (
+                <div
+                  aria-live='polite'
+                  className='flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive'
                   role='alert'
                 >
-                  <AlertCircle className='w-4 h-4 shrink-0' />
+                  <AlertCircle className='h-4 w-4 shrink-0' />
                   <span>{error}</span>
-                </motion.div>
-              )}
+                </div>
+              ) : null}
 
               <div className='space-y-2'>
                 <label htmlFor='forgot-email' className='text-sm font-medium'>
@@ -111,23 +106,23 @@ export default function ForgotPasswordPage() {
                   autoComplete='email'
                   required
                   value={email}
-                  onChange={e => {
-                    setEmail(e.target.value)
+                  onChange={event => {
+                    setEmail(event.target.value)
                     clearError()
                   }}
                   placeholder='you@company.com'
-                  className='w-full px-3 py-2.5 rounded-lg border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors'
+                  className='w-full rounded-lg border border-input bg-background px-3 py-2.5 text-foreground transition-colors placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50'
                 />
               </div>
 
               <button
                 type='submit'
                 disabled={isLoading || !email.trim()}
-                className='w-full py-2.5 px-4 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2'
+                className='flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50'
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className='w-4 h-4 animate-spin' />
+                    <Loader2 className='h-4 w-4 animate-spin' />
                     Sending...
                   </>
                 ) : (
@@ -140,14 +135,14 @@ export default function ForgotPasswordPage() {
           <div className='mt-6 text-center'>
             <Link
               href='/login'
-              className='inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors'
+              className='inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground'
             >
-              <ArrowLeft className='w-3 h-3' />
+              <ArrowLeft className='h-3 w-3' />
               Back to sign in
             </Link>
           </div>
         </div>
-      </motion.div>
+      </div>
     </PremiumPageWrapper>
   )
 }

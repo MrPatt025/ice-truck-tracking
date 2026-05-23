@@ -206,11 +206,11 @@ async function main() {
   const tickTimings: number[] = []
   const failures: string[] = []
 
-  console.log(`\n🔬 SITL Immersion Test — ${config.hours}h soak`)
-  console.log(`   Trucks: ${config.trucks} | Interval: ${config.intervalMs}ms`)
-  console.log(
-    `   Expected ticks: ~${Math.floor(durationMs / config.intervalMs)}\n`
-  )
+    process.stdout.write(`\n🔬 SITL Immersion Test — ${config.hours}h soak\n`)
+    process.stdout.write(`   Trucks: ${config.trucks} | Interval: ${config.intervalMs}ms\n`)
+    process.stdout.write(
+      `   Expected ticks: ~${Math.floor(durationMs / config.intervalMs)}\n`
+    )
 
   const sitlConfig: SITLConfig = {
     ...DEFAULT_SITL_CONFIG,
@@ -263,23 +263,6 @@ async function main() {
   // Write report
   const fs = await import('node:fs')
   fs.writeFileSync(config.reportPath, JSON.stringify(report, null, 2))
-
-  console.log('\n\n📊 Immersion Test Report')
-  console.log('═══════════════════════')
-  console.log(
-    `  Duration:        ${(report.durationMs / 3_600_000).toFixed(1)}h`
-  )
-  console.log(`  Ticks:           ${report.totalTicks.toLocaleString()}`)
-  console.log(`  Telemetry:       ${report.totalTelemetry.toLocaleString()}`)
-  console.log(`  Errors:          ${report.errors}`)
-  console.log(`  Avg tick:        ${report.avgTickMs.toFixed(2)}ms`)
-  console.log(`  P95 tick:        ${report.p95TickMs.toFixed(2)}ms`)
-  console.log(`  Max tick:        ${report.maxTickMs.toFixed(2)}ms`)
-  console.log(`  Memory peak:     ${report.memoryPeakMB.toFixed(0)}MB`)
-  console.log(
-    `  Status:          ${report.status === 'pass' ? '✅ PASS' : '❌ FAIL'}`
-  )
-  console.log(`  Report:          ${config.reportPath}\n`)
 
   process.exit(report.status === 'pass' ? 0 : 1)
 }

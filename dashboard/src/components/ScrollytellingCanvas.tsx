@@ -4,6 +4,7 @@ import React, { Suspense, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useScroll, motion, useTransform, MotionValue } from 'framer-motion'
 import * as THREE from 'three'
+import GlassSpinner from '@/components/common/GlassSpinner'
 
 /* ----------------------------------------------------------------
  *  ScrollytellingGrid — a Zero-Render Architecture 3D scene node.
@@ -12,8 +13,20 @@ import * as THREE from 'three'
  * ---------------------------------------------------------------- */
 /* eslint-disable react/no-unknown-property */
 function ScrollytellingGrid({
-  scrollProgress,
-}: Readonly<{ scrollProgress: MotionValue<number> }>) {
+  cameraZ,
+  cameraY,
+  cameraRotX,
+  gridLift,
+  gridSpin,
+  lightIntensity,
+}: Readonly<{
+  cameraZ: MotionValue<number>
+  cameraY: MotionValue<number>
+  cameraRotX: MotionValue<number>
+  gridLift: MotionValue<number>
+  gridSpin: MotionValue<number>
+  lightIntensity: MotionValue<number>
+}>) {
   const gridRef = useRef<THREE.GridHelper>(null)
   const dirLightRef = useRef<THREE.DirectionalLight>(null)
   const timeRef = useRef(0)
@@ -21,19 +34,16 @@ function ScrollytellingGrid({
 
   useFrame((_state, delta) => {
     timeRef.current += delta
-    const scroll = scrollProgress.get()
+    const targetZ = cameraZ.get()
+    const targetY = cameraY.get()
+    const targetRotX = cameraRotX.get()
 
     if (gridRef.current) {
-      gridRef.current.rotation.z = Math.sin(timeRef.current * 0.08) * 0.03
-      gridRef.current.position.y = -2 + Math.sin(timeRef.current * 0.15) * 0.12
+      gridRef.current.rotation.z = gridSpin.get()
+      gridRef.current.position.y =
+        gridLift.get() + Math.sin(timeRef.current * 0.15) * 0.08
     }
 
-    // Camera interpolation based on scroll
-    const targetZ = THREE.MathUtils.lerp(5, 12, scroll)
-    const targetY = THREE.MathUtils.lerp(2, 6, scroll)
-    const targetRotX = THREE.MathUtils.lerp(-0.2, -0.8, scroll)
-
-    // Smooth dampening
     camera.position.z = THREE.MathUtils.damp(
       camera.position.z,
       targetZ,
@@ -53,9 +63,8 @@ function ScrollytellingGrid({
       delta
     )
 
-    // Light intensity interpolation based on scroll
     if (dirLightRef.current) {
-      const targetIntensity = THREE.MathUtils.lerp(1, 0.4, scroll)
+      const targetIntensity = lightIntensity.get()
       dirLightRef.current.intensity = THREE.MathUtils.damp(
         dirLightRef.current.intensity,
         targetIntensity,
@@ -96,7 +105,12 @@ function ScrollytellingGrid({
 export function ScrollytellingCanvas() {
   const { scrollYProgress } = useScroll()
 
-  // Optimized transformations for background depth
+  const cameraZ = useTransform(scrollYProgress, [0, 1], [5, 12])
+  const cameraY = useTransform(scrollYProgress, [0, 1], [2, 6])
+  const cameraRotX = useTransform(scrollYProgress, [0, 1], [-0.2, -0.8])
+  const gridLift = useTransform(scrollYProgress, [0, 1], [-2, -1.45])
+  const gridSpin = useTransform(scrollYProgress, [0, 1], [-0.025, 0.065])
+  const lightIntensity = useTransform(scrollYProgress, [0, 1], [1, 0.4])
   const opacity = useTransform(
     scrollYProgress,
     [0, 0.15, 0.85, 1],
@@ -107,19 +121,24 @@ export function ScrollytellingCanvas() {
   return (
     <motion.div
       suppressHydrationWarning
-      className='absolute inset-0 -z-10 pointer-events-none'
+      className='absolute inset-0 -z-10 pointer-events-none min-h-[100svh]'
       style={{ opacity, scale }}
     >
-      <Suspense
-        fallback={<div className='animate-pulse bg-slate-800 w-full h-full' />}
-      >
+      <Suspense fallback={<GlassSpinner className='absolute inset-0' />}>
         <Canvas
           shadows={false}
           dpr={[1, 1.5]}
           gl={{ powerPreference: 'high-performance', antialias: false }}
           frameloop='always'
         >
-          <ScrollytellingGrid scrollProgress={scrollYProgress} />
+          <ScrollytellingGrid
+            cameraZ={cameraZ}
+            cameraY={cameraY}
+            cameraRotX={cameraRotX}
+            gridLift={gridLift}
+            gridSpin={gridSpin}
+            lightIntensity={lightIntensity}
+          />
         </Canvas>
       </Suspense>
     </motion.div>

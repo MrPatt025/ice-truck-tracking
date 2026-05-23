@@ -78,7 +78,7 @@ function parseArgs(argv: string[]): {
         break
       case '--help':
       case '-h':
-        console.log(`
+          process.stdout.write(`
 SITL Simulator — Standalone CLI Runner
 
 Usage:

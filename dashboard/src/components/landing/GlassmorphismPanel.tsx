@@ -56,10 +56,10 @@ export const GlassmorphismPanel = memo(function GlassmorphismPanel({
         backgroundColor: `rgba(15, 23, 42, ${opacity})`,
       }}
       className={clsx(
-        'relative rounded-2xl border transform-gpu',
-        'border-cyan-100/25 bg-white/10 ring-1 ring-cyan-100/15',
+        'relative z-40 overflow-hidden rounded-2xl border transform-gpu text-slate-100',
+        'border-white/10 bg-slate-900/30 backdrop-blur-[40px] shadow-[0_8px_32px_0_rgba(0,0,0,0.6)] saturate-150',
         blurClass,
-        'saturate-150 shadow-[0_12px_48px_-12px_rgba(34,211,238,0.24)]',
+        'ring-1 ring-white/10 shadow-[0_12px_48px_-12px_rgba(34,211,238,0.24)]',
         className
       )}
     >

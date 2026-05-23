@@ -5,7 +5,10 @@
 FROM node:26-alpine AS deps
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+RUN npm install -g pnpm@11.1.3 --ignore-scripts && mkdir -p /pnpm/store
 
 # Copy only workspace and dependency files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
@@ -15,14 +18,16 @@ COPY mobile-app/package.json ./mobile-app/
 COPY sdk/edge/package.json ./sdk/edge/
 COPY sdk/mobile/package.json ./sdk/mobile/
 
-# Install production dependencies
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts && \
-    pnpm store prune
+# Install dependencies with retries against transient registry failures
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+  sh -ec 'for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts && exit 0; echo "pnpm install failed (attempt ${attempt}), retrying..." >&2; if [ "$attempt" -eq 3 ]; then exit 1; fi; sleep $((attempt * 5)); done'
 
 # ── Builder stage ───────────────────────────────────
 FROM node:26-alpine AS builder
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN npm install -g pnpm@11.1.3 --ignore-scripts && mkdir -p /pnpm/store
 ENV NODE_ENV production
 
 # Copy dependencies from deps stage
@@ -46,22 +51,20 @@ COPY src ./src
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Build all packages
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-  pnpm install --frozen-lockfile --ignore-scripts && \
-  pnpm run build
+RUN pnpm run build
 
 # ── Runtime stage ──────────────────────────────────
 FROM node:26-alpine AS runner
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
-ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ENV NODE_ENV production
 ENV PORT 5000
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Create app user for security
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+  adduser -S nodejs -u 1001
 
 # Copy runtime dependencies only
 COPY --from=deps /app/node_modules ./node_modules
@@ -83,7 +86,7 @@ USER nodejs
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:5000/api/v1/health', (r) => { if (r.statusCode !== 200) throw new Error(r.statusCode); })"
+  CMD node -e "const request = require('http').get('http://localhost:5000/api/v1/health', (response) => { if (response.statusCode !== 200) throw new Error(response.statusCode); }); request.on('error', error => { throw error; })"
 
 # Start backend API
 CMD ["node", "backend/index.js"]

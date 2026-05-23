@@ -72,7 +72,7 @@ function LoginContent() {
         >
           <Snowflake className='w-7 h-7 text-primary' />
         </motion.div>
-        <h1 className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
+        <h1 className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'>
           Welcome back
         </h1>
         <p className='text-muted-foreground mt-1'>

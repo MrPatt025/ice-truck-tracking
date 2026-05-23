@@ -40,13 +40,11 @@ async function waitForCount(expected) {
 
 async function main() {
   let broadcastCount = 0;
-  let lastBroadcastPayload = null;
   const originalBroadcast = websocketService.broadcast.bind(websocketService);
 
   websocketService.broadcast = (event, payload) => {
     if (event === 'truck-update') {
       broadcastCount += 1;
-      lastBroadcastPayload = payload;
     }
     originalBroadcast(event, payload);
   };
@@ -117,16 +115,6 @@ async function main() {
     const persisted = await waitForCount(TOTAL_MESSAGES);
 
     const passed = persisted === TOTAL_MESSAGES && broadcastCount >= TOTAL_MESSAGES;
-
-    console.log('--- TELEMETRY SMOKE TEST RESULT ---');
-    console.log(`truckId: ${TEST_TRUCK_ID}`);
-    console.log(`published: ${TOTAL_MESSAGES}`);
-    console.log(`persisted_to_timescaledb: ${persisted}`);
-    console.log(`socketio_truck_update_events: ${broadcastCount}`);
-    console.log(`zod_parse_and_pipeline_status: ${passed ? 'PASS' : 'FAIL'}`);
-    if (lastBroadcastPayload) {
-      console.log('sample_broadcast_payload:', JSON.stringify(lastBroadcastPayload));
-    }
 
     publisher.end(true);
 

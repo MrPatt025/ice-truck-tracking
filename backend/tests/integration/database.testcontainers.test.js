@@ -184,7 +184,6 @@ beforeAll(async () => {
   // gracefully skip the entire test suite.
   dockerAvailable = await isDockerAvailable();
   if (!dockerAvailable) {
-    console.log('\n⏭️  Docker daemon not running, skipping container tests.\n');
     return; // Gracefully exit without throwing error
   }
 
@@ -425,7 +424,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('core tables exist after migration', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -448,7 +446,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('insert and select a user', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -472,7 +469,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('unique username constraint enforced', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -493,7 +489,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('role check constraint enforced', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -512,7 +507,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('insert and query trucks', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -530,7 +524,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('truck status constraint enforced', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -546,7 +539,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('insert driver linked to user', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -574,7 +566,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('insert and query shops', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -593,7 +584,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('insert telemetry data points', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -623,7 +613,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('insert and resolve an alert', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -665,7 +654,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('transaction commit works', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -690,7 +678,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('transaction rollback works', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 
@@ -717,7 +704,6 @@ describe('Testcontainers — PostgreSQL Integration', () => {
 
   test('parameterised queries prevent SQL injection', async () => {
     if (!dockerAvailable) {
-      console.log('Skipping test: Docker daemon not available');
       return; // Skip this test
     }
 

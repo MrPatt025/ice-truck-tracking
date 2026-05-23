@@ -4,8 +4,10 @@
 # ============================================================================
 
 FROM node:26-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 
-RUN corepack enable && corepack prepare pnpm@11.1.3 --activate
+RUN npm install -g pnpm@11.1.3 --ignore-scripts && mkdir -p /pnpm/store
 
 # ── Dependencies stage ─────────────────────────────────
 FROM base AS deps
@@ -21,10 +23,11 @@ ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY dashboard/package.json ./dashboard/
 
-# Install the full workspace with a frozen lockfile so workspace links stay
-# deterministic while still using the shared pnpm store cache.
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --ignore-scripts
+# Install the full workspace with retries so transient registry failures don't fail the image build.
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+  sh -ec 'for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts && exit 0; \
+  echo "pnpm install failed (attempt ${attempt}), retrying..." >&2; \
+  if [ "$attempt" -eq 3 ]; then exit 1; fi; sleep $((attempt * 5)); done'
 
 # ── Builder stage ──────────────────────────────────────
 FROM base AS builder
@@ -48,9 +51,7 @@ WORKDIR /app/dashboard
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Build the Next.js application using the locked workspace dependencies.
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile --ignore-scripts && \
-    pnpm run build
+RUN pnpm run build
 
 # ── Production runner ──────────────────────────────────
 FROM base AS runner
@@ -62,13 +63,13 @@ ENV NODE_ENV=production
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 RUN addgroup --system --gid 1001 nodejs \
-    && adduser --system --uid 1001 nextjs
+  && adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/dashboard/public ./public
 
 # Set the correct permission for prerender cache
 RUN mkdir .next \
-    && chown nextjs:nodejs .next
+  && chown nextjs:nodejs .next
 
 # Automatically leverage output traces to reduce image size
 COPY --from=builder /app/dashboard/.next/standalone ./

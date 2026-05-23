@@ -620,7 +620,7 @@ export default function LandingPage() {
           <motion.h2
             custom={0}
             variants={fadeUp}
-            className='text-3xl font-bold sm:text-4xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'
+            className='text-3xl font-bold sm:text-4xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'
           >
             Ready to Track?
           </motion.h2>

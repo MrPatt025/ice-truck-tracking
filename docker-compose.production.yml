@@ -193,8 +193,8 @@ services:
   # ── Backend API ──────────────────────────────────────────
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
       target: production
     environment:
       <<: *common-env

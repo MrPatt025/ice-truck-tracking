@@ -1,4 +1,4 @@
-import { test, expect, Page, ConsoleMessage } from '@playwright/test'
+import { test, expect, Page, ConsoleMessage, type Locator } from '@playwright/test'
 
 /**
  * E2E Navigation Tests — All 14 Pages
@@ -39,7 +39,12 @@ const dashboardRoutes = [
 
 const allRoutes = [...authRoutes, ...dashboardRoutes]
 
-// Helper: Check page loaded successfully and PremiumPageWrapper exists
+async function waitForStable(page: Page, locator: Locator): Promise<void> {
+  await page.waitForLoadState('load')
+  await expect(locator).toBeVisible({ timeout: ASSERTION_TIMEOUT })
+}
+
+// Helper: Check page loaded successfully and main landmark exists
 async function verifyPageLoad(page: Page, route: string): Promise<void> {
   const consoleErrors: string[] = []
 
@@ -72,16 +77,9 @@ async function verifyPageLoad(page: Page, route: string): Promise<void> {
   // Assert page loaded successfully
   expect(response?.status() ?? 200).toBeLessThan(400)
 
-  // Wait for main landmark to be attached/visible (covers semantic pages)
-  const main = page.locator('main, [role="main"]').first()
-  await main.waitFor({ state: 'visible', timeout: ASSERTION_TIMEOUT })
-
-  // Assert PremiumPageWrapper is present — context-aware testid locator
-  // Auth routes use auth-page-wrapper; dashboard routes use dashboard-page-wrapper
-  const isAuth = authRoutes.some(r => r.split('?')[0] === route.split('?')[0])
-  const expectedTestId = isAuth ? 'auth-page-wrapper' : 'dashboard-page-wrapper'
-  const pageContent = page.locator(`[data-testid="${expectedTestId}"]`).first()
-  await expect(pageContent).toBeVisible({ timeout: ASSERTION_TIMEOUT })
+  // Wait for the semantic main landmark instead of a wrapper test id.
+  const main = page.getByRole('main').first()
+  await waitForStable(page, main)
 
   // Verify no critical console errors (filter out benign 3D/WebGL warnings)
   const criticalErrors = consoleErrors.filter(

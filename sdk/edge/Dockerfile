@@ -2,33 +2,53 @@
 # Edge SDK Dockerfile — Secure Production Build
 # ============================================================================
 
-FROM node:26-alpine
+FROM node:26-alpine AS base
 
 WORKDIR /app
 
-# Ensure standard secure path
-ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-
-# Copy package files (lockfile required for locked version resolution)
-COPY package.json package-lock.json* ./
-
-# Configure NPM network retry settings to prevent ECONNRESET timeouts
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 ENV NPM_CONFIG_FETCH_RETRIES=5
 ENV NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000
 ENV NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000
 
-# Install dependencies with locked versions + --ignore-scripts (SonarCloud docker:S4507 & S8543)
-RUN npm ci --only=production --ignore-scripts && \
-  addgroup -g 1001 -S nodejs && \
-  adduser -S notification -u 1001
+RUN apk add --no-cache libc6-compat && npm install -g pnpm@11.1.3 --ignore-scripts && mkdir -p /pnpm/store
 
-COPY tsconfig.json ./
-COPY src ./src
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY backend/package.json ./backend/
+COPY dashboard/package.json ./dashboard/
+COPY mobile-app/package.json ./mobile-app/
+COPY sdk/edge/package.json ./sdk/edge/
+COPY sdk/mobile/package.json ./sdk/mobile/
+
+FROM base AS deps
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+  sh -ec 'for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts && exit 0; \
+  echo "pnpm install failed (attempt ${attempt}), retrying..." >&2; \
+  if [ "$attempt" -eq 3 ]; then exit 1; fi; sleep $((attempt * 5)); done'
+
+FROM base AS build
+COPY --from=deps /app/node_modules ./node_modules
+COPY sdk/edge/package.json ./sdk/edge/
+COPY sdk/edge/tsconfig.json ./sdk/edge/
+COPY sdk/edge/src ./sdk/edge/src
+
+WORKDIR /app/sdk/edge
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+RUN pnpm run build
+
+FROM base AS runner
+RUN addgroup -g 1001 -S nodejs && \
+  adduser -S notification -u 1001
 
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
-RUN npm run build && \
-  true
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/sdk/edge/dist ./dist
+
+WORKDIR /app/sdk/edge
+
 USER notification
 
 EXPOSE 3002

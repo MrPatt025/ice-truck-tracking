@@ -148,7 +148,7 @@ export default function ReportsPage() {
           <div className='relative z-50 mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'>
             <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
               <div>
-                <h1 className='flex items-center gap-2 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 leading-tight'>
+                <h1 className='flex items-center gap-2 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400 leading-tight'>
                   <BarChart3 className='w-7 h-7 text-primary' />
                   Reports & Analytics
                 </h1>
@@ -218,7 +218,7 @@ export default function ReportsPage() {
                         {card.change}
                       </span>
                     </div>
-                    <p className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 tabular-nums'>
+                    <p className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400 tabular-nums'>
                       {card.value}
                     </p>
                     <p className='text-xs text-muted-foreground mt-1'>

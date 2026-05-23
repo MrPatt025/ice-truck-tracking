@@ -1,7 +1,6 @@
 'use client'
 
 import { memo, type ReactNode } from 'react'
-import { motion } from 'framer-motion'
 import { glassPanel } from '@/ui/tokens/glass'
 import { cn } from '@/lib/utils'
 
@@ -38,12 +37,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         className
       )}
     >
-      <motion.main
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className='relative isolate h-full min-h-[100svh] w-full transform-gpu'
-      >
+      <main className='relative isolate h-full min-h-[100svh] w-full transform-gpu opacity-100 transition-opacity duration-300'>
         <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120rem_58rem_at_50%_-25%,rgba(56,189,248,.12),transparent_56%),radial-gradient(104rem_44rem_at_12%_108%,rgba(45,212,191,.13),transparent_62%)]' />
         <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(66rem_36rem_at_18%_-12%,rgba(56,189,248,.16),transparent),radial-gradient(78rem_40rem_at_90%_108%,rgba(16,185,129,.14),transparent)]' />
         <div className='pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(120deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0)_40%)]' />
@@ -99,7 +93,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
           ) : null}
           <div className='relative z-50 antialiased'>{children}</div>
         </div>
-      </motion.main>
+      </main>
     </section>
   )
 })

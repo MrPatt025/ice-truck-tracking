@@ -104,6 +104,7 @@ import MapModeToggle from '@/components/MapModeToggle'
 import OfflineBanner from '@/components/OfflineBanner'
 
 const API_BASE = resolveApiBaseV1()
+const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
 
 const GlassPulseFallback = () => (
   <div className='h-9 w-28 animate-pulse rounded-xl border border-white/10 bg-white/10 shadow-[0_16px_38px_-20px_rgba(56,189,248,0.85)]' />
@@ -1106,6 +1107,8 @@ function useFullscreenEscape(
 
 function useApiHealthProbe() {
   useEffect(() => {
+    if (E2E_LIGHT_MODE) return
+
     let retryCount = 0
     const maxRetries = 3
 
@@ -1872,13 +1875,13 @@ export default function DashboardView() {
                     <div className='mt-6 grid grid-cols-2 gap-3'>
                       <div className='text-center p-3 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/30'>
                         <p className='text-xs text-slate-400'>Avg Score</p>
-                        <p className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 text-emerald-400'>
+                        <p className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400 text-emerald-400'>
                           90.2
                         </p>
                       </div>
                       <div className='text-center p-3 rounded-xl bg-cyan-500/10 ring-1 ring-cyan-500/30'>
                         <p className='text-xs text-slate-400'>Rank</p>
-                        <p className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400 text-cyan-400'>
+                        <p className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400 text-cyan-400'>
                           #1
                         </p>
                       </div>
@@ -2052,7 +2055,7 @@ export default function DashboardView() {
                           <div className='absolute inset-0 flex items-center justify-center backdrop-blur-sm'>
                             <div className='text-center space-y-4'>
                               <MapPin className='h-16 w-16 mx-auto text-cyan-400 animate-bounce' />
-                              <p className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
+                              <p className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'>
                                 <ActiveTrucksHeadline />
                               </p>
                               <p className='text-sm text-slate-400'>
@@ -2198,7 +2201,7 @@ export default function DashboardView() {
             <div className='fixed inset-0 z-[100] bg-slate-950/90 backdrop-blur-xl animate-fadeIn'>
               <div className='absolute inset-4 lg:inset-10 rounded-3xl ring-1 ring-white/20 bg-slate-900/80 backdrop-blur-xl p-4 lg:p-8 shadow-2xl'>
                 <div className='mb-4 flex items-center justify-between'>
-                  <h3 className='text-xl lg:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400'>
+                  <h3 className='text-xl lg:text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'>
                     {FULLSCREEN_TITLES[fullscreen]}
                   </h3>
                   <div className='flex items-center gap-3'>

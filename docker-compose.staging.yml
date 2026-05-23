@@ -90,8 +90,8 @@ services:
   # ── Backend API (2 replicas) ──────────────────────────────
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     environment:
       NODE_ENV: staging
       PORT: 5000
