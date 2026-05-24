@@ -27,16 +27,6 @@ const GlassCard = memo(function GlassCard({
     >
       <div
         className={`group glass-panel relative h-full overflow-hidden rounded-3xl p-[2px] bg-gradient-to-br ${accent} transition-transform duration-500 hover:scale-[1.02] will-change-transform`}
-        style={(() => {
-          const panelStyle: React.CSSProperties & Record<string, string> = {
-            '--glass-panel-background-image':
-              'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(30, 41, 59, 0.65) 100%)',
-            '--glass-panel-background-color': 'rgba(15, 23, 42, 0.5)',
-            '--glass-panel-shadow':
-              '0 0 40px -10px rgba(139, 92, 246, 0.3), 0 0 20px -5px rgba(34, 211, 238, 0.2)',
-          }
-          return panelStyle
-        })()}
       >
         <div
           className={`relative h-full rounded-[calc(1.5rem-2px)] backdrop-blur-[var(--glass-blur)] backdrop-saturate-[1.8] backdrop-brightness-110 ring-1 ring-white/20 transition-[box-shadow] duration-500 group-hover:ring-white/30 ${className}`}
@@ -44,11 +34,7 @@ const GlassCard = memo(function GlassCard({
           <div className='pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.25),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.2),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]' />
 
           <div
-            className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-[0.03] mix-blend-overlay'
-            style={{
-              backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" result="noise"/></filter><rect width="100" height="100" fill="white" filter="url(%23n)"/></svg>')`,
-              backgroundSize: '50px 50px',
-            }}
+            className='glass-noise-layer pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-[0.03] mix-blend-overlay'
           />
 
           <div className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.15),transparent)] bg-[length:200%_100%] animate-shimmer' />

@@ -1,6 +1,5 @@
 'use client'
 import dynamic from 'next/dynamic'
-import AlertsSidePanel from '@/components/dashboard/AlertsSidePanel'
 import ChartGridController from '@/components/dashboard/ChartGridController'
 import DashboardHeader from '@/components/dashboard/DashboardHeader'
 /* ================================================================
@@ -320,8 +319,6 @@ export default function DashboardView() {
   const show3D = useIoTStore(s => s.show3D)
   const showMap = useIoTStore(s => s.showMap)
   const showHeatmap = useIoTStore(s => s.showHeatmap)
-  const showAlerts = useIoTStore(s => s.showAlerts)
-  const toggleAlerts = useIoTStore(s => s.toggleAlerts)
   const timeRange = useIoTStore(s => s.timeRange)
   const refreshSpeed = useIoTStore(s => s.refreshSpeed)
   const connectionStatus = useIoTStore(s => s.connectionStatus)
@@ -502,14 +499,8 @@ export default function DashboardView() {
       >
         <motion.div
           data-testid='dashboard-main'
-          style={{
-            opacity: introOpacity,
-            scale: introScale,
-            y: introLift,
-            willChange: 'opacity, transform',
-            contain: 'layout paint style',
-          }}
-          className='mission-control-shell relative min-h-screen overflow-x-clip text-white selection:bg-cyan-500/30 selection:text-white'
+          style={{ opacity: introOpacity, scale: introScale, y: introLift }}
+          className='dashboard-motion-shell mission-control-shell relative min-h-screen overflow-x-clip text-white selection:bg-cyan-500/30 selection:text-white'
         >
           <h1 className='sr-only'>Ice Truck Mission Control Dashboard</h1>
           <div className='pointer-events-none fixed inset-0 -z-20 hud-grid-overlay opacity-45' />
@@ -518,20 +509,14 @@ export default function DashboardView() {
 
           {/* ── Background gradient ── */}
           <div
-            className='pointer-events-none fixed inset-0 -z-20 transition-all duration-1000 mix-blend-screen [background-image:var(--mission-control-background)]'
+            className='mission-control-background-layer pointer-events-none fixed inset-0 -z-20 transition-all duration-1000 mix-blend-screen'
             style={missionControlBackgroundStyle}
           />
 
           {/* ── Grid overlay ── */}
           {showGrid && (
             <div
-              className='pointer-events-none fixed inset-0 -z-10 opacity-[0.09] transition-opacity duration-500'
-              style={{
-                // NOSONAR — complex CSS pattern
-                backgroundImage:
-                  'linear-gradient(to right, #fff 1px, transparent 1px),linear-gradient(to bottom, #fff 1px, transparent 1px)',
-                backgroundSize: '48px 48px',
-              }}
+              className='mission-control-grid-overlay pointer-events-none fixed inset-0 -z-10 opacity-[0.09] transition-opacity duration-500'
             />
           )}
 
@@ -554,31 +539,20 @@ export default function DashboardView() {
 
           {/* ── Main Content ── */}
           <main
-            className='mx-auto max-w-[128rem] space-y-6 overflow-x-clip px-4 py-6 sm:px-6'
-            style={{
-              contentVisibility: 'auto',
-              containIntrinsicSize: '1px 1400px',
-            }}
+            data-testid='dashboard-content'
+            className='page-content-reserved mx-auto max-w-[128rem] space-y-6 overflow-x-clip px-4 py-6 sm:px-6'
           >
             {/* ── Mission Control Surface (always-present E2E anchors) ── */}
             <motion.section
               initial={false}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className='group relative isolate overflow-hidden rounded-[1.75rem] border border-cyan-200/25 bg-[linear-gradient(135deg,rgba(15,23,42,.82),rgba(15,23,42,.56))] p-5 backdrop-blur-[32px] shadow-[0_34px_120px_-64px_rgba(34,211,238,0.95)] supports-[backdrop-filter]:backdrop-saturate-150'
-              style={{
-                willChange: 'transform, opacity',
-                minHeight: '6.25rem',
-              }}
+              className='mission-control-surface-shell group relative isolate overflow-hidden rounded-[1.75rem] border border-cyan-200/25 bg-[linear-gradient(135deg,rgba(15,23,42,.82),rgba(15,23,42,.56))] p-5 backdrop-blur-[32px] shadow-[0_34px_120px_-64px_rgba(34,211,238,0.95)] supports-[backdrop-filter]:backdrop-saturate-150'
               data-testid='mission-control-surface'
             >
               <div
                 aria-hidden='true'
-                className='pointer-events-none absolute inset-0 opacity-[0.08] mix-blend-soft-light'
-                style={{
-                  backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="${'http' + '://www.w3.org/2000/svg'}" width="120" height="120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.72" numOctaves="4"/></filter><rect width="120" height="120" filter="url(%23n)"/></svg>')`,
-                  backgroundSize: '72px 72px',
-                }}
+                className='mission-control-surface-noise pointer-events-none absolute inset-0 opacity-[0.08] mix-blend-soft-light'
               />
               <div className='pointer-events-none absolute inset-0 rounded-[inherit] border border-white/10' />
               <div className='pointer-events-none absolute -inset-20 bg-[radial-gradient(80rem_30rem_at_20%_-20%,rgba(34,211,238,.28),transparent),radial-gradient(90rem_34rem_at_80%_140%,rgba(139,92,246,.24),transparent)] opacity-85 transition-opacity duration-700 group-hover:opacity-100' />
@@ -645,11 +619,6 @@ export default function DashboardView() {
               </p>
             </div>
           </main>
-
-          {/* ── Alerts Side Panel ── */}
-          {showAlerts && <AlertsSidePanel onClose={toggleAlerts} />}
-
-          {/* ── Global Styles ── */}
           <style jsx global>{`
             @keyframes shimmer {
               to {

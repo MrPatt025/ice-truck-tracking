@@ -65,8 +65,14 @@ export function TemperatureSparkline({
 
   return (
     <div
-      className='relative inline-block shrink-0 overflow-hidden rounded-sm'
-      style={{ width, height }}
+      style={
+        {
+          '--sparkline-width': `${width}px`,
+          '--sparkline-height': `${height}px`,
+        } as React.CSSProperties &
+          Record<'--sparkline-width' | '--sparkline-height', string>
+      }
+      className='relative inline-block shrink-0 overflow-hidden rounded-sm min-w-[var(--sparkline-width)] min-h-[var(--sparkline-height)] w-[var(--sparkline-width)] h-[var(--sparkline-height)]'
     >
       <canvas
         ref={canvasRef}

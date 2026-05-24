@@ -22,17 +22,7 @@ COPY sdk/edge/package.json ./sdk/edge/
 COPY sdk/mobile/package.json ./sdk/mobile/
 
 FROM base AS deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  sh -ec '\
-  pnpm config set fetch-retries 5 && \
-  pnpm config set fetch-timeout 600000 && \
-  pnpm config set network-concurrency 1; \
-  for attempt in 1 2 3; do \
-    pnpm install --frozen-lockfile --ignore-scripts && exit 0; \
-    echo "pnpm install failed (attempt ${attempt}), retrying..." >&2; \
-    if [ "$attempt" -eq 3 ]; then exit 1; fi; \
-    sleep $((attempt * 5)); \
-  done'
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
 COPY sdk/edge/tsconfig.json ./sdk/edge/
 COPY sdk/edge/src ./sdk/edge/src
 
@@ -48,7 +38,7 @@ RUN addgroup -g 1001 -S nodejs && \
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=build /app/sdk/edge/dist ./dist
+COPY --from=deps /app/sdk/edge/dist ./dist
 
 WORKDIR /app/sdk/edge
 

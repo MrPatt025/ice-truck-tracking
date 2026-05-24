@@ -220,7 +220,7 @@ const ChartGridController = memo(function ChartGridController({
                 <Maximize2 className='h-4 w-4 text-slate-400' />
               </button>
             </div>
-            <div style={{ aspectRatio: '16 / 9' }}>
+            <div className='aspect-[16/9]'>
               <CanvasChart id='revenue' config={CHART_CONFIGS.revenue} className='h-full' />
             </div>
           </div>
@@ -242,7 +242,7 @@ const ChartGridController = memo(function ChartGridController({
                 <Maximize2 className='h-4 w-4 text-slate-400' />
               </button>
             </div>
-            <div style={{ aspectRatio: '16 / 9' }}>
+            <div className='aspect-[16/9]'>
               <CanvasChart id='fleet' config={CHART_CONFIGS.fleet} className='h-full' />
             </div>
           </div>
@@ -265,7 +265,7 @@ const ChartGridController = memo(function ChartGridController({
                 <ThermometerSun className='h-5 w-5 text-sky-400' />
                 Cargo Temperature Distribution
               </h3>
-              <div style={{ aspectRatio: '4 / 3' }}>
+              <div className='aspect-[4/3]'>
                 <CanvasChart
                   id='temperature'
                   config={CHART_CONFIGS.temperature}
@@ -309,7 +309,7 @@ const ChartGridController = memo(function ChartGridController({
                   <Maximize2 className='h-4 w-4 text-slate-400' />
                 </button>
               </div>
-              <div style={{ aspectRatio: '4 / 3' }}>
+              <div className='aspect-[4/3]'>
                 <CanvasChart id='alerts' config={CHART_CONFIGS.alerts} className='h-full' />
               </div>
             </div>
@@ -324,7 +324,7 @@ const ChartGridController = memo(function ChartGridController({
                 <Activity className='h-5 w-5 text-emerald-400' />
                 Performance Metrics
               </h3>
-              <div style={{ aspectRatio: '4 / 3' }}>
+              <div className='aspect-[4/3]'>
                 <CanvasChart id='fuel' config={CHART_CONFIGS.fuel} className='h-full' />
               </div>
               <div className='mt-6 grid grid-cols-2 gap-3'>
@@ -373,8 +373,7 @@ const ChartGridController = memo(function ChartGridController({
                   damping: 30,
                 }}
                 animate={{ height: isLiveMode ? 400 : 430 }}
-                style={{ aspectRatio: '16 / 10' }}
-                className='bloom-edge vignette-strong rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative'
+                className='bloom-edge vignette-strong aspect-[16/10] rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative'
               >
                 {showMap ? (
                   <div

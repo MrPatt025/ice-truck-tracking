@@ -128,9 +128,10 @@ export default function AdminPage() {
 
   return (
     <motion.main
+      data-testid='page-shell'
       initial={false}
       animate={{ opacity: 1, y: 0 }}
-      className='relative w-full'
+      className='page-shell relative w-full'
     >
       <AppSidebar>
         <PremiumPageWrapper

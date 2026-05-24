@@ -17,10 +17,11 @@ const TRACKING_LANES = [
 export default function TrackingPage() {
   return (
     <motion.main
+      data-testid='page-shell'
       suppressHydrationWarning
       initial={false}
       animate={{ opacity: 1, y: 0 }}
-      className='relative w-full'
+      className='page-shell relative w-full'
     >
       <AppSidebar>
         <PremiumPageWrapper
@@ -29,7 +30,10 @@ export default function TrackingPage() {
           testId='dashboard-page-wrapper'
           contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-68px_rgba(59,130,246,0.95)]'
         >
-          <main className='relative z-50 mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'>
+          <main
+            data-testid='page-content'
+            className='relative z-50 mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'
+          >
             <motion.header
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}

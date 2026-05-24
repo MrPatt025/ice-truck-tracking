@@ -13,10 +13,6 @@ type PremiumPageWrapperProps = Readonly<{
   testId?: string
 }>
 
-const SVG_XMLNS = 'http' + '://www.w3.org/2000/svg'
-const BG_NOISE_IMAGE = `url("data:image/svg+xml,%3Csvg xmlns='${encodeURIComponent(SVG_XMLNS)}' width='180' height='180'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23noise)'/%3E%3C/svg%3E")`
-const SURFACE_NOISE_IMAGE = `url("data:image/svg+xml,%3Csvg xmlns='${encodeURIComponent(SVG_XMLNS)}' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")`
-
 const PremiumPageWrapper = memo(function PremiumPageWrapper({
   children,
   className,
@@ -31,11 +27,14 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
       suppressHydrationWarning
       aria-label='Primary content'
       className={cn(
-        'relative isolate min-h-[100svh] text-slate-100 antialiased',
+        'page-shell relative isolate text-slate-100 antialiased',
         className
       )}
     >
-      <main className='relative isolate h-full min-h-[100svh] w-full transform-gpu opacity-100 transition-opacity duration-300'>
+      <main
+        data-testid='page-wrapper'
+        className='page-wrapper-main relative isolate h-full transform-gpu opacity-100 transition-opacity duration-300'
+      >
         <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(120rem_58rem_at_50%_-25%,rgba(56,189,248,.12),transparent_56%),radial-gradient(104rem_44rem_at_12%_108%,rgba(45,212,191,.13),transparent_62%)]' />
         <div className='pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(66rem_36rem_at_18%_-12%,rgba(56,189,248,.16),transparent),radial-gradient(78rem_40rem_at_90%_108%,rgba(16,185,129,.14),transparent)]' />
         <div className='pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(120deg,rgba(255,255,255,0.05)_0%,rgba(255,255,255,0)_40%)]' />
@@ -47,13 +46,9 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         <div
           aria-hidden='true'
           className={cn(
-            'pointer-events-none absolute inset-0 -z-10 mix-blend-overlay',
+            'premium-noise-layer pointer-events-none absolute inset-0 -z-10 mix-blend-overlay',
             denseNoise ? 'opacity-[0.04]' : 'opacity-[0.025]'
           )}
-          style={{
-            backgroundImage: BG_NOISE_IMAGE,
-            backgroundSize: '90px 90px',
-          }}
         />
         <div
           aria-hidden='true'
@@ -71,11 +66,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
               <div className='premium-visual premium-right-line pointer-events-none absolute inset-y-6 right-0 w-px bg-gradient-to-b from-transparent via-emerald-200/20 to-transparent opacity-70' />
               <div
                 aria-hidden='true'
-                className='premium-visual premium-noise pointer-events-none absolute inset-0 rounded-3xl opacity-[0.035] mix-blend-overlay'
-                style={{
-                  backgroundImage: SURFACE_NOISE_IMAGE,
-                  backgroundSize: '70px 70px',
-                }}
+                className='premium-surface-noise-layer premium-visual premium-noise pointer-events-none absolute inset-0 rounded-3xl opacity-[0.035] mix-blend-overlay'
               />
               <div className='premium-visual premium-glow-a pointer-events-none absolute -left-8 -top-8 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl' />
               <div className='premium-visual premium-glow-b pointer-events-none absolute -bottom-10 -right-10 h-44 w-44 rounded-full bg-emerald-300/15 blur-3xl' />

@@ -35,10 +35,11 @@ const CONTROL_ROWS = [
 export default function CompliancePage() {
   return (
     <motion.main
+      data-testid='page-shell'
       suppressHydrationWarning
       initial={false}
       animate={{ opacity: 1, y: 0 }}
-      className='relative w-full'
+      className='page-shell relative w-full'
     >
       <AppSidebar>
         <PremiumPageWrapper
@@ -47,7 +48,10 @@ export default function CompliancePage() {
           testId='dashboard-page-wrapper'
           contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-68px_rgba(244,114,182,0.85)]'
         >
-          <main className='relative z-50 mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'>
+          <main
+            data-testid='page-content'
+            className='relative z-50 mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'
+          >
             <motion.header
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}

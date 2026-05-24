@@ -133,10 +133,11 @@ export default function ReportsPage() {
 
   return (
     <motion.main
+      data-testid='page-shell'
       suppressHydrationWarning
       initial={false}
       animate={{ opacity: 1, y: 0 }}
-      className='relative w-full'
+      className='page-shell relative w-full'
     >
       <AppSidebar>
         <PremiumPageWrapper

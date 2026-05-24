@@ -30,17 +30,7 @@ COPY sdk/mobile/package.json ./sdk/mobile/
 
 # Development stage
 FROM base AS development
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  sh -ec '\
-  pnpm config set fetch-retries 5 && \
-  pnpm config set fetch-timeout 600000 && \
-  pnpm config set network-concurrency 1; \
-  for attempt in 1 2 3; do \
-    pnpm install --frozen-lockfile --ignore-scripts && exit 0; \
-    echo "pnpm install failed (attempt ${attempt}), retrying..." >&2; \
-    if [ "$attempt" -eq 3 ]; then exit 1; fi; \
-    sleep $((attempt * 5)); \
-  done'
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
 COPY backend/index.js backend/swagger.json ./backend/
 COPY backend/src ./backend/src
 EXPOSE 5000
@@ -50,13 +40,7 @@ CMD ["dumb-init", "node", "backend/index.js"]
 # Production dependencies stage — locked versions
 # ignore-scripts required by SonarCloud docker rules
 FROM base AS dependencies
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  sh -ec 'pnpm config set fetch-retries 5 && \
-  pnpm config set fetch-timeout 600000 && \
-  pnpm config set network-concurrency 1; \
-  for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts && exit 0; \
-  echo "pnpm install failed (attempt ${attempt}), retrying..." >&2; \
-  if [ "$attempt" -eq 3 ]; then exit 1; fi; sleep $((attempt * 5)); done'
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
 
 # Production stage
 FROM node:26-alpine AS production
