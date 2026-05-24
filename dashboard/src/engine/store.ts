@@ -172,3 +172,19 @@ export const useIoTStore = create<IoTStoreState>()(
       })),
   }))
 )
+
+// ─── Atomic metric selectors (avoid full-metrics re-renders) ───
+export const selectActiveTrucks = (s: IoTStoreState) => s.metrics.activeTrucks
+export const selectIdleTrucks = (s: IoTStoreState) => s.metrics.idleTrucks
+export const selectOfflineTrucks = (s: IoTStoreState) => s.metrics.offlineTrucks
+export const selectAvgTemperature = (s: IoTStoreState) => s.metrics.avgTemperature
+export const selectTotalAlerts = (s: IoTStoreState) => s.metrics.totalAlerts
+export const selectCriticalAlerts = (s: IoTStoreState) => s.metrics.criticalAlerts
+export const selectWarningAlerts = (s: IoTStoreState) => s.metrics.warningAlerts
+export const selectAvgFuelLevel = (s: IoTStoreState) => s.metrics.avgFuelLevel
+export const selectOnTimeRate = (s: IoTStoreState) => s.metrics.onTimeRate
+export const selectTotalDeliveries = (s: IoTStoreState) => s.metrics.totalDeliveries
+export const selectRevenueToday = (s: IoTStoreState) => s.metrics.revenueToday
+export const selectActiveDrivers = (s: IoTStoreState) => s.metrics.activeDrivers
+export const selectFuelEfficiency = (s: IoTStoreState) => s.metrics.fuelEfficiency
+export const selectAvgSpeed = (s: IoTStoreState) => s.metrics.avgSpeed

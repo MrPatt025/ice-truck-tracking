@@ -64,13 +64,18 @@ export function TemperatureSparkline({
   }, [fill, height, stroke, values, width])
 
   return (
-    <canvas
-      ref={canvasRef}
-      width={width}
-      height={height}
-      className='rounded-sm'
-      aria-label='Temperature sparkline'
-      data-testid='temperature-sparkline'
-    />
+    <div
+      className='relative inline-block shrink-0 overflow-hidden rounded-sm'
+      style={{ width, height }}
+    >
+      <canvas
+        ref={canvasRef}
+        width={width}
+        height={height}
+        className='absolute inset-0 h-full w-full rounded-sm'
+        aria-label='Temperature sparkline'
+        data-testid='temperature-sparkline'
+      />
+    </div>
   )
 }

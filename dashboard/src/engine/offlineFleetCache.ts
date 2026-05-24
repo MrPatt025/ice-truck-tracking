@@ -14,7 +14,7 @@ const DEFAULT_MAX_AGE_MS = 10 * 60 * 1000
 let dbPromise: Promise<IDBDatabase | null> | null = null
 
 function hasIndexedDb(): boolean {
-  return typeof window !== 'undefined' && 'indexedDB' in globalThis
+  return globalThis.window !== undefined && 'indexedDB' in globalThis
 }
 
 function isFiniteNumber(value: unknown): value is number {
@@ -95,7 +95,7 @@ function openDatabase(): Promise<IDBDatabase | null> {
 }
 
 function writeLocalFallback(snapshot: FleetCacheSnapshot): void {
-  if (typeof window === 'undefined') return
+  if (globalThis.window === undefined) return
   try {
     globalThis.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(snapshot))
   } catch {
@@ -104,7 +104,7 @@ function writeLocalFallback(snapshot: FleetCacheSnapshot): void {
 }
 
 function readLocalFallback(maxAgeMs: number): TruckTelemetry[] {
-  if (typeof window === 'undefined') return []
+  if (globalThis.window === undefined) return []
 
   try {
     const raw = globalThis.localStorage.getItem(LOCAL_STORAGE_KEY)

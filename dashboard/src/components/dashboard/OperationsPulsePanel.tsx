@@ -3,6 +3,7 @@
 import React, { memo } from 'react'
 import { TrendingUp } from 'lucide-react'
 import { useIoTStore } from '@/engine'
+import { useShallow } from 'zustand/shallow'
 import GlassCard from '@/components/common/GlassCard'
 
 function resolveConnectionLabel(status: string): string {
@@ -13,7 +14,11 @@ function resolveConnectionLabel(status: string): string {
 }
 
 const OperationsPulsePanel = memo(function OperationsPulsePanel() {
-  const metrics = useIoTStore(s => s.metrics)
+  const metrics = useIoTStore(useShallow(s => ({
+    totalDeliveries: s.metrics.totalDeliveries,
+    avgTemperature: s.metrics.avgTemperature,
+    activeTrucks: s.metrics.activeTrucks,
+  })))
   const connectionStatus = useIoTStore(s => s.connectionStatus)
   const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
 

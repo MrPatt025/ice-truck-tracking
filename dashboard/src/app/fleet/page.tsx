@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import { useEffect, useMemo, useState } from 'react'
+import { useDebouncedCallback } from 'use-debounce'
 import { Download, Plus, Search, Truck } from 'lucide-react'
 import AppSidebar from '@/components/AppSidebar'
 import PremiumPageWrapper from '@/components/common/PremiumPageWrapper'
@@ -86,7 +87,7 @@ function createMockRows(count: number): FleetTruckRow[] {
 
 function FleetGridSkeleton() {
   return (
-    <div className='p-4 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
+    <div className='glass-panel p-4 rounded-2xl relative z-50'>
       <div className='mb-4 h-5 w-56 animate-pulse rounded bg-white/10' />
       <div className='space-y-2'>
         {Array.from({ length: 10 }, (_, idx) => (
@@ -114,10 +115,15 @@ export default function FleetManagementPage() {
 
   const [rows, setRows] = useState<FleetTruckRow[]>([])
   const [statusFilter, setStatusFilter] = useState<FleetStatusFilter>('all')
+  const [inputValue, setInputValue] = useState('')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedRow, setSelectedRow] = useState<string | null>(null)
+
+  const debouncedSetSearch = useDebouncedCallback((val: string) => {
+    setSearch(val)
+  }, 300)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -216,9 +222,9 @@ export default function FleetManagementPage() {
           contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(45,212,191,0.95)]'
         >
           <div className='relative z-50 mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>
-            <header className='flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
+            <header className='glass-panel flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between rounded-2xl relative z-50'>
               <div>
-                <h1 className='flex items-center gap-2 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400 text-slate-100'>
+                <h1 className='flex items-center gap-2 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'>
                   <Truck className='h-7 w-7 text-cyan-300' />
                   Fleet Management
                 </h1>
@@ -253,7 +259,7 @@ export default function FleetManagementPage() {
               </div>
             </header>
 
-            <section className='p-4 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
+            <section className='glass-panel p-4 rounded-2xl relative z-50'>
               <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
                 <div className='flex flex-wrap items-center gap-2'>
                   {ALL_FILTERS.map(filter => (
@@ -282,8 +288,11 @@ export default function FleetManagementPage() {
                   <Search className='pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400' />
                   <input
                     type='text'
-                    value={search}
-                    onChange={event => setSearch(event.target.value)}
+                    value={inputValue}
+                    onChange={event => {
+                      setInputValue(event.target.value)
+                      debouncedSetSearch(event.target.value)
+                    }}
                     placeholder='Search by truck, plate, driver, route...'
                     className='w-full rounded-lg border border-white/10 bg-slate-950/60 py-2.5 pl-10 pr-4 text-sm text-slate-100 outline-none transition focus:border-cyan-400/70 focus:ring-2 focus:ring-cyan-500/35'
                     data-testid='fleet-grid-search'
@@ -305,7 +314,7 @@ export default function FleetManagementPage() {
               )}
             </SectionErrorBoundary>
 
-            <section className='p-4 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
+            <section className='glass-panel p-4 rounded-2xl relative z-50'>
               <p className='text-sm text-slate-300'>
                 Showing{' '}
                 <span className='font-semibold text-slate-100'>

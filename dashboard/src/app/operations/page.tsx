@@ -33,10 +33,10 @@ export default function OperationsPage() {
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45 }}
-              className='overflow-hidden p-6 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'
+              className='glass-panel overflow-hidden p-6 rounded-2xl relative z-50'
             >
               <div className='pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full bg-teal-400/20 blur-3xl' />
-              <h1 className='flex items-center gap-3 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400 text-slate-50'>
+              <h1 className='flex items-center gap-3 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'>
                 <RadioTower className='h-7 w-7 text-teal-300' />
                 Operations Pulse
               </h1>
@@ -54,7 +54,7 @@ export default function OperationsPage() {
                   initial={{ opacity: 0, y: 18 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.07 }}
-                  className='p-5 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'
+                  className='glass-panel p-5 rounded-2xl relative z-50'
                 >
                   <p className='text-xs uppercase tracking-[0.12em] text-teal-200/90'>
                     {stream.id}
@@ -70,13 +70,13 @@ export default function OperationsPage() {
             </section>
 
             <section className='grid gap-4 xl:grid-cols-3'>
-              <article className='p-5 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
+              <article className='glass-panel p-5 rounded-2xl relative z-50'>
                 <h2 className='flex items-center gap-2 text-lg font-semibold text-slate-100'>
                   <Waves className='h-5 w-5 text-teal-300' /> Throughput Drift
                 </h2>
-                <div className='mt-4 h-40 rounded-xl border border-dashed border-teal-200/30 bg-gradient-to-br from-teal-500/10 to-slate-900/10' />
+                <div className='mt-4 h-40 aspect-[16/9] rounded-xl border border-dashed border-teal-200/30 bg-gradient-to-br from-teal-500/10 to-slate-900/10' />
               </article>
-              <article className='p-5 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
+              <article className='glass-panel p-5 rounded-2xl relative z-50'>
                 <h2 className='flex items-center gap-2 text-lg font-semibold text-slate-100'>
                   <Clock3 className='h-5 w-5 text-cyan-300' /> Queue Latency
                 </h2>
@@ -84,7 +84,7 @@ export default function OperationsPage() {
                   124 ms
                 </p>
               </article>
-              <article className='p-5 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'>
+              <article className='glass-panel p-5 rounded-2xl relative z-50'>
                 <h2 className='flex items-center gap-2 text-lg font-semibold text-slate-100'>
                   <CircleGauge className='h-5 w-5 text-emerald-300' /> Runtime
                   Budget

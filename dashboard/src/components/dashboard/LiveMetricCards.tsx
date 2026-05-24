@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useIoTStore, type FleetMetrics } from '@/engine'
+import { useShallow } from 'zustand/shallow'
 import GlassCard from '@/components/common/GlassCard'
 import Tilt from '@/components/common/Tilt'
 
@@ -40,9 +41,9 @@ const PANEL_SPRING = {
     scale: 1,
     transition: {
       type: 'spring',
-      stiffness: 210,
-      damping: 24,
-      mass: 0.76,
+      stiffness: 300,
+      damping: 30,
+      mass: 0.8,
     },
   },
 } as const
@@ -69,7 +70,7 @@ function resolveTrendIcon(trend: Trend): React.ReactNode {
   return <TrendingUp className='h-4 w-4' />
 }
 
-export function buildMetrics(m: FleetMetrics, unack: number): MetricItem[] {
+export function buildMetrics(m: Pick<FleetMetrics, 'activeTrucks' | 'avgTemperature' | 'warningAlerts' | 'criticalAlerts' | 'onTimeRate' | 'fuelEfficiency' | 'activeDrivers' | 'revenueToday' | 'totalDeliveries'>, unack: number): MetricItem[] {
   return [
     {
       title: 'Active Trucks',
@@ -147,7 +148,17 @@ export function buildMetrics(m: FleetMetrics, unack: number): MetricItem[] {
 }
 
 const LiveMetricCards = memo(function LiveMetricCards() {
-  const metrics = useIoTStore(s => s.metrics)
+  const metrics = useIoTStore(useShallow(s => ({
+    activeTrucks: s.metrics.activeTrucks,
+    avgTemperature: s.metrics.avgTemperature,
+    warningAlerts: s.metrics.warningAlerts,
+    criticalAlerts: s.metrics.criticalAlerts,
+    onTimeRate: s.metrics.onTimeRate,
+    fuelEfficiency: s.metrics.fuelEfficiency,
+    activeDrivers: s.metrics.activeDrivers,
+    revenueToday: s.metrics.revenueToday,
+    totalDeliveries: s.metrics.totalDeliveries,
+  })))
   const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
   const metricCards = buildMetrics(metrics, unacknowledgedAlerts)
 

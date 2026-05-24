@@ -338,8 +338,8 @@ function calculateTier(
  */
 export function detectDeviceTier(): DeviceTier {
   if (
-    typeof globalThis.window === 'undefined' ||
-    typeof globalThis.navigator === 'undefined'
+    globalThis.window === undefined ||
+    globalThis.navigator === undefined
   ) {
     return 'mid-range' // Safe default for SSR
   }

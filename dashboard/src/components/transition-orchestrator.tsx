@@ -2,7 +2,17 @@
 /* eslint-disable react/prop-types */
 
 import { useEffect, useRef } from 'react'
-import * as THREE from 'three'
+import {
+  Scene,
+  PerspectiveCamera,
+  WebGLRenderer,
+  IcosahedronGeometry,
+  MeshPhongMaterial,
+  Mesh,
+  PointLight,
+  AmbientLight,
+} from 'three'
+import type { Material } from 'three'
 import {
   useCinematicGateway,
   orchestrateTransition,
@@ -28,9 +38,9 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
   duration = 1200,
   onComplete,
 }) => {
-  const sceneRef = useRef<THREE.Scene | null>(null)
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null)
+  const sceneRef = useRef<Scene | null>(null)
+  const cameraRef = useRef<PerspectiveCamera | null>(null)
+  const rendererRef = useRef<WebGLRenderer | null>(null)
   const animationIdRef = useRef<number | null>(null)
   const startTimeRef = useRef<number | null>(null)
   const rafs = useRef<number[]>([])
@@ -49,8 +59,8 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
     ) as HTMLCanvasElement
     if (!canvas) return
 
-    const scene = new THREE.Scene()
-    const camera = new THREE.PerspectiveCamera(
+    const scene = new Scene()
+    const camera = new PerspectiveCamera(
       60,
       globalThis.window.innerWidth / globalThis.window.innerHeight,
       0.1,
@@ -58,7 +68,7 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
     )
     camera.position.set(0, 0, 0)
 
-    const renderer = new THREE.WebGLRenderer({
+    const renderer = new WebGLRenderer({
       canvas,
       antialias: true,
       alpha: true,
@@ -72,24 +82,24 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
     renderer.setClearColor(0x000000, 0.1)
 
     // Add subtle mesh to canvas (visual anchor)
-    const geometry = new THREE.IcosahedronGeometry(1, 4)
-    const material = new THREE.MeshPhongMaterial({
+    const geometry = new IcosahedronGeometry(1, 4)
+    const material = new MeshPhongMaterial({
       color: 0x00d4ff,
       emissive: 0x0099cc,
       wireframe: false,
       transparent: true,
       opacity: 0.15,
     })
-    const mesh = new THREE.Mesh(geometry, material)
+    const mesh = new Mesh(geometry, material)
     mesh.position.z = -30
     scene.add(mesh)
 
     // Lighting
-    const light = new THREE.PointLight(0xffffff, 1)
+    const light = new PointLight(0xffffff, 1)
     light.position.set(5, 5, 5)
     scene.add(light)
 
-    const ambientLight = new THREE.AmbientLight(0x404040)
+    const ambientLight = new AmbientLight(0x404040)
     scene.add(ambientLight)
 
     sceneRef.current = scene
@@ -117,7 +127,7 @@ export const TransitionOrchestrator: React.FC<TransitionOrchestratorProps> = ({
       mesh.rotation.y += 0.0008
 
       // Fade out mesh opacity with progress
-      ;(material as THREE.Material).opacity = 0.15 * (1 - progress)
+      ;(material as Material).opacity = 0.15 * (1 - progress)
 
       renderer.render(scene, camera)
 

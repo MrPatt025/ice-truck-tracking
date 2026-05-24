@@ -29,6 +29,7 @@ const OFFLINE_SYNC_TAG = 'ice-truck-fleet-sync'
 
 let isQueueFlushRunning = false
 let onlineListenerAttached = false
+let _onlineHandler: (() => void) | null = null
 
 function createStableMutationId(): string {
   const cryptoApi = globalThis.crypto
@@ -184,11 +185,21 @@ function ensureOfflineMutationSync(): void {
   if (!canUseBrowserStorage() || onlineListenerAttached) return
 
   onlineListenerAttached = true
-  globalThis.window.addEventListener('online', () => {
+  _onlineHandler = () => {
     void flushQueuedMutations()
-  })
+  }
+  globalThis.window.addEventListener('online', _onlineHandler)
 
   void flushQueuedMutations()
+}
+
+/** Remove the online listener to prevent memory leaks on unmount / HMR. */
+export function cleanupOfflineMutationSync(): void {
+  if (_onlineHandler && canUseBrowserStorage()) {
+    globalThis.window.removeEventListener('online', _onlineHandler)
+  }
+  _onlineHandler = null
+  onlineListenerAttached = false
 }
 
 function notifyBackendHealth(

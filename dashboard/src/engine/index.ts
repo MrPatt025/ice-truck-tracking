@@ -65,6 +65,21 @@ export {
   pushAlert,
   acknowledgeAlert,
   pushChartPoint,
+  // Atomic metric selectors
+  selectActiveTrucks,
+  selectIdleTrucks,
+  selectOfflineTrucks,
+  selectAvgTemperature,
+  selectTotalAlerts,
+  selectCriticalAlerts,
+  selectWarningAlerts,
+  selectAvgFuelLevel,
+  selectOnTimeRate,
+  selectTotalDeliveries,
+  selectRevenueToday,
+  selectActiveDrivers,
+  selectFuelEfficiency,
+  selectAvgSpeed,
 } from './store'
 export type { IoTStoreState } from './store'
 

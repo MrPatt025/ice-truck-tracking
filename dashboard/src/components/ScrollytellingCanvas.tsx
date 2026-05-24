@@ -3,7 +3,8 @@
 import React, { Suspense, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useScroll, motion, useTransform, MotionValue } from 'framer-motion'
-import * as THREE from 'three'
+import { MathUtils } from 'three'
+import type { GridHelper, DirectionalLight } from 'three'
 import GlassSpinner from '@/components/common/GlassSpinner'
 
 /* ----------------------------------------------------------------
@@ -27,8 +28,8 @@ function ScrollytellingGrid({
   gridSpin: MotionValue<number>
   lightIntensity: MotionValue<number>
 }>) {
-  const gridRef = useRef<THREE.GridHelper>(null)
-  const dirLightRef = useRef<THREE.DirectionalLight>(null)
+  const gridRef = useRef<GridHelper>(null)
+  const dirLightRef = useRef<DirectionalLight>(null)
   const timeRef = useRef(0)
   const { camera } = useThree()
 
@@ -44,19 +45,19 @@ function ScrollytellingGrid({
         gridLift.get() + Math.sin(timeRef.current * 0.15) * 0.08
     }
 
-    camera.position.z = THREE.MathUtils.damp(
+    camera.position.z = MathUtils.damp(
       camera.position.z,
       targetZ,
       4,
       delta
     )
-    camera.position.y = THREE.MathUtils.damp(
+    camera.position.y = MathUtils.damp(
       camera.position.y,
       targetY,
       4,
       delta
     )
-    camera.rotation.x = THREE.MathUtils.damp(
+    camera.rotation.x = MathUtils.damp(
       camera.rotation.x,
       targetRotX,
       4,
@@ -65,7 +66,7 @@ function ScrollytellingGrid({
 
     if (dirLightRef.current) {
       const targetIntensity = lightIntensity.get()
-      dirLightRef.current.intensity = THREE.MathUtils.damp(
+      dirLightRef.current.intensity = MathUtils.damp(
         dirLightRef.current.intensity,
         targetIntensity,
         4,

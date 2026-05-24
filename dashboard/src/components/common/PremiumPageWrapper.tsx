@@ -16,8 +16,6 @@ type PremiumPageWrapperProps = Readonly<{
 const SVG_XMLNS = 'http' + '://www.w3.org/2000/svg'
 const BG_NOISE_IMAGE = `url("data:image/svg+xml,%3Csvg xmlns='${encodeURIComponent(SVG_XMLNS)}' width='180' height='180'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23noise)'/%3E%3C/svg%3E")`
 const SURFACE_NOISE_IMAGE = `url("data:image/svg+xml,%3Csvg xmlns='${encodeURIComponent(SVG_XMLNS)}' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E")`
-const PREMIUM_GLASS_CLASS =
-  'bg-slate-900/30 backdrop-blur-[40px] border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.6)] saturate-150 relative z-40 overflow-hidden text-slate-100'
 
 const PremiumPageWrapper = memo(function PremiumPageWrapper({
   children,
@@ -62,10 +60,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
           className='pointer-events-none absolute -top-28 left-1/2 -z-10 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-300/10 blur-[120px]'
         />
         <div
-          className={cn(
-            mode === 'glass' ? `${glassPanel} ${PREMIUM_GLASS_CLASS}` : '',
-            contentClassName
-          )}
+          className={cn(mode === 'glass' ? glassPanel : '', contentClassName)}
         >
           {mode === 'glass' ? (
             <>
@@ -91,7 +86,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
               <div className='premium-visual premium-frame pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-cyan-200/20 shadow-[inset_0_0_35px_-20px_rgba(56,189,248,.95)]' />
             </>
           ) : null}
-          <div className='relative z-50 antialiased [&_h1]:text-4xl [&_h1]:font-extrabold [&_h1]:tracking-tight [&_h1]:bg-clip-text [&_h1]:text-transparent [&_h1]:bg-gradient-to-r [&_h1]:from-white [&_h1]:to-slate-400 [&_h2]:text-3xl [&_h2]:font-semibold [&_h2]:tracking-tight'>
+          <div className='headline-gradient relative z-10 antialiased [&_h1]:text-4xl [&_h1]:font-extrabold [&_h1]:tracking-tight [&_h2]:text-3xl [&_h2]:font-semibold [&_h2]:tracking-tight'>
             {children}
           </div>
         </div>

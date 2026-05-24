@@ -317,7 +317,7 @@ export default function LandingPage() {
         initial={false}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.45, ease: EASE_STANDARD }}
-        className='glass-panel relative z-[999] sticky top-0 border-b border-cyan-200/20 bg-slate-950/65 backdrop-blur-2xl shadow-[0_20px_70px_-35px_rgba(34,211,238,0.5)] transform-gpu'
+        className='glass-panel relative z-20 sticky top-0 border-b border-cyan-200/20 bg-slate-950/65 shadow-[0_20px_70px_-35px_rgba(34,211,238,0.5)] transform-gpu'
       >
         <div className='mx-auto flex h-16 max-w-7xl items-center justify-between px-6'>
           <div className='flex items-center gap-2'>
@@ -663,12 +663,12 @@ export default function LandingPage() {
       <motion.div
         aria-hidden='true'
         style={{ opacity: veilSolidOpacity }}
-        className='pointer-events-none fixed inset-0 z-[61] bg-slate-950'
+        className='pointer-events-none fixed inset-0 z-[60] bg-slate-950'
       />
       <motion.div
         aria-hidden='true'
         style={{ opacity: veilOpacity }}
-        className='pointer-events-none fixed inset-0 z-[62] bg-[radial-gradient(circle_at_50%_50%,rgba(125,211,252,0.18),rgba(2,6,23,0.98)_65%)]'
+        className='pointer-events-none fixed inset-0 z-[60] bg-[radial-gradient(circle_at_50%_50%,rgba(125,211,252,0.18),rgba(2,6,23,0.98)_65%)]'
       />
     </motion.div>
   )

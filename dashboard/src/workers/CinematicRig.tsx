@@ -129,13 +129,23 @@ function AdaptiveLightingEnvironment({
 }: Readonly<{ enabled: boolean }>) {
   const { gl, scene } = useThree()
 
+  const prevFogTint = React.useRef(Number.NaN)
+  const prevTemp = React.useRef(Number.NaN)
+
   useFrame(() => {
     if (!enabled) return
-    const frostBias = Math.max(0, Math.min(1, runtimeState.telemetry.fogTint))
-    const thermalBias = Math.max(
-      0,
-      Math.min(1, (-runtimeState.telemetry.temperatureC + 6) / 18)
+    const { fogTint, temperatureC } = runtimeState.telemetry
+    // Dirty-flag: skip if inputs unchanged (ε = 0.001)
+    if (
+      Math.abs(fogTint - prevFogTint.current) < 0.001 &&
+      Math.abs(temperatureC - prevTemp.current) < 0.001
     )
+      return
+    prevFogTint.current = fogTint
+    prevTemp.current = temperatureC
+
+    const frostBias = Math.max(0, Math.min(1, fogTint))
+    const thermalBias = Math.max(0, Math.min(1, (-temperatureC + 6) / 18))
     const targetEnvIntensity = 0.82 + frostBias * 0.2 + thermalBias * 0.12
     scene.environmentIntensity +=
       (targetEnvIntensity - scene.environmentIntensity) * 0.08
@@ -635,12 +645,28 @@ function ColdFogParticles() {
     }
   }, [geometry, ColdFogShaderMaterial])
 
+  const prevFogDensity = React.useRef(Number.NaN)
+  const prevFogTemp = React.useRef(Number.NaN)
+  const prevFogTint = React.useRef(Number.NaN)
+
   useFrame(({ clock }, delta) => {
     if (!pointsRef.current || !shaderRef.current) return
 
     pointsRef.current.rotation.y += delta * 0.08
     const { telemetry } = runtimeState
     shaderRef.current.uniforms.uTime.value = clock.elapsedTime
+
+    // Dirty-flag: skip uniform updates if telemetry unchanged (ε = 0.001)
+    if (
+      Math.abs(telemetry.fogDensity - prevFogDensity.current) < 0.001 &&
+      Math.abs(telemetry.temperatureC - prevFogTemp.current) < 0.001 &&
+      Math.abs(telemetry.fogTint - prevFogTint.current) < 0.001
+    )
+      return
+    prevFogDensity.current = telemetry.fogDensity
+    prevFogTemp.current = telemetry.temperatureC
+    prevFogTint.current = telemetry.fogTint
+
     shaderRef.current.uniforms.uDensity.value = telemetry.fogDensity
     shaderRef.current.uniforms.uTemp.value = telemetry.temperatureC
 
@@ -712,9 +738,14 @@ function SelectionPulseHalo() {
 
   useFrame(({ clock }, delta) => {
     if (!haloMaterialRef.current) return
-    haloMaterialRef.current.uniforms.uTime.value = clock.elapsedTime
     const target = isTruckSelected ? 1 : 0
     const current = haloMaterialRef.current.uniforms.uIntensity.value
+    // Dirty-flag: skip if intensity has converged to target (ε = 0.001)
+    if (Math.abs(current - target) < 0.001) {
+      haloMaterialRef.current.uniforms.uIntensity.value = target
+      return
+    }
+    haloMaterialRef.current.uniforms.uTime.value = clock.elapsedTime
     haloMaterialRef.current.uniforms.uIntensity.value =
       current + (target - current) * Math.min(1, delta * 6)
   })
@@ -734,10 +765,15 @@ function SelectionPulseHalo() {
 function MapModeTransitionVeil() {
   const materialRef = React.useRef<MeshBasicMaterial | null>(null)
 
+  const prevBlend = React.useRef(Number.NaN)
+
   useFrame(() => {
-    if (materialRef.current) {
-      materialRef.current.opacity = runtimeState.mapMode.blend * 0.42
-    }
+    if (!materialRef.current) return
+    const blend = runtimeState.mapMode.blend
+    // Dirty-flag: skip if blend value unchanged (ε = 0.0001)
+    if (Math.abs(blend - prevBlend.current) < 0.0001) return
+    prevBlend.current = blend
+    materialRef.current.opacity = blend * 0.42
   })
 
   return (
