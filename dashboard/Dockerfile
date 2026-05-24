@@ -25,7 +25,7 @@ COPY dashboard/package.json ./dashboard/
 
 # Install the full workspace with retries so transient registry failures don't fail the image build.
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  sh -ec 'for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts && exit 0; \
+  sh -ec 'pnpm config set fetch-retries 5 && pnpm config set fetch-timeout 600000 && pnpm config set network-concurrency 1; for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts && exit 0; \
   echo "pnpm install failed (attempt ${attempt}), retrying..." >&2; \
   if [ "$attempt" -eq 3 ]; then exit 1; fi; sleep $((attempt * 5)); done'
 

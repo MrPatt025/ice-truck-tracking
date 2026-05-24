@@ -1,0 +1,8 @@
+- generic [active] [ref=e1]:
+  - region "Primary content" [ref=e4]:
+    - main [ref=e5]:
+      - generic [ref=e9]:
+        - img [ref=e10]
+        - paragraph [ref=e12]: Initializing IoT Engine...
+  - button "Open Next.js Dev Tools" [ref=e18] [cursor=pointer]:
+    - img [ref=e19]

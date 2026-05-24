@@ -91,7 +91,9 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
               <div className='premium-visual premium-frame pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-cyan-200/20 shadow-[inset_0_0_35px_-20px_rgba(56,189,248,.95)]' />
             </>
           ) : null}
-          <div className='relative z-50 antialiased'>{children}</div>
+          <div className='relative z-50 antialiased [&_h1]:text-4xl [&_h1]:font-extrabold [&_h1]:tracking-tight [&_h1]:bg-clip-text [&_h1]:text-transparent [&_h1]:bg-gradient-to-r [&_h1]:from-white [&_h1]:to-slate-400 [&_h2]:text-3xl [&_h2]:font-semibold [&_h2]:tracking-tight'>
+            {children}
+          </div>
         </div>
       </main>
     </section>

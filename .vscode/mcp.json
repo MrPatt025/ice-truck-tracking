@@ -22,21 +22,15 @@
 			],
 			"env": {
 				"POSTMAN_API_KEY": "${input:POSTMAN_API_KEY}"
-			},
-			"gallery": "https://api.mcp.github.com",
-			"version": "2.8.7"
+      }
 		},
 		"com.figma.mcp/mcp": {
 			"type": "http",
-			"url": "https://mcp.figma.com/mcp",
-			"gallery": "https://api.mcp.github.com",
-			"version": "1.0.3"
+      "url": "https://mcp.figma.com/mcp"
 		},
 		"com.vercel/vercel-mcp": {
 			"type": "http",
-			"url": "https://mcp.vercel.com",
-			"gallery": "https://api.mcp.github.com",
-			"version": "0.0.3"
+      "url": "https://mcp.vercel.com"
 		},
 		"io.github.SonarSource/sonarqube-mcp-server": {
 			"type": "stdio",
@@ -57,18 +51,14 @@
 				"SONARQUBE_TOKEN": "${input:SONARQUBE_TOKEN}",
 				"SONARQUBE_ORG": "${input:SONARQUBE_ORG}",
 				"SONARQUBE_URL": "${input:SONARQUBE_URL}"
-			},
-			"gallery": "https://api.mcp.github.com",
-			"version": "1.12.0"
+      }
 		},
 		"io.github.vercel/next-devtools-mcp": {
 			"type": "stdio",
 			"command": "npx",
 			"args": [
 				"next-devtools-mcp@0.3.6"
-			],
-			"gallery": "https://api.mcp.github.com",
-			"version": "0.3.6"
+      ]
 		},
 		"io.github.github/github-mcp-server": {
 			"type": "stdio",
@@ -80,15 +70,11 @@
 				"-e",
 				"GITHUB_PERSONAL_ACCESS_TOKEN=${input:token}",
 				"ghcr.io/github/github-mcp-server:1.0.4"
-			],
-			"gallery": "https://api.mcp.github.com",
-			"version": "1.0.4"
+      ]
 		},
 		"com.stackoverflow.mcp/mcp": {
 			"type": "http",
-			"url": "https://mcp.stackoverflow.com",
-			"gallery": "https://api.mcp.github.com",
-			"version": "1.1.3"
+      "url": "https://mcp.stackoverflow.com"
 		},
 		"io.github.ChromeDevTools/chrome-devtools-mcp": {
 			"type": "stdio",
@@ -97,27 +83,21 @@
 				"--registry",
 				"https://registry.npmjs.org",
 				"chrome-devtools-mcp@0.25.0"
-			],
-			"gallery": "https://api.mcp.github.com",
-			"version": "0.25.0"
+      ]
 		},
 		"microsoft/playwright-mcp": {
 			"type": "stdio",
 			"command": "npx",
 			"args": [
 				"@playwright/mcp@latest"
-			],
-			"gallery": "https://api.mcp.github.com",
-			"version": "0.0.1-seed"
+      ]
 		},
 		"microsoft/markitdown": {
 			"type": "stdio",
 			"command": "uvx",
 			"args": [
 				"markitdown-mcp@0.0.1a4"
-			],
-			"gallery": "https://api.mcp.github.com",
-			"version": "1.0.0"
+      ]
 		}
 	},
 	"inputs": [
