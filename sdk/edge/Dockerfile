@@ -23,13 +23,16 @@ COPY sdk/mobile/package.json ./sdk/mobile/
 
 FROM base AS deps
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  sh -ec 'for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts && exit 0; \
-  echo "pnpm install failed (attempt ${attempt}), retrying..." >&2; \
-  if [ "$attempt" -eq 3 ]; then exit 1; fi; sleep $((attempt * 5)); done'
-  RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    sh -ec 'pnpm config set fetch-retries 5 && pnpm config set fetch-timeout 600000 && pnpm config set network-concurrency 1; for attempt in 1 2 3; do pnpm install --frozen-lockfile --ignore-scripts && exit 0; \
+  sh -ec '\
+  pnpm config set fetch-retries 5 && \
+  pnpm config set fetch-timeout 600000 && \
+  pnpm config set network-concurrency 1; \
+  for attempt in 1 2 3; do \
+    pnpm install --frozen-lockfile --ignore-scripts && exit 0; \
     echo "pnpm install failed (attempt ${attempt}), retrying..." >&2; \
-    if [ "$attempt" -eq 3; then exit 1; fi; sleep $((attempt * 5)); done'
+    if [ "$attempt" -eq 3 ]; then exit 1; fi; \
+    sleep $((attempt * 5)); \
+  done'
 COPY sdk/edge/tsconfig.json ./sdk/edge/
 COPY sdk/edge/src ./sdk/edge/src
 

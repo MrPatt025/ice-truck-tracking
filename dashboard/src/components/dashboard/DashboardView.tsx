@@ -172,11 +172,12 @@ const PremiumSystemStatusBanner = dynamic(
 )
 
 const REFRESH_SPEED_VALUES = ['fast', 'normal', 'slow'] as const
+const REFRESH_SPEED_SET = new Set<string>(REFRESH_SPEED_VALUES)
 
 function isRefreshSpeed(
   value: string
 ): value is (typeof REFRESH_SPEED_VALUES)[number] {
-  return (REFRESH_SPEED_VALUES as readonly string[]).includes(value)
+  return REFRESH_SPEED_SET.has(value)
 }
 
 const DASHBOARD_TITLE = 'Ice Truck Tracking Dashboard | Mission Control'
@@ -214,14 +215,21 @@ const usePwaInstallPrompt = (mounted: boolean): PwaInstallPromptState => {
     )
     const updateStandaloneState = () => {
       const navigatorStandalone =
-        (globalThis.navigator as Navigator & { standalone?: boolean })
-          .standalone === true
+        Reflect.get(globalThis.navigator, 'standalone') === true
       setIsStandalone(mediaQuery.matches || navigatorStandalone)
     }
 
+    const isBeforeInstallPromptEvent = (
+      event: Event
+    ): event is BeforeInstallPromptEvent =>
+      typeof (event as BeforeInstallPromptEvent).prompt === 'function' &&
+      'userChoice' in event
+
     const onBeforeInstallPrompt = (event: Event) => {
       event.preventDefault()
-      setDeferredInstallPrompt(event as BeforeInstallPromptEvent)
+      if (isBeforeInstallPromptEvent(event)) {
+        setDeferredInstallPrompt(event)
+      }
     }
 
     updateStandaloneState()
@@ -241,7 +249,7 @@ const usePwaInstallPrompt = (mounted: boolean): PwaInstallPromptState => {
   }, [mounted])
 
   const installApp = useCallback(async () => {
-    if (!deferredInstallPrompt || installingApp) return
+    if (deferredInstallPrompt === null || installingApp) return
 
     try {
       setInstallingApp(true)
@@ -256,7 +264,7 @@ const usePwaInstallPrompt = (mounted: boolean): PwaInstallPromptState => {
   }, [deferredInstallPrompt, installingApp])
 
   return {
-    canInstallApp: mounted && !isStandalone && deferredInstallPrompt !== null,
+    canInstallApp: mounted && deferredInstallPrompt !== null && isStandalone === false,
     installingApp,
     installApp,
   }

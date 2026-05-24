@@ -20,6 +20,7 @@ export default [
             '**/playwright/.cache/**',
             '**/playwright-errors.txt',
             '**/playwright-results*.txt',
+            '**/*.report.html',
             'pnpm-lock.yaml',
             'eslint.config.*',
             'lint-staged.config.*',
