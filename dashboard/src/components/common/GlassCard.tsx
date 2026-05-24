@@ -36,8 +36,9 @@ const GlassCard = memo(function GlassCard({
         <div
           className={`relative h-full rounded-[calc(1.5rem-2px)] bg-slate-900/70 backdrop-blur-xl backdrop-saturate-150 backdrop-brightness-110 ring-1 ring-white/20 transition-all duration-500 group-hover:ring-white/30 ${className}`}
           style={{
-            background:
-              'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(30, 41, 59, 0.65) 100%), rgba(15, 23, 42, 0.5)',
+            backgroundImage:
+              'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(30, 41, 59, 0.65) 100%)',
+            backgroundColor: 'rgba(15, 23, 42, 0.5)',
             backdropFilter: 'blur(12px) saturate(150%) brightness(110%)',
           }}
         >

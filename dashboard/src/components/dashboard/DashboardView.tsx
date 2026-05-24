@@ -46,9 +46,6 @@ import {
   ThermometerSun,
   Bell,
   Activity,
-  ArrowUpRight,
-  ArrowDownRight,
-  TrendingUp,
   Maximize2,
   X,
   Grid3X3,
@@ -59,11 +56,7 @@ import {
   CheckCircle2,
   Settings,
   Download,
-  Fuel,
-  Package,
-  Users,
   DollarSign,
-  Search,
   Wifi,
   WifiOff,
   Server,
@@ -71,7 +64,6 @@ import {
   Clock,
   Pause,
   Minimize2,
-  type LucideIcon,
 } from 'lucide-react'
 
 // ─── IoT Engine imports (zero-render architecture) ─────────────
@@ -79,7 +71,6 @@ import {
   useIoTStore,
   getAlerts,
   acknowledgeAlert as ackAlert,
-  type FleetMetrics,
   type Theme,
   type TelemetryAlert,
   bootEngine,
@@ -91,23 +82,29 @@ import {
   mountChart,
   unmountChart,
   getPerfOverlay,
-  getAdaptiveController,
 } from '@/engine'
 import { useTransitionStore } from '@/stores/transitionStore'
 import type { StatusIssue } from '@/components/common/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
 import { dispatchBackendHealthEvent } from '@/lib/healthEvents'
 import { resolveApiBaseV1 } from '@/lib/backendUrl'
-import { secureRandomRange } from '@/lib/secureRandom'
 import { GlobalErrorBoundary } from '@/components/common/GlobalErrorBoundary'
+import GlassCard from '@/components/common/GlassCard'
+import AnimatedPings from '@/components/AnimatedPings'
 import MapModeToggle from '@/components/MapModeToggle'
 import OfflineBanner from '@/components/OfflineBanner'
+import SearchToolbar from '@/components/dashboard/SearchToolbar'
+import SystemStatus from '@/components/dashboard/SystemStatus'
+import LiveMetricCards, {
+  buildMetrics,
+} from '@/components/dashboard/LiveMetricCards'
+import OperationsPulsePanel from '@/components/dashboard/OperationsPulsePanel'
 
 const API_BASE = resolveApiBaseV1()
 const E2E_LIGHT_MODE = process.env.NEXT_PUBLIC_E2E_LIGHT === 'true'
 
 const GlassPulseFallback = () => (
-  <div className='h-9 w-28 animate-pulse rounded-xl border border-white/10 bg-white/10 shadow-[0_16px_38px_-20px_rgba(56,189,248,0.85)]' />
+  <div className='h-9 min-h-[2.25rem] w-28 min-w-[7rem] animate-pulse rounded-xl border border-white/10 bg-white/10 shadow-[0_16px_38px_-20px_rgba(56,189,248,0.85)]' />
 )
 
 const WebGLCanvasSkeleton = () => (
@@ -145,16 +142,6 @@ const PANEL_SPRING: Variants = {
   },
 }
 
-const METRIC_CARD_VARIANT: Variants = {
-  hidden: { opacity: 0, y: 20, scale: 0.96 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.5, ease: [0.2, 0.88, 0.25, 1] },
-  },
-}
-
 const FpsTargetMonitor = dynamic(
   () => import('@/components/FpsTargetMonitor'),
   {
@@ -183,7 +170,6 @@ function isRefreshSpeed(
 const DASHBOARD_TITLE = 'Ice Truck Tracking Dashboard | Mission Control'
 
 // ─── Types ─────────────────────────────────────────────────────
-type Trend = 'up' | 'down' | 'stable'
 type Fullscreen = null | 'revenue' | 'fleet' | 'temp' | 'alerts' | 'performance'
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>
@@ -194,11 +180,6 @@ type PwaInstallPromptState = Readonly<{
   canInstallApp: boolean
   installingApp: boolean
   installApp: () => Promise<void>
-}>
-
-type MapModeControls = Readonly<{
-  isLiveMode: boolean
-  setMapMode: (mode: 'live' | 'historical') => void
 }>
 
 const usePwaInstallPrompt = (mounted: boolean): PwaInstallPromptState => {
@@ -270,7 +251,7 @@ const usePwaInstallPrompt = (mounted: boolean): PwaInstallPromptState => {
   }
 }
 
-const useMapModeControls = (showHeatmap: boolean): MapModeControls => {
+const useMapModeControls = (showHeatmap: boolean) => {
   const setMapMode = useCallback((mode: 'live' | 'historical') => {
     const shouldShowHeatmap = mode === 'historical'
     if (useIoTStore.getState().showHeatmap === shouldShowHeatmap) return
@@ -475,24 +456,6 @@ function resolveApiHealthLabel(apiHealthy: boolean | null): string {
   return 'API Checking'
 }
 
-function resolveConnectionIntent(status: string): 'ok' | 'warn' | 'info' {
-  if (status === 'connected') return 'ok'
-  if (status === 'reconnecting') return 'warn'
-  return 'info'
-}
-
-function resolveConnectionDot(status: string): string {
-  if (status === 'connected') return 'bg-emerald-400 animate-pulse'
-  if (status === 'reconnecting') return 'bg-amber-400 animate-pulse'
-  return 'bg-slate-400'
-}
-
-function resolveConnectionLabel(status: string): string {
-  if (status === 'connected') return 'Live Data'
-  if (status === 'reconnecting') return 'Reconnecting...'
-  return 'Simulation Mode'
-}
-
 function resolveApiHealthy(
   backendStatus: 'healthy' | 'degraded' | 'unknown'
 ): boolean | null {
@@ -558,24 +521,6 @@ function buildStatusIssues({
   return issues
 }
 
-function resolveStatusText(paused: boolean, lastUpdate: Date | null): string {
-  if (paused) return 'Simulation paused'
-  if (lastUpdate) return `Last updated ${lastUpdate.toLocaleTimeString()}`
-  return 'All systems operational'
-}
-
-function resolveTrendColor(trend: Trend): string {
-  if (trend === 'up') return 'text-emerald-400'
-  if (trend === 'down') return 'text-rose-400'
-  return 'text-slate-400'
-}
-
-function resolveTrendIcon(trend: Trend) {
-  if (trend === 'up') return <ArrowUpRight className='h-4 w-4' />
-  if (trend === 'down') return <ArrowDownRight className='h-4 w-4' />
-  return <TrendingUp className='h-4 w-4' />
-}
-
 function resolveAlertBg(level: string): string {
   if (level === 'critical') return 'bg-red-500/10 ring-red-500/30'
   if (level === 'warning') return 'bg-amber-500/10 ring-amber-500/30'
@@ -607,39 +552,6 @@ const FULLSCREEN_TITLES: Record<string, string> = {
   performance: 'Performance Metrics',
 }
 
-/* ============== UI Components (React — lightweight) ============ */
-function PingLayer({ count = 12 }: Readonly<{ count?: number }>) {
-  const [dots, setDots] = React.useState<
-    { left: string; top: string; delay: number }[]
-  >([])
-  React.useEffect(() => {
-    setDots(
-      Array.from({ length: count }, (_, i) => ({
-        left: `${secureRandomRange(20, 80)}%`,
-        top: `${secureRandomRange(20, 80)}%`,
-        delay: i * 0.3,
-      }))
-    )
-  }, [count])
-  if (!dots.length) return null
-  return (
-    <div className='absolute inset-0 opacity-60'>
-      {dots.map(d => (
-        <div
-          key={`${d.left}-${d.top}`}
-          className='absolute animate-ping'
-          style={{
-            left: d.left,
-            top: d.top,
-            animationDelay: `${d.delay}s`,
-            animationDuration: '3s',
-          }} // NOSONAR — dynamic positions
-        />
-      ))}
-    </div>
-  )
-}
-
 const Pill = memo(
   ({
     children,
@@ -666,161 +578,6 @@ const Pill = memo(
     return <span className={base}>{children}</span>
   }
 )
-
-const GlassCard = memo(
-  ({
-    children,
-    accent = 'from-violet-400/30 via-purple-400/20 to-cyan-400/30',
-    className = '',
-    onClick,
-    layoutId,
-  }: Readonly<{
-    children: React.ReactNode
-    accent?: string
-    className?: string
-    onClick?: () => void
-    layoutId?: string
-  }>) => {
-    const inner = (
-      <motion.div
-        layout
-        layoutId={layoutId}
-        transition={{ type: 'spring', damping: 30, stiffness: 230 }}
-      >
-        <div
-          className={`group glass-panel relative rounded-3xl p-[2px] bg-gradient-to-br ${accent} transition-all duration-500 hover:scale-[1.02] will-change-transform overflow-hidden`}
-          style={{
-            boxShadow:
-              '0 0 40px -10px rgba(139, 92, 246, 0.3), 0 0 20px -5px rgba(34, 211, 238, 0.2)',
-          }}
-        >
-          {/* Enhanced glassmorphism background */}
-          <div
-            className={`relative rounded-[calc(1.5rem-2px)] bg-slate-900/70 backdrop-blur-xl backdrop-saturate-150 backdrop-brightness-110 ring-1 ring-white/20 transition-all duration-500 group-hover:ring-white/30 ${className}`}
-            style={{
-              background:
-                'linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(30, 41, 59, 0.65) 100%), rgba(15, 23, 42, 0.5)',
-              backdropFilter: 'blur(12px) saturate(150%) brightness(110%)',
-            }}
-          >
-            {/* Multi-layer radial glow backdrop */}
-            <div className='pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.25),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.2),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]' />
-
-            {/* Noise texture overlay */}
-            <div
-              className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-[0.03] mix-blend-overlay'
-              style={{
-                backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="${'http' + '://www.w3.org/2000/svg'}" width="100" height="100"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" result="noise"/></filter><rect width="100" height="100" fill="white" filter="url(%23n)"/></svg>')`,
-                backgroundSize: '50px 50px',
-              }}
-            />
-
-            {/* Shimmer effect with enhanced animation */}
-            <div className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.15),transparent)] bg-[length:200%_100%] animate-shimmer' />
-
-            {/* Enhanced border glow effect */}
-            <div className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[linear-gradient(135deg,rgba(139,92,246,.1),transparent,rgba(34,211,238,.1))]' />
-
-            {/* Primary content */}
-            <div className='relative'>{children}</div>
-          </div>
-        </div>
-      </motion.div>
-    )
-    if (onClick) {
-      return (
-        <button
-          type='button'
-          className='cursor-pointer text-left w-full border-0 bg-transparent p-0'
-          onClick={onClick}
-        >
-          {inner}
-        </button>
-      )
-    }
-    return inner
-  }
-)
-
-const Tilt = memo(({ children }: Readonly<{ children: React.ReactNode }>) => {
-  const ref = useRef<HTMLDivElement>(null)
-  const mouseX = useRef(0)
-  const mouseY = useRef(0)
-  const tiltX = useRef(0)
-  const tiltY = useRef(0)
-  const isHovered = useRef(false)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-
-    const onMove = (e: MouseEvent) => {
-      if (!isHovered.current) return
-
-      const rect = el.getBoundingClientRect()
-      const x = (e.clientX - rect.left) / rect.width
-      const y = (e.clientY - rect.top) / rect.height
-
-      // Target rotation values (0-8 degrees range, centered)
-      const targetTiltX = (0.5 - y) * 10
-      const targetTiltY = (x - 0.5) * 10
-
-      // Smooth interpolation for fluid motion
-      mouseX.current = x
-      mouseY.current = y
-      tiltX.current = targetTiltX
-      tiltY.current = targetTiltY
-
-      // Apply transform with smooth easing
-      el.style.transform = `perspective(1000px) rotateX(${targetTiltX}deg) rotateY(${targetTiltY}deg) translateZ(20px) scale3d(1.01, 1.01, 1.01)`
-    }
-
-    const onEnter = () => {
-      if (el) {
-        isHovered.current = true
-        el.style.transition = 'transform 0.3s cubic-bezier(0.23, 1, 0.320, 1)'
-      }
-    }
-
-    const onLeave = () => {
-      if (el) {
-        isHovered.current = false
-        el.style.transition = 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
-        el.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale3d(1, 1, 1)`
-        tiltX.current = 0
-        tiltY.current = 0
-      }
-    }
-
-    el.addEventListener('mousemove', onMove)
-    el.addEventListener('mouseenter', onEnter)
-    el.addEventListener('mouseleave', onLeave)
-
-    return () => {
-      el.removeEventListener('mousemove', onMove)
-      el.removeEventListener('mouseenter', onEnter)
-      el.removeEventListener('mouseleave', onLeave)
-    }
-  }, [])
-
-  return (
-    <div
-      ref={ref}
-      className='will-change-transform'
-      style={{ perspective: '1000px' }}
-    >
-      {children}
-    </div>
-  )
-})
-
-const ClientOnlyText: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-  return <span suppressHydrationWarning>{mounted ? children : null}</span>
-}
 
 /* ============== Imperative Chart Canvas Wrapper ============== */
 /** Thin React wrapper that provides a <canvas> and calls mountChart/unmountChart */
@@ -865,93 +622,6 @@ const CanvasChart = memo(
 )
 
 /* ============== Metric Card Item ============== */
-interface MetricItem {
-  title: string
-  value: string
-  change: string
-  trend: Trend
-  icon: LucideIcon
-  accent: string
-  detail: string
-}
-
-function buildMetrics(m: FleetMetrics, unack: number): MetricItem[] {
-  return [
-    {
-      title: 'Active Trucks',
-      value: String(m.activeTrucks || 55),
-      change: '+6.1%',
-      trend: 'up',
-      icon: Truck,
-      accent: 'from-cyan-400 via-blue-400 to-indigo-500',
-      detail: `Fleet Utilization: ${m.activeTrucks ? Math.round((m.activeTrucks / 55) * 100) : 87}%`,
-    },
-    {
-      title: 'Avg Cargo Temp',
-      value: `${(m.avgTemperature || -4.2).toFixed(1)}°C`,
-      change: `${m.avgTemperature > 0 ? '+' : ''}${(m.avgTemperature || -4.2).toFixed(1)}°C`,
-      trend: 'up',
-      icon: ThermometerSun,
-      accent: 'from-fuchsia-400 via-violet-400 to-purple-500',
-      detail: 'Within target range',
-    },
-    {
-      title: 'Open Alerts',
-      value: String(unack),
-      change: `-${m.warningAlerts || 0}`,
-      trend: 'down',
-      icon: Bell,
-      accent: 'from-amber-400 via-orange-400 to-rose-500',
-      detail: `${m.criticalAlerts || 0} Critical, ${m.warningAlerts || 0} Warning`,
-    },
-    {
-      title: 'On-time Rate',
-      value: `${(m.onTimeRate || 96.8).toFixed(1)}%`,
-      change: '+1.4%',
-      trend: 'up',
-      icon: Activity,
-      accent: 'from-emerald-400 via-teal-400 to-green-500',
-      detail: 'Industry leading',
-    },
-    {
-      title: 'Fuel Efficiency',
-      value: `${(m.fuelEfficiency || 8.2).toFixed(1)} MPG`,
-      change: '+0.4',
-      trend: 'up',
-      icon: Fuel,
-      accent: 'from-lime-400 via-green-400 to-emerald-500',
-      detail: 'Above target',
-    },
-    {
-      title: 'Active Drivers',
-      value: String(m.activeDrivers || 48),
-      change: '+3',
-      trend: 'up',
-      icon: Users,
-      accent: 'from-pink-400 via-rose-400 to-red-500',
-      detail: `${m.activeDrivers ? Math.round((m.activeDrivers / 55) * 100) : 87}% of fleet`,
-    },
-    {
-      title: 'Revenue Today',
-      value: `$${((m.revenueToday || 48200) / 1000).toFixed(1)}K`,
-      change: '+12.3%',
-      trend: 'up',
-      icon: DollarSign,
-      accent: 'from-yellow-400 via-amber-400 to-orange-500',
-      detail: `Projected: $${(((m.revenueToday || 48200) * 1.08) / 1000).toFixed(0)}K`,
-    },
-    {
-      title: 'Deliveries',
-      value: String(m.totalDeliveries || 234),
-      change: '+18',
-      trend: 'up',
-      icon: Package,
-      accent: 'from-indigo-400 via-purple-400 to-pink-500',
-      detail: '96% success rate',
-    },
-  ]
-}
-
 const UnacknowledgedAlertsBadge = memo(function UnacknowledgedAlertsBadge() {
   const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
   if (unacknowledgedAlerts <= 0) return null
@@ -971,119 +641,6 @@ const UnacknowledgedAlertsText = memo(function UnacknowledgedAlertsText() {
 const ActiveTrucksHeadline = memo(function ActiveTrucksHeadline() {
   const activeTrucks = useIoTStore(s => s.metrics.activeTrucks)
   return <>{activeTrucks || 55} Active Trucks</>
-})
-
-const LiveMetricCards = memo(function LiveMetricCards() {
-  const metrics = useIoTStore(s => s.metrics)
-  const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
-  const metricCards = buildMetrics(metrics, unacknowledgedAlerts)
-
-  return (
-    <motion.section
-      variants={PANEL_SPRING}
-      className='grid auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8'
-    >
-      {metricCards.map(m => (
-        <motion.div
-          key={m.title}
-          variants={METRIC_CARD_VARIANT}
-          className='h-full'
-        >
-          <Tilt>
-            <GlassCard accent={m.accent}>
-              <div className='h-full min-h-[11.5rem] p-4 sm:p-5'>
-                <div className='mb-3 flex items-center justify-between'>
-                  <span className='text-xs font-bold uppercase tracking-widest text-slate-400'>
-                    {m.title}
-                  </span>
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${m.accent} shadow-lg`}
-                  >
-                    <m.icon className='h-5 w-5 text-white' />
-                  </div>
-                </div>
-                <p className='text-3xl font-black tracking-tighter leading-none tabular-nums sm:text-4xl'>
-                  {m.value}
-                </p>
-                <div className='mt-3 flex items-center gap-2'>
-                  <span
-                    className={`flex items-center gap-1 text-xs font-bold ${resolveTrendColor(m.trend)}`}
-                  >
-                    {resolveTrendIcon(m.trend)}
-                    {m.change}
-                  </span>
-                  <span className='text-[11px] text-slate-500'>{m.detail}</span>
-                </div>
-              </div>
-            </GlassCard>
-          </Tilt>
-        </motion.div>
-      ))}
-    </motion.section>
-  )
-})
-
-const OperationsPulsePanel = memo(function OperationsPulsePanel() {
-  const metrics = useIoTStore(s => s.metrics)
-  const connectionStatus = useIoTStore(s => s.connectionStatus)
-  const unacknowledgedAlerts = useIoTStore(s => s.unacknowledgedAlerts)
-
-  const throughput = metrics.totalDeliveries || 234
-  const coldChain = metrics.avgTemperature || -4.2
-  const fleetUtilization = metrics.activeTrucks
-    ? Math.round((metrics.activeTrucks / 55) * 100)
-    : 87
-
-  return (
-    <GlassCard accent='from-cyan-400/25 via-violet-400/15 to-emerald-400/20'>
-      <div className='rounded-3xl p-5 xl:p-6'>
-        <h3 className='mb-5 text-lg font-bold flex items-center gap-2'>
-          <TrendingUp className='h-5 w-5 text-cyan-300' />
-          Operations Pulse
-        </h3>
-        <div className='grid grid-cols-2 gap-3'>
-          <div className='rounded-xl border border-cyan-200/25 bg-cyan-500/10 p-3 backdrop-blur-md'>
-            <p className='text-[10px] uppercase tracking-[0.14em] text-cyan-200/75'>
-              Throughput
-            </p>
-            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black leading-none tabular-nums'>
-              {throughput}
-            </p>
-          </div>
-          <div className='rounded-xl border border-violet-200/25 bg-violet-500/10 p-3 backdrop-blur-md'>
-            <p className='text-[10px] uppercase tracking-[0.14em] text-violet-200/75'>
-              Fleet Utilization
-            </p>
-            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black leading-none tabular-nums'>
-              {fleetUtilization}%
-            </p>
-          </div>
-          <div className='rounded-xl border border-emerald-200/25 bg-emerald-500/10 p-3 backdrop-blur-md'>
-            <p className='text-[10px] uppercase tracking-[0.14em] text-emerald-200/75'>
-              Cold Chain Avg
-            </p>
-            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black leading-none tabular-nums'>
-              {coldChain.toFixed(1)}°C
-            </p>
-          </div>
-          <div className='rounded-xl border border-rose-200/25 bg-rose-500/10 p-3 backdrop-blur-md'>
-            <p className='text-[10px] uppercase tracking-[0.14em] text-rose-200/75'>
-              Unack Alerts
-            </p>
-            <p className='mt-1 text-[clamp(1.35rem,0.55vw+1.2rem,2rem)] font-black leading-none tabular-nums'>
-              {unacknowledgedAlerts}
-            </p>
-          </div>
-        </div>
-        <div className='mt-4 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-300 backdrop-blur-md'>
-          Data stream status:{' '}
-          <span className='font-semibold text-cyan-200'>
-            {resolveConnectionLabel(connectionStatus)}
-          </span>
-        </div>
-      </div>
-    </GlassCard>
-  )
 })
 
 function acknowledgePendingAlerts(
@@ -1184,15 +741,12 @@ export default function DashboardView() {
   const setTimeRange = useIoTStore(s => s.setTimeRange)
   const refreshSpeed = useIoTStore(s => s.refreshSpeed)
   const setRefreshSpeed = useIoTStore(s => s.setRefreshSpeed)
-  const searchTerm = useIoTStore(s => s.searchTerm)
-  const setSearchTerm = useIoTStore(s => s.setSearchTerm)
   const connectionStatus = useIoTStore(s => s.connectionStatus)
   const { backendStatus } = useAppHealthEvents()
 
   // ── Local React state (UI-only, not telemetry) ───────────────
   const [browserOffline, setBrowserOffline] = useState(false)
   const [fullscreen, setFullscreen] = useState<Fullscreen>(null)
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [mounted, setMounted] = useState(false)
 
   const isTransitioning = useTransitionStore(s => s.isTransitioning)
@@ -1224,7 +778,6 @@ export default function DashboardView() {
   // ── Boot IoT engine on mount ─────────────────────────────────
   useEffect(() => {
     setMounted(true)
-    setLastUpdate(new Date())
 
     // Boot the entire engine pipeline: Worker → Store → Frame Scheduler
     bootEngine()
@@ -1279,10 +832,6 @@ export default function DashboardView() {
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
-          case 'r':
-            e.preventDefault()
-            setLastUpdate(new Date())
-            break
           case 'g':
             e.preventDefault()
             toggleGrid()
@@ -1297,13 +846,6 @@ export default function DashboardView() {
     globalThis.addEventListener('keydown', onKey)
     return () => globalThis.removeEventListener('keydown', onKey)
   }, [toggleGrid, togglePause])
-
-  // ── Periodic lastUpdate bump ─────────────────────────────────
-  useEffect(() => {
-    if (paused) return
-    const interval = setInterval(() => setLastUpdate(new Date()), 5000)
-    return () => clearInterval(interval)
-  }, [paused])
 
   const apiHealthy = resolveApiHealthy(backendStatus)
 
@@ -1434,7 +976,6 @@ export default function DashboardView() {
 
           <PremiumSystemStatusBanner issues={statusIssues} />
 
-          {/* ── Imperative Three.js 3D Background (no React rendering) ── */}
           {show3D && (
             <div
               ref={threeContainerRef}
@@ -1485,21 +1026,7 @@ export default function DashboardView() {
 
                 {/* Toolbar */}
                 <div className='flex items-center gap-2 sm:gap-3'>
-                  {/* Search (desktop only) */}
-                  <div
-                    data-testid='dashboard-search-toolbar'
-                    className='flex items-center gap-2 rounded-xl bg-white/5 ring-1 ring-white/10 px-3 py-2'
-                  >
-                    <Search className='h-4 w-4 text-slate-400' />
-                    <input
-                      data-testid='dashboard-search-input'
-                      type='text'
-                      placeholder='Search trucks...'
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                      className='bg-transparent text-sm outline-none w-40 placeholder:text-slate-500'
-                    />
-                  </div>
+                  <SearchToolbar />
 
                   {/* Quick actions */}
                   <div className='flex items-center gap-1.5'>
@@ -1711,28 +1238,7 @@ export default function DashboardView() {
             </motion.section>
 
             {/* Status pills */}
-            <div className='flex flex-wrap items-center gap-3'>
-              <Pill intent={resolveConnectionIntent(connectionStatus)}>
-                <span
-                  className={`h-2 w-2 rounded-full ${resolveConnectionDot(connectionStatus)}`}
-                />
-                {resolveConnectionLabel(connectionStatus)}
-              </Pill>
-              <Pill intent='neutral'>
-                <Clock className='h-3 w-3' />
-                <ClientOnlyText>
-                  {resolveStatusText(paused, lastUpdate)}
-                </ClientOnlyText>
-              </Pill>
-              {!paused && (
-                <Pill intent='ok'>
-                  <Zap className='h-3 w-3' />
-                  {getAdaptiveController()?.getDeviceTier()
-                    ? `GPU: ${getAdaptiveController()!.getDeviceTier()}`
-                    : 'All systems operational'}
-                </Pill>
-              )}
-            </div>
+            <SystemStatus />
 
             {/* ── Metric Cards Grid (isolated telemetry subscriptions) ── */}
             <motion.div
@@ -2059,7 +1565,7 @@ export default function DashboardView() {
                         />
                       ) : (
                         <>
-                          <PingLayer count={12} />
+                          <AnimatedPings count={12} />
                           <div className='absolute inset-0 flex items-center justify-center backdrop-blur-sm'>
                             <div className='text-center space-y-4'>
                               <MapPin className='h-16 w-16 mx-auto text-cyan-400 animate-bounce' />
@@ -2183,10 +1689,8 @@ export default function DashboardView() {
                           </div>
                           <p className='text-sm mb-2'>{alert.message}</p>
                           <p className='text-xs text-slate-500'>
-                            <ClientOnlyText>
-                              {new Date(alert.timestamp).toLocaleTimeString()}
-                            </ClientOnlyText>
-                          </p>
+                                    {new Date(alert.timestamp).toLocaleTimeString()}
+                                  </p>
                         </div>
                         {!alert.acknowledged && (
                           <button

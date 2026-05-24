@@ -203,6 +203,7 @@ function TruckModel({
   const frontWheels = React.useRef<InstancedMesh>(null)
   const rearWheels = React.useRef<InstancedMesh>(null)
   const frostDummy = React.useRef(new Object3D())
+  const lastFrostPanelOffsets = React.useRef<readonly [number, number] | null>(null)
   const isTruckSelected = useCameraSelectionStore(
     state => state.selectedTruckId !== null
   )
@@ -367,15 +368,24 @@ function TruckModel({
     const openDistance = exploded * 1.5
     if (frostPanels) {
       const panelOffsets = [-0.72 - openDistance, 0.72 + openDistance] as const
-      panelOffsets.forEach((x, index) => {
-        const dummy = frostDummy.current
-        dummy.position.set(x, 0.6, 0)
-        dummy.rotation.set(0, 0, 0)
-        dummy.scale.set(1, 1, 1)
-        dummy.updateMatrix()
-        frostPanels.setMatrixAt(index, dummy.matrix)
-      })
-      frostPanels.instanceMatrix.needsUpdate = true
+      const previousOffsets = lastFrostPanelOffsets.current
+      const offsetsChanged =
+        previousOffsets === null ||
+        Math.abs(previousOffsets[0] - panelOffsets[0]) > 0.0001 ||
+        Math.abs(previousOffsets[1] - panelOffsets[1]) > 0.0001
+
+      if (offsetsChanged) {
+        panelOffsets.forEach((x, index) => {
+          const dummy = frostDummy.current
+          dummy.position.set(x, 0.6, 0)
+          dummy.rotation.set(0, 0, 0)
+          dummy.scale.set(1, 1, 1)
+          dummy.updateMatrix()
+          frostPanels.setMatrixAt(index, dummy.matrix)
+        })
+        frostPanels.instanceMatrix.needsUpdate = true
+        lastFrostPanelOffsets.current = panelOffsets
+      }
     }
 
     frostShaderMaterial.uniforms.uTime.value = clock.elapsedTime

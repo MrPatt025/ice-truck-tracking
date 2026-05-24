@@ -397,6 +397,7 @@ export class ImperativeThreeLayer {
           this.dummy.scale.setScalar(0)
           this.dummy.updateMatrix()
           truckMesh.setMatrixAt(idx, this.dummy.matrix)
+          dataChanged = true
           idx++
           return
         }
