@@ -212,14 +212,14 @@ export default function FleetManagementPage() {
       suppressHydrationWarning
       initial={false}
       animate={{ opacity: 1, y: 0 }}
-      className='relative w-full'
+      className='page-shell relative w-full'
     >
       <AppSidebar>
         <PremiumPageWrapper
           mode='glass'
           denseNoise
           testId='dashboard-page-wrapper'
-          contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(45,212,191,0.95)]'
+          contentClassName='mx-auto w-full max-w-[1700px]'
         >
           <div className='relative z-50 mx-auto max-w-[1700px] space-y-5 p-4 lg:p-6'>
             <header className='glass-panel flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between rounded-2xl relative z-50'>

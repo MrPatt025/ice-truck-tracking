@@ -103,6 +103,14 @@ export type WorkerInbound =
 export type WorkerOutbound =
   | { type: 'truck-update'; payload: TruckTelemetry }
   | { type: 'truck-batch'; payload: TruckTelemetry[] }
+  | {
+    type: 'truck-batch-transfer'
+    payload: {
+      ids: string[]
+      buffer: ArrayBuffer
+      stride: number
+    }
+  }
   | { type: 'alert'; payload: TelemetryAlert }
   | { type: 'metrics'; payload: FleetMetrics }
   | { type: 'geofence-event'; payload: GeofenceEvent }

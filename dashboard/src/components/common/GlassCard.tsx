@@ -26,16 +26,14 @@ const GlassCard = memo(function GlassCard({
       className='h-full'
     >
       <div
-        className={`group glass-panel relative h-full overflow-hidden rounded-3xl p-[2px] bg-gradient-to-br ${accent} transition-transform duration-500 hover:scale-[1.02] will-change-transform`}
+        className={`group apple-surface relative h-full overflow-hidden rounded-3xl p-[2px] bg-gradient-to-br ${accent} transition-transform duration-500 hover:scale-[1.02] will-change-transform`}
       >
         <div
           className={`relative h-full rounded-[calc(1.5rem-2px)] backdrop-blur-[var(--glass-blur)] backdrop-saturate-[1.8] backdrop-brightness-110 ring-1 ring-white/20 transition-[box-shadow] duration-500 group-hover:ring-white/30 ${className}`}
         >
           <div className='pointer-events-none absolute -inset-10 rounded-[2.5rem] bg-[radial-gradient(100rem_35rem_at_50%_-15%,rgba(139,92,246,.25),transparent),radial-gradient(60rem_25rem_at_-15%_125%,rgba(34,211,238,.2),transparent),radial-gradient(70rem_28rem_at_115%_125%,rgba(16,185,129,.18),transparent)]' />
 
-          <div
-            className='glass-noise-layer pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-[0.03] mix-blend-overlay'
-          />
+          <div className='glass-noise-layer pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-[0.03] mix-blend-overlay' />
 
           <div className='pointer-events-none absolute inset-0 rounded-[calc(1.5rem-2px)] opacity-0 transition-opacity duration-700 group-hover:opacity-100 bg-[linear-gradient(120deg,transparent,rgba(255,255,255,.15),transparent)] bg-[length:200%_100%] animate-shimmer' />
 

@@ -67,6 +67,7 @@ export class ImperativeThreeLayer {
   private readonly dummy = new THREE.Object3D()
   private colorAttr: THREE.InstancedBufferAttribute | null = null
   private truckPositions = new Float32Array(MAX_INSTANCES * 3)
+  private readonly dirtyTruckIds = new Set<string>()
 
   // ─── Shader materials ──────────────────────────────────────
   private shaderMaterials: THREE.ShaderMaterial[] = []
@@ -372,57 +373,74 @@ export class ImperativeThreeLayer {
 
     updateShaderUniforms(this.shaderMaterials, this.elapsed)
 
-    // ── Update instanced truck mesh with frustum culling ──
+    // ── Update instanced truck mesh only for dirty batches ──
     const trucks = getTruckMap()
-    let idx = 0
-    const tempColor = new THREE.Color()
-    const tmpVec = new THREE.Vector3()
-    let dataChanged = false
+    if (this.dirtyTruckIds.size > 0) {
+      let idx = 0
+      let minDirtyIndex = Number.POSITIVE_INFINITY
+      let maxDirtyIndex = -1
+      const tempColor = new THREE.Color()
+      const tmpVec = new THREE.Vector3()
 
-    trucks.forEach(truck => {
-      if (idx >= MAX_INSTANCES) return
+      trucks.forEach(truck => {
+        if (idx >= MAX_INSTANCES) return
 
-      const x = (truck.lng - 100.5) * 80
-      const y = (truck.lat - 13.75) * 80
-      const z = Math.sin(t + idx * 0.1) * 0.5
+        const x = (truck.lng - 100.5) * 80
+        const y = (truck.lat - 13.75) * 80
+        const z = Math.sin(t + idx * 0.1) * 0.5
 
-      this.truckPositions[idx * 3] = x
-      this.truckPositions[idx * 3 + 1] = y
-      this.truckPositions[idx * 3 + 2] = z
+        this.truckPositions[idx * 3] = x
+        this.truckPositions[idx * 3 + 1] = y
+        this.truckPositions[idx * 3 + 2] = z
 
-      if (this.sceneCtrl) {
-        tmpVec.set(x, y, z)
-        if (!this.sceneCtrl.isInFrustum(tmpVec)) {
-          this.dummy.position.set(x, y, z)
-          this.dummy.scale.setScalar(0)
-          this.dummy.updateMatrix()
-          truckMesh.setMatrixAt(idx, this.dummy.matrix)
-          dataChanged = true
+        if (!this.dirtyTruckIds.has(truck.id)) {
           idx++
           return
         }
+
+        if (this.sceneCtrl) {
+          tmpVec.set(x, y, z)
+          if (!this.sceneCtrl.isInFrustum(tmpVec)) {
+            this.dummy.position.set(x, y, z)
+            this.dummy.scale.setScalar(0)
+            this.dummy.updateMatrix()
+            truckMesh.setMatrixAt(idx, this.dummy.matrix)
+            minDirtyIndex = Math.min(minDirtyIndex, idx)
+            maxDirtyIndex = Math.max(maxDirtyIndex, idx)
+            idx++
+            return
+          }
+        }
+
+        const lodScale = this.computeLodScale(tmpVec, camera)
+
+        this.dummy.position.set(x, y, z)
+        this.dummy.scale.setScalar((0.8 + (truck.speed / 120) * 0.4) * lodScale)
+        this.dummy.updateMatrix()
+        truckMesh.setMatrixAt(idx, this.dummy.matrix)
+
+        const statusColor = STATUS_COLORS[truck.status] ?? 0x06b6d4
+        tempColor.setHex(statusColor)
+        colorAttr.setXYZ(idx, tempColor.r, tempColor.g, tempColor.b)
+
+        minDirtyIndex = Math.min(minDirtyIndex, idx)
+        maxDirtyIndex = Math.max(maxDirtyIndex, idx)
+        idx++
+      })
+
+      if (maxDirtyIndex >= minDirtyIndex && minDirtyIndex !== Infinity) {
+        const dirtyCount = maxDirtyIndex - minDirtyIndex + 1
+        truckMesh.count = idx
+        truckMesh.instanceMatrix.clearUpdateRanges()
+        truckMesh.instanceMatrix.addUpdateRange(minDirtyIndex * 16, dirtyCount * 16)
+        truckMesh.instanceMatrix.needsUpdate = true
+        colorAttr.clearUpdateRanges()
+        colorAttr.addUpdateRange(minDirtyIndex * 3, dirtyCount * 3)
+        colorAttr.needsUpdate = true
+        this.sceneCtrl?.markDirty('data')
       }
 
-      const lodScale = this.computeLodScale(tmpVec, camera)
-
-      this.dummy.position.set(x, y, z)
-      this.dummy.scale.setScalar((0.8 + (truck.speed / 120) * 0.4) * lodScale)
-      this.dummy.updateMatrix()
-      truckMesh.setMatrixAt(idx, this.dummy.matrix)
-
-      const statusColor = STATUS_COLORS[truck.status] ?? 0x06b6d4
-      tempColor.setHex(statusColor)
-      colorAttr.setXYZ(idx, tempColor.r, tempColor.g, tempColor.b)
-
-      dataChanged = true
-      idx++
-    })
-
-    if (dataChanged) {
-      truckMesh.count = idx
-      truckMesh.instanceMatrix.needsUpdate = true
-      colorAttr.needsUpdate = true
-      this.sceneCtrl?.markDirty('data')
+      this.dirtyTruckIds.clear()
     }
 
     this.animateEnvironment(t, dt)
@@ -446,6 +464,12 @@ export class ImperativeThreeLayer {
     if (this.adaptiveDPR.sample(this.lastGPUTime, this.fps)) {
       const newDPR = this.adaptiveDPR.getCurrentDPR()
       renderer.setPixelRatio(newDPR)
+    }
+  }
+
+  markTruckIdsDirty(ids: readonly string[]): void {
+    for (const id of ids) {
+      this.dirtyTruckIds.add(id)
     }
   }
 

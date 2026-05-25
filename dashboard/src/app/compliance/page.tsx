@@ -46,7 +46,7 @@ export default function CompliancePage() {
           mode='glass'
           denseNoise
           testId='dashboard-page-wrapper'
-          contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-68px_rgba(244,114,182,0.85)]'
+          contentClassName='mx-auto w-full max-w-[1500px]'
         >
           <main
             data-testid='page-content'
@@ -58,7 +58,7 @@ export default function CompliancePage() {
               transition={{ duration: 0.42 }}
               className='p-6 bg-slate-950/40 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-cyan-500/10 rounded-2xl relative z-50'
             >
-              <h1 className='flex items-center gap-3 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400 text-slate-50'>
+              <h1 className='flex items-center gap-3 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'>
                 <ShieldCheck className='h-7 w-7 text-pink-300' />
                 Compliance Command
               </h1>

@@ -502,7 +502,9 @@ export default function DashboardView() {
           style={{ opacity: introOpacity, scale: introScale, y: introLift }}
           className='dashboard-motion-shell mission-control-shell relative min-h-screen overflow-x-clip text-white selection:bg-cyan-500/30 selection:text-white'
         >
-          <h1 className='sr-only'>Ice Truck Mission Control Dashboard</h1>
+          <h1 className='sr-only text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'>
+            Ice Truck Mission Control Dashboard
+          </h1>
           <div className='pointer-events-none fixed inset-0 -z-20 hud-grid-overlay opacity-45' />
           <div className='pointer-events-none fixed inset-0 -z-10 scanline-overlay opacity-40' />
           <div className='pointer-events-none fixed inset-0 -z-10 opacity-[0.04] [background-image:radial-gradient(rgba(255,255,255,0.65)_0.7px,transparent_0.7px)] [background-size:3px_3px]' />
@@ -547,7 +549,7 @@ export default function DashboardView() {
               initial={false}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className='mission-control-surface-shell group relative isolate overflow-hidden rounded-[1.75rem] border border-cyan-200/25 bg-[linear-gradient(135deg,rgba(15,23,42,.82),rgba(15,23,42,.56))] p-5 backdrop-blur-[32px] shadow-[0_34px_120px_-64px_rgba(34,211,238,0.95)] supports-[backdrop-filter]:backdrop-saturate-150'
+              className='mission-control-surface-shell apple-surface group relative isolate overflow-hidden rounded-[1.75rem] p-5'
               data-testid='mission-control-surface'
             >
               <div

@@ -196,6 +196,22 @@ const ChartGridController = memo(function ChartGridController({
 
   return (
     <>
+      <motion.section
+        variants={PANEL_SPRING}
+        initial='hidden'
+        whileInView='show'
+        viewport={{ once: true, amount: 0.22 }}
+        className='mb-6 rounded-3xl border border-white/10 bg-slate-900/30 p-5 backdrop-blur-[40px] shadow-[0_8px_32px_0_rgba(0,0,0,0.6)] saturate-150'
+      >
+        <h2 className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'>
+          System Health Monitor
+        </h2>
+        <p className='mt-2 text-sm leading-6 text-slate-300'>
+          Live uptime, latency, and dashboard integrity signals for the current
+          mission control session.
+        </p>
+      </motion.section>
+
       {/* ── Chart Row 1: 2-column ── */}
       <motion.section
         variants={PANEL_SPRING}
@@ -208,7 +224,7 @@ const ChartGridController = memo(function ChartGridController({
         <GlassCard layoutId='panel-system-health'>
           <div className='rounded-3xl p-6'>
             <div className='mb-4 flex items-center justify-between'>
-              <h3 className='text-lg font-bold flex items-center gap-2'>
+              <h3 className='flex items-center gap-2 text-lg font-bold'>
                 <DollarSign className='h-5 w-5 text-violet-400' />
                 Revenue Trend Analysis
               </h3>
@@ -230,7 +246,7 @@ const ChartGridController = memo(function ChartGridController({
         <GlassCard accent='from-cyan-400/30 via-blue-400/20 to-indigo-400/30'>
           <div className='rounded-3xl p-6'>
             <div className='mb-4 flex items-center justify-between'>
-              <h3 className='text-lg font-bold flex items-center gap-2'>
+              <h3 className='flex items-center gap-2 text-lg font-bold'>
                 <Truck className='h-5 w-5 text-cyan-400' />
                 Fleet Activity &amp; Efficiency
               </h3>
@@ -261,7 +277,7 @@ const ChartGridController = memo(function ChartGridController({
         <div className='min-w-0 xl:col-span-4'>
           <GlassCard accent='from-blue-400/30 via-sky-400/20 to-cyan-400/30'>
             <div className='rounded-3xl p-6'>
-              <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
+              <h3 className='mb-4 flex items-center gap-2 text-lg font-bold'>
                 <ThermometerSun className='h-5 w-5 text-sky-400' />
                 Cargo Temperature Distribution
               </h3>
@@ -297,7 +313,7 @@ const ChartGridController = memo(function ChartGridController({
           <GlassCard accent='from-rose-400/30 via-orange-400/20 to-amber-400/30'>
             <div className='rounded-3xl p-6'>
               <div className='mb-4 flex items-center justify-between'>
-                <h3 className='text-lg font-bold flex items-center gap-2'>
+                <h3 className='flex items-center gap-2 text-lg font-bold'>
                   <AlertTriangle className='h-5 w-5 text-rose-400' />
                   Alert Timeline
                 </h3>
@@ -320,7 +336,7 @@ const ChartGridController = memo(function ChartGridController({
         <div className='min-w-0 xl:col-span-4'>
           <GlassCard accent='from-emerald-400/30 via-teal-400/20 to-green-400/30'>
             <div className='rounded-3xl p-6'>
-              <h3 className='mb-4 text-lg font-bold flex items-center gap-2'>
+              <h3 className='mb-4 flex items-center gap-2 text-lg font-bold'>
                 <Activity className='h-5 w-5 text-emerald-400' />
                 Performance Metrics
               </h3>

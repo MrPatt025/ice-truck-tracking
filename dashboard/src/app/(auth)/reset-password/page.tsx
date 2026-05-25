@@ -218,7 +218,7 @@ export default function ResetPasswordPage() {
       className='w-full'
       denseNoise
       testId='auth-page-wrapper'
-      contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(14,165,233,0.95)]'
+      contentClassName='mx-auto w-full max-w-[34rem]'
     >
       <Suspense
         fallback={

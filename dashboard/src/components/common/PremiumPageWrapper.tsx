@@ -1,7 +1,6 @@
 'use client'
 
 import { memo, type ReactNode } from 'react'
-import { glassPanel } from '@/ui/tokens/glass'
 import { cn } from '@/lib/utils'
 
 type PremiumPageWrapperProps = Readonly<{
@@ -54,9 +53,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
           aria-hidden='true'
           className='pointer-events-none absolute -top-28 left-1/2 -z-10 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-300/10 blur-[120px]'
         />
-        <div
-          className={cn(mode === 'glass' ? glassPanel : '', contentClassName)}
-        >
+        <div className={cn('apple-surface rounded-3xl p-6', contentClassName)}>
           {mode === 'glass' ? (
             <>
               <div className='premium-visual premium-ornament pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(74rem_30rem_at_10%_-24%,rgba(56,189,248,.26),transparent),radial-gradient(84rem_34rem_at_96%_115%,rgba(16,185,129,.18),transparent)]' />

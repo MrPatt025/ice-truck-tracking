@@ -27,7 +27,7 @@ export default function OperationsPage() {
           mode='glass'
           denseNoise
           testId='dashboard-page-wrapper'
-          contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-70px_rgba(45,212,191,0.95)]'
+          contentClassName='mx-auto w-full max-w-[1500px]'
         >
           <main
             data-testid='page-content'

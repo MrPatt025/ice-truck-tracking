@@ -144,12 +144,12 @@ export default function ReportsPage() {
           mode='glass'
           denseNoise
           testId='dashboard-page-wrapper'
-          contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-72px_rgba(14,165,233,0.95)]'
+          contentClassName='mx-auto w-full max-w-[1500px]'
         >
           <div className='relative z-50 mx-auto max-w-[1500px] space-y-6 p-4 lg:p-6'>
             <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
               <div>
-                <h1 className='flex items-center gap-2 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400 leading-tight'>
+                <h1 className='flex items-center gap-2 text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'>
                   <BarChart3 className='w-7 h-7 text-primary' />
                   Reports & Analytics
                 </h1>

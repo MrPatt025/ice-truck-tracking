@@ -180,6 +180,30 @@
     contain-intrinsic-size: 1px 1400px;
   }
 
+  .apple-surface {
+    position: relative;
+    z-index: 40;
+    overflow: hidden;
+    color: rgb(226 232 240 / 1);
+    border: 1px solid rgb(255 255 255 / 0.1);
+    background-color: rgb(15 23 42 / 0.3);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    box-shadow: 0 8px 32px 0 rgb(0 0 0 / 0.6);
+    filter: saturate(1.5);
+  }
+
+  .apple-heading {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    background-image: linear-gradient(to right, #cffafe, #94a3b8);
+  }
+
   .dashboard-motion-shell {
     will-change: opacity, transform;
     contain: layout paint style;

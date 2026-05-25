@@ -18,8 +18,11 @@ import type {
 } from './types'
 
 // ─── Internal mutable containers (never cause re-render) ──────
-/** Mutable truck map — updated imperatively by the frame loop */
-const _trucks = new Map<string, TruckTelemetry>()
+/** Mutable truck maps — updated imperatively by the frame loop */
+let _trucksRead = new Map<string, TruckTelemetry>()
+let _trucksWrite = new Map<string, TruckTelemetry>()
+let _trucksWriteDirty = false
+const _dirtyTruckIds = new Set<string>()
 
 /** Mutable alert ring buffer — max 200 entries */
 const _alerts: TelemetryAlert[] = []
@@ -31,7 +34,7 @@ const MAX_CHART_POINTS = 360 // 6 min @ 1pt/sec
 
 // ─── Public accessors (no React subscription) ──────────────────
 export function getTruckMap(): ReadonlyMap<string, TruckTelemetry> {
-  return _trucks
+  return _trucksRead
 }
 
 export function getAlerts(): readonly TelemetryAlert[] {
@@ -44,13 +47,29 @@ export function getChartBuffer(series: string): readonly TimeSeriesPoint[] {
 
 // ─── Imperative mutators (called from frame scheduler) ─────────
 export function upsertTruck(t: TruckTelemetry): void {
-  _trucks.set(t.id, t)
+  stageTruckWrite().set(t.id, t)
+  _dirtyTruckIds.add(t.id)
 }
 
 export function upsertTruckBatch(batch: TruckTelemetry[]): void {
+  const write = stageTruckWrite()
   for (const item of batch) {
-    _trucks.set(item.id, item)
+    write.set(item.id, item)
+    _dirtyTruckIds.add(item.id)
   }
+}
+
+export function commitTruckBuffer(): string[] {
+  if (!_trucksWriteDirty) return []
+
+  const dirtyIds = Array.from(_dirtyTruckIds)
+  const nextRead = _trucksWrite
+  _trucksRead = nextRead
+  _trucksWrite = new Map(nextRead)
+  _trucksWriteDirty = false
+  _dirtyTruckIds.clear()
+
+  return dirtyIds
 }
 
 export function pushAlert(a: TelemetryAlert): void {
@@ -71,6 +90,15 @@ export function pushChartPoint(series: string, pt: TimeSeriesPoint): void {
   }
   buf.push(pt)
   if (buf.length > MAX_CHART_POINTS) buf.shift()
+}
+
+function stageTruckWrite(): Map<string, TruckTelemetry> {
+  if (!_trucksWriteDirty) {
+    _trucksWrite = new Map(_trucksRead)
+    _trucksWriteDirty = true
+  }
+
+  return _trucksWrite
 }
 
 // ─── Zustand Store (React-subscribed state — minimal) ──────────

@@ -96,7 +96,7 @@ export default function RegisterPage() {
       mode='glass'
       denseNoise
       testId='auth-page-wrapper'
-      contentClassName='mx-auto w-full max-w-[40rem] border-white/30 bg-slate-950/48 shadow-[0_42px_145px_-78px_rgba(99,102,241,0.95)]'
+      contentClassName='mx-auto w-full max-w-[40rem]'
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}

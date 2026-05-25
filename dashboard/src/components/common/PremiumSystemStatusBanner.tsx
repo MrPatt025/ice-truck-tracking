@@ -57,7 +57,7 @@ const PremiumSystemStatusBanner = memo(function PremiumSystemStatusBanner({
       className={`fixed right-4 top-20 z-[70] w-[min(92vw,26rem)] space-y-2 pointer-events-none ${className}`}
       data-testid='system-status-banner'
     >
-      <div className='rounded-2xl border border-white/15 bg-slate-950/55 p-3 backdrop-blur-2xl'>
+      <div className='apple-surface rounded-2xl p-3'>
         <p
           className='text-[11px] uppercase tracking-[0.12em] text-slate-200/85'
           data-testid='connection-status'

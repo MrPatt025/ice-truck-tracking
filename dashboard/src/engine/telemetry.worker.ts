@@ -63,6 +63,14 @@ const MAX_RETRIES = 10
 let simInterval: ReturnType<typeof setInterval> | null = null
 const SIM_TRUCK_COUNT = 55
 const SIM_INTERVAL_MS = 100 // 10 updates/sec per truck → ~550 events/sec
+const TRUCK_BATCH_STRIDE = 9
+const STATUS_TO_CODE: Record<TruckStatus, number> = {
+  active: 0,
+  idle: 1,
+  offline: 2,
+  maintenance: 3,
+  alert: 4,
+}
 
 function startSimulation(): void {
   // Seed initial trucks
@@ -421,13 +429,53 @@ function emitChartPoints(): void {
 // ─── Batch flusher (16ms → 60 Hz) ─────────────────────────────
 function flushBatch(): void {
   if (pendingBatch.length === 0) return
-  post({ type: 'truck-batch', payload: pendingBatch })
+  postTruckBatchTransfer(pendingBatch)
   pendingBatch = []
 }
 
 // ─── postMessage helper ────────────────────────────────────────
-function post(msg: WorkerOutbound): void {
-  postMessage(msg)
+function post(msg: WorkerOutbound, transfer?: Transferable[]): void {
+  const workerScope = globalThis as typeof globalThis & {
+    postMessage(message: WorkerOutbound, transfer?: Transferable[]): void
+  }
+  if (transfer && transfer.length > 0) {
+    workerScope.postMessage(msg, transfer)
+    return
+  }
+
+  workerScope.postMessage(msg)
+}
+
+function postTruckBatchTransfer(batch: TruckTelemetry[]): void {
+  const ids = new Array<string>(batch.length)
+  const values = new Float32Array(batch.length * TRUCK_BATCH_STRIDE)
+
+  for (let index = 0; index < batch.length; index++) {
+    const truck = batch[index]
+    const offset = index * TRUCK_BATCH_STRIDE
+    ids[index] = truck.id
+    values[offset] = truck.lat
+    values[offset + 1] = truck.lng
+    values[offset + 2] = truck.speed
+    values[offset + 3] = truck.heading
+    values[offset + 4] = truck.temperature
+    values[offset + 5] = truck.fuelLevel
+    values[offset + 6] = truck.engineRpm
+    values[offset + 7] = truck.odometer
+    values[offset + 8] = STATUS_TO_CODE[truck.status] ?? 0
+  }
+
+  post(
+    {
+      type: 'truck-batch-transfer',
+      payload: {
+        ids,
+        buffer: values.buffer,
+        stride: TRUCK_BATCH_STRIDE,
+      },
+    },
+    [values.buffer]
+  )
 }
 
 // ─── Alert level helper ────────────────────────────────────────

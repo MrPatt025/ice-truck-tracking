@@ -39,14 +39,14 @@ export default function ForgotPasswordPage() {
       mode='glass'
       denseNoise
       testId='auth-page-wrapper'
-      contentClassName='mx-auto w-full max-w-[34rem] border-white/30 bg-slate-950/48 shadow-[0_40px_140px_-74px_rgba(16,185,129,0.95)]'
+      contentClassName='mx-auto w-full max-w-[34rem]'
     >
       <div className='relative z-10'>
         <div className='mb-8 text-center'>
           <div className='mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10'>
             <Snowflake className='h-7 w-7 text-primary' />
           </div>
-          <h1 className='bg-gradient-to-r from-cyan-100 to-slate-400 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent'>
+          <h1 className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'>
             {sent ? 'Check your email' : 'Reset your password'}
           </h1>
           <p className='mt-1 text-muted-foreground'>

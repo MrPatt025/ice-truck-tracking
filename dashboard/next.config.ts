@@ -89,6 +89,9 @@ const nextConfig: NextConfig = {
     '@react-three/fiber',
     'three',
   ],
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'recharts', 'framer-motion'],
+  },
   turbopack: {},
   /**
    * Core Web Vitals optimization:

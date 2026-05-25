@@ -112,7 +112,7 @@ const DashboardHeader = memo(function DashboardHeader({
   return (
     <header
       suppressHydrationWarning
-      className='relative z-50 glass-panel sticky top-0 bg-slate-950/45 backdrop-blur-[24px] ring-1 ring-cyan-200/25 shadow-[0_24px_90px_-45px_rgba(34,211,238,0.6)] [background-image:linear-gradient(110deg,rgba(34,211,238,0.08),rgba(255,255,255,0.02)_42%,rgba(99,102,241,0.08))]'
+      className='apple-surface relative z-50 sticky top-0 [background-image:linear-gradient(110deg,rgba(34,211,238,0.08),rgba(255,255,255,0.02)_42%,rgba(99,102,241,0.08))]'
     >
       <div className='mx-auto max-w-[120rem] px-4 sm:px-6'>
         <div className='flex items-center justify-between py-4'>
@@ -127,7 +127,7 @@ const DashboardHeader = memo(function DashboardHeader({
             <div>
               <motion.h1
                 data-display-font='true'
-                className='bg-gradient-to-r from-cyan-100 via-white to-amber-100 bg-clip-text text-[clamp(1.1rem,0.82vw+0.95rem,2.05rem)] font-black uppercase tracking-[0.105em] leading-tight text-transparent'
+                className='text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-cyan-100 to-slate-400'
                 initial={false}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{

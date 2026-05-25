@@ -28,7 +28,7 @@ export default function TrackingPage() {
           mode='glass'
           denseNoise
           testId='dashboard-page-wrapper'
-          contentClassName='border-white/25 bg-slate-950/42 shadow-[0_36px_130px_-68px_rgba(59,130,246,0.95)]'
+          contentClassName='mx-auto w-full max-w-[1500px]'
         >
           <main
             data-testid='page-content'

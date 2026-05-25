@@ -28,13 +28,16 @@ import type {
   WorkerConfig,
   AlertLevel,
   SpatialEntity,
+  TruckTelemetry,
 } from './types'
 import {
   useIoTStore,
   upsertTruck,
   upsertTruckBatch,
+  commitTruckBuffer,
   pushAlert,
   pushChartPoint,
+  getTruckMap,
 } from './store'
 import { frameScheduler } from './frameScheduler'
 import type { ImperativeThreeLayer } from './threeLayer'
@@ -495,18 +498,29 @@ function handleTruckUpdate(
   payload: WorkerOutbound & { type: 'truck-update' }
 ): void {
   upsertTruck(payload.payload)
-  if (entityMap && spatialIndex) {
-    const t = payload.payload
-    entityMap.set(t.id, { id: t.id, x: t.lng, y: t.lat, data: t })
-  }
+  finalizeTruckBatch([payload.payload])
 }
 
 function handleTruckBatch(
   payload: WorkerOutbound & { type: 'truck-batch' }
 ): void {
-  upsertTruckBatch(payload.payload)
+  finalizeTruckBatch(payload.payload)
+}
+
+function handleTruckBatchTransfer(
+  payload: WorkerOutbound & { type: 'truck-batch-transfer' }
+): void {
+  const decoded = decodeTruckBatch(payload.payload)
+  finalizeTruckBatch(decoded)
+}
+
+function finalizeTruckBatch(batch: TruckTelemetry[]): void {
+  if (batch.length === 0) return
+
+  upsertTruckBatch(batch)
+
   if (entityMap && spatialIndex) {
-    const entities: SpatialEntity[] = payload.payload.map(t => ({
+    const entities: SpatialEntity[] = batch.map(t => ({
       id: t.id,
       x: t.lng,
       y: t.lat,
@@ -517,6 +531,63 @@ function handleTruckBatch(
       spatialIndex.bulkLoad(Array.from(entityMap.values()))
       entityMap.flushDirty()
     }
+  }
+
+  const dirtyIds = commitTruckBuffer()
+  threeLayer?.markTruckIdsDirty(dirtyIds)
+}
+
+function decodeTruckBatch(payload: {
+  ids: string[]
+  buffer: ArrayBuffer
+  stride: number
+}): TruckTelemetry[] {
+  const { ids, buffer, stride } = payload
+  if (ids.length === 0 || stride <= 0) return []
+
+  const values = new Float32Array(buffer)
+  const snapshot = getTruckMap()
+  const receivedAt = Date.now()
+  const batch: TruckTelemetry[] = []
+
+  for (let index = 0; index < ids.length; index++) {
+    const id = ids[index]
+    const offset = index * stride
+    const existing = snapshot.get(id)
+    const statusCode = values[offset + 8] ?? 0
+
+    batch.push({
+      id,
+      lat: values[offset],
+      lng: values[offset + 1],
+      speed: values[offset + 2],
+      heading: values[offset + 3],
+      temperature: values[offset + 4],
+      fuelLevel: values[offset + 5],
+      engineRpm: values[offset + 6],
+      odometer: values[offset + 7],
+      status: decodeTruckStatus(statusCode),
+      driverName: existing?.driverName ?? '',
+      routeId: existing?.routeId ?? '',
+      timestamp: receivedAt,
+    })
+  }
+
+  return batch
+}
+
+function decodeTruckStatus(code: number): TruckTelemetry['status'] {
+  switch (code) {
+    case 1:
+      return 'idle'
+    case 2:
+      return 'offline'
+    case 3:
+      return 'maintenance'
+    case 4:
+      return 'alert'
+    default:
+      return 'active'
   }
 }
 
@@ -543,6 +614,10 @@ function handleWorkerMessage(msg: WorkerOutbound): void {
 
     case 'truck-batch':
       handleTruckBatch(msg)
+      break
+
+    case 'truck-batch-transfer':
+      handleTruckBatchTransfer(msg)
       break
 
     case 'alert': {

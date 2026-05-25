@@ -26,12 +26,8 @@ const DashboardView = dynamic(
 
 export default function DashboardPage() {
   return (
-    <PremiumPageWrapper
-        mode='glass'
-        denseNoise
-        testId='dashboard-page-wrapper'
-      >
-        <DashboardView />
-      </PremiumPageWrapper>
+    <PremiumPageWrapper mode='glass' denseNoise testId='dashboard-page-wrapper'>
+      <DashboardView />
+    </PremiumPageWrapper>
   )
 }
