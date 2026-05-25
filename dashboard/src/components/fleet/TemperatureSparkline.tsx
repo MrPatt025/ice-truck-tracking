@@ -18,6 +18,7 @@ export function TemperatureSparkline({
   fill = 'rgba(34,211,238,0.16)',
 }: Readonly<TemperatureSparklineProps>) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -63,15 +64,15 @@ export function TemperatureSparkline({
     ctx.fill()
   }, [fill, height, stroke, values, width])
 
+  useEffect(() => {
+    if (!wrapperRef.current) return
+    wrapperRef.current.style.setProperty('--sparkline-width', `${width}px`)
+    wrapperRef.current.style.setProperty('--sparkline-height', `${height}px`)
+  }, [width, height])
+
   return (
     <div
-      style={
-        {
-          '--sparkline-width': `${width}px`,
-          '--sparkline-height': `${height}px`,
-        } as React.CSSProperties &
-          Record<'--sparkline-width' | '--sparkline-height', string>
-      }
+      ref={wrapperRef}
       className='relative inline-block shrink-0 overflow-hidden rounded-sm min-w-[var(--sparkline-width)] min-h-[var(--sparkline-height)] w-[var(--sparkline-width)] h-[var(--sparkline-height)]'
     >
       <canvas
