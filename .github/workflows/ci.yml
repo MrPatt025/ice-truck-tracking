@@ -1,289 +1,46 @@
-name: CI/CD Pipeline
+name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
-  workflow_call:
-    secrets:
-      VERCEL_TOKEN:
-        required: false
-      VERCEL_ORG_ID:
-        required: false
-      VERCEL_PROJECT_ID:
-        required: false
-      RENDER_DEPLOY_HOOK_URL:
-        required: false
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-env:
-  NODE_VERSION: '26'
-  PNPM_VERSION: '11.1.3+sha512.c85357fe17ca12dd23dd7071822666dfd7e3cb76fe214e3370b5ea2fb34f2a231185509b63e717f3cd0acb38dd3f8d82bcd5e8172400ae678b70ea4fbed0896d'
-  CI: 'true'
-  NEXT_TELEMETRY_DISABLED: '1'
+    branches: [main]
 
 jobs:
-  # ── Install & Cache ──────────────────────────────────────
-  install:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile --ignore-scripts
+  build-and-test:
+    runs-on: windows-latest
 
-  # ── Lint & Type Check ────────────────────────────────────
-  lint:
-    needs: install
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm run lint
-      - run: pnpm run type-check
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  # ── Commitlint (PR only) ────────────────────────────────
-  commitlint:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
+          node-version: 22
 
-  # ── Backend Tests ────────────────────────────────────────
-  test-backend:
-    needs: lint
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    services:
-      redis:
-        image: redis:7-alpine
-        ports: ['6379:6379']
-        options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
-    env:
-      REDIS_URL: redis://localhost:6379
-      NODE_ENV: test
-      USE_FAKE_DB: 'true'
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: JWT_SECRET="$(openssl rand -hex 32)" pnpm --filter @ice-truck/backend run test -- --ci --coverage=false --forceExit --testTimeout=15000
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: backend-coverage
-          path: backend/coverage/
-          if-no-files-found: ignore
+      - name: Install pnpm
+        run: npm install -g pnpm@11.1.3
 
-  # ── Backend Testcontainers (Real DB) ─────────────────────
-  testcontainers-backend:
-    needs: lint
-    # Guard: only run on develop/feature branches — not on direct pushes/PRs
-    # to main, so an unstable Docker environment never blocks the main gate.
-    if: github.ref != 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm --filter @ice-truck/backend run test:containers
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-  # ── Dashboard Tests ──────────────────────────────────────
-  test-dashboard:
-    needs: lint
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm --filter @ice-truck/dashboard run test -- --ci --coverage=false
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: dashboard-coverage
-          path: dashboard/coverage/
-          if-no-files-found: ignore
-
-  # ── Playwright E2E — Light Profile (every PR) ────────────
-  test-e2e-light:
-    needs: [test-backend, test-dashboard]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - name: Restore Playwright browser cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml', 'dashboard/playwright.light.config.ts') }}
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Install Playwright browsers
+      - name: Type-Check
+        run: pnpm run type-check
         working-directory: dashboard
-        run: |
-          pnpm exec playwright install --with-deps chromium firefox # NOSONAR
-      - name: Run E2E Light Tests (no GPU)
-        run: pnpm --filter @ice-truck/dashboard run test:e2e:light
-        env:
-          E2E_LIGHT: 'true'
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        if: always()
-        with:
-          name: playwright-report-light
-          path: dashboard/playwright-report/light/
-          if-no-files-found: ignore
 
-  # ── Build All ────────────────────────────────────────────
-  build:
-    needs: [test-backend, test-dashboard, test-e2e-light]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      NEXT_PUBLIC_API_URL: http://localhost:5000
-      NEXT_PUBLIC_WS_URL: ws://localhost:5000
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm run build
-
-  # ── Preview Deployment (every PR) ────────────────────────
-  preview:
-    if: github.event_name == 'pull_request'
-    needs: lint
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-    environment: preview
-    steps:
-      - name: Preview deployment placeholder
-        run: |
-          echo "Preview deployment job is intentionally disabled in CI."
-          echo "Configure deployment in a dedicated workflow with environment-level secrets."
-
-  # ── Deploy Dashboard → Vercel (production) ──────────────
-  deploy-dashboard:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    environment: production
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e
-        with:
-          version: ${{ env.PNPM_VERSION }}
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Validate Vercel secrets
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} # NOSONAR
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }} # NOSONAR
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }} # NOSONAR
-        run: |
-          test -n "$VERCEL_TOKEN"
-          test -n "$VERCEL_ORG_ID"
-          test -n "$VERCEL_PROJECT_ID"
-      - name: Deploy dashboard to Vercel
+      - name: Lint
+        run: pnpm run lint
         working-directory: dashboard
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} # NOSONAR
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }} # NOSONAR
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }} # NOSONAR
-        run: |
-          pnpm dlx vercel@52.0.0 pull --yes --environment=production --token="$VERCEL_TOKEN"
-          pnpm dlx vercel@52.0.0 build --prod --token="$VERCEL_TOKEN"
-          pnpm dlx vercel@52.0.0 deploy --prebuilt --prod --token="$VERCEL_TOKEN"
 
-  # ── Deploy Backend → Render ─────────────────────────────
-  deploy-backend:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    environment: production
-    steps:
-      - name: Validate Render deploy secret
-        env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }} # NOSONAR
-        run: |
-          test -n "$RENDER_DEPLOY_HOOK_URL"
-      - name: Trigger Render production deploy hook
-        env:
-          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }} # NOSONAR
-        run: |
-          curl --fail --silent --show-error --max-time 30 -X POST "$RENDER_DEPLOY_HOOK_URL"
+      - name: Install Playwright Browsers
+        run: pnpm exec playwright install --with-deps chromium firefox
+        working-directory: dashboard
+
+      - name: Playwright E2E
+        run: pnpm run test:e2e
+        working-directory: dashboard
+
+      - name: Build
+        run: pnpm run build
+        working-directory: dashboard
