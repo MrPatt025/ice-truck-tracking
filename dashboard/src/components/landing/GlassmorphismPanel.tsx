@@ -3,6 +3,7 @@
 import React, { memo } from 'react'
 import {
   motion,
+  type MotionStyle,
   type MotionValue,
   useMotionValue,
   useTransform,
@@ -42,6 +43,12 @@ export const GlassmorphismPanel = memo(function GlassmorphismPanel({
   const progress = scrollProgress ?? fallbackProgress
   const panelOpacity = useTransform(progress, parallaxRange, [1, 0.84])
   const panelY = useTransform(progress, parallaxRange, ['0px', '-16px'])
+  const panelStyle: MotionStyle & Record<'--glass-panel-opacity', number> = {
+    opacity: panelOpacity,
+    y: panelY,
+    willChange: 'opacity, transform',
+    '--glass-panel-opacity': opacity,
+  }
 
   return (
     <motion.div
@@ -49,17 +56,12 @@ export const GlassmorphismPanel = memo(function GlassmorphismPanel({
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay, ease: 'easeOut' }}
       viewport={{ once: true, amount: 0.2 }}
-      style={{
-        opacity: panelOpacity,
-        y: panelY,
-        willChange: 'opacity, transform',
-        backgroundColor: `rgba(15, 23, 42, ${opacity})`,
-      }}
+      style={panelStyle}
       className={clsx(
-        'relative z-40 overflow-hidden rounded-2xl border transform-gpu text-slate-100',
-        'border-white/10 bg-slate-900/30 backdrop-blur-[40px] shadow-[0_8px_32px_0_rgba(0,0,0,0.6)] saturate-150',
+        'glass-panel glass-panel-strong relative z-40 overflow-hidden rounded-2xl border transform-gpu text-slate-100',
+        'border-white/10 saturate-150',
         blurClass,
-        'ring-1 ring-white/10 shadow-[0_12px_48px_-12px_rgba(34,211,238,0.24)]',
+        'ring-1 ring-white/10',
         className
       )}
     >

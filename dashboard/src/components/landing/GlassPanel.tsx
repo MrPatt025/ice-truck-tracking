@@ -37,7 +37,7 @@ const GlassPanel = memo(function GlassPanel({
         y: panelLift,
         willChange: 'opacity, transform',
       }}
-      className={`relative overflow-hidden rounded-3xl border border-cyan-100/30 bg-white/10 backdrop-blur-[var(--glass-blur)] backdrop-saturate-[var(--glass-saturate)] shadow-[0_24px_80px_-42px_rgba(56,189,248,0.72)] ring-1 ring-cyan-200/25 transform-gpu ${className}`}
+      className={`glass-panel glass-panel-strong relative overflow-hidden rounded-3xl border-cyan-100/30 transform-gpu ${className}`}
     >
       <div className='pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_14%,rgba(186,230,253,0.22),transparent_48%)]' />
       <div className='condensation-layer pointer-events-none absolute inset-0' />

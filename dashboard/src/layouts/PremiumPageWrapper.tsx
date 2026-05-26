@@ -1,6 +1,7 @@
 'use client'
 
-import { memo, type ReactNode } from 'react'
+import { memo, type ReactNode, useEffect, useRef } from 'react'
+import { useMotionValueEvent, useScroll } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 type PremiumPageWrapperProps = Readonly<{
@@ -20,6 +21,26 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
   denseNoise = false,
   testId = 'premium-wrapper',
 }: PremiumPageWrapperProps) {
+  const { scrollYProgress } = useScroll()
+  const shellRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const shell = shellRef.current
+    if (!shell) return
+
+    shell.style.opacity = '1'
+    shell.style.transform = 'translate3d(0, 0px, 0)'
+  }, [])
+
+  useMotionValueEvent(scrollYProgress, 'change', latest => {
+    const shell = shellRef.current
+    if (!shell) return
+
+    const progress = Math.min(1, Math.max(0, latest))
+    shell.style.opacity = `${1 - progress * 0.02}`
+    shell.style.transform = `translate3d(0, ${-14 * progress}px, 0)`
+  })
+
   return (
     <section
       data-testid={testId}
@@ -53,7 +74,13 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
           aria-hidden='true'
           className='pointer-events-none absolute -top-28 left-1/2 -z-10 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-300/10 blur-[120px]'
         />
-        <div className={cn('apple-surface rounded-3xl p-6', contentClassName)}>
+        <div
+          ref={shellRef}
+          className={cn(
+            'rounded-3xl p-6 bg-slate-900/30 backdrop-blur-[40px] border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.6)] saturate-150',
+            contentClassName
+          )}
+        >
           {mode === 'glass' ? (
             <>
               <div className='premium-visual premium-ornament pointer-events-none absolute inset-0 rounded-3xl bg-[radial-gradient(74rem_30rem_at_10%_-24%,rgba(56,189,248,.26),transparent),radial-gradient(84rem_34rem_at_96%_115%,rgba(16,185,129,.18),transparent)]' />
@@ -74,7 +101,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
               <div className='premium-visual premium-frame pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-cyan-200/20 shadow-[inset_0_0_35px_-20px_rgba(56,189,248,.95)]' />
             </>
           ) : null}
-          <div className='headline-gradient relative z-10 antialiased [&_h1]:text-4xl [&_h1]:font-extrabold [&_h1]:tracking-tight [&_h2]:text-3xl [&_h2]:font-semibold [&_h2]:tracking-tight'>
+          <div className='headline-gradient relative z-10 antialiased [&_h1]:text-4xl [&_h1]:font-extrabold [&_h1]:tracking-tight [&_h1]:bg-clip-text [&_h1]:text-transparent [&_h1]:bg-gradient-to-r [&_h1]:from-cyan-100 [&_h1]:to-slate-400 [&_h2]:text-4xl [&_h2]:font-extrabold [&_h2]:tracking-tight [&_h2]:bg-clip-text [&_h2]:text-transparent [&_h2]:bg-gradient-to-r [&_h2]:from-cyan-100 [&_h2]:to-slate-400'>
             {children}
           </div>
         </div>

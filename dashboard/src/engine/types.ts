@@ -107,7 +107,7 @@ export type WorkerOutbound =
     type: 'truck-batch-transfer'
     payload: {
       ids: string[]
-      buffer: ArrayBuffer
+      buffer: ArrayBuffer | SharedArrayBuffer
       stride: number
     }
   }

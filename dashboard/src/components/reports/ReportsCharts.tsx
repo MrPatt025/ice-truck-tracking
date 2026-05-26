@@ -17,6 +17,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
+import ChartTooltip from './ChartTooltip'
 
 export type ReportsTab = 'overview' | 'temperature' | 'delivery' | 'fuel'
 
@@ -85,12 +86,7 @@ export function ReportsCharts({
                 />
                 <YAxis className='text-xs' tick={{ fill: 'currentColor' }} />
                 <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
+                  content={<ChartTooltip />}
                 />
                 <Legend />
                 <Bar
@@ -160,12 +156,7 @@ export function ReportsCharts({
                 domain={[-25, -10]}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
+                content={<ChartTooltip />}
               />
               <Legend />
               <Area
@@ -214,12 +205,7 @@ export function ReportsCharts({
               />
               <YAxis className='text-xs' tick={{ fill: 'currentColor' }} />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
+                content={<ChartTooltip />}
               />
               <Legend />
               <Bar
@@ -269,12 +255,7 @@ export function ReportsCharts({
               tick={{ fill: 'currentColor' }}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '8px',
-                fontSize: '12px',
-              }}
+              content={<ChartTooltip />}
             />
             <Legend />
             <Line

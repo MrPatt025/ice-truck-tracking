@@ -23,30 +23,14 @@
  *  React only renders: Shell, Panels, Controls, Forms.
  * ================================================================ */
 
-import type {
-  WorkerOutbound,
-  WorkerConfig,
-  AlertLevel,
-  SpatialEntity,
-  TruckTelemetry,
-} from './types'
-import {
-  useIoTStore,
-  upsertTruck,
-  upsertTruckBatch,
-  commitTruckBuffer,
-  pushAlert,
-  pushChartPoint,
-  getTruckMap,
-} from './store'
+import type { WorkerOutbound, WorkerConfig, AlertLevel } from './types'
+import { useIoTStore } from './store'
 import { frameScheduler } from './frameScheduler'
 import type { ImperativeThreeLayer } from './threeLayer'
 import { ImperativeChart } from './chartEngine'
 import { PerformanceOverlay } from './perfOverlay'
 import { AdaptiveController } from './adaptive'
 import { PerceptionEngine } from './perception'
-import { SpatialIndex, EntityMap } from './dataViz/spatialIndex'
-import { dispatchWsHealthEvent } from '@/lib/healthEvents'
 
 // ─── Craft Layer Imports ───────────────────────────────────────
 import { LightDirector } from './craft/lightSystem'
@@ -77,8 +61,6 @@ const charts = new Map<string, ImperativeChart>()
 // ─── Masterpiece engine layers ─────────────────────────────────
 let adaptiveCtrl: AdaptiveController | null = null
 let perceptionEngine: PerceptionEngine | null = null
-let spatialIndex: SpatialIndex | null = null
-let entityMap: EntityMap<SpatialEntity> | null = null
 let _booted = false
 
 // ─── Craft Layer singletons ────────────────────────────────────
@@ -98,7 +80,6 @@ let colorIntelligence: ColorIntelligenceEngine | null = null
 let layoutDensity: LayoutDensityController | null = null
 
 // ─── Perf-aware alert level tracking ──────────────────────────
-let _currentAlertLevel: AlertLevel | null = null
 
 // ─── Public API ────────────────────────────────────────────────
 
@@ -125,14 +106,10 @@ export function bootEngine(config?: Partial<WorkerConfig>): void {
       console.debug('[Adaptive] Scaling applied:', decision.reason)
   })
 
-  // 2) Spatial index for fast range queries
-  spatialIndex = new SpatialIndex()
-  entityMap = new EntityMap<SpatialEntity>()
-
-  // 3) Perception Engine (mounted lazily with DOM containers)
+  // 2) Perception Engine (mounted lazily with DOM containers)
   perceptionEngine = new PerceptionEngine()
 
-  // 4) Spawn Web Worker
+  // 3) Spawn Web Worker
   try {
     worker = new Worker(new URL('./telemetry.worker.ts', import.meta.url), {
       type: 'module',
@@ -155,19 +132,19 @@ export function bootEngine(config?: Partial<WorkerConfig>): void {
     )
   }
 
-  // 5) Start frame scheduler
+  // 4) Start frame scheduler
   frameScheduler.start()
 
-  // 6) Performance overlay
+  // 5) Performance overlay
   perfOverlay = new PerformanceOverlay()
   frameScheduler.register('perf', dt => perfOverlay?.update(dt))
 
-  // 7) Adaptive monitor tick (runs before other layers)
+  // 6) Adaptive monitor tick (runs before other layers)
   frameScheduler.register('adaptive', () => {
     adaptiveCtrl?.tick()
   })
 
-  // 8) Perception engine tick (runs after rendering)
+  // 7) Perception engine tick (runs after rendering)
   frameScheduler.register('perception', dt => {
     // Perception updates are event-driven via updateContext
     // Tick drives spring animations for tint/typography/depth
@@ -254,9 +231,6 @@ export function shutdownEngine(): void {
 
   perceptionEngine?.destroy()
   perceptionEngine = null
-
-  spatialIndex = null
-  entityMap = null
 
   // Cleanup craft layers
   lightDirector?.destroy()
@@ -441,12 +415,16 @@ export function getPerceptionEngine(): PerceptionEngine | null {
   return perceptionEngine
 }
 
-export function getSpatialIndex(): SpatialIndex | null {
-  return spatialIndex
+export function getSpatialIndex(): null {
+  return null
 }
 
-export function getEntityMap(): EntityMap<SpatialEntity> | null {
-  return entityMap
+export function getEntityMap(): null {
+  return null
+}
+
+export function getCharts(): Map<string, ImperativeChart> {
+  return charts
 }
 
 // ─── Craft Layer Accessors ─────────────────────────────────────
@@ -494,186 +472,8 @@ export function getLayoutDensity(): LayoutDensityController | null {
 }
 
 // ─── Worker message handler helpers ────────────────────────────
-function handleTruckUpdate(
-  payload: WorkerOutbound & { type: 'truck-update' }
-): void {
-  upsertTruck(payload.payload)
-  finalizeTruckBatch([payload.payload])
-}
-
-function handleTruckBatch(
-  payload: WorkerOutbound & { type: 'truck-batch' }
-): void {
-  finalizeTruckBatch(payload.payload)
-}
-
-function handleTruckBatchTransfer(
-  payload: WorkerOutbound & { type: 'truck-batch-transfer' }
-): void {
-  const decoded = decodeTruckBatch(payload.payload)
-  finalizeTruckBatch(decoded)
-}
-
-function finalizeTruckBatch(batch: TruckTelemetry[]): void {
-  if (batch.length === 0) return
-
-  upsertTruckBatch(batch)
-
-  if (entityMap && spatialIndex) {
-    const entities: SpatialEntity[] = batch.map(t => ({
-      id: t.id,
-      x: t.lng,
-      y: t.lat,
-      data: t,
-    }))
-    entityMap.setBatch(entities)
-    if (entityMap.getDirtyIds().size > 0) {
-      spatialIndex.bulkLoad(Array.from(entityMap.values()))
-      entityMap.flushDirty()
-    }
-  }
-
-  const dirtyIds = commitTruckBuffer()
-  threeLayer?.markTruckIdsDirty(dirtyIds)
-}
-
-function decodeTruckBatch(payload: {
-  ids: string[]
-  buffer: ArrayBuffer
-  stride: number
-}): TruckTelemetry[] {
-  const { ids, buffer, stride } = payload
-  if (ids.length === 0 || stride <= 0) return []
-
-  const values = new Float32Array(buffer)
-  const snapshot = getTruckMap()
-  const receivedAt = Date.now()
-  const batch: TruckTelemetry[] = []
-
-  for (let index = 0; index < ids.length; index++) {
-    const id = ids[index]
-    const offset = index * stride
-    const existing = snapshot.get(id)
-    const statusCode = values[offset + 8] ?? 0
-
-    batch.push({
-      id,
-      lat: values[offset],
-      lng: values[offset + 1],
-      speed: values[offset + 2],
-      heading: values[offset + 3],
-      temperature: values[offset + 4],
-      fuelLevel: values[offset + 5],
-      engineRpm: values[offset + 6],
-      odometer: values[offset + 7],
-      status: decodeTruckStatus(statusCode),
-      driverName: existing?.driverName ?? '',
-      routeId: existing?.routeId ?? '',
-      timestamp: receivedAt,
-    })
-  }
-
-  return batch
-}
-
-function decodeTruckStatus(code: number): TruckTelemetry['status'] {
-  switch (code) {
-    case 1:
-      return 'idle'
-    case 2:
-      return 'offline'
-    case 3:
-      return 'maintenance'
-    case 4:
-      return 'alert'
-    default:
-      return 'active'
-  }
-}
-
-function computeSystemLoad(m: {
-  criticalAlerts: number
-  warningAlerts: number
-}): number {
-  if (m.criticalAlerts > 0) return 0.9
-  if (m.warningAlerts > 0) return 0.5
-  return 0.2
-}
-
-// ─── Worker message handler ────────────────────────────────────
-function handleWorkerMessage(msg: WorkerOutbound): void {
-  const store = useIoTStore
-
-  // Record event for perf overlay
-  perfOverlay?.recordEvent()
-
-  switch (msg.type) {
-    case 'truck-update':
-      handleTruckUpdate(msg)
-      break
-
-    case 'truck-batch':
-      handleTruckBatch(msg)
-      break
-
-    case 'truck-batch-transfer':
-      handleTruckBatchTransfer(msg)
-      break
-
-    case 'alert': {
-      pushAlert(msg.payload)
-      store.getState().incrementUnacknowledgedAlerts()
-      _currentAlertLevel = msg.payload.level
-      perceptionEngine?.updateContext({
-        alertLevel: _currentAlertLevel,
-        focusedTruckId: msg.payload.truckId || null,
-        systemLoad: 0,
-      })
-      break
-    }
-
-    case 'metrics':
-      store.getState().setMetrics(msg.payload)
-      if (perceptionEngine) {
-        perceptionEngine.updateContext({
-          alertLevel: _currentAlertLevel,
-          focusedTruckId: null,
-          systemLoad: computeSystemLoad(msg.payload),
-        })
-      }
-      break
-
-    case 'geofence-event':
-      if (process.env.NODE_ENV === 'development')
-        console.debug('[Geofence]', msg.payload)
-      break
-
-    case 'chart-delta': {
-      const { series, point } = msg.payload
-      pushChartPoint(series, point)
-      charts.forEach(chart => {
-        chart.push(series, point)
-      })
-      break
-    }
-
-    case 'connection-status': {
-      store.getState().setConnectionStatus(msg.payload)
-      let wsStatus: 'connected' | 'reconnecting' | 'offline' = 'offline'
-      if (msg.payload === 'connected') {
-        wsStatus = 'connected'
-      } else if (msg.payload === 'reconnecting') {
-        wsStatus = 'reconnecting'
-      }
-      dispatchWsHealthEvent({
-        status: wsStatus,
-        source: 'telemetry-worker',
-        reason: `worker-${msg.payload}`,
-      })
-      break
-    }
-  }
-}
+// The telemetry sync logic has been decentralized to telemetrySync.ts
+import { handleWorkerMessage } from './telemetrySync'
 
 // ─── Store subscriptions for imperative layers ─────────────────
 // When theme changes, update 3D, map, and perception

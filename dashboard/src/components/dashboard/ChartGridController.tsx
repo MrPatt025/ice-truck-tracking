@@ -165,7 +165,7 @@ type ChartGridControllerProps = Readonly<{
 
 const ChartGridController = memo(function ChartGridController({
   showMap,
-  isLiveMode,
+  isLiveMode: _isLiveMode,
   mounted,
 }: ChartGridControllerProps) {
   const [fullscreen, setFullscreen] = useState<Fullscreen>(null)
@@ -237,7 +237,11 @@ const ChartGridController = memo(function ChartGridController({
               </button>
             </div>
             <div className='aspect-[16/9]'>
-              <CanvasChart id='revenue' config={CHART_CONFIGS.revenue} className='h-full' />
+              <CanvasChart
+                id='revenue'
+                config={CHART_CONFIGS.revenue}
+                className='h-full'
+              />
             </div>
           </div>
         </GlassCard>
@@ -259,7 +263,11 @@ const ChartGridController = memo(function ChartGridController({
               </button>
             </div>
             <div className='aspect-[16/9]'>
-              <CanvasChart id='fleet' config={CHART_CONFIGS.fleet} className='h-full' />
+              <CanvasChart
+                id='fleet'
+                config={CHART_CONFIGS.fleet}
+                className='h-full'
+              />
             </div>
           </div>
         </GlassCard>
@@ -326,7 +334,11 @@ const ChartGridController = memo(function ChartGridController({
                 </button>
               </div>
               <div className='aspect-[4/3]'>
-                <CanvasChart id='alerts' config={CHART_CONFIGS.alerts} className='h-full' />
+                <CanvasChart
+                  id='alerts'
+                  config={CHART_CONFIGS.alerts}
+                  className='h-full'
+                />
               </div>
             </div>
           </GlassCard>
@@ -341,7 +353,11 @@ const ChartGridController = memo(function ChartGridController({
                 Performance Metrics
               </h3>
               <div className='aspect-[4/3]'>
-                <CanvasChart id='fuel' config={CHART_CONFIGS.fuel} className='h-full' />
+                <CanvasChart
+                  id='fuel'
+                  config={CHART_CONFIGS.fuel}
+                  className='h-full'
+                />
               </div>
               <div className='mt-6 grid grid-cols-2 gap-3'>
                 <div className='text-center p-3 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/30'>
@@ -388,14 +404,10 @@ const ChartGridController = memo(function ChartGridController({
                   stiffness: 300,
                   damping: 30,
                 }}
-                animate={{ height: isLiveMode ? 400 : 430 }}
-                className='bloom-edge vignette-strong aspect-[16/10] rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative'
+                className='bloom-edge vignette-strong aspect-[16/10] rounded-2xl bg-slate-950/50 ring-1 ring-cyan-200/20 overflow-hidden relative [content-visibility:auto]'
               >
                 {showMap ? (
-                  <div
-                    ref={mapContainerRef}
-                    className='absolute inset-0'
-                  />
+                  <div ref={mapContainerRef} className='absolute inset-0' />
                 ) : (
                   <>
                     <AnimatedPings count={12} />
@@ -456,9 +468,7 @@ const ChartGridController = memo(function ChartGridController({
             <div className='h-[calc(100%-80px)]'>
               <CanvasChart
                 id={`fullscreen-${fullscreen}`}
-                config={
-                  FULLSCREEN_CONFIGS[fullscreen] ?? CHART_CONFIGS.fuel
-                }
+                config={FULLSCREEN_CONFIGS[fullscreen] ?? CHART_CONFIGS.fuel}
                 className='h-full'
               />
             </div>

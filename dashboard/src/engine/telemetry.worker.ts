@@ -21,6 +21,7 @@ import type {
   FleetMetrics,
   TimeSeriesPoint,
   TruckStatus,
+  SpatialEntity,
 } from './types'
 import { io, type Socket } from 'socket.io-client'
 import {
@@ -29,6 +30,7 @@ import {
   secureRandomInt,
   secureRandomRange,
 } from '../lib/secureRandom'
+import { SpatialIndex } from './dataViz/spatialIndex'
 
 // ─── State inside the worker ───────────────────────────────────
 let socket: Socket | null = null
@@ -42,6 +44,9 @@ let config: WorkerConfig = {
 
 /** Mutable truck map — the source of truth inside the worker */
 const trucks = new Map<string, TruckTelemetry>()
+const spatialIndex = new SpatialIndex()
+
+let spatialIndexDirty = false
 
 /** Pending batch — accumulated between frames */
 let pendingBatch: TruckTelemetry[] = []
@@ -96,6 +101,8 @@ function startSimulation(): void {
   // Emit initial batch
   const initial = Array.from(trucks.values())
   post({ type: 'truck-batch', payload: initial })
+  spatialIndexDirty = true
+  refreshSpatialIndex()
 
   // Continuous simulation
   simInterval = setInterval(() => {
@@ -135,6 +142,7 @@ function startSimulation(): void {
 
     // Send batch to main thread
     pendingBatch.push(...batch)
+    spatialIndexDirty = true
 
     // Random alerts
     if (secureRandomChance(0.05)) {
@@ -249,6 +257,7 @@ function applySnapshotBatch(rawBatch: unknown): void {
     batch.push(t)
   }
   if (batch.length) pendingBatch.push(...batch)
+  if (batch.length) spatialIndexDirty = true
 }
 
 function applySingleTruckEnvelope(payload: Record<string, unknown>): void {
@@ -257,6 +266,7 @@ function applySingleTruckEnvelope(payload: Record<string, unknown>): void {
   if (!t) return
   trucks.set(t.id, t)
   pendingBatch.push(t)
+  spatialIndexDirty = true
 }
 
 function hasCoordinates(payload: Record<string, unknown>): boolean {
@@ -278,6 +288,7 @@ function applyDirectTruckPayload(payload: Record<string, unknown>): void {
   if (!t) return
   trucks.set(t.id, t)
   pendingBatch.push(t)
+  spatialIndexDirty = true
 }
 
 function postAlertEnvelope(payload: Record<string, unknown>): void {
@@ -317,6 +328,7 @@ function handleTruckStatusUpdate(raw: unknown): void {
 
   trucks.set(id, next)
   pendingBatch.push(next)
+  spatialIndexDirty = true
 }
 
 function normalizeTruck(raw: unknown): TruckTelemetry | null {
@@ -431,6 +443,24 @@ function flushBatch(): void {
   if (pendingBatch.length === 0) return
   postTruckBatchTransfer(pendingBatch)
   pendingBatch = []
+  refreshSpatialIndex()
+}
+
+function refreshSpatialIndex(): void {
+  if (!spatialIndexDirty) return
+
+  const entities: SpatialEntity[] = []
+  for (const truck of trucks.values()) {
+    entities.push({
+      id: truck.id,
+      x: truck.lng,
+      y: truck.lat,
+      data: truck,
+    })
+  }
+
+  spatialIndex.bulkLoad(entities)
+  spatialIndexDirty = false
 }
 
 // ─── postMessage helper ────────────────────────────────────────
@@ -448,7 +478,12 @@ function post(msg: WorkerOutbound, transfer?: Transferable[]): void {
 
 function postTruckBatchTransfer(batch: TruckTelemetry[]): void {
   const ids = new Array<string>(batch.length)
-  const values = new Float32Array(batch.length * TRUCK_BATCH_STRIDE)
+  const byteLength = batch.length * TRUCK_BATCH_STRIDE * Float32Array.BYTES_PER_ELEMENT
+  const buffer: ArrayBuffer | SharedArrayBuffer =
+    typeof SharedArrayBuffer === 'undefined'
+      ? new ArrayBuffer(byteLength)
+      : new SharedArrayBuffer(byteLength)
+  const values = new Float32Array(buffer)
 
   for (let index = 0; index < batch.length; index++) {
     const truck = batch[index]
@@ -474,7 +509,7 @@ function postTruckBatchTransfer(batch: TruckTelemetry[]): void {
         stride: TRUCK_BATCH_STRIDE,
       },
     },
-    [values.buffer]
+    values.buffer instanceof SharedArrayBuffer ? undefined : [values.buffer]
   )
 }
 
