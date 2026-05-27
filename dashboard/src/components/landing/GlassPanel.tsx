@@ -35,7 +35,6 @@ const GlassPanel = memo(function GlassPanel({
       style={{
         opacity: panelOpacity,
         y: panelLift,
-        willChange: 'opacity, transform',
       }}
       className={`glass-panel glass-panel-strong relative overflow-hidden rounded-3xl border-cyan-100/30 transform-gpu ${className}`}
     >

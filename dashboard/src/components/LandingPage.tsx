@@ -34,7 +34,7 @@ import GlassPanel from '@/components/landing/GlassPanel'
 import { useTransitionStore } from '@/stores/transitionStore'
 import PremiumSystemStatusBanner, {
   type StatusIssue,
-} from '@/components/common/PremiumSystemStatusBanner'
+} from '@/shared/ui/PremiumSystemStatusBanner'
 import { useAppHealthEvents } from '@/hooks/useAppHealthEvents'
 
 const HeroBackground = dynamic(
@@ -301,10 +301,9 @@ export default function LandingPage() {
         opacity: pageOpacity,
         scale: pageScale,
         y: pageLift,
-        willChange: 'opacity, transform',
         contain: 'layout paint style',
       }}
-      className='mission-control-shell relative z-50 min-h-screen overflow-hidden text-white'
+      className='mission-control-shell will-change-opacity-transform relative z-50 min-h-screen overflow-hidden text-white'
     >
       <PremiumSystemStatusBanner issues={statusIssues} className='top-24' />
 
@@ -313,7 +312,6 @@ export default function LandingPage() {
 
       {/* ── Nav ─────────────────────────────────────────────── */}
       <motion.nav
-        suppressHydrationWarning
         initial={false}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.45, ease: EASE_STANDARD }}
@@ -404,8 +402,7 @@ export default function LandingPage() {
                 <motion.span
                   aria-live='polite'
                   role='status'
-                  className='ml-2 inline-flex items-center gap-1 rounded-full border border-emerald-200/40 bg-emerald-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-100 transform-gpu'
-                  style={{ willChange: 'opacity, transform' }}
+                    className='will-change-opacity-transform ml-2 inline-flex items-center gap-1 rounded-full border border-emerald-200/40 bg-emerald-400/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-emerald-100 transform-gpu'
                   animate={
                     isLiveFlowing
                       ? {

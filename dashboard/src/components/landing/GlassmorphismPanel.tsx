@@ -46,7 +46,6 @@ export const GlassmorphismPanel = memo(function GlassmorphismPanel({
   const panelStyle: MotionStyle & Record<'--glass-panel-opacity', number> = {
     opacity: panelOpacity,
     y: panelY,
-    willChange: 'opacity, transform',
     '--glass-panel-opacity': opacity,
   }
 

@@ -83,11 +83,11 @@ const MagneticButton = memo(function MagneticButton({
       onClick={onClick}
       onMouseMove={onMove}
       onMouseLeave={reset}
-      style={{ x, y, willChange: 'transform' }}
+      style={{ x, y }}
       whileHover={{ scale: 1.04 }}
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 420, damping: 26, mass: 0.42 }}
-      className={className}
+      className={`will-change-transform ${className}`}
     >
       {children}
     </motion.button>

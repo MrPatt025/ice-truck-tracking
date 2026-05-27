@@ -34,6 +34,7 @@ export default function SharedCanvasHost() {
 
   useEffect(() => {
     canvas.id = SHARED_CANVAS_ID
+    canvas.className = 'will-change-transform-opacity-filter'
     canvas.style.position = 'fixed'
     canvas.style.inset = '0'
     canvas.style.width = '100vw'
@@ -42,7 +43,6 @@ export default function SharedCanvasHost() {
     canvas.style.top = '0'
     canvas.style.zIndex = '-1'
     canvas.style.opacity = '0.32'
-    canvas.style.willChange = 'transform, opacity, filter'
     canvas.style.mixBlendMode = 'screen'
     canvas.style.pointerEvents = 'none'
     canvas.style.background =

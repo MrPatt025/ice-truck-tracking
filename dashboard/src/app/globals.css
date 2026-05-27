@@ -28,6 +28,7 @@
     --glass-bg: rgb(15 23 42 / 0.3);
     --glass-bg-strong: rgb(15 23 42 / 0.42);
     --glass-border: rgb(255 255 255 / 0.1);
+    --glass-border-strong: rgb(255 255 255 / 0.12);
     --glass-shadow-strong: 0 8px 32px 0 rgb(0 0 0 / 0.6);
     --glass-text-gradient: linear-gradient(to right, #cffafe, #94a3b8);
     --glass-accent-gradient: linear-gradient(
@@ -36,6 +37,74 @@
       rgb(255 255 255 / 0.03) 44%,
       rgb(56 189 248 / 0.08) 100%
     );
+    --mission-control-gradient-dark:
+      radial-gradient(
+        1400px 700px at 10% -10%,
+        rgb(139 92 246 / 0.38),
+        transparent 65%
+      ),
+      radial-gradient(
+        1000px 600px at 100% 10%,
+        rgb(34 211 238 / 0.32),
+        transparent 65%
+      ),
+      radial-gradient(
+        1000px 600px at 50% 120%,
+        rgb(16 185 129 / 0.32),
+        transparent 65%
+      ),
+      #0b1220;
+    --mission-control-gradient-neon:
+      radial-gradient(
+        1400px 700px at 10% -10%,
+        rgb(255 0 110 / 0.4),
+        transparent 65%
+      ),
+      radial-gradient(
+        1000px 600px at 100% 10%,
+        rgb(0 245 255 / 0.35),
+        transparent 65%
+      ),
+      radial-gradient(
+        1000px 600px at 50% 120%,
+        rgb(0 255 159 / 0.35),
+        transparent 65%
+      ),
+      #0d0221;
+    --mission-control-gradient-ocean:
+      radial-gradient(
+        1400px 700px at 10% -10%,
+        rgb(6 182 212 / 0.4),
+        transparent 65%
+      ),
+      radial-gradient(
+        1000px 600px at 100% 10%,
+        rgb(14 165 233 / 0.35),
+        transparent 65%
+      ),
+      radial-gradient(
+        1000px 600px at 50% 120%,
+        rgb(20 184 166 / 0.35),
+        transparent 65%
+      ),
+      #0a1628;
+    --mission-control-gradient-forest:
+      radial-gradient(
+        1400px 700px at 10% -10%,
+        rgb(16 185 129 / 0.4),
+        transparent 65%
+      ),
+      radial-gradient(
+        1000px 600px at 100% 10%,
+        rgb(5 150 105 / 0.35),
+        transparent 65%
+      ),
+      radial-gradient(
+        1000px 600px at 50% 120%,
+        rgb(52 211 153 / 0.35),
+        transparent 65%
+      ),
+      #0a1810;
   }
 
   /* Reduce motion for users who prefer it */
@@ -162,6 +231,18 @@
     will-change: transform, opacity;
   }
 
+  .will-change-opacity-transform {
+    will-change: opacity, transform;
+  }
+
+  .will-change-transform {
+    will-change: transform;
+  }
+
+  .will-change-transform-opacity-filter {
+    will-change: transform, opacity, filter;
+  }
+
   .glass-panel-strong {
     background-color: var(--glass-bg-strong);
   }
@@ -187,7 +268,7 @@
 
   .glass-card-frame {
     border-radius: calc(1.5rem - 2px);
-    border: 1px solid rgb(255 255 255 / 0.12);
+    border: 1px solid var(--glass-border-strong);
   }
 
   .glass-card-sheen {
@@ -276,7 +357,25 @@
   }
 
   .mission-control-background-layer {
-    background-image: var(--mission-control-background);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  .mission-control-background-dark {
+    background-image: var(--mission-control-gradient-dark);
+  }
+
+  .mission-control-background-neon {
+    background-image: var(--mission-control-gradient-neon);
+  }
+
+  .mission-control-background-ocean {
+    background-image: var(--mission-control-gradient-ocean);
+  }
+
+  .mission-control-background-forest {
+    background-image: var(--mission-control-gradient-forest);
   }
 
   .mission-control-grid-overlay {

@@ -15,7 +15,7 @@
 
 'use client'
 
-import React, { useRef, useEffect, useMemo } from 'react'
+import React, { useRef, useEffect, useMemo, useId } from 'react'
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -73,23 +73,6 @@ type SvgInteractionHandlers = Pick<
   React.SVGProps<SVGSVGElement>,
   'onMouseEnter' | 'onMouseLeave' | 'onMouseDown' | 'onMouseUp'
 >
-
-function createStableTitleId(): string {
-  if (globalThis.crypto?.randomUUID) {
-    return `craft-icon-title-${globalThis.crypto.randomUUID()}`
-  }
-
-  if (globalThis.crypto?.getRandomValues) {
-    const bytes = new Uint8Array(8)
-    globalThis.crypto.getRandomValues(bytes)
-    const token = Array.from(bytes, byte =>
-      byte.toString(16).padStart(2, '0')
-    ).join('')
-    return `craft-icon-title-${token}`
-  }
-
-  return `craft-icon-title-${Date.now()}`
-}
 
 function createElasticHandlers(enabled: boolean): SvgInteractionHandlers {
   if (!enabled) {
@@ -192,9 +175,13 @@ export const ProceduralIcon: React.FC<ProceduralIconProps> = ({
 }) => {
   const pathRef = useRef<SVGPathElement>(null)
   const animRef = useRef<Animation | null>(null)
+  const reactTitleId = useId()
   const titleId = useMemo(
-    () => (label ? createStableTitleId() : undefined),
-    [label]
+    () =>
+      label
+        ? `craft-icon-title-${reactTitleId.replaceAll(':', '')}`
+        : undefined,
+    [label, reactTitleId]
   )
 
   // Morph interpolation
@@ -248,11 +235,10 @@ export const ProceduralIcon: React.FC<ProceduralIconProps> = ({
       strokeWidth={sw}
       strokeLinecap='round'
       strokeLinejoin='round'
-      className={`craft-icon ${className}`}
+      className={`craft-icon will-change-transform ${className}`}
       style={{
         transition:
           'color 200ms ease, stroke 200ms ease, transform 150ms cubic-bezier(0.22, 1, 0.36, 1)',
-        willChange: 'transform',
         ...loadingStyle,
       }}
       aria-hidden={a11yProps['aria-hidden'] as boolean | undefined}
