@@ -152,7 +152,6 @@ export class ColorIntelligenceEngine {
   private _temperature: ColorTemperature
   private _theme: Theme = 'dark'
   private _alertLevel: AlertLevel | null = null
-  private _styleEl: HTMLStyleElement | null = null
   private _mounted = false
 
   constructor(config?: Partial<ColorIntelligenceConfig>) {
@@ -173,14 +172,11 @@ export class ColorIntelligenceEngine {
   mount(): void {
     if (this._mounted || document === undefined) return
     this._mounted = true
-    this._injectStyles()
     this._applyColorVars()
   }
 
   destroy(): void {
     this._mounted = false
-    this._styleEl?.remove()
-    this._styleEl = null
   }
 
   /* ── Theme & Context ───────────────────────────────────────── */
@@ -257,7 +253,7 @@ export class ColorIntelligenceEngine {
   /* ── CSS Variable Application ──────────────────────────────── */
 
   private _applyColorVars(): void {
-    if (typeof document === 'undefined') return
+    if (globalThis.document === undefined) return
     const root = document.documentElement
 
     // Temperature-derived accent colors
@@ -308,31 +304,6 @@ export class ColorIntelligenceEngine {
     })
   }
 
-  private _injectStyles(): void {
-    if (typeof document === 'undefined') return
-
-    const css = `
-      :root {
-        --ci-accent: oklch(0.75 0.15 250);
-        --ci-surface: oklch(0.18 0.02 260);
-        --ci-text: oklch(0.90 0.02 250);
-        --ci-muted: oklch(0.55 0.04 250);
-        --ci-temperature: 5500;
-        --ci-saturation-scale: 1;
-      }
-
-      /* Color intelligence utility classes */
-      .ci-accent { color: var(--ci-accent); }
-      .ci-surface { background-color: var(--ci-surface); }
-      .ci-text { color: var(--ci-text); }
-      .ci-muted { color: var(--ci-muted); }
-    `
-
-    this._styleEl = document.createElement('style')
-    this._styleEl.dataset.craft = 'color-intelligence'
-    this._styleEl.textContent = css
-    document.head.appendChild(this._styleEl)
-  }
 }
 
 export { TEMPERATURE_MAP, SEVERITY_SATURATION, TIME_TEMPERATURE }

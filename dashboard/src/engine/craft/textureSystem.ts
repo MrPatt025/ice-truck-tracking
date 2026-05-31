@@ -154,7 +154,7 @@ export class BrushedMetal {
   private _el: HTMLDivElement | null = null
 
   mount(parent: HTMLElement, config: TextureConfig['brushedMetal']): void {
-    if (typeof document === 'undefined') return
+    if (globalThis.document === undefined) return
 
     // Generate brushed metal pattern on offscreen canvas
     this._canvas = document.createElement('canvas')
@@ -217,7 +217,7 @@ export class SoftDustGrain {
   private _time = 0
 
   mount(parent: HTMLElement, config: TextureConfig['dustGrain']): void {
-    if (typeof document === 'undefined') return
+    if (globalThis.document === undefined) return
 
     const filterId = `craft-dust-${this._seed}`
     const svgMarkup = createSVGFilter(
@@ -286,7 +286,7 @@ export class FabricBackground {
   private _el: HTMLDivElement | null = null
 
   mount(parent: HTMLElement, config: TextureConfig['fabric']): void {
-    if (typeof document === 'undefined') return
+    if (globalThis.document === undefined) return
 
     this._canvas = document.createElement('canvas')
     const size = 64 * config.weaveScale
@@ -354,7 +354,7 @@ export class TextureCompositor {
   private _tier: DeviceTier = 'high-end'
 
   mount(parent?: HTMLElement): void {
-    if (this._mounted || typeof document === 'undefined') return
+    if (this._mounted || globalThis.document === undefined) return
     this._mounted = true
     const p = parent || document.body
     const config = TEXTURE_PRESETS.dark

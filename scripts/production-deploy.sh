@@ -33,7 +33,7 @@ echo "🔧 Production Setup..."
 echo "--------------------"
 
 # Create production docker-compose override
-cat > docker-compose.prod.yml << EOF
+cat > docker-compose.override.yml << EOF
 version: '3.8'
 services:
   backend:
@@ -86,7 +86,7 @@ EOF
 
 # Deploy
 echo "🚀 Deploying services..."
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d --build
 
 # Wait for services
 echo "⏳ Waiting for services to start..."

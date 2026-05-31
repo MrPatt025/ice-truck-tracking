@@ -85,7 +85,7 @@ export const easeInOutCubic = (t: number): number => {
  * SVG noise generator for subtle texture
  */
 export const createNoisePattern = (): HTMLCanvasElement | null => {
-  if (typeof document === 'undefined') return null
+  if (globalThis.document === undefined) return null
 
   const canvas = document.createElement('canvas')
   canvas.width = 512
@@ -114,10 +114,7 @@ export const createNoisePattern = (): HTMLCanvasElement | null => {
  * Called once from root layout
  */
 export const initGlobalCanvas = (): HTMLCanvasElement | null => {
-  if (
-    typeof document === 'undefined' ||
-    typeof globalThis.window === 'undefined'
-  )
+  if (globalThis.document === undefined || globalThis.window === undefined)
     return null
 
   const canvas = document.createElement('canvas')

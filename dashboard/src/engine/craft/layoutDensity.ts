@@ -111,7 +111,6 @@ const DENSITY_PRESETS: Record<DensityMode, DensityConfig> = {
 export class LayoutDensityController {
   private _mode: DensityMode = 'focus'
   private _config: DensityConfig
-  private _styleEl: HTMLStyleElement | null = null
   private _mounted = false
   private _autoDetect = true
   private _resizeObserver: ResizeObserver | null = null
@@ -127,7 +126,6 @@ export class LayoutDensityController {
     if (this._mounted || document === undefined) return
     this._mounted = true
 
-    this._injectStyles()
     this._applyDensityVars()
 
     // Auto-detect density based on viewport
@@ -143,8 +141,6 @@ export class LayoutDensityController {
 
   destroy(): void {
     this._mounted = false
-    this._styleEl?.remove()
-    this._styleEl = null
     this._resizeObserver?.disconnect()
     this._resizeObserver = null
   }
@@ -201,7 +197,7 @@ export class LayoutDensityController {
   }
 
   private _applyDensityVars(): void {
-    if (typeof document === 'undefined') return
+    if (globalThis.document === undefined) return
     const c = this._config
 
     const vars: Record<string, string> = {
@@ -225,76 +221,10 @@ export class LayoutDensityController {
   }
 
   private _setDataAttribute(mode: DensityMode): void {
-    if (typeof document === 'undefined') return
+    if (globalThis.document === undefined) return
     document.documentElement.dataset.density = mode
   }
 
-  private _injectStyles(): void {
-    if (typeof document === 'undefined') return
-
-    const css = `
-      :root {
-        --density-spacing: 8px;
-        --density-content-max: 100%;
-        --density-panel-gap: 16px;
-        --density-font-scale: 1;
-        --density-padding-scale: 1;
-        --density-radius-scale: 1;
-        --density-columns: 3;
-        --density-card-min: 280px;
-        --density-header-h: 56px;
-        --density-sidebar-w: 240px;
-        --density-animation: 0.7;
-      }
-
-      /* Density-adaptive grid */
-      [data-craft-grid] {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(var(--density-card-min), 1fr));
-        gap: var(--density-panel-gap);
-        max-width: var(--density-content-max);
-        margin: 0 auto;
-      }
-
-      /* Density-adaptive card */
-      [data-craft-card] {
-        padding: calc(16px * var(--density-padding-scale));
-        border-radius: calc(12px * var(--density-radius-scale));
-        font-size: calc(1rem * var(--density-font-scale));
-      }
-
-      /* Header adapts to density */
-      [data-craft-header] {
-        height: var(--density-header-h);
-        padding-inline: calc(16px * var(--density-padding-scale));
-      }
-
-      /* Sidebar adapts or hides */
-      [data-craft-sidebar] {
-        width: var(--density-sidebar-w);
-        transition: width 300ms cubic-bezier(0.22, 1, 0.36, 1);
-      }
-
-      /* Hide sidebar in cinematic/focus modes */
-      [data-density="focus"] [data-craft-sidebar],
-      [data-density="cinematic"] [data-craft-sidebar] {
-        width: 0;
-        overflow: hidden;
-        opacity: 0;
-      }
-
-      /* Reduce decorations in compact/analyst */
-      [data-density="compact"] [data-craft-decoration],
-      [data-density="analyst"] [data-craft-decoration] {
-        display: none !important;
-      }
-    `
-
-    this._styleEl = document.createElement('style')
-    this._styleEl.dataset.craft = 'layout-density'
-    this._styleEl.textContent = css
-    document.head.appendChild(this._styleEl)
-  }
 }
 
 export { DENSITY_PRESETS }

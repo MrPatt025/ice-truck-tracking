@@ -289,18 +289,3 @@ export const CraftIcon: React.FC<
 }
 
 // ─── Global Keyframe (injected once) ─────────────────────────
-
-if (typeof document !== 'undefined') {
-  const existingStyle = document.querySelector('[data-craft="icon-keyframes"]')
-  if (!existingStyle) {
-    const style = document.createElement('style')
-    style.dataset.craft = 'icon-keyframes'
-    style.textContent = `
-      @keyframes craft-icon-spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-    `
-    document.head.appendChild(style)
-  }
-}

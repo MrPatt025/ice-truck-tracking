@@ -2,7 +2,7 @@
 # Build optimized for layer caching and minimal image size
 
 # ── Dependencies stage ──────────────────────────────
-FROM node:26-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 
 ENV PNPM_HOME="/pnpm"
@@ -22,7 +22,7 @@ COPY sdk/mobile/package.json ./sdk/mobile/
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
 
 # ── Builder stage ───────────────────────────────────
-FROM node:26-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -34,7 +34,7 @@ COPY --from=deps /app/node_modules ./node_modules
 
 # Copy workspace config and root-level files (essential for build)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY next.config.js eslint.config.mjs tsconfig.json commitlint.config.js lint-staged.config.js renovate.json stryker.conf.js index.js ./
+COPY eslint.config.mjs tsconfig.json commitlint.config.js lint-staged.config.js renovate.json stryker.conf.js ./
 
 # Copy workspace packages (only source files needed for build)
 COPY backend/package.json ./backend/
@@ -53,7 +53,7 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm run build
 
 # ── Runtime stage ──────────────────────────────────
-FROM node:26-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"

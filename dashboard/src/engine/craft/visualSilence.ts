@@ -59,7 +59,6 @@ const SILENCE_PRESETS: Record<SilenceLevel, VisualSilenceConfig> = {
 
 export class VisualSilenceController {
   private _config: VisualSilenceConfig
-  private _styleEl: HTMLStyleElement | null = null
   private _mounted = false
   private _idleTimer: ReturnType<typeof setTimeout> | null = null
   private _isIdle = false
@@ -71,9 +70,8 @@ export class VisualSilenceController {
   /* ── Lifecycle ─────────────────────────────────────────────── */
 
   mount(): void {
-    if (this._mounted || document === undefined) return
+    if (this._mounted || globalThis.document === undefined) return
     this._mounted = true
-    this._injectStyles()
     this._applyVars()
 
     if (this._config.fadeChrome) {
@@ -83,11 +81,9 @@ export class VisualSilenceController {
 
   destroy(): void {
     this._mounted = false
-    this._styleEl?.remove()
-    this._styleEl = null
     if (this._idleTimer) clearTimeout(this._idleTimer)
 
-    if (typeof document !== 'undefined') {
+    if (globalThis.document !== undefined) {
       delete document.documentElement.dataset.silence
       delete document.documentElement.dataset.silenceIdle
     }
@@ -98,7 +94,6 @@ export class VisualSilenceController {
   setLevel(level: SilenceLevel): void {
     this._config = { ...SILENCE_PRESETS[level] }
     this._applyVars()
-    this._updateStyles()
   }
 
   getLevel(): SilenceLevel {
@@ -118,128 +113,27 @@ export class VisualSilenceController {
   /** Force idle state (useful for demo/testing) */
   setIdle(idle: boolean): void {
     this._isIdle = idle
-    if (typeof document !== 'undefined') {
-      if (idle) {
-        document.documentElement.dataset.silenceIdle = 'true'
-      } else {
-        delete document.documentElement.dataset.silenceIdle
-      }
-    }
-  }
 
-  /* ── Internal ──────────────────────────────────────────────── */
+    if (globalThis.document === undefined) return
+
+    if (idle) {
+      document.documentElement.dataset.silenceIdle = 'true'
+      return
+    }
+
+    delete document.documentElement.dataset.silenceIdle
+  }
 
   private _applyVars(): void {
-    if (typeof document === 'undefined') return
+    if (globalThis.document === undefined) return
+
     const root = document.documentElement
-    const m = this._config.breathingMultiplier
+    const { level, chromeOpacity, contentMaxWidth, breathingMultiplier } = this._config
 
-    root.style.setProperty('--silence-breathing', String(m))
-    root.style.setProperty(
-      '--silence-chrome-opacity',
-      String(this._config.chromeOpacity)
-    )
-    root.style.setProperty('--silence-max-width', this._config.contentMaxWidth)
-
-    // Spacing scale (base * multiplier)
-    root.style.setProperty('--silence-space-xs', `${4 * m}px`)
-    root.style.setProperty('--silence-space-sm', `${8 * m}px`)
-    root.style.setProperty('--silence-space-md', `${16 * m}px`)
-    root.style.setProperty('--silence-space-lg', `${24 * m}px`)
-    root.style.setProperty('--silence-space-xl', `${40 * m}px`)
-    root.style.setProperty('--silence-space-2xl', `${64 * m}px`)
-
-    root.dataset.silence = this._config.level
-  }
-
-  private _injectStyles(): void {
-    if (typeof document === 'undefined') return
-
-    this._styleEl = document.createElement('style')
-    this._styleEl.dataset.craft = 'visual-silence'
-    this._updateStyles()
-    document.head.appendChild(this._styleEl)
-  }
-
-  private _updateStyles(): void {
-    if (!this._styleEl) return
-
-    const borderRule = this._config.removeBorders
-      ? `[data-silence="balanced"] [data-silence-chrome],
-         [data-silence="maximal"] [data-silence-chrome] {
-           border-color: transparent !important;
-         }`
-      : ''
-
-    this._styleEl.textContent = `
-      /* ── Visual Silence — Breathing Room ─────────────── */
-
-      [data-silence] {
-        --silence-transition: opacity 600ms cubic-bezier(0.33, 1, 0.68, 1);
-      }
-
-      /* Non-essential chrome fading */
-      [data-silence-chrome] {
-        transition: var(--silence-transition);
-        opacity: var(--silence-chrome-opacity, 1);
-      }
-
-      /* Idle state — further reduce chrome */
-      [data-silence-idle] [data-silence-chrome] {
-        opacity: calc(var(--silence-chrome-opacity, 1) * 0.5);
-      }
-
-      /* Essential elements always remain visible */
-      [data-silence-essential] {
-        opacity: 1 !important;
-      }
-
-      ${borderRule}
-
-      /* Content width constraint */
-      [data-silence] .silence-content {
-        max-width: var(--silence-max-width, 1200px);
-        margin-inline: auto;
-      }
-
-      /* Spacing utilities */
-      .silence-pad {
-        padding: var(--silence-space-md);
-      }
-      .silence-pad-lg {
-        padding: var(--silence-space-lg);
-      }
-      .silence-gap {
-        gap: var(--silence-space-md);
-      }
-      .silence-gap-lg {
-        gap: var(--silence-space-lg);
-      }
-
-      /* Progressive disclosure */
-      [data-silence] .silence-reveal {
-        opacity: 0;
-        transform: translateY(4px);
-        transition: opacity 300ms ease, transform 300ms ease;
-        pointer-events: none;
-      }
-      [data-silence] *:hover > .silence-reveal,
-      [data-silence] *:focus-within > .silence-reveal {
-        opacity: 1;
-        transform: translateY(0);
-        pointer-events: auto;
-      }
-
-      /* Maximal mode — ultra-clean look */
-      [data-silence="maximal"] hr,
-      [data-silence="maximal"] .divider {
-        opacity: 0.15;
-      }
-
-      [data-silence="maximal"] .border {
-        border-color: oklch(0.5 0 0 / 0.08);
-      }
-    `
+    root.dataset.silence = level
+    root.style.setProperty('--silence-chrome-opacity', String(chromeOpacity))
+    root.style.setProperty('--silence-max-width', contentMaxWidth)
+    root.style.setProperty('--silence-breathing', String(breathingMultiplier))
   }
 
   private _setupIdleDetection(): void {

@@ -47,10 +47,10 @@ export function ThemeProvider({
 
   // Hydrate from localStorage
   useEffect(() => {
-    if (typeof globalThis !== 'undefined' && globalThis.window) {
+    if (globalThis.window !== undefined) {
       const stored = globalThis.window.localStorage.getItem(storageKey)
-      if (stored && ['light', 'dark', 'system'].includes(stored)) {
-        setTheme(stored as Theme)
+      if (stored === 'light' || stored === 'dark' || stored === 'system') {
+        setTheme(stored)
       }
     }
   }, [storageKey, setTheme])
@@ -113,7 +113,7 @@ export function ThemeProvider({
   const persistTheme = useCallback(
     (t: Theme) => {
       setTheme(t)
-      if (typeof globalThis !== 'undefined' && globalThis.window) {
+      if (globalThis.window !== undefined) {
         globalThis.window.localStorage.setItem(storageKey, t)
       }
     },
