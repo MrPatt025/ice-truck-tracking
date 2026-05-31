@@ -44,7 +44,6 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
   return (
     <section
       data-testid={testId}
-      suppressHydrationWarning
       aria-label='Primary content'
       className={cn(
         'page-shell relative isolate text-slate-100 antialiased',
@@ -77,7 +76,7 @@ const PremiumPageWrapper = memo(function PremiumPageWrapper({
         <div
           ref={shellRef}
           className={cn(
-            'rounded-3xl p-6 bg-slate-900/30 backdrop-blur-[40px] border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.6)] saturate-150',
+            'rounded-3xl p-6 bg-slate-900/30 backdrop-blur-[40px] border border-white/10 shadow-2xl saturate-150',
             contentClassName
           )}
         >

@@ -1,11 +1,10 @@
 'use client'
 
-import React, { Suspense, useRef } from 'react'
+import React, { Suspense, useEffect, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { useScroll, motion, useTransform, MotionValue } from 'framer-motion'
-import { MathUtils } from 'three'
 import type { GridHelper, DirectionalLight } from 'three'
-import GlassSpinner from '@/components/common/GlassSpinner'
+import GlassSpinner from '@/shared/ui/GlassSpinner'
 
 /* ----------------------------------------------------------------
  *  ScrollytellingGrid — a Zero-Render Architecture 3D scene node.
@@ -30,48 +29,26 @@ function ScrollytellingGrid({
 }>) {
   const gridRef = useRef<GridHelper>(null)
   const dirLightRef = useRef<DirectionalLight>(null)
-  const timeRef = useRef(0)
   const { camera } = useThree()
 
-  useFrame((_state, delta) => {
-    timeRef.current += delta
-    const targetZ = cameraZ.get()
-    const targetY = cameraY.get()
-    const targetRotX = cameraRotX.get()
+  useEffect(() => {
+    camera.position.z = cameraZ.get()
+    camera.position.y = cameraY.get()
+    camera.rotation.x = cameraRotX.get()
+  }, [camera, cameraRotX, cameraY, cameraZ])
 
+  useFrame(() => {
     if (gridRef.current) {
       gridRef.current.rotation.z = gridSpin.get()
-      gridRef.current.position.y =
-        gridLift.get() + Math.sin(timeRef.current * 0.15) * 0.08
+      gridRef.current.position.y = gridLift.get()
     }
 
-    camera.position.z = MathUtils.damp(
-      camera.position.z,
-      targetZ,
-      4,
-      delta
-    )
-    camera.position.y = MathUtils.damp(
-      camera.position.y,
-      targetY,
-      4,
-      delta
-    )
-    camera.rotation.x = MathUtils.damp(
-      camera.rotation.x,
-      targetRotX,
-      4,
-      delta
-    )
+    camera.position.z = cameraZ.get()
+    camera.position.y = cameraY.get()
+    camera.rotation.x = cameraRotX.get()
 
     if (dirLightRef.current) {
-      const targetIntensity = lightIntensity.get()
-      dirLightRef.current.intensity = MathUtils.damp(
-        dirLightRef.current.intensity,
-        targetIntensity,
-        4,
-        delta
-      )
+      dirLightRef.current.intensity = lightIntensity.get()
     }
   })
 
@@ -121,7 +98,6 @@ export function ScrollytellingCanvas() {
 
   return (
     <motion.div
-      suppressHydrationWarning
       className='absolute inset-0 -z-10 pointer-events-none min-h-[100svh]'
       style={{ opacity, scale }}
     >
