@@ -3,7 +3,7 @@
 # Context: repository root (.)
 # ============================================================================
 
-FROM node:22-alpine AS base
+FROM node:26-alpine AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
@@ -24,7 +24,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY dashboard/package.json ./dashboard/
 
 # Install the full workspace with a cache-mounted pnpm store
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # ── Builder stage ──────────────────────────────────────
 FROM base AS builder

@@ -2,7 +2,7 @@
 # Build optimized for layer caching and minimal image size
 
 # ── Dependencies stage ──────────────────────────────
-FROM node:22-alpine AS deps
+FROM node:26-alpine AS deps
 WORKDIR /app
 
 ENV PNPM_HOME="/pnpm"
@@ -19,10 +19,10 @@ COPY sdk/edge/package.json ./sdk/edge/
 COPY sdk/mobile/package.json ./sdk/mobile/
 
 # Install dependencies with cache-mounted pnpm for faster, reproducible builds
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # ── Builder stage ───────────────────────────────────
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -53,7 +53,7 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm run build
 
 # ── Runtime stage ──────────────────────────────────
-FROM node:22-alpine AS runner
+FROM node:26-alpine AS runner
 WORKDIR /app
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"

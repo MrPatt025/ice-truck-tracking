@@ -2,7 +2,7 @@
 # Backend Dockerfile — Multi-Stage Production Build
 # ============================================================================
 
-FROM node:22-alpine AS base
+FROM node:26-alpine AS base
 
 # Install security updates and dumb-init
 RUN apk update && apk upgrade && apk add --no-cache dumb-init curl
@@ -30,7 +30,7 @@ COPY sdk/mobile/package.json ./sdk/mobile/
 
 # Development stage
 FROM base AS development
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 COPY backend/index.js backend/swagger.json ./backend/
 COPY backend/src ./backend/src
 EXPOSE 5000
@@ -40,10 +40,10 @@ CMD ["dumb-init", "node", "backend/index.js"]
 # Production dependencies stage — locked versions
 # ignore-scripts required by SonarCloud docker rules
 FROM base AS dependencies
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Production stage
-FROM node:22-alpine AS production
+FROM node:26-alpine AS production
 
 # Install security updates and dumb-init
 RUN apk update && apk upgrade && apk add --no-cache dumb-init
